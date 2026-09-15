@@ -2,13 +2,64 @@
 
 ## Antes de nada
 
+En Linux y macOS:
+
 ```bash
 make install
 make verify
 ```
 
+En Windows, con PowerShell:
+
+```powershell
+./make.ps1 install
+./make.ps1 verify
+```
+
 `make verify` debe pasar en verde **sin red y sin clave de API**. Si algo falla
 por falta de credenciales, es un bug de la implementación, no de tu entorno.
+
+## Los dos caminos de ejecución
+
+El repositorio se construye igual en las tres plataformas, pero hay dos formas
+de arrancar la construcción:
+
+| | Linux / macOS | Windows |
+|---|---|---|
+| Envoltorio | `Makefile` → `make <target>` | `make.ps1` → `./make.ps1 <target>` |
+| Sin envoltorio | `python scripts/tasks.py <target>` | idéntico |
+
+**Los dos envoltorios son finos a propósito.** Toda la definición de los targets
+vive en `scripts/tasks.py`: un único sitio donde está escrito qué hace `verify`,
+en qué orden y con qué comandos. El `Makefile` y `make.ps1` se limitan a
+delegar. Si añades un paso a `verify`, lo añades **una vez**, en `tasks.py`.
+
+Lo que esto evita: dos listas de pasos que divergen en silencio hasta que la CI
+y el portátil de alguien dejan de comprobar lo mismo.
+
+Reglas al tocar la construcción:
+
+- Ningún target escribe `.venv/bin` ni `.venv/Scripts` a mano; el directorio de
+  ejecutables lo resuelve `tasks.py::bin_dir` según la plataforma.
+- Nada de `test -f`, `rm -rf`, `find` ni `touch` en el `Makefile`. El equivalente
+  portable está en `tasks.py` (`require_file`, `remove`, `task_clean`).
+- Un paso que falla aborta con `TaskError` y código de salida distinto de cero.
+  Nunca se ignora un fallo para seguir con el siguiente paso.
+- `tasks.py` usa **solo la biblioteca estándar**: tiene que poder ejecutar
+  `install` antes de que exista el entorno virtual.
+
+### Versión de Python en Windows
+
+El proyecto exige Python 3.12 (`DECISIONS.md`, D-13) y el `python` del PATH de
+Windows puede ser anterior. `./make.ps1 install` usa el lanzador `py -3.12` si
+está disponible. Para forzar un intérprete concreto:
+
+```powershell
+./make.ps1 install -Python C:/ruta/a/python.exe
+./make.ps1 install -Venv .venv312          # y otro directorio de entorno
+```
+
+El equivalente en Linux y macOS es `make install PY=python3.12 VENV=.venv312`.
 
 ## Convención de commits
 
@@ -113,6 +164,8 @@ peor que un test en rojo.
 - Meter el prompt completo en los logs.
 - Tests que requieran red o clave de API.
 - Capturar excepciones de forma genérica y continuar en silencio.
+- Órdenes exclusivas de Unix en el `Makefile`, o pasos de construcción
+  definidos dos veces (una por plataforma) en lugar de en `scripts/tasks.py`.
 
 ## Secretos
 

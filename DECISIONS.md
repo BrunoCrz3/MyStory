@@ -195,6 +195,44 @@ cargarlos bajo demanda en lugar de pagarlos en cada sesión.
 por defecto, así que `make install` crea el entorno virtual con el intérprete
 3.12 disponible en el sistema. `StrEnum` y la sintaxis de tipos usada lo exigen.
 
+### D-14. La construcción funciona en Windows sin duplicar la lista de targets
+
+**Problema:** el `Makefile` original solo funcionaba en Unix. Daba por hecho
+`.venv/bin` (en Windows es `.venv/Scripts`) y usaba `test -f`, `rm -rf`, `find`
+y `touch`, que no existen en `cmd.exe` ni en PowerShell. Además, GNU make no
+viene instalado en Windows, así que arreglar el `Makefile` no habría bastado.
+
+**Decisión:** la definición de los targets se mueve a `scripts/tasks.py`, un
+ejecutor en Python que solo usa la biblioteca estándar. `Makefile` y `make.ps1`
+quedan como envoltorios finos que delegan en él.
+
+- `tasks.py::bin_dir` resuelve `Scripts` o `bin` según `os.name`. Ninguna ruta
+  del entorno virtual se escribe a mano.
+- `test -f` → `require_file`; `rm -rf` y `find … -exec rm` → `remove` y
+  `pycache_dirs` sobre `pathlib` y `shutil`; `touch` → `Path.touch`.
+- El `Makefile` ya no contiene **ninguna** orden de shell, solo delegaciones.
+  Esa es la razón de que deje de importar qué shell use make.
+- Un paso fallido lanza `TaskError` y sale con código distinto de cero. Nada se
+  captura para continuar en silencio.
+
+**La alternativa descartada** era mantener los pasos en el `Makefile` y escribir
+un `make.ps1` paralelo con los mismos comandos. Se rechaza porque duplica la
+definición de `verify`: dos listas que divergen en cuanto alguien añade un paso
+a una sola, y el fallo se manifiesta como «en mi máquina pasa» meses después.
+
+**Coste asumido:** una indirección más. `make verify` ya no muestra los pasos en
+el propio `Makefile`; hay que abrir `tasks.py`. Se compensa con que `tasks.py`
+imprime cada comando que ejecuta, precedido de `$`.
+
+**Inventario:** `make.ps1` y `scripts/tasks.py` se añaden a `inventory.yaml`
+(meta 11 → 12, scripts 3 → 4, total 120 → 122). §21.12 declara un total
+**mínimo**, no una lista cerrada, así que ampliarlo no es una desviación.
+
+**Pendiente:** la CI solo corre en `ubuntu-latest` y llama a las herramientas
+directamente, sin pasar por `make`. Ni el `Makefile` ni `make.ps1` están
+cubiertos por la CI. Añadir un `make --dry-run verify` en Linux y un job de
+Windows con `./make.ps1 verify` cerraría ese hueco.
+
 ---
 
 ## Lo que conviene decidir antes de escalar a novela completa

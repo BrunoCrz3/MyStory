@@ -15,10 +15,20 @@ La especificación completa está en [`BUILD_SPEC.md`](BUILD_SPEC.md).
 
 ## Instalación y demo en tres comandos
 
+En Linux y macOS:
+
 ```bash
 make install          # crea .venv e instala el paquete con sus extras de desarrollo
 make demo             # pipeline completo offline: 3 capítulos de 4 líneas
 cat out/demo/manuscrito.md
+```
+
+En Windows, con PowerShell y **sin necesidad de instalar GNU make**:
+
+```powershell
+./make.ps1 install
+./make.ps1 demo
+Get-Content out/demo/manuscrito.md
 ```
 
 `make demo` **no toca la red ni necesita ninguna clave de API**: usa el proveedor
@@ -28,8 +38,34 @@ segundos.
 Para comprobar el proyecto entero:
 
 ```bash
-make verify
+make verify           # ./make.ps1 verify en Windows
 ```
+
+### Los dos caminos son el mismo
+
+`Makefile` y `make.ps1` son envoltorios finos sobre `scripts/tasks.py`, que es
+donde vive la definición de cada target. No hay dos listas de pasos que puedan
+separarse: hay una, en Python, y dos formas de invocarla.
+
+| | Linux / macOS | Windows |
+|---|---|---|
+| Invocación | `make <target>` | `./make.ps1 <target>` |
+| Sin envoltorio | `python scripts/tasks.py <target>` | idéntico |
+| Entorno virtual | `.venv/bin/` | `.venv\Scripts\` |
+
+Los targets son los mismos en ambos: `install`, `demo`, `test`, `lint`,
+`typecheck`, `inventory`, `verify` y `clean`. `scripts/tasks.py` resuelve el
+directorio de ejecutables del entorno virtual según la plataforma, así que
+ninguna ruta `bin/` o `Scripts/` aparece escrita a mano.
+
+Si usas `cmd.exe` en lugar de PowerShell, o prefieres no depender de ningún
+envoltorio, llama directamente a `python scripts/tasks.py verify`.
+
+**Nota sobre la versión de Python:** el proyecto exige 3.12 o superior. En
+Windows, `./make.ps1 install` usa el lanzador `py -3.12` si está disponible,
+porque el `python` del PATH puede ser una versión anterior. Para forzar un
+intérprete concreto: `./make.ps1 install -Python C:/ruta/a/python.exe`, o
+`make install PY=python3.12` en Linux y macOS.
 
 ## Cómo funciona
 
@@ -168,6 +204,14 @@ make test        # solo la suite
 make lint        # ruff check y ruff format --check
 make typecheck   # mypy en modo estricto
 make inventory   # comprueba el inventario de entregables de §21
+make clean       # borra out/ (salvo .gitkeep) y las cachés
+```
+
+En Windows, el mismo target con el envoltorio de PowerShell:
+
+```powershell
+./make.ps1 verify
+./make.ps1 lint test      # admite varios targets en una sola llamada
 ```
 
 Los tests **nunca** usan red ni clave de API: el determinismo lo da el `FakeLLM`

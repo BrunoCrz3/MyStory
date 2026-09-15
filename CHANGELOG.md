@@ -7,6 +7,28 @@ proyecto se adhiere a [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [Sin publicar]
 
+### Añadido
+
+- **Soporte de Windows en la construcción.** `scripts/tasks.py`, ejecutor de
+  targets multiplataforma que solo usa la biblioteca estándar, y `make.ps1`,
+  envoltorio de PowerShell para quien no tiene GNU make. Los targets
+  (`install`, `demo`, `test`, `lint`, `typecheck`, `inventory`, `verify`,
+  `clean`) son los mismos en Linux, macOS y Windows. Ver `DECISIONS.md`, D-14.
+
+### Cambiado
+
+- El `Makefile` pasa a ser un envoltorio fino sobre `scripts/tasks.py` y ya no
+  contiene órdenes de shell. Los nombres de los targets y su comportamiento no
+  cambian: `make verify` sigue haciendo exactamente lo mismo en Unix.
+- `inventory.yaml`: total mínimo de 120 a 122 ficheros (meta 11 → 12,
+  scripts 3 → 4).
+
+### Corregido
+
+- La construcción daba por hecho `.venv/bin` y las órdenes `test -f`, `rm -rf`,
+  `find` y `touch`, por lo que `make verify`, `make demo` y `make clean` no
+  funcionaban en Windows.
+
 ## [0.1.0] — 2026-09-15
 
 Primera construcción del harness, según `BUILD_SPEC.md` v1.0.
