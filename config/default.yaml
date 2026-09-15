@@ -1,0 +1,52 @@
+project:
+  language: es
+  seed: 20260915
+
+novel:
+  chapters: 3                      # N — modificable en cualquier momento
+  length:
+    unit: lines                    # lines | words
+    target: 4                      # tamaño objetivo por capítulo
+    tolerance: 0                   # desviación admitida (0 = exacto, en unidad)
+  subgenre: hard_sf
+  tone: contemplativo
+  pov: tercera_limitada
+  tense: pasado
+  structure: tres_actos
+  hardness: plausible
+  forbidden: []
+
+profile: micro                     # micro | full
+
+llm:
+  provider: fake                   # fake | anthropic | openrouter
+  models:
+    architect:  {name: "claude-sonnet-4-6", temperature: 0.95, max_tokens: 4000}
+    outliner:   {name: "claude-sonnet-4-6", temperature: 0.75, max_tokens: 4000}
+    writer:     {name: "claude-sonnet-4-6", temperature: 0.90, max_tokens: 4000}
+    rewriter:   {name: "claude-sonnet-4-6", temperature: 0.80, max_tokens: 4000}
+    stylist:    {name: "claude-sonnet-4-6", temperature: 0.60, max_tokens: 4000}
+    archivist:  {name: "claude-haiku-4-5", temperature: 0.10, max_tokens: 3000}
+    judge:      {name: "claude-haiku-4-5", temperature: 0.20, max_tokens: 2000}
+    reviewer:   {name: "claude-sonnet-4-6", temperature: 0.40, max_tokens: 4000}
+
+  # Solo se usa con provider: openrouter. Ver §24.
+  openrouter:
+    base_url: "https://openrouter.ai/api/v1"
+    app_title: "novela-agent"
+    app_referer: "https://github.com/BrunoCrz3/MyStory"
+    require_parameters: true       # no enrutar a proveedores sin las capacidades pedidas
+    allow_fallbacks: false         # para roles de prosa: consistencia > disponibilidad
+    data_collection: deny
+    provider_order: []             # vacío = enrutado automático
+
+limits:
+  max_rewrite_attempts: 3
+  max_schema_retries: 3
+  max_cost_usd: 5.00
+  context_token_budget: 30000
+
+approval:
+  bible: auto                      # auto | manual
+  outline: auto
+  final: auto

@@ -1,0 +1,22 @@
+# Perfil micro — obras muy cortas (p. ej. 3 capítulos de 4 líneas).
+# Aplicar umbrales de novela larga a capítulos de 4 líneas produce falsos
+# positivos constantes: por eso este perfil desactiva las severidades que
+# necesitan una muestra que aquí no existe. Las métricas se siguen calculando.
+repetition:
+  ngram_size: 3
+  jaccard_blocking: null           # desactivado: muestra insuficiente
+  jaccard_warning: 0.40
+  cosine_scene_blocking: null      # desactivado
+  cosine_scene_warning: 0.92
+  max_trigram_repeats: 2
+  mtld_check: false
+  mtld_drop_max: null
+  opening_type_window: 3           # sí activo: 3 capítulos, 3 aperturas distintas
+  forbid_reused_sentence_openers: true
+continuity:
+  llm_judge: true
+  beat_coverage_min: 0.80
+context:
+  literal_tail_units: 2            # últimas 2 líneas del capítulo anterior
+  mid_summaries: false             # con N=3 no hace falta memoria media
+  rag_top_k: 0                     # RAG desactivado
