@@ -1,0 +1,64 @@
+{
+  "role": "archivist",
+  "chapter": 2,
+  "output_type": "json",
+  "json": {
+    "facts": [
+      {
+        "id": "f_1_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Pasarela Seis",
+        "chapter_established": 1,
+        "status": "revocado",
+        "revoked_by": "f_2_loc",
+        "evidence": "bajó a la Pasarela Seis con la linterna apagada"
+      },
+      {
+        "id": "f_2_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Sala del Oráculo",
+        "chapter_established": 2,
+        "status": "vigente",
+        "revoked_by": null,
+        "evidence": "Consulta el Oráculo, Nadia, y no discutas la orden"
+      },
+      {
+        "id": "f_2_cargas",
+        "subject": "chr_2",
+        "predicate": "sabe",
+        "value": "que ha gastado dos cargas sin justificarlas en el parte",
+        "evidence": "el supervisor ya había gastado dos esa misma semana",
+        "chapter_established": 2,
+        "status": "vigente",
+        "revoked_by": null
+      }
+    ],
+    "threads": [],
+    "summary": {
+      "number": 2,
+      "one_line": "Teo obliga a gastar la última carga y la estación queda ciega noventa minutos.",
+      "paragraph": "Teo Marchetti ordena una consulta que agota la reserva de helio-3. Nadia obedece y la estación pierde toda anticipación durante hora y media. En esa ventana alguien recorre el pasillo hacia la esclusa con la seguridad de quien conoce los horarios.",
+      "by_scene": [
+        "Teo ordena a Nadia consultar el Oráculo y gastar la reserva de helio-3.",
+        "La estación queda ciega hora y media y alguien camina hacia la esclusa."
+      ]
+    },
+    "style_artifacts": [
+      {
+        "id": "sty_2_a",
+        "kind": "imagen",
+        "text": "la estación ciega durante hora y media",
+        "chapter": 2
+      },
+      {
+        "id": "sty_2_b",
+        "kind": "apertura",
+        "text": "dialogo con orden directa del supervisor",
+        "chapter": 2
+      }
+    ],
+    "new_entities": []
+  }
+}

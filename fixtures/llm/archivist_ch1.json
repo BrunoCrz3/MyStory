@@ -1,0 +1,69 @@
+{
+  "role": "archivist",
+  "chapter": 1,
+  "output_type": "json",
+  "json": {
+    "facts": [
+      {
+        "id": "f_1_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Pasarela Seis",
+        "chapter_established": 1,
+        "status": "vigente",
+        "revoked_by": null,
+        "evidence": "bajó a la Pasarela Seis con la linterna apagada"
+      },
+      {
+        "id": "f_1_guante",
+        "subject": "chr_1",
+        "predicate": "posee",
+        "value": "un guante izquierdo con microfuga registrada",
+        "evidence": "revisó el sello del guante izquierdo y anotó la microfuga",
+        "chapter_established": 1,
+        "status": "vigente",
+        "revoked_by": null
+      }
+    ],
+    "threads": [
+      {
+        "id": "th_1",
+        "question": "¿Quién usaba las ventanas de ceguera del Oráculo y para qué?",
+        "opened_chapter": 1,
+        "planned_close_chapter": 3,
+        "status": "abierto",
+        "closed_chapter": null,
+        "importance": "principal"
+      }
+    ],
+    "summary": {
+      "number": 1,
+      "one_line": "El Oráculo anticipa un cadáver en la Pasarela Seis y Nadia se niega a firmar el parte.",
+      "paragraph": "Durante una inspección rutinaria de la Pasarela Seis, Nadia Ferrán registra una microfuga en su guante izquierdo. La proyección del Oráculo le devuelve la misma rejilla con un cuerpo que todavía no existe. Deja el parte sin firmar y baja a comprobarlo por su cuenta.",
+      "by_scene": [
+        "Nadia revisa el sello del guante y anota la microfuga en el parte del turno.",
+        "El Oráculo proyecta una rejilla vacía con un cuerpo que todavía no existía."
+      ]
+    },
+    "style_artifacts": [
+      {
+        "id": "sty_1_a",
+        "kind": "metafora",
+        "text": "como un hueso que se acomoda",
+        "chapter": 1
+      },
+      {
+        "id": "sty_1_b",
+        "kind": "apertura",
+        "text": "descripcion del entorno helado",
+        "chapter": 1
+      }
+    ],
+    "new_entities": [
+      "Nadia Ferrán",
+      "Teo Marchetti",
+      "Pasarela Seis",
+      "Sala del Oráculo"
+    ]
+  }
+}

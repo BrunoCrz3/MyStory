@@ -1,0 +1,84 @@
+{
+  "role": "archivist",
+  "chapter": 3,
+  "output_type": "json",
+  "json": {
+    "facts": [
+      {
+        "id": "f_1_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Pasarela Seis",
+        "chapter_established": 1,
+        "status": "revocado",
+        "revoked_by": "f_2_loc",
+        "evidence": "bajó a la Pasarela Seis con la linterna apagada"
+      },
+      {
+        "id": "f_2_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Sala del Oráculo",
+        "chapter_established": 2,
+        "status": "revocado",
+        "revoked_by": "f_3_loc",
+        "evidence": "Consulta el Oráculo, Nadia, y no discutas la orden"
+      },
+      {
+        "id": "f_3_loc",
+        "subject": "chr_1",
+        "predicate": "ubicacion",
+        "value": "Sala del Oráculo",
+        "chapter_established": 3,
+        "status": "vigente",
+        "revoked_by": null,
+        "evidence": "Arrancó el panel del mamparo con las dos manos"
+      },
+      {
+        "id": "f_3_registro",
+        "subject": "chr_1",
+        "predicate": "posee",
+        "value": "el registro de consultas no solicitadas de la campaña anterior",
+        "evidence": "guardó el registro en el bolsillo del traje",
+        "chapter_established": 3,
+        "status": "vigente",
+        "revoked_by": null
+      }
+    ],
+    "threads": [
+      {
+        "id": "th_1",
+        "question": "¿Quién usaba las ventanas de ceguera del Oráculo y para qué?",
+        "opened_chapter": 1,
+        "planned_close_chapter": 3,
+        "status": "cerrado",
+        "closed_chapter": 3,
+        "importance": "principal"
+      }
+    ],
+    "summary": {
+      "number": 3,
+      "one_line": "El mamparo guarda el registro de consultas y Teo confiesa el motivo económico.",
+      "paragraph": "Nadia arranca el panel del mamparo y encuentra un registro de consultas que nadie había solicitado, fechado en la campaña de las dos muertes. Teo no lo niega: enumera la cuota, los plazos y el precio de perder la concesión. Nadia se queda la prueba y firma por fin el parte del primer turno.",
+      "by_scene": [
+        "Nadia arranca el panel del mamparo y encuentra un registro de consultas no solicitado.",
+        "Teo enumera la cuota, los plazos y el precio de una concesión perdida."
+      ]
+    },
+    "style_artifacts": [
+      {
+        "id": "sty_3_a",
+        "kind": "imagen",
+        "text": "un mamparo arrancado con las dos manos",
+        "chapter": 3
+      },
+      {
+        "id": "sty_3_b",
+        "kind": "apertura",
+        "text": "accion fisica en primera posicion",
+        "chapter": 3
+      }
+    ],
+    "new_entities": []
+  }
+}
