@@ -1,0 +1,77 @@
+{
+  "role": "architect",
+  "output_type": "json",
+  "json": {
+    "logline": "En una estación minera de Encélado, una ingeniera descubre que el oráculo capaz de anticipar accidentes lleva meses sirviendo para provocarlos.",
+    "theme": "Conocer el futuro no es lo mismo que tener permiso para cambiarlo.",
+    "characters": [
+      {
+        "id": "chr_1",
+        "name": "Nadia Ferrán",
+        "role": "ingeniera de sistemas de la estación",
+        "want": "terminar la campaña de extracción sin una sola baja",
+        "need": "dejar de obedecer protocolos cuyo motivo nadie le explica",
+        "fear": "firmar con su nombre un parte que esconda una muerte",
+        "flaw": "confía antes en la lectura de un sensor que en la voz de una persona",
+        "voice": "frases cortas, léxico técnico, ironía seca cuando está asustada",
+        "arc_start": "cumple el protocolo y anota las anomalías sin discutirlas",
+        "arc_mid": "obedece una orden que la deja a ciegas y entiende el precio",
+        "arc_end": "documenta la verdad y firma el parte con su nombre"
+      },
+      {
+        "id": "chr_2",
+        "name": "Teo Marchetti",
+        "role": "supervisor de la concesión minera",
+        "want": "sostener la cuota trimestral que renueva la concesión",
+        "need": "reconocer que convirtió una herramienta de seguridad en un calendario",
+        "fear": "perder la concesión y con ella la única vida que sabe llevar",
+        "flaw": "transforma cualquier duda ajena en una orden directa",
+        "voice": "imperativos breves, cortesía fría, nunca levanta la voz",
+        "arc_start": "administra las consultas del oráculo como un recurso más",
+        "arc_mid": "gasta cargas sin justificar y presiona para que nadie mire el registro",
+        "arc_end": "explica sus cuentas sin negar nada y acepta quedar por escrito"
+      }
+    ],
+    "locations": [
+      {
+        "id": "loc_1",
+        "name": "Pasarela Seis",
+        "description": "Pasillo exterior de rejilla sobre la grieta de extracción, con presión marginal y dos sellos de emergencia que nunca se han probado."
+      },
+      {
+        "id": "loc_2",
+        "name": "Sala del Oráculo",
+        "description": "Cámara blindada donde la red de sensores cuánticos proyecta el interior de la estación sobre una placa de niebla luminosa."
+      }
+    ],
+    "speculative_premise": {
+      "concept": "El Oráculo es una red de sensores cuánticos que proyecta el estado interior de la estación noventa segundos por delante del presente.",
+      "rules": [
+        "Proyecta únicamente lo que ocurre dentro del casco presurizado.",
+        "Cada consulta agota una carga de helio-3 que tarda noventa minutos en reponerse.",
+        "La proyección es muda: da imagen, nunca sonido ni intención."
+      ],
+      "limits": [
+        "Ninguna proyección alcanza un horizonte superior al minuto y medio.",
+        "El sistema jamás muestra lo que sucede fuera del casco presurizado.",
+        "Una decisión todavía no tomada resulta invisible para el aparato."
+      ],
+      "cost": "Cada consulta deja al Oráculo inerte durante noventa minutos, y a la estación sin ningún aviso anticipado mientras dura esa ceguera."
+    },
+    "timeline_before": [
+      "El Oráculo se instaló catorce meses antes del primer capítulo.",
+      "Dos mineros murieron en la Pasarela Seis durante la campaña anterior.",
+      "La concesión se renueva por cuota trimestral desde hace seis años."
+    ],
+    "glossary": {
+      "Oráculo": "Red de sensores cuánticos de anticipación instalada en la cámara blindada.",
+      "carga": "Unidad de helio-3 que consume una consulta completa del Oráculo.",
+      "parte": "Registro firmado de incidencias de un turno de extracción."
+    },
+    "motifs": [
+      "el hielo que cruje bajo la rejilla",
+      "los guantes y sus sellos",
+      "partes firmados y partes en blanco"
+    ]
+  }
+}

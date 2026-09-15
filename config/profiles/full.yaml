@@ -1,0 +1,21 @@
+# Perfil full — novelas reales (p. ej. 24 capítulos de 2500 palabras).
+# Los valores son un punto de partida razonable, no valores medidos:
+# calíbralos con las `metrics` que cada ValidationReport deja en out/<pid>/reports/.
+repetition:
+  ngram_size: 4
+  jaccard_blocking: 0.15
+  jaccard_warning: 0.10
+  cosine_scene_blocking: 0.85
+  cosine_scene_warning: 0.78
+  max_trigram_repeats: 3
+  mtld_check: true
+  mtld_drop_max: 0.15
+  opening_type_window: 3
+  forbid_reused_sentence_openers: true
+continuity:
+  llm_judge: true
+  beat_coverage_min: 0.90
+context:
+  literal_tail_units: 600          # últimas 600 palabras
+  mid_summaries: true
+  rag_top_k: 5

@@ -1,0 +1,58 @@
+name: Calibración de umbrales
+description: Ajuste de un umbral de repetición o continuidad con datos observados
+labels: ["calibracion"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Las incidencias de calidad narrativa se argumentan con las `metrics` del
+        `ValidationReport`, no con impresiones subjetivas.
+
+  - type: input
+    id: metric
+    attributes:
+      label: Métrica
+      placeholder: rep.jaccard_max
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Perfil
+      options: [micro, full]
+    validations:
+      required: true
+
+  - type: input
+    id: current
+    attributes:
+      label: Umbral actual
+      placeholder: "jaccard_blocking: 0.15"
+    validations:
+      required: true
+
+  - type: textarea
+    id: observed
+    attributes:
+      label: Valores observados
+      description: Pega las `metrics` de los `ValidationReport` de `out/<pid>/reports/`.
+      render: json
+    validations:
+      required: true
+
+  - type: input
+    id: sample
+    attributes:
+      label: Tamaño de muestra
+      description: Número de capítulos y unidad de longitud. Muestras pequeñas no calibran nada.
+      placeholder: "24 capítulos de 2500 palabras"
+    validations:
+      required: true
+
+  - type: input
+    id: proposal
+    attributes:
+      label: Umbral propuesto
+    validations:
+      required: true

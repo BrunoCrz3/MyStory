@@ -1,0 +1,41 @@
+# ─────────────────────────────────────────────────────────────
+# novela.yaml — configuración de usuario
+# Todo lo que no esté aquí se hereda de config/default.yaml
+# Los cambios se aplican en la siguiente ejecución. No hace falta reinstalar.
+# Valida los cambios con:  novela config validate
+# ─────────────────────────────────────────────────────────────
+
+novel:
+  # Número de capítulos de la novela. Entero entre 3 y 60.
+  # Cambiarlo antes de aprobar la escaleta la regenera; después de aprobarla el
+  # sistema avisa y exige `novela outline <pid> --regenerate`, nunca trunca.
+  chapters: 3
+
+  length:
+    # Unidad de medida del capítulo: "lines" (pruebas) o "words" (producción).
+    # Cambiarla con capítulos ya escritos los marca `stale`; `novela status` los lista.
+    unit: lines
+    # Tamaño objetivo por capítulo, en la unidad de arriba. Entero mayor que 0.
+    # Con unit: lines y target < 3 el capítulo no sostiene estructura dramática.
+    target: 4
+    # Desviación admitida, en la misma unidad. 0 = longitud exacta.
+    # Con unit: words, 0 es prácticamente inalcanzable: usa 300-500.
+    tolerance: 0
+
+# Perfil de umbrales de calidad: "micro" para capítulos muy cortos,
+# "full" para novela real. Ver config/profiles/.
+# Con unit: words y profile: micro los umbrales están desactivados y la
+# detección de repetición no protegerá la obra.
+profile: micro
+
+llm:
+  # "fake" no consume red ni dinero y es el único que usan los tests.
+  # "anthropic" usa ANTHROPIC_API_KEY del entorno.
+  # "openrouter" usa OPENROUTER_API_KEY y permite mezclar familias por rol (§24).
+  provider: fake
+
+limits:
+  # Corte de seguridad de gasto por proyecto, en dólares.
+  # Se comprueba ANTES de cada llamada: al superarlo el proyecto pasa a PAUSED
+  # sin perder el trabajo hecho.
+  max_cost_usd: 5.00

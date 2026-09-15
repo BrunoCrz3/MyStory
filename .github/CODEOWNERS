@@ -1,0 +1,7 @@
+# Responsables por defecto de todo el repositorio.
+*                       @BrunoCrz3
+
+# Areas con criterio especifico.
+/src/novela/validators/ @BrunoCrz3
+/prompts/               @BrunoCrz3
+/config/                @BrunoCrz3

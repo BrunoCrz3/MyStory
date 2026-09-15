@@ -1,0 +1,50 @@
+name: Bug
+description: Un fallo reproducible del harness
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        No pegues nunca claves de API. `trace.jsonl` no las contiene; si crees que sí, es otro bug.
+
+  - type: input
+    id: command
+    attributes:
+      label: Comando exacto
+      description: La invocación completa de la CLI que falla.
+      placeholder: novela write demo --from 2
+    validations:
+      required: true
+
+  - type: dropdown
+    id: profile
+    attributes:
+      label: Perfil activo
+      options: [micro, full, otro]
+    validations:
+      required: true
+
+  - type: input
+    id: issue_code
+    attributes:
+      label: Código de incidencia
+      description: "El identificador exacto, por ejemplo CONT-DEAD-ACTS o REP-NGRAM."
+      placeholder: CONT-DEAD-ACTS
+    validations:
+      required: false
+
+  - type: textarea
+    id: trace
+    attributes:
+      label: Extracto de trace.jsonl
+      description: Las líneas relevantes de `out/<pid>/trace.jsonl`.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas y qué ocurrió
+    validations:
+      required: true

@@ -1,0 +1,19 @@
+{
+  "role": "reviewer",
+  "output_type": "json",
+  "json": {
+    "novel_title": "Noventa segundos de ceguera",
+    "synopsis": "Una ingeniera de Encélado descubre que el oráculo instalado para prever accidentes se ha convertido en el calendario de quien los provoca, y decide firmar por fin el parte que nadie quería en el registro.",
+    "chapter_titles": {
+      "1": "Parte en blanco",
+      "2": "La última carga",
+      "3": "El registro"
+    },
+    "corrections": [],
+    "pacing_notes": [
+      "El capítulo 1 sostiene la tensión con una sola anomalía concreta y no adelanta la causa.",
+      "El capítulo 2 gasta el recurso escaso y convierte la ceguera en una ventana de oportunidad.",
+      "El capítulo 3 cierra el hilo con una prueba material, no con una explicación."
+    ]
+  }
+}

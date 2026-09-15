@@ -1,0 +1,27 @@
+# configuracion local del usuario
+novela.yaml
+.env
+
+# salidas de ejecucion
+out/*
+!out/.gitkeep
+
+# bases de datos y trazas
+*.db
+*.db-journal
+trace.jsonl
+
+# entornos y cachés
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/

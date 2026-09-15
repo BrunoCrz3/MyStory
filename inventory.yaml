@@ -1,0 +1,167 @@
+# Inventario de entregables — BUILD_SPEC.md §21.
+#
+# Contrato de entrega: nada se da por hecho hasta que todos estos ficheros
+# existen, no están vacíos y cumplen su criterio de aceptación.
+#
+# Lo verifica `scripts/check_inventory.py`, que forma parte de `make verify`.
+#
+# Notas de recuento (ver DECISIONS.md, D-10):
+#   - El grupo `src` declara los 43 ficheros que enumera la tabla de §21.7.
+#   - El grupo `env` recoge `.env.example`, exigido por §4 y §22.2 pero sin
+#     grupo propio en §21.
+version: 1
+total: 120
+groups:
+- name: meta
+  expected: 11
+  files:
+  - README.md
+  - BUILD_SPEC.md
+  - DECISIONS.md
+  - CONTRIBUTING.md
+  - CHANGELOG.md
+  - LICENSE
+  - Makefile
+  - pyproject.toml
+  - inventory.yaml
+  - .gitignore
+  - CLAUDE.md
+- name: env
+  expected: 1
+  files:
+  - .env.example
+- name: github
+  expected: 7
+  files:
+  - .github/workflows/ci.yml
+  - .github/workflows/nightly-real.yml
+  - .github/ISSUE_TEMPLATE/bug.yml
+  - .github/ISSUE_TEMPLATE/feature.yml
+  - .github/ISSUE_TEMPLATE/calibration.yml
+  - .github/pull_request_template.md
+  - .github/CODEOWNERS
+- name: harness
+  expected: 16
+  files:
+  - .claude/settings.json
+  - .claude/agents/spec-auditor.md
+  - .claude/agents/fixture-smith.md
+  - .claude/agents/validator-engineer.md
+  - .claude/agents/prompt-smith.md
+  - .claude/agents/threshold-calibrator.md
+  - .claude/agents/continuity-detective.md
+  - .claude/commands/verify.md
+  - .claude/commands/spec-check.md
+  - .claude/commands/calibrate.md
+  - .claude/commands/chapter-debug.md
+  - .claude/commands/fixtures-check.md
+  - .claude/hooks/block-secrets.sh
+  - .claude/hooks/format-python.sh
+  - .claude/hooks/validate-config.sh
+  - .claude/hooks/session-start.sh
+- name: config
+  expected: 4
+  files:
+  - config/default.yaml
+  - config/profiles/micro.yaml
+  - config/profiles/full.yaml
+  - novela.example.yaml
+- name: prompts
+  expected: 10
+  files:
+  - prompts/_base.md
+  - prompts/architect.md
+  - prompts/outliner.md
+  - prompts/writer.md
+  - prompts/rewriter.md
+  - prompts/patcher.md
+  - prompts/stylist.md
+  - prompts/archivist.md
+  - prompts/judge.md
+  - prompts/reviewer.md
+- name: fixtures
+  expected: 10
+  files:
+  - fixtures/llm/architect.json
+  - fixtures/llm/outliner.json
+  - fixtures/llm/writer_ch1.json
+  - fixtures/llm/writer_ch2.json
+  - fixtures/llm/writer_ch3.json
+  - fixtures/llm/archivist_ch1.json
+  - fixtures/llm/archivist_ch2.json
+  - fixtures/llm/archivist_ch3.json
+  - fixtures/llm/judge_clean.json
+  - fixtures/llm/reviewer.json
+- name: src
+  expected: 43
+  files:
+  - src/novela/__init__.py
+  - src/novela/__main__.py
+  - src/novela/cli.py
+  - src/novela/config.py
+  - src/novela/models.py
+  - src/novela/store.py
+  - src/novela/errors.py
+  - src/novela/llm/__init__.py
+  - src/novela/llm/base.py
+  - src/novela/llm/anthropic_client.py
+  - src/novela/llm/openrouter_client.py
+  - src/novela/llm/capabilities.py
+  - src/novela/llm/fake.py
+  - src/novela/llm/router.py
+  - src/novela/context/__init__.py
+  - src/novela/context/builder.py
+  - src/novela/context/summarizer.py
+  - src/novela/context/retrieval.py
+  - src/novela/agents/__init__.py
+  - src/novela/agents/base.py
+  - src/novela/agents/architect.py
+  - src/novela/agents/outliner.py
+  - src/novela/agents/writer.py
+  - src/novela/agents/stylist.py
+  - src/novela/agents/archivist.py
+  - src/novela/agents/reviewer.py
+  - src/novela/validators/__init__.py
+  - src/novela/validators/base.py
+  - src/novela/validators/length.py
+  - src/novela/validators/bible.py
+  - src/novela/validators/outline.py
+  - src/novela/validators/repetition.py
+  - src/novela/validators/continuity.py
+  - src/novela/orchestrator/__init__.py
+  - src/novela/orchestrator/states.py
+  - src/novela/orchestrator/chapter_loop.py
+  - src/novela/orchestrator/pipeline.py
+  - src/novela/export/__init__.py
+  - src/novela/export/assembler.py
+  - src/novela/export/pdf.py
+  - src/novela/observability/__init__.py
+  - src/novela/observability/trace.py
+  - src/novela/observability/cost.py
+- name: tests
+  expected: 10
+  files:
+  - tests/test_config.py
+  - tests/test_models.py
+  - tests/test_length.py
+  - tests/test_repetition.py
+  - tests/test_continuity.py
+  - tests/test_context_builder.py
+  - tests/test_chapter_loop.py
+  - tests/test_pipeline_e2e.py
+  - tests/test_reconfigure.py
+  - tests/test_openrouter.py
+- name: skills
+  expected: 5
+  files:
+  - .claude/skills/narrative-canon/SKILL.md
+  - .claude/skills/continuity-audit/SKILL.md
+  - .claude/skills/anti-repetition/SKILL.md
+  - .claude/skills/sf-prose/SKILL.md
+  - .claude/skills/manuscript-export/SKILL.md
+- name: scripts
+  expected: 3
+  files:
+  - scripts/check_inventory.py
+  - scripts/make_fixtures.py
+  - scripts/assert_demo_output.py

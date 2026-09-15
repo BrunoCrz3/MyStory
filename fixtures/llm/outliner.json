@@ -1,0 +1,134 @@
+{
+  "role": "outliner",
+  "output_type": "json",
+  "json": {
+    "chapters": [
+      {
+        "number": 1,
+        "working_title": "Parte en blanco",
+        "pov_character_id": "chr_1",
+        "location_ids": [
+          "loc_1"
+        ],
+        "story_time_start": "turno 412, hora 06:00",
+        "story_time_end": "turno 412, hora 09:20",
+        "dramatic_function": "detonante",
+        "goal": "cerrar el turno de inspección sin incidencias",
+        "conflict": "la proyección muestra una víctima que todavía no existe",
+        "outcome": "Nadia deja el parte sin firmar y baja a comprobarlo",
+        "scenes": [
+          {
+            "id": "sc_1_1",
+            "beats": [
+              "Nadia revisa el sello del guante y anota la microfuga en el parte del turno.",
+              "El Oráculo proyecta una rejilla vacía con un cuerpo que todavía no existía."
+            ],
+            "new_information": [
+              "El Oráculo puede proyectar una muerte que aún no ha ocurrido.",
+              "El guante de Nadia tiene una microfuga registrada por escrito."
+            ]
+          }
+        ],
+        "threads_opened": [
+          "th_1"
+        ],
+        "threads_advanced": [],
+        "threads_closed": [],
+        "world_state_delta": [
+          "El Oráculo puede proyectar una muerte que aún no ha ocurrido.",
+          "El guante de Nadia tiene una microfuga registrada por escrito."
+        ],
+        "hook": "el cuerpo proyectado llevaba su mismo modelo de guante",
+        "target_length": {
+          "unit": "lines",
+          "target": 4,
+          "tolerance": 0
+        }
+      },
+      {
+        "number": 2,
+        "working_title": "La última carga",
+        "pov_character_id": "chr_1",
+        "location_ids": [
+          "loc_2"
+        ],
+        "story_time_start": "turno 413, hora 05:40",
+        "story_time_end": "turno 413, hora 08:10",
+        "dramatic_function": "complicacion",
+        "goal": "conservar una carga de reserva para el descenso",
+        "conflict": "Teo ordena gastarla en una consulta que nadie ha justificado",
+        "outcome": "la estación queda sin anticipación durante noventa minutos",
+        "scenes": [
+          {
+            "id": "sc_2_1",
+            "beats": [
+              "Teo ordena a Nadia consultar el Oráculo y gastar la reserva de helio-3.",
+              "La estación queda ciega hora y media y alguien camina hacia la esclusa."
+            ],
+            "new_information": [
+              "Teo ha gastado dos cargas sin dejar justificación en el parte.",
+              "Alguien se mueve por la estación justamente durante las ventanas de ceguera."
+            ]
+          }
+        ],
+        "threads_opened": [],
+        "threads_advanced": [
+          "th_1"
+        ],
+        "threads_closed": [],
+        "world_state_delta": [
+          "Teo ha gastado dos cargas sin dejar justificación en el parte.",
+          "Alguien se mueve por la estación justamente durante las ventanas de ceguera."
+        ],
+        "hook": "unos pasos conocían de memoria el horario de la ceguera",
+        "target_length": {
+          "unit": "lines",
+          "target": 4,
+          "tolerance": 0
+        }
+      },
+      {
+        "number": 3,
+        "working_title": "El registro",
+        "pov_character_id": "chr_1",
+        "location_ids": [
+          "loc_2"
+        ],
+        "story_time_start": "turno 414, hora 04:00",
+        "story_time_end": "turno 414, hora 07:30",
+        "dramatic_function": "climax_y_resolucion",
+        "goal": "abrir el mamparo antes de que el supervisor lo impida",
+        "conflict": "lo que guarda el mamparo compromete la concesión entera",
+        "outcome": "Nadia se queda el registro y firma el parte pendiente",
+        "scenes": [
+          {
+            "id": "sc_3_1",
+            "beats": [
+              "Nadia arranca el panel del mamparo y encuentra un registro de consultas no solicitado.",
+              "Teo enumera la cuota, los plazos y el precio de una concesión perdida."
+            ],
+            "new_information": [
+              "Existe un registro fechado de consultas durante la campaña de las dos muertes.",
+              "Teo reconoce el móvil económico sin negar los hechos."
+            ]
+          }
+        ],
+        "threads_opened": [],
+        "threads_advanced": [],
+        "threads_closed": [
+          "th_1"
+        ],
+        "world_state_delta": [
+          "Existe un registro fechado de consultas durante la campaña de las dos muertes.",
+          "Teo reconoce el móvil económico sin negar los hechos."
+        ],
+        "hook": "una firma bastaba para convertir el silencio en prueba",
+        "target_length": {
+          "unit": "lines",
+          "target": 4,
+          "tolerance": 0
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+name: Feature
+description: Una capacidad nueva del harness
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Fase del pipeline afectada
+      options:
+        - "Fase 0 — proyecto y configuración"
+        - "Fase 1 — canon / biblia"
+        - "Fase 2 — escaleta"
+        - "Fase 3 — redacción de capítulos"
+        - "Fase 4 — revisión global"
+        - "Fase 5 — exportación"
+        - "Transversal — LLM, observabilidad, CLI"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qué problema resuelve
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Propuesta
+      description: Indica si toca contratos de datos (§5), validadores (§9) o configuración (§3).
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Restricciones respetadas
+      options:
+        - label: No introduce dependencias fuera de la lista cerrada de §2.2
+        - label: No requiere red ni clave de API en los tests
+        - label: No añade números mágicos de capítulos o longitud al código

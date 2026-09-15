@@ -1,0 +1,7 @@
+{
+  "role": "judge",
+  "output_type": "json",
+  "json": {
+    "issues": []
+  }
+}

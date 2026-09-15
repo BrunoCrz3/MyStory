@@ -1,0 +1,60 @@
+name: nightly-real
+
+# Validacion deliberada con modelo real. Nunca se dispara en push ni en PR:
+# la CI de cada commit debe ser gratuita, offline y determinista.
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Proveedor LLM real a usar"
+        required: true
+        default: anthropic
+        type: choice
+        options: [anthropic, openrouter]
+      max_cost_usd:
+        description: "Tope de gasto para esta ejecucion, en dolares"
+        required: true
+        default: "1.00"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  real:
+    # Nunca en PRs de forks: el repositorio debe ser el propietario del secreto.
+    if: github.repository == github.event.repository.full_name
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      NOVELA__LLM__PROVIDER: ${{ inputs.provider }}
+      NOVELA__LIMITS__MAX_COST_USD: ${{ inputs.max_cost_usd }}
+      NOVELA__PROFILE: micro
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Run micro novel with a real provider
+        run: |
+          python -m novela init "Una sonda a la deriva descubre que su tripulacion nunca existio." --project-id nightly
+          python -m novela run nightly --auto
+
+      - name: Cost report
+        run: python -m novela cost nightly
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manuscrito-nightly
+          path: |
+            out/nightly/manuscrito.md
+            out/nightly/cost.json
+            out/nightly/trace.jsonl
