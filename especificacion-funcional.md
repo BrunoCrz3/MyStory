@@ -54,8 +54,7 @@ El modo se fija al inicio y puede cambiarse en cualquier checkpoint.
 
 ### 4.1 Modo autónomo (end-to-end)
 
-El agente recorre las seis fases y entrega el manuscrito completo sin pedir nada por el
-camino.
+El agente recorre las seis fases y entrega el manuscrito completo.
 
 **Entrada mínima:** nada. Con una invocación sin argumentos el agente genera premisa
 propia. Opcionalmente: semilla temática, extensión objetivo, tono, muestra de estilo y
