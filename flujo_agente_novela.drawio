@@ -1,0 +1,377 @@
+<mxfile host="app.diagrams.net" agent="Claude">
+  <diagram id="flujo-agente-novela" name="Flujo del agente generador de novelas">
+    <mxGraphModel dx="3700" dy="1140" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="3300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="bg0" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#666666;opacity=60;" value="FASE 0 · ENTRADA DEL AUTOR" vertex="1">
+          <mxGeometry height="180" width="1140" x="20" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="bg1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#666666;opacity=60;" value="FASE 1 · CONSTRUCCIÓN DEL CANON (Agente Arquitecto)" vertex="1">
+          <mxGeometry height="400" width="1140" x="20" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="bg2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#666666;opacity=60;" value="FASE 2 · PLANIFICACIÓN ESTRUCTURAL (Agente Escaletista)" vertex="1">
+          <mxGeometry height="420" width="1140" x="20" y="690" as="geometry" />
+        </mxCell>
+        <mxCell id="bg3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#6C8EBF;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#3B6EA5;opacity=60;" value="FASE 3 · BUCLE DE REDACCIÓN POR CAPÍTULO  ( i = 1 … N )   —   ESTRICTAMENTE SECUENCIAL" vertex="1">
+          <mxGeometry height="1300" width="1140" x="20" y="1130" as="geometry" />
+        </mxCell>
+        <mxCell id="bg4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F5F5;strokeColor=#B3B3B3;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#666666;opacity=60;" value="FASE 4 · REVISIÓN GLOBAL" vertex="1">
+          <mxGeometry height="340" width="1140" x="20" y="2450" as="geometry" />
+        </mxCell>
+        <mxCell id="bg5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F0FFF0;strokeColor=#82B366;dashed=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=6;fontSize=15;fontStyle=1;fontColor=#4F7942;opacity=60;" value="FASE 5 · ENSAMBLADO Y ENTREGA DEL MANUSCRITO" vertex="1">
+          <mxGeometry height="370" width="1140" x="20" y="2810" as="geometry" />
+        </mxCell>
+        <mxCell id="titulo" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=22;fontStyle=1;fontColor=#1A1A1A;" value="Agente generador de novelas de ciencia ficción · Flujo de proceso con entradas y salidas por agente" vertex="1">
+          <mxGeometry height="40" width="1140" x="20" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="leyenda" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#999999;fontSize=12;" value="&lt;b&gt;LEYENDA&lt;/b&gt;&lt;br&gt;&lt;br&gt;■ Azul — Agente LLM&lt;br&gt;■ Verde — Proceso determinista (código)&lt;br&gt;■ Naranja — Validador / control de calidad&lt;br&gt;■ Amarillo — Decisión o punto de control del autor&lt;br&gt;■ Morado — Estado persistido&lt;br&gt;■ Gris claro (izq.) — ENTRADAS del agente&lt;br&gt;■ Verde claro (der.) — SALIDAS del agente&lt;br&gt;&lt;br&gt;— — —  flujo de datos (lectura / escritura)" vertex="1">
+          <mxGeometry height="210" width="300" x="1200" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="estado" parent="1" style="swimlane;html=1;startSize=54;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=13;fontStyle=1;fontColor=#4B286D;verticalAlign=top;align=center;" value="CAPA DE ESTADO PERSISTIDO&#xa;(fuente de verdad · no la memoria del modelo)" vertex="1">
+          <mxGeometry height="540" width="300" x="1200" y="1160" as="geometry" />
+        </mxCell>
+        <mxCell id="ds1" parent="estado" style="shape=cylinder3;boundedLbl=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=12;size=10;" value="PostgreSQL / JSONB&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;StoryBible · Outline · ChapterVersion&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="250" x="25" y="70" as="geometry" />
+        </mxCell>
+        <mxCell id="ds2" parent="estado" style="shape=cylinder3;boundedLbl=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=12;size=10;" value="Libro mayor de continuidad&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;CanonFact vigentes · OpenThread · cronología · inventario&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="250" x="25" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="ds3" parent="estado" style="shape=cylinder3;boundedLbl=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=12;size=10;" value="pgvector&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;embeddings de escenas, párrafos e imágenes literarias&lt;/font&gt;" vertex="1">
+          <mxGeometry height="95" width="250" x="25" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="ds4" parent="estado" style="shape=cylinder3;boundedLbl=1;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#9673A6;fontSize=12;size=10;" value="StyleArtifact&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;frases, metáforas, aperturas y patrones YA USADOS → restricciones negativas&lt;/font&gt;" vertex="1">
+          <mxGeometry height="105" width="250" x="25" y="415" as="geometry" />
+        </mxCell>
+        <mxCell id="estado_nota" parent="1" style="text;html=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#666666;" value="Leída por el Constructor de Contexto y&lt;br&gt;por los dos validadores. Escrita únicamente&lt;br&gt;por el Archivista (transacción por capítulo)." vertex="1">
+          <mxGeometry height="50" width="300" x="1200" y="1710" as="geometry" />
+        </mxCell>
+        <mxCell id="n1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#333333;fontSize=13;fontStyle=1;" value="INICIO&#xa;El autor crea el proyecto" vertex="1">
+          <mxGeometry height="50" width="240" x="450" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="n2" parent="1" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;size=20;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="&lt;b&gt;ENTRADA DEL AUTOR&lt;/b&gt;&lt;br&gt;Premisa (50–2.000 car.)  ·  N capítulos (3–60)&lt;br&gt;Subgénero · tono · POV · tiempo verbal · dureza científica&lt;br&gt;longitud objetivo · estructura · contenido vedado · semilla" vertex="1">
+          <mxGeometry height="60" width="380" x="380" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="in1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;" value="&lt;b&gt;IN&lt;/b&gt;&lt;br&gt;• Premisa en texto libre&lt;br&gt;• Parámetros creativos&lt;br&gt;• Políticas de contenido&lt;br&gt;• Lista de elementos vedados" vertex="1">
+          <mxGeometry height="100" width="290" x="50" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE ARQUITECTO&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;LLM · T = 0,95 · salida JSON forzada&lt;br&gt;Inventa el mundo, no escribe prosa&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="340" x="400" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="out1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · StoryBible.json&lt;/b&gt;&lt;br&gt;• Logline y tema&lt;br&gt;• 3–8 personajes (deseo, miedo, defecto, voz, arco)&lt;br&gt;• Escenario, política, economía&lt;br&gt;• Premisa especulativa: &lt;b&gt;reglas, límites y coste&lt;/b&gt;&lt;br&gt;• Cronología previa al cap. 1 · glosario · motivos" vertex="1">
+          <mxGeometry height="120" width="340" x="800" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="v1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=13;" value="&lt;b&gt;VALIDADOR DE BIBLIA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Contradicciones internas · tecnología sin límites que anula el conflicto · personajes con el mismo rol dramático&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="d1" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="&lt;b&gt;PUNTO DE CONTROL&lt;/b&gt;&lt;br&gt;¿El autor aprueba&lt;br&gt;la biblia narrativa?" vertex="1">
+          <mxGeometry height="100" width="280" x="430" y="550" as="geometry" />
+        </mxCell>
+        <mxCell id="in2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;" value="&lt;b&gt;IN&lt;/b&gt;&lt;br&gt;• StoryBible aprobada (canon)&lt;br&gt;• N capítulos&lt;br&gt;• Estructura elegida&lt;br&gt;• Longitud objetivo por capítulo" vertex="1">
+          <mxGeometry height="100" width="290" x="50" y="730" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE ESCALETISTA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;LLM · T = 0,75 · salida JSON forzada&lt;br&gt;Distribuye giros en función de N&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="340" x="400" y="735" as="geometry" />
+        </mxCell>
+        <mxCell id="out2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · Outline.json = N × ChapterPlan&lt;/b&gt;&lt;br&gt;Por capítulo: POV · story_time · función dramática&lt;br&gt;escenas + beats · &lt;b&gt;información nueva para el lector&lt;/b&gt;&lt;br&gt;hilos abiertos / avanzados / cerrados&lt;br&gt;world_state_delta · gancho final · target_words" vertex="1">
+          <mxGeometry height="120" width="340" x="800" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="v2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=13;" value="&lt;b&gt;VALIDADOR DE ESCALETA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;¿Exactamente N? · ¿todo hilo cierra antes de N? · ¿algún capítulo sin información nueva (relleno)? · ¿POV+localización+función repetidos en consecutivos? · ¿siembra previa a cada giro?&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="340" x="400" y="860" as="geometry" />
+        </mxCell>
+        <mxCell id="d2" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="&lt;b&gt;PUNTO DE CONTROL&lt;/b&gt;&lt;br&gt;¿El autor aprueba&lt;br&gt;la escaleta?" vertex="1">
+          <mxGeometry height="100" width="280" x="430" y="985" as="geometry" />
+        </mxCell>
+        <mxCell id="loop" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=14;fontStyle=1;" value="i = 1" vertex="1">
+          <mxGeometry height="40" width="160" x="490" y="1175" as="geometry" />
+        </mxCell>
+        <mxCell id="in3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;" value="&lt;b&gt;IN · capas de contexto (presupuesto fijo de tokens)&lt;/b&gt;&lt;br&gt;L0 rol y restricciones duras&lt;br&gt;L1 canon filtrado: solo personajes/lugares/reglas del cap. i&lt;br&gt;L2 hechos canónicos vigentes + hilos abiertos&lt;br&gt;L3 resúmenes de 1…i-2 (1 párrafo c/u)&lt;br&gt;L4 resumen de i-1 + &lt;b&gt;últimas 400–600 palabras literales&lt;/b&gt;&lt;br&gt;L5 RAG top-k sobre el propio manuscrito (por entidad y beat)&lt;br&gt;L6 ChapterPlan del cap. i&lt;br&gt;L7 &lt;b&gt;prohibiciones&lt;/b&gt;: frases, imágenes y patrones ya usados" vertex="1">
+          <mxGeometry height="180" width="290" x="50" y="1240" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=13;" value="&lt;b&gt;CONSTRUCTOR DE CONTEXTO&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Código determinista · recorta por prioridad L5→L3→L1 si excede presupuesto&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="1265" as="geometry" />
+        </mxCell>
+        <mxCell id="out3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT&lt;/b&gt; · Prompt ensamblado del capítulo i&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;+ prompt_hash para trazabilidad&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="340" x="800" y="1275" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE ESCRITOR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;LLM · T = 0,85–0,95 · penalización de repetición&lt;br&gt;Prohibido resumir lo ya ocurrido · entrada tardía / salida temprana de escena&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="340" x="400" y="1385" as="geometry" />
+        </mxCell>
+        <mxCell id="out4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT&lt;/b&gt; · Borrador del capítulo i&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;prosa · ±20 % de target_words · POV y tiempo verbal declarados&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="340" x="800" y="1390" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=13;" value="&lt;b&gt;VALIDADOR DE REPETICIÓN&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;100 % determinista · sin LLM · auditable&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="1515" as="geometry" />
+        </mxCell>
+        <mxCell id="out5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · métricas&lt;/b&gt;&lt;br&gt;• Jaccard de 4-gramas vs. cada capítulo previo (&amp;gt; 0,15)&lt;br&gt;• Coseno escena–escena (&amp;gt; 0,85 = bloqueante)&lt;br&gt;• Metáforas e imágenes ya usadas (&amp;gt; 0,90)&lt;br&gt;• Muletillas · MTLD · tipo de apertura y de cierre" vertex="1">
+          <mxGeometry height="100" width="340" x="800" y="1505" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE6CC;strokeColor=#D79B00;fontSize=13;" value="&lt;b&gt;VALIDADOR DE CONTINUIDAD&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Reglas SQL sobre el libro mayor + LLM juez (T = 0,2, sesión distinta a la del Escritor)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="1645" as="geometry" />
+        </mxCell>
+        <mxCell id="out6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · incidencias clasificadas&lt;/b&gt;&lt;br&gt;• Contradicción de hechos · personaje muerto que actúa&lt;br&gt;• Cronología no monótona · ubicación imposible&lt;br&gt;• Violación de reglas especulativas · deriva de nombres&lt;br&gt;• Beats del plan no cubiertos · voz de personaje inconsistente&lt;br&gt;&lt;b&gt;→ {bloqueante | mayor | menor}&lt;/b&gt;" vertex="1">
+          <mxGeometry height="110" width="340" x="800" y="1630" as="geometry" />
+        </mxCell>
+        <mxCell id="d3" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="¿Incidencias&lt;br&gt;&lt;b&gt;BLOQUEANTES&lt;/b&gt; &amp;gt; 0?" vertex="1">
+          <mxGeometry height="90" width="260" x="440" y="1775" as="geometry" />
+        </mxCell>
+        <mxCell id="a7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" value="&lt;b&gt;REESCRITURA DIRIGIDA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;IN: borrador + lista concreta de incidencias&lt;br&gt;Nunca se regenera a ciegas&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="290" x="50" y="1780" as="geometry" />
+        </mxCell>
+        <mxCell id="d4" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="¿intentos &amp;gt; 3?" vertex="1">
+          <mxGeometry height="80" width="200" x="95" y="1895" as="geometry" />
+        </mxCell>
+        <mxCell id="esc" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;fontSize=12;" value="&lt;b&gt;PAUSA · ESCALAR AL AUTOR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Estado persistido · diagnóstico concreto&lt;br&gt;El proceso se reanuda tras su decisión&lt;/font&gt;" vertex="1">
+          <mxGeometry height="75" width="290" x="50" y="2010" as="geometry" />
+        </mxCell>
+        <mxCell id="d5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="¿Incidencias&lt;br&gt;&lt;b&gt;MAYORES&lt;/b&gt; &amp;gt; 0?" vertex="1">
+          <mxGeometry height="90" width="260" x="440" y="1900" as="geometry" />
+        </mxCell>
+        <mxCell id="patch" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=12;" value="&lt;b&gt;PARCHE QUIRÚRGICO&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Reescribe solo los párrafos señalados&lt;br&gt;(más barato que regenerar el capítulo)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="800" y="1905" as="geometry" />
+        </mxCell>
+        <mxCell id="a8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE ESTILISTA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;LLM · T = 0,6 · pule ritmo y frase&lt;br&gt;PROHIBIDO alterar hechos, diálogo sustantivo o beats&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="2035" as="geometry" />
+        </mxCell>
+        <mxCell id="out8" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=middle;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT&lt;/b&gt; · Capítulo i definitivo → ChapterVersion&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;texto + modelo + T + semilla + prompt_hash + origin&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="340" x="800" y="2040" as="geometry" />
+        </mxCell>
+        <mxCell id="a9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE ARCHIVISTA&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;LLM · T = 0,1 · JSON Schema forzado&lt;br&gt;Prohibido inferir lo que no está escrito&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="2150" as="geometry" />
+        </mxCell>
+        <mxCell id="out9" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · actualización del estado del mundo&lt;/b&gt;&lt;br&gt;• CanonFact nuevos / revocados (con cita de evidencia)&lt;br&gt;• Hilos abiertos, avanzados y cerrados&lt;br&gt;• Entidades y términos nuevos&lt;br&gt;• Resumen en 3 niveles (frase / párrafo / escena a escena)&lt;br&gt;• Embeddings · metáforas e imágenes → StyleArtifact" vertex="1">
+          <mxGeometry height="115" width="340" x="800" y="2135" as="geometry" />
+        </mxCell>
+        <mxCell id="d6" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=14;fontStyle=1;" value="¿ i &amp;lt; N ?" vertex="1">
+          <mxGeometry height="90" width="240" x="450" y="2285" as="geometry" />
+        </mxCell>
+        <mxCell id="in10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#F5F5F5;strokeColor=#999999;fontSize=11;" value="&lt;b&gt;IN&lt;/b&gt;&lt;br&gt;• Manuscrito completo (N capítulos)&lt;br&gt;• Libro mayor de continuidad final&lt;br&gt;• Métricas acumuladas de repetición&lt;br&gt;• Escaleta original (contraste plan/resultado)" vertex="1">
+          <mxGeometry height="100" width="290" x="50" y="2500" as="geometry" />
+        </mxCell>
+        <mxCell id="a10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontSize=13;" value="&lt;b&gt;AGENTE REVISOR GLOBAL&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Pasada sobre la obra entera, no capítulo a capítulo&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="2505" as="geometry" />
+        </mxCell>
+        <mxCell id="out10" parent="1" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=8;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=11;" value="&lt;b&gt;OUT · informes + propuestas&lt;/b&gt;&lt;br&gt;• Continuidad: hilos, cronología, arcos de personaje&lt;br&gt;• Repetición: expresiones más repetidas de la novela&lt;br&gt;• Ritmo: longitud, densidad de diálogo, tensión por capítulo&lt;br&gt;• Correcciones con capítulo, párrafo y motivo&lt;br&gt;• Títulos definitivos, título de la novela y sinopsis" vertex="1">
+          <mxGeometry height="115" width="340" x="800" y="2490" as="geometry" />
+        </mxCell>
+        <mxCell id="d7" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;fontSize=12;" value="&lt;b&gt;PUNTO DE CONTROL&lt;/b&gt;&lt;br&gt;¿Manuscrito aprobado&lt;br&gt;por el autor?" vertex="1">
+          <mxGeometry height="110" width="280" x="430" y="2640" as="geometry" />
+        </mxCell>
+        <mxCell id="a11" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=13;" value="&lt;b&gt;ENSAMBLADOR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Código · concatena las ChapterVersion vigentes&lt;br&gt;Portada, títulos de capítulo, front matter, metadatos&lt;/font&gt;" vertex="1">
+          <mxGeometry height="80" width="340" x="400" y="2860" as="geometry" />
+        </mxCell>
+        <mxCell id="docmd" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=20;fillColor=#FFFFFF;strokeColor=#4F7942;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;manuscrito.md&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;MANUSCRITO FINAL en Markdown&lt;br&gt;N capítulos · fuente canónica de la entrega&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="820" y="2855" as="geometry" />
+        </mxCell>
+        <mxCell id="a12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=13;" value="&lt;b&gt;EXPORTADOR&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Pandoc (PDF / DOCX) · EbookLib (EPUB)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="70" width="340" x="400" y="2975" as="geometry" />
+        </mxCell>
+        <mxCell id="docpdf" parent="1" style="shape=note;whiteSpace=wrap;html=1;size=20;fillColor=#FFFFFF;strokeColor=#4F7942;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;manuscrito.pdf&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;+ .docx · .epub&lt;br&gt;+ anexos JSON (biblia, escaleta, libro mayor, informes)&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="820" y="2970" as="geometry" />
+        </mxCell>
+        <mxCell id="end" parent="1" style="ellipse;whiteSpace=wrap;html=1;fillColor=#4F7942;strokeColor=#2F4F2F;fontColor=#FFFFFF;fontSize=13;fontStyle=1;" value="FIN · ENTREGA AL AUTOR" vertex="1">
+          <mxGeometry height="50" width="280" x="430" y="3085" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="n1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="n2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="n2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="in1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="v1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="v1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a2" value="Sí · canon congelado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="d1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;dashed=1;strokeColor=#B85450;fontColor=#B85450;" target="a1" value="No · editar / regenerar sección">
+          <mxGeometry relative="1" x="0.0213" y="80" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="370" y="600" />
+              <mxPoint x="370" y="338" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="in2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="v2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="v2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="loop" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="d2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;dashed=1;strokeColor=#B85450;fontColor=#B85450;" target="a2" value="No · reordenar, fusionar o dividir capítulos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1035" />
+              <mxPoint x="370" y="758" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="loop" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e16" edge="1" parent="1" source="in3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="a3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e18" edge="1" parent="1" source="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e19" edge="1" parent="1" source="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" edge="1" parent="1" source="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e25" edge="1" parent="1" source="d3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;fontColor=#B85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeWidth=2;" target="a7" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e26" edge="1" parent="1" source="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;" target="d4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e27" edge="1" parent="1" source="d4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;fontColor=#B85450;" target="esc" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e28" edge="1" parent="1" source="d4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#B85450;fontColor=#B85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="a4" value="No · reintento con el informe de incidencias inyectado">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="40" y="1935" />
+              <mxPoint x="40" y="1453" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e29" edge="1" parent="1" source="d3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d5" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e30" edge="1" parent="1" source="d5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#D79B00;fontColor=#D79B00;" target="patch" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e31" edge="1" parent="1" source="patch" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D79B00;fontColor=#D79B00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="a6" value="revalidar">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="1945" />
+              <mxPoint x="1175" y="1620" />
+              <mxPoint x="655" y="1620" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e32" edge="1" parent="1" source="d5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a8" value="No · solo incidencias menores">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e33" edge="1" parent="1" source="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" edge="1" parent="1" source="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" edge="1" parent="1" source="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e36" edge="1" parent="1" source="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e37" edge="1" parent="1" source="d6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;strokeColor=#3B6EA5;fontColor=#3B6EA5;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" target="a3" value="Sí · i = i + 1&#xa;(el capítulo siguiente ya ve el nuevo estado del mundo)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="2330" />
+              <mxPoint x="370" y="1240" />
+              <mxPoint x="485" y="1240" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e38" edge="1" parent="1" source="d6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a10" value="No · i = N">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e39" edge="1" parent="1" source="in10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="a10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e40" edge="1" parent="1" source="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="out10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e41" edge="1" parent="1" source="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="d7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e42" edge="1" parent="1" source="d7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#B85450;fontColor=#B85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="a3" value="No · aplicar correcciones y regenerar los capítulos afectados">
+          <mxGeometry relative="1" x="0.0608" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="360" y="2695" />
+              <mxPoint x="360" y="1325" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e43" edge="1" parent="1" source="d7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a11" value="Sí">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e44" edge="1" parent="1" source="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4F7942;" target="docmd">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e45" edge="1" parent="1" source="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="a12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e46" edge="1" parent="1" source="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4F7942;" target="docpdf">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e47" edge="1" parent="1" source="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeWidth=2;" target="end">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e48" edge="1" parent="1" source="out9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeWidth=2;strokeColor=#9673A6;fontColor=#9673A6;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" target="estado" value="ESCRIBE&#xa;(transacción por capítulo)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1350" y="2164" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e49" edge="1" parent="1" source="estado" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeWidth=2;strokeColor=#9673A6;fontColor=#9673A6;exitX=0;exitY=0.1;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" target="a3" value="LEE → capas L1, L2, L5 y L7">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="1214" />
+              <mxPoint x="770" y="1285" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e50" edge="1" parent="1" source="estado" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;strokeColor=#9673A6;fontColor=#9673A6;exitX=0;exitY=0.9;exitDx=0;exitDy=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" target="a5" value="LEE · corpus + embeddings&#xa;para el contraste anti-repetición">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="1646" />
+              <mxPoint x="1175" y="1470" />
+              <mxPoint x="770" y="1470" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
