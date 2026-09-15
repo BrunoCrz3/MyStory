@@ -39,7 +39,7 @@ permitírselo, porque en ejecución autónoma nadie va a detectar la contradicci
 - Redacción de todas las escenas hasta completar el manuscrito.
 - Auditoría de continuidad y corrección de los hallazgos.
 - Crítica estructural y de ritmo.
-- **Ejecución end-to-end sin intervención humana**, con auto-evaluación en cada compuerta.
+- **Ejecución end-to-end**.
 - Informe de progreso y dosier de decisiones.
 
 ### Excluido
