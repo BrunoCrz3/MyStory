@@ -9,11 +9,13 @@
 #   - El grupo `src` declara los 43 ficheros que enumera la tabla de §21.7.
 #   - El grupo `env` recoge `.env.example`, exigido por §4 y §22.2 pero sin
 #     grupo propio en §21.
+#   - `make.ps1` y `scripts/tasks.py` son la ruta de Windows del Makefile
+#     (ver DECISIONS.md, D-14). §21 declara un total minimo, no cerrado.
 version: 1
-total: 120
+total: 122
 groups:
 - name: meta
-  expected: 11
+  expected: 12
   files:
   - README.md
   - BUILD_SPEC.md
@@ -26,6 +28,7 @@ groups:
   - inventory.yaml
   - .gitignore
   - CLAUDE.md
+  - make.ps1
 - name: env
   expected: 1
   files:
@@ -160,8 +163,9 @@ groups:
   - .claude/skills/sf-prose/SKILL.md
   - .claude/skills/manuscript-export/SKILL.md
 - name: scripts
-  expected: 3
+  expected: 4
   files:
   - scripts/check_inventory.py
   - scripts/make_fixtures.py
   - scripts/assert_demo_output.py
+  - scripts/tasks.py

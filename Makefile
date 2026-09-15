@@ -1,41 +1,38 @@
+# Envoltorio fino sobre `scripts/tasks.py`, que es donde vive la definicion de
+# cada target. La logica no esta aqui para que Linux, macOS y Windows ejecuten
+# exactamente los mismos pasos (DECISIONS.md, D-14).
+#
+# En Windows sin GNU make, el equivalente es `./make.ps1 <target>`.
 PY ?= python
 VENV ?= .venv
-BIN := $(VENV)/bin
+
+# `tasks.py` lee VENV del entorno; el interprete lo elige `PY`.
+export VENV
+
+TASKS := $(PY) scripts/tasks.py
 
 .PHONY: install demo test lint typecheck inventory verify clean
 
 install:
-	$(PY) -m venv $(VENV)
-	$(BIN)/pip install --upgrade pip
-	$(BIN)/pip install -e ".[dev]"
+	$(TASKS) install
 
 demo:
-	$(BIN)/python -m novela demo
+	$(TASKS) demo
 
 test:
-	$(BIN)/pytest -q
+	$(TASKS) test
 
 lint:
-	$(BIN)/ruff check .
-	$(BIN)/ruff format --check .
+	$(TASKS) lint
 
 typecheck:
-	$(BIN)/mypy src/
+	$(TASKS) typecheck
 
 inventory:
-	$(BIN)/python scripts/check_inventory.py
+	$(TASKS) inventory
 
 verify:
-	$(BIN)/python scripts/check_inventory.py
-	$(BIN)/ruff check .
-	$(BIN)/ruff format --check .
-	$(BIN)/mypy src/
-	$(BIN)/pytest -q
-	$(BIN)/python -m novela demo
-	test -f out/demo/manuscrito.md
-	$(BIN)/python scripts/assert_demo_output.py
+	$(TASKS) verify
 
 clean:
-	rm -rf out/* .pytest_cache .mypy_cache .ruff_cache .coverage htmlcov
-	find . -name '__pycache__' -type d -prune -exec rm -rf {} +
-	touch out/.gitkeep
+	$(TASKS) clean
