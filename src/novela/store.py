@@ -179,15 +179,17 @@ class SQLiteStore(Store):
         self.connection.commit()
 
     # ---------------- artefactos simples ----------------
-    def _save_artifact(self, name: str, payload: Any, filename: str) -> None:
+    def _save_artifact(self, name: str, payload: Any, filename: str | None) -> None:
+        """Persiste en SQLite y, si `filename` no es None, espeja el artefacto a disco."""
         self.connection.execute(
             "INSERT OR REPLACE INTO artifact (name, payload, updated_at) VALUES (?, ?, ?)",
             (name, _dumps(payload), datetime.now(UTC).isoformat()),
         )
         self.connection.commit()
-        (self.directory / filename).write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
+        if filename is not None:
+            (self.directory / filename).write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
 
     def _load_artifact(self, name: str) -> Any | None:
         row = self.connection.execute(
@@ -354,9 +356,9 @@ class SQLiteStore(Store):
         ledger = self.load_ledger()
         entities = sorted(set(ledger.entities) | set(archivist.new_entities))
         timeline = [*ledger.timeline, archivist.summary.one_line]
-        self._save_artifact(
-            "ledger_meta", {"entities": entities, "timeline": timeline}, "ledger_meta.json"
-        )
+        # ledger_meta es estado interno: vive en SQLite y se refleja dentro de
+        # ledger.json, no como un fichero propio del inventario de §23.
+        self._save_artifact("ledger_meta", {"entities": entities, "timeline": timeline}, None)
         refreshed = self.load_ledger().model_copy(update={"entities": entities, "timeline": timeline})
         (self.directory / "ledger.json").write_text(
             json.dumps(refreshed.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
