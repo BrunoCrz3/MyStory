@@ -78,7 +78,9 @@ class CostTracker:
             "input_tokens": input_tokens,
             "output_tokens": output_tokens,
             "by_role": {role: round(value, 6) for role, value in sorted(self.by_role().items())},
-            "by_chapter": {key: round(value, 6) for key, value in sorted(self.by_chapter().items())},
+            "by_chapter": {
+                key: round(value, 6) for key, value in sorted(self.by_chapter().items())
+            },
         }
 
     def flush(self) -> None:

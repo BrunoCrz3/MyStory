@@ -100,7 +100,9 @@ def _fallback(markdown_path: Path, pdf_path: Path, message: str) -> PdfResult:
                 f"/Resources << /Font << /F1 3 0 R >> >> /Contents {page_ids[index] + 1} 0 R >>"
             ).encode("latin-1")
         )
-        objects.append(b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream")
+        objects.append(
+            b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream"
+        )
 
     pdf_path.parent.mkdir(parents=True, exist_ok=True)
     pdf_path.write_bytes(_serialise(objects))

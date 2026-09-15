@@ -526,9 +526,10 @@ class LengthSpec(BaseModel):
     def bounds(self) -> tuple[int, int]:
         return (self.target - self.tolerance, self.target + self.tolerance)
 
+
 # ---------- canon ----------
 class Character(BaseModel):
-    id: str                    # chr_1
+    id: str  # chr_1
     name: str
     role: str
     want: str
@@ -540,16 +541,19 @@ class Character(BaseModel):
     arc_mid: str
     arc_end: str
 
+
 class SpeculativePremise(BaseModel):
     concept: str
     rules: list[str] = Field(min_length=1)
-    limits: list[str] = Field(min_length=1)   # obligatorio: sin límites no hay conflicto
+    limits: list[str] = Field(min_length=1)  # obligatorio: sin límites no hay conflicto
     cost: str
+
 
 class Location(BaseModel):
     id: str
     name: str
     description: str
+
 
 class StoryBible(BaseModel):
     logline: str
@@ -561,11 +565,13 @@ class StoryBible(BaseModel):
     glossary: dict[str, str]
     motifs: list[str]
 
+
 # ---------- plan ----------
 class Scene(BaseModel):
     id: str
     beats: list[str] = Field(min_length=1)
-    new_information: list[str] = Field(min_length=1)   # si está vacío, el capítulo es relleno
+    new_information: list[str] = Field(min_length=1)  # si está vacío, el capítulo es relleno
+
 
 class ChapterPlan(BaseModel):
     number: int = Field(ge=1)
@@ -586,19 +592,22 @@ class ChapterPlan(BaseModel):
     hook: str
     target_length: LengthSpec
 
+
 class Outline(BaseModel):
     chapters: list[ChapterPlan]
+
 
 # ---------- estado del mundo ----------
 class CanonFact(BaseModel):
     id: str
-    subject: str               # chr_1, loc_2, world
-    predicate: str             # estado_vital, ubicacion, posee, sabe
+    subject: str  # chr_1, loc_2, world
+    predicate: str  # estado_vital, ubicacion, posee, sabe
     value: str
     chapter_established: int
     status: Literal["vigente", "revocado"] = "vigente"
     revoked_by: str | None = None
     evidence: str = Field(max_length=200)
+
 
 class OpenThread(BaseModel):
     id: str
@@ -609,17 +618,20 @@ class OpenThread(BaseModel):
     status: Literal["abierto", "cerrado"] = "abierto"
     importance: Literal["principal", "secundario"]
 
+
 class ChapterSummary(BaseModel):
     number: int
     one_line: str
     paragraph: str
     by_scene: list[str]
 
+
 class StyleArtifact(BaseModel):
     id: str
     kind: Literal["metafora", "imagen", "apertura", "cierre", "muletilla"]
     text: str
     chapter: int
+
 
 # ---------- capítulo ----------
 class ChapterVersion(BaseModel):
@@ -635,19 +647,22 @@ class ChapterVersion(BaseModel):
     prompt_hash: str
     created_at: datetime
 
+
 # ---------- validación ----------
 class Severity(StrEnum):
     BLOCKING = "blocking"
     MAJOR = "major"
     MINOR = "minor"
 
+
 class Issue(BaseModel):
-    code: str                  # CONT-DEAD-ACTS, REP-NGRAM, LEN-OUT-OF-RANGE…
+    code: str  # CONT-DEAD-ACTS, REP-NGRAM, LEN-OUT-OF-RANGE…
     severity: Severity
-    message: str               # accionable: qué está mal y qué hacer
+    message: str  # accionable: qué está mal y qué hacer
     chapter: int | None = None
     span: str | None = None
     evidence: str | None = None
+
 
 class ValidationReport(BaseModel):
     issues: list[Issue]
@@ -699,6 +714,7 @@ class LLMResponse(BaseModel):
     output_tokens: int
     model: str
     latency_ms: int
+
 
 class LLMClient(Protocol):
     def complete(
@@ -889,12 +905,28 @@ Parte con juez LLM: voz de personaje, motivación y tensión. **El juez debe inv
 
 ```python
 class ProjectState(StrEnum):
-    DRAFT, BIBLE_GENERATING, BIBLE_REVIEW, BIBLE_APPROVED,
-    OUTLINE_GENERATING, OUTLINE_REVIEW, OUTLINE_APPROVED,
+    (
+        DRAFT,
+        BIBLE_GENERATING,
+        BIBLE_REVIEW,
+        BIBLE_APPROVED,
+    )
+    (
+        OUTLINE_GENERATING,
+        OUTLINE_REVIEW,
+        OUTLINE_APPROVED,
+    )
     WRITING, GLOBAL_REVIEW, COMPLETED, PAUSED, FAILED
 
+
 class ChapterState(StrEnum):
-    PLANNED, DRAFTING, VALIDATING, REWRITING, PATCHING,
+    (
+        PLANNED,
+        DRAFTING,
+        VALIDATING,
+        REWRITING,
+        PATCHING,
+    )
     POLISHING, ARCHIVING, DONE, ESCALATED
 ```
 

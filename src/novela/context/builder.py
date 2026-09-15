@@ -170,14 +170,17 @@ def build_chapter_context(
     prohibitions, openings, phrases = _prohibitions(style_artifacts)
 
     recent = recent_summary(summaries, plan.number - 1)
-    l4_body = "\n\n".join(
-        part
-        for part in (
-            f"Resumen del capítulo {plan.number - 1}:\n{recent}" if recent else "",
-            f"Cómo terminaba, literal:\n{tail}" if tail else "",
+    l4_body = (
+        "\n\n".join(
+            part
+            for part in (
+                f"Resumen del capítulo {plan.number - 1}:\n{recent}" if recent else "",
+                f"Cómo terminaba, literal:\n{tail}" if tail else "",
+            )
+            if part
         )
-        if part
-    ) or "No hay capítulo anterior."
+        or "No hay capítulo anterior."
+    )
 
     layers: list[Layer] = [
         Layer("L0", "Rol y restricciones duras", _role_block(plan)),
@@ -197,7 +200,11 @@ def build_chapter_context(
             layers.append(Layer("L5", "Pasajes recuperados", body))
 
     layers.append(
-        Layer("L6", "Plan del capítulo", json.dumps(plan.model_dump(mode="json"), ensure_ascii=False, indent=2))
+        Layer(
+            "L6",
+            "Plan del capítulo",
+            json.dumps(plan.model_dump(mode="json"), ensure_ascii=False, indent=2),
+        )
     )
     layers.append(Layer("L7", "Prohibiciones de estilo", prohibitions))
 
