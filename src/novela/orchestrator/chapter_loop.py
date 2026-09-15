@@ -175,9 +175,7 @@ class ChapterRunner:
 
         self.store.set_chapter_state(number, ChapterState.ARCHIVING)
         self.check_budget()
-        archived = self.agents.archivist.run(
-            polished, self.bible, self.store.load_ledger(), plan
-        )
+        archived = self.agents.archivist.run(polished, self.bible, self.store.load_ledger(), plan)
         version = self._version(plan, polished, context)
         self.store.commit_chapter(number, version, archived, ChapterState.DONE)
         self._persist_report(number)
@@ -187,9 +185,7 @@ class ChapterRunner:
         previous = self.store.latest_chapter(number - 1) if number > 1 else None
         return previous.text if previous else None
 
-    def _version(
-        self, plan: ChapterPlan, text: str, context: ChapterContext
-    ) -> ChapterVersion:
+    def _version(self, plan: ChapterPlan, text: str, context: ChapterContext) -> ChapterVersion:
         model = self.config.model_for("stylist")
         return ChapterVersion(
             number=plan.number,

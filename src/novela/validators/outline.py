@@ -6,6 +6,8 @@ compara siempre contra `config.novel.chapters`.
 
 from __future__ import annotations
 
+from itertools import pairwise
+
 from novela.models import Outline
 from novela.validators.base import ValidationReport, issue
 
@@ -82,7 +84,7 @@ def _check_filler(outline: Outline, report: ValidationReport) -> None:
 def _check_repeated_function(outline: Outline, report: ValidationReport) -> None:
     repeated = 0
     ordered = sorted(outline.chapters, key=lambda plan: plan.number)
-    for previous, plan in zip(ordered, ordered[1:], strict=False):
+    for previous, plan in pairwise(ordered):
         same_function = previous.dramatic_function == plan.dramatic_function
         same_pov = previous.pov_character_id == plan.pov_character_id
         same_place = set(previous.location_ids) == set(plan.location_ids)

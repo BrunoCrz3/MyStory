@@ -39,7 +39,9 @@ def load_inventory(path: Path) -> dict[str, object]:
     with path.open(encoding="utf-8") as handle:
         data = yaml.safe_load(handle)
     if not isinstance(data, dict):
-        raise SystemExit(f"inventory.yaml malformado: se esperaba un mapa, hay {type(data).__name__}")
+        raise SystemExit(
+            f"inventory.yaml malformado: se esperaba un mapa, hay {type(data).__name__}"
+        )
     return data
 
 

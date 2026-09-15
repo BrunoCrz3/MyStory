@@ -21,8 +21,9 @@ from novela.models import Severity, StyleArtifact
 from novela.validators.base import ValidationReport, issue
 from novela.validators.length import prose_lines
 
-STOPWORDS: frozenset[str] = frozenset(
-    """
+# Lista de palabras vacias del español. Se mantiene como texto para que sea
+# legible y editable de un vistazo al calibrar.
+_STOPWORD_TEXT = """
     a al algo algun alguna algunas alguno algunos ante antes aquel aquella aquellas aquello
     aquellos aqui asi aun aunque cada como con contra cual cuales cuando cuanto de del desde
     donde dos e el ella ellas ello ellos en entre era eran eres es esa esas ese eso esos esta
@@ -31,8 +32,8 @@ STOPWORDS: frozenset[str] = frozenset(
     otros para pero poco por porque que quien quienes se sea segun ser si sin sobre solo son su
     sus tal tambien tan tanto te tiene tienen todo todos tras tu tus un una unas uno unos usted
     ustedes ya yo lel della dello puede pueden podia podian
-    """.split()
-)
+    """
+STOPWORDS: frozenset[str] = frozenset(_STOPWORD_TEXT.split())
 
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?…])\s+")
 WORD_RE = re.compile(r"[a-záéíóúüñ0-9-]+")
@@ -40,8 +41,21 @@ DIALOGUE_OPENERS = ("—", "–", "-", "«", '"', "“", "'")
 REFLECTION_MARKERS = frozenset(
     {"penso", "pense", "recordo", "recorde", "sabia", "quiza", "quizas", "tal", "acaso", "creyo"}
 )
-VERB_SUFFIXES = ("aba", "ia", "aron", "ieron", "aba", "o", "e", "io", "ar", "er", "ir", "ando",
-                 "iendo")
+VERB_SUFFIXES = (
+    "aba",
+    "ia",
+    "aron",
+    "ieron",
+    "aba",
+    "o",
+    "e",
+    "io",
+    "ar",
+    "er",
+    "ir",
+    "ando",
+    "iendo",
+)
 #: Coseno minimo para considerar que una imagen nueva reutiliza una ya registrada.
 IMAGE_REUSE_COSINE = 0.90
 

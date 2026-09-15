@@ -51,7 +51,9 @@ def main() -> int:
     chapters = split_chapters(path.read_text(encoding="utf-8"))
     problems: list[str] = []
     if len(chapters) != expected_chapters:
-        problems.append(f"el manuscrito tiene {len(chapters)} capítulos y se esperaban {expected_chapters}")
+        problems.append(
+            f"el manuscrito tiene {len(chapters)} capítulos y se esperaban {expected_chapters}"
+        )
 
     low, high = spec.bounds()
     for number, body in chapters:

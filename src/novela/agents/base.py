@@ -124,10 +124,13 @@ class BaseAgent:
         chapter: int | None,
         attempt: int,
         context_layers: dict[str, int] | None = None,
+        json_schema: dict[str, object] | None = None,
+        call_role: str | None = None,
     ) -> str:
-        model = self.context.config.model_for(self.role)
+        role = call_role or self.role
+        model = self.context.config.model_for(role)
         response = self.context.router.complete(
-            role=self.role, system=system, user=user, chapter=chapter
+            role=role, system=system, user=user, chapter=chapter, json_schema=json_schema
         )
         cost = (
             response.cost_usd
@@ -136,7 +139,7 @@ class BaseAgent:
         )
         self.context.cost.record(
             CostEntry(
-                role=self.role,
+                role=role,
                 chapter=chapter,
                 model=response.model,
                 input_tokens=response.input_tokens,
@@ -147,7 +150,7 @@ class BaseAgent:
         self.context.trace.write(
             TraceEvent(
                 project=self.context.project_id,
-                role=self.role,
+                role=role,
                 model=response.model,
                 chapter=chapter,
                 attempt=attempt,
@@ -176,6 +179,7 @@ class ProseAgent(BaseAgent):
         template: str,
         chapter: int | None = None,
         context_layers: dict[str, int] | None = None,
+        call_role: str | None = None,
         **variables: object,
     ) -> str:
         rendered = self.context.render(template, **variables)
@@ -186,6 +190,7 @@ class ProseAgent(BaseAgent):
             chapter=chapter,
             attempt=0,
             context_layers=context_layers,
+            call_role=call_role,
         ).strip("\n")
 
 
@@ -213,6 +218,9 @@ class JsonAgent(BaseAgent):
                 chapter=chapter,
                 attempt=attempt,
                 context_layers=context_layers,
+                # El esquema viaja al proveedor para que fuerce JSON si puede; la
+                # validacion Pydantic se aplica igual en los tres niveles (§24.4).
+                json_schema=schema.model_json_schema(),
             )
             try:
                 return schema.model_validate_json(extract_json(payload))

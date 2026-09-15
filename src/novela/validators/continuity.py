@@ -29,8 +29,12 @@ from novela.validators.repetition import (
 #: Coseno minimo para dar un beat por cubierto por una frase del capitulo.
 BEAT_MATCH_MIN = 0.20
 #: Fraccion de palabras significativas de un limite que deben concurrir en una
-#: misma frase para considerarla una violacion de la regla del mundo.
-RULE_MATCH_MIN = 0.85
+#: misma frase para considerarla una violacion de la regla del mundo. No es 1.0
+#: porque el espanol flexiona los verbos ("muestra" / "mostro") y una
+#: coincidencia exacta al 100 % no detectaria ninguna violacion real.
+RULE_MATCH_MIN = 0.80
+#: Palabras significativas minimas de un limite para que merezca la pena evaluarlo.
+RULE_MIN_CONTENT_WORDS = 3
 #: Longitud minima de un token candidato a deriva de nombre.
 NAME_MIN_LENGTH = 4
 #: Distancia de edicion maxima para considerar dos nombres el mismo.
@@ -69,16 +73,20 @@ def _check_fact_conflicts(ledger: Ledger, chapter: int, report: ValidationReport
     report.metrics["cont.fact_conflicts"] = float(conflicts)
 
 
+#: Palabras que, tras un nombre propio, no indican accion sino enumeracion.
+CONNECTORS = frozenset({"y", "e", "o", "de", "del", "la", "el", "los", "las"})
+
+
 def _acts_in_text(name: str, text: str) -> str | None:
     """Devuelve la frase en la que `name` ejerce de sujeto de una accion, si la hay."""
-    first = name.split()[0]
+    first = name.split()[0].lower()
     for sentence in sentences(text):
-        words = WORD_RE.findall(sentence)
-        if first.lower() not in [word.lower() for word in words]:
+        words = WORD_RE.findall(sentence.lower())
+        if first not in words:
             continue
-        index = [word.lower() for word in words].index(first.lower())
+        index = words.index(first)
         following = words[index + 1 : index + 3]
-        if any(strip_accents(word.lower()) not in {"y", "de", "del", "la"} for word in following):
+        if any(strip_accents(word) not in CONNECTORS for word in following):
             return sentence
     return None
 
@@ -179,7 +187,7 @@ def _check_rule_violations(
     chapter_sentences = sentences(text)
     for limit in bible.speculative_premise.limits:
         content = [word for word in tokens(limit) if word not in NEGATION_WORDS]
-        if len(content) < 3:
+        if len(content) < RULE_MIN_CONTENT_WORDS:
             continue
         for sentence in chapter_sentences:
             present = set(tokens(sentence))

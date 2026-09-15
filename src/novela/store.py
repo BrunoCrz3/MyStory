@@ -156,7 +156,7 @@ class SQLiteStore(Store):
         self.connection.commit()
 
     def _project_row(self) -> sqlite3.Row:
-        row = self.connection.execute(
+        row: sqlite3.Row | None = self.connection.execute(
             "SELECT * FROM project WHERE id = ?", (self.project_id,)
         ).fetchone()
         if row is None:
@@ -213,9 +213,7 @@ class SQLiteStore(Store):
 
     def save_report(self, name: str, payload: Any) -> None:
         path = self.directory / "reports" / f"{name}.json"
-        path.write_text(
-            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     # ---------------- estado del mundo ----------------
     def load_ledger(self) -> Ledger:
@@ -359,7 +357,9 @@ class SQLiteStore(Store):
         # ledger_meta es estado interno: vive en SQLite y se refleja dentro de
         # ledger.json, no como un fichero propio del inventario de §23.
         self._save_artifact("ledger_meta", {"entities": entities, "timeline": timeline}, None)
-        refreshed = self.load_ledger().model_copy(update={"entities": entities, "timeline": timeline})
+        refreshed = self.load_ledger().model_copy(
+            update={"entities": entities, "timeline": timeline}
+        )
         (self.directory / "ledger.json").write_text(
             json.dumps(refreshed.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",

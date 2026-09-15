@@ -118,9 +118,7 @@ class Pipeline:
         self.store.set_project_state(ProjectState.OUTLINE_GENERATING)
         self._check_budget()
         outline = Outliner(self.agents_context).run(bible)
-        report = outline_validator.validate(
-            outline, expected_chapters=self.config.novel.chapters
-        )
+        report = outline_validator.validate(outline, expected_chapters=self.config.novel.chapters)
         report.issues.extend(bible_validator.validate(bible, outline=outline).issues)
         self.store.save_outline(outline)
         self.store.save_report("outline_validation", report.model_dump(mode="json"))

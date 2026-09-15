@@ -24,9 +24,7 @@ HEADING_RE = re.compile(r"^\s*#")
 def prose_lines(text: str) -> list[str]:
     """Lineas de prosa: sin blancos y sin el titulo del capitulo."""
     return [
-        line.strip()
-        for line in text.splitlines()
-        if line.strip() and not HEADING_RE.match(line)
+        line.strip() for line in text.splitlines() if line.strip() and not HEADING_RE.match(line)
     ]
 
 

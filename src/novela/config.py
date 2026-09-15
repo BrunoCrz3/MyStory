@@ -33,6 +33,11 @@ from novela.errors import ConfigError
 from novela.models import LengthSpec
 
 ENV_PREFIX = "NOVELA__"
+
+#: Roles que comparten la configuracion de modelo de otro rol. El Parcheador usa
+#: el modelo del Reescritor (§7) pero conserva etiqueta propia en `trace.jsonl` y
+#: clave propia en las fixtures, para poder distinguir parche de reescritura.
+ROLE_ALIASES: dict[str, str] = {"patcher": "rewriter"}
 STRICT = ConfigDict(extra="forbid")
 
 JsonDict = dict[str, Any]
@@ -172,8 +177,9 @@ class Config(BaseModel):
         )
 
     def model_for(self, role: str) -> ModelCfg:
+        resolved = ROLE_ALIASES.get(role, role)
         try:
-            return self.llm.models[role]
+            return self.llm.models[resolved]
         except KeyError:
             known = ", ".join(sorted(self.llm.models))
             raise ConfigError(
@@ -202,7 +208,9 @@ def find_repo_root(start: Path | None = None) -> Path:
         candidate = Path(env_home).expanduser().resolve()
         if (candidate / "config" / "default.yaml").is_file():
             return candidate
-        raise ConfigError(f"NOVELA_HOME apunta a '{candidate}', que no contiene config/default.yaml")
+        raise ConfigError(
+            f"NOVELA_HOME apunta a '{candidate}', que no contiene config/default.yaml"
+        )
 
     seeds = [start or Path.cwd(), Path(__file__).resolve().parent]
     for seed in seeds:

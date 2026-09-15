@@ -59,10 +59,15 @@ class Rewriter(ProseAgent):
     def patch(
         self, draft: str, issues: list[Issue], context: ChapterContext, plan: ChapterPlan
     ) -> str:
-        """Sustituye solo los fragmentos señalados. Nunca regenera el capitulo entero."""
+        """Sustituye solo los fragmentos señalados. Nunca regenera el capitulo entero.
+
+        Usa el modelo del rol `rewriter` (§7) pero se registra como `patcher`, para
+        poder distinguir un parche de una reescritura en `trace.jsonl`.
+        """
         return self.generate(
             template="patcher.md",
             chapter=plan.number,
+            call_role="patcher",
             context_layers=context.debug,
             role_description="el Parcheador, responsable de sustituir fragmentos concretos",
             context=context.user,

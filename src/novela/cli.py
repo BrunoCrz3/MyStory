@@ -18,8 +18,8 @@ from rich.table import Table
 
 from novela import __version__
 from novela.config import (
-    ConfigBundle,
     Config,
+    ConfigBundle,
     find_repo_root,
     get_dotted,
     project_dir,
@@ -51,7 +51,7 @@ SEVERITY_STYLE = {
 
 def _bundle(project_id: str | None = None, **flags: Any) -> ConfigBundle:
     """Punto unico de resolucion de configuracion para todos los comandos."""
-    bundle = resolve(project_id=project_id, flags={k: v for k, v in flags.items()})
+    bundle = resolve(project_id=project_id, flags=dict(flags))
     for warning in bundle.warnings:
         console.print(f"[yellow]Aviso de configuración:[/yellow] {warning}")
     return bundle
@@ -91,11 +91,14 @@ def init(
 ) -> None:
     """Crea el proyecto y congela su configuración de partida."""
     try:
-        bundle = _bundle(**{"novel.chapters": chapters, "profile": profile})
+        bundle = _bundle(None, **{"novel.chapters": chapters, "profile": profile})
         pipeline = Pipeline.open(bundle.config, bundle.repo_root, project_id)
-        pipeline.init(premise, resolved_yaml=yaml.safe_dump(
-            bundle.config.model_dump(mode="json"), allow_unicode=True, sort_keys=False
-        ))
+        pipeline.init(
+            premise,
+            resolved_yaml=yaml.safe_dump(
+                bundle.config.model_dump(mode="json"), allow_unicode=True, sort_keys=False
+            ),
+        )
     except NovelaError as error:
         _fail(error)
     console.print(f"[green]Proyecto '{project_id}' creado[/green] en out/{project_id}/")
@@ -231,7 +234,9 @@ def status(project_id: str) -> None:
     """Estado del proyecto, capítulos y capítulos obsoletos."""
     try:
         pipeline, bundle = _pipeline(project_id)
-        console.print(f"Proyecto [bold]{project_id}[/bold] · estado {pipeline.store.project_state()}")
+        console.print(
+            f"Proyecto [bold]{project_id}[/bold] · estado {pipeline.store.project_state()}"
+        )
         table = Table("Cap.", "Estado", "Unidades", "Obsoleto", box=None)
         stale = set(pipeline.store.stale_chapters())
         for number in range(1, bundle.config.novel.chapters + 1):
@@ -257,11 +262,13 @@ def continuity(project_id: str) -> None:
         _fail(error)
     facts = Table("Hecho", "Sujeto", "Predicado", "Valor", "Cap.", box=None)
     for fact in ledger.current_facts():
-        facts.add_row(fact.id, fact.subject, fact.predicate, fact.value, str(fact.chapter_established))
+        facts.add_row(
+            fact.id, fact.subject, fact.predicate, fact.value, str(fact.chapter_established)
+        )
     console.print(facts)
     threads = ledger.open_threads()
     console.print(
-        f"[green]Sin hilos abiertos.[/green]"
+        "[green]Sin hilos abiertos.[/green]"
         if not threads
         else "Hilos abiertos: " + ", ".join(f"{t.id} ({t.question})" for t in threads)
     )
@@ -276,20 +283,27 @@ def cost(project_id: str) -> None:
     directory = project_dir(bundle.repo_root, project_id)
     tracker = CostTracker(directory / "cost.json")
     total = CostTracker.load_total(tracker.path)
-    console.print(f"Coste observado del proyecto: [bold]{total:.4f} USD[/bold] "
-                  f"(tope {bundle.config.limits.max_cost_usd:.2f} USD)")
+    console.print(
+        f"Coste observado del proyecto: [bold]{total:.4f} USD[/bold] "
+        f"(tope {bundle.config.limits.max_cost_usd:.2f} USD)"
+    )
     events = TraceWriter(directory / "trace.jsonl").read_all()
     table = Table("Rol", "Llamadas", "Tokens ent.", "Tokens sal.", "USD", box=None)
     roles: dict[str, list[float]] = {}
     for event in events:
         row = roles.setdefault(str(event.get("role")), [0.0, 0.0, 0.0, 0.0])
         row[0] += 1
-        row[1] += float(event.get("input_tokens", 0) or 0)
-        row[2] += float(event.get("output_tokens", 0) or 0)
-        row[3] += float(event.get("cost_usd", 0) or 0)
+        row[1] += _number(event.get("input_tokens"))
+        row[2] += _number(event.get("output_tokens"))
+        row[3] += _number(event.get("cost_usd"))
     for role, row in sorted(roles.items()):
         table.add_row(role, f"{row[0]:.0f}", f"{row[1]:.0f}", f"{row[2]:.0f}", f"{row[3]:.4f}")
     console.print(table)
+
+
+def _number(value: object) -> float:
+    """Convierte un campo de `trace.jsonl` a float sin confiar en su tipo declarado."""
+    return float(value) if isinstance(value, (int, float)) else 0.0
 
 
 @app.command()
@@ -316,8 +330,10 @@ def demo() -> None:
         produced = pipeline.run_auto()
     except NovelaError as error:
         _fail(error)
-    console.print(f"[green]Demo completa[/green] · {bundle.config.novel.chapters} capítulos de "
-                  f"{bundle.config.novel.length.target} {bundle.config.novel.length.unit}")
+    console.print(
+        f"[green]Demo completa[/green] · {bundle.config.novel.chapters} capítulos de "
+        f"{bundle.config.novel.length.target} {bundle.config.novel.length.unit}"
+    )
     for kind, path in produced.items():
         console.print(f"[green]{kind}:[/green] {path.relative_to(root)}")
 
@@ -345,8 +361,11 @@ def config_show(
     """Muestra la configuración efectiva, con el origen de cada clave si se pide."""
     bundle = _bundle(project_id)
     if not resolved:
-        console.print(yaml.safe_dump(bundle.config.model_dump(mode="json"), allow_unicode=True,
-                                     sort_keys=False))
+        console.print(
+            yaml.safe_dump(
+                bundle.config.model_dump(mode="json"), allow_unicode=True, sort_keys=False
+            )
+        )
         return
     table = Table("Clave", "Valor", "Origen", box=None)
     for key, origin in sorted(bundle.origins.items()):
@@ -359,7 +378,9 @@ def config_show(
 
 
 @config_app.command("get")
-def config_get(key: str, project_id: Annotated[str | None, typer.Option("--project")] = None) -> None:
+def config_get(
+    key: str, project_id: Annotated[str | None, typer.Option("--project")] = None
+) -> None:
     """Imprime el valor efectivo de una clave."""
     try:
         console.print(get_dotted(_bundle(project_id).config, key))
@@ -390,13 +411,12 @@ def config_set(
     console.print(f"[green]{key}[/green] = {value}  →  {target}")
 
 
-def _record_change(
-    root: Path, project_id: str | None, key: str, old: object, new: object
-) -> None:
+def _record_change(root: Path, project_id: str | None, key: str, old: object, new: object) -> None:
     if project_id is None or old == new:
         return
-    Pipeline.open(resolve(repo_root=root, project_id=project_id).config, root, project_id)\
-        .log_config_change(key, old, new)
+    Pipeline.open(
+        resolve(repo_root=root, project_id=project_id).config, root, project_id
+    ).log_config_change(key, old, new)
 
 
 @config_app.command("validate")

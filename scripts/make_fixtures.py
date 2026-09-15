@@ -124,7 +124,8 @@ CHAPTERS: list[dict[str, object]] = [
         "hook": "el cuerpo proyectado llevaba su mismo modelo de guante",
         "text": (
             "El hielo de Encélado crujía bajo la rejilla como un hueso que se acomoda.\n"
-            "Nadia revisó el sello del guante izquierdo y anotó la microfuga en el parte del turno.\n"
+            "Nadia revisó el sello del guante izquierdo y anotó la microfuga en el "
+            "parte del turno.\n"
             "Desde la cámara contigua, el Oráculo proyectó una rejilla vacía y un cuerpo que "
             "todavía no existía.\n"
             "Cerró el parte sin firmarlo y bajó a la Pasarela Seis con la linterna apagada.\n"
@@ -189,7 +190,8 @@ CHAPTERS: list[dict[str, object]] = [
             "parte pendiente.\n"
         ),
         "beats": [
-            "Nadia arranca el panel del mamparo y encuentra un registro de consultas no solicitado.",
+            "Nadia arranca el panel del mamparo y encuentra un registro de consultas "
+            "no solicitado.",
             "Teo enumera la cuota, los plazos y el precio de una concesión perdida.",
         ],
         "new_information": [
@@ -310,7 +312,8 @@ def build_outline() -> dict[str, object]:
                 "threads_advanced": [THREAD["id"]] if number == 2 else [],
                 "threads_closed": [THREAD["id"]] if number == 3 else [],
                 "world_state_delta": [
-                    str(item) for item in list(spec["new_information"])  # type: ignore[arg-type]
+                    str(item)
+                    for item in list(spec["new_information"])  # type: ignore[arg-type]
                 ],
                 "hook": spec["hook"],
                 "target_length": LENGTH,
@@ -339,7 +342,9 @@ def build_archivist(number: int) -> dict[str, object]:
             }
         )
     for extra in EXTRA_FACTS[number]:
-        facts.append({**extra, "chapter_established": number, "status": "vigente", "revoked_by": None})
+        facts.append(
+            {**extra, "chapter_established": number, "status": "vigente", "revoked_by": None}
+        )
 
     thread = dict(THREAD)
     if number == 1:
@@ -386,8 +391,10 @@ def build_reviewer() -> dict[str, object]:
         },
         "corrections": [],
         "pacing_notes": [
-            "El capítulo 1 sostiene la tensión con una sola anomalía concreta y no adelanta la causa.",
-            "El capítulo 2 gasta el recurso escaso y convierte la ceguera en una ventana de oportunidad.",
+            "El capítulo 1 sostiene la tensión con una sola anomalía concreta y no "
+            "adelanta la causa.",
+            "El capítulo 2 gasta el recurso escaso y convierte la ceguera en una "
+            "ventana de oportunidad.",
             "El capítulo 3 cierra el hilo con una prueba material, no con una explicación.",
         ],
     }
@@ -433,15 +440,21 @@ def verify() -> list[str]:
     from novela.validators.length import count_units
 
     problems: list[str] = []
-    bible = StoryBible.model_validate(json.loads((FIXTURES / "architect.json").read_text("utf-8"))["json"])
-    outline = Outline.model_validate(json.loads((FIXTURES / "outliner.json").read_text("utf-8"))["json"])
+    bible = StoryBible.model_validate(
+        json.loads((FIXTURES / "architect.json").read_text("utf-8"))["json"]
+    )
+    outline = Outline.model_validate(
+        json.loads((FIXTURES / "outliner.json").read_text("utf-8"))["json"]
+    )
     GlobalReview.model_validate(json.loads((FIXTURES / "reviewer.json").read_text("utf-8"))["json"])
 
     character_ids = {character.id for character in bible.characters}
     location_ids = {location.id for location in bible.locations}
     for plan in outline.chapters:
         if plan.pov_character_id not in character_ids:
-            problems.append(f"ch{plan.number}: POV '{plan.pov_character_id}' no existe en la biblia")
+            problems.append(
+                f"ch{plan.number}: POV '{plan.pov_character_id}' no existe en la biblia"
+            )
         for location_id in plan.location_ids:
             if location_id not in location_ids:
                 problems.append(f"ch{plan.number}: localización '{location_id}' no existe")
