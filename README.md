@@ -202,8 +202,16 @@ escritos (para que tengan también los scores añadidos después) y saca las
 generaciones de los transcripts de Claude Code, que es el único sitio donde
 está el desglose de tokens por llamada.
 
-Es idempotente: los identificadores son deterministas, así que ejecutarlo dos
-veces actualiza en vez de duplicar. No escribe en `events.jsonl`.
+**No es idempotente por sí solo.** La ingesta por OpenTelemetry **no
+deduplica**: reenviar un span crea otra observación en el panel. Por eso el
+sistema lleva un registro local de lo ya enviado en
+`novela/langfuse-enviados.txt`, y el script omite lo que ya viajó. Si borras
+ese fichero, o usas `--reenviar-todo`, duplicarás lo que ya estuviera arriba.
+
+Para rehacer una traza desde cero: bórrala primero en la interfaz de Langfuse,
+quita sus identificadores del registro local y vuelve a lanzarlo.
+
+No escribe en `events.jsonl`.
 
 ## Dependencias
 

@@ -63,12 +63,45 @@ def carpeta_transcripts(ruta: str = None):
     return None
 
 
+def _colapsar(lineas: list) -> list:
+    """Una entrada por LLAMADA real, no por linea del transcript.
+
+    Una sola llamada a la API deja varias lineas en el transcript, una por
+    bloque de contenido, todas con el mismo requestId. Los tokens de entrada y
+    de cache se repiten identicos en todas; los de salida son instantaneas
+    parciales que crecen hasta el valor final.
+
+    Por eso no se suman: los de entrada se toman una vez y los de salida se
+    queda el maximo. Sumarlos inflaba el gasto de la novela al doble.
+
+    De paso, la primera y la ultima linea dan a la generacion una duracion
+    real, en vez de un instante sin latencia.
+    """
+    grupos = {}
+    for fila in lineas:
+        clave = fila["id_generacion"]
+        grupo = grupos.get(clave)
+        if grupo is None:
+            grupos[clave] = dict(fila, inicio=fila["ts"], fin=fila["ts"])
+            continue
+        grupo["inicio"] = min(grupo["inicio"], fila["ts"] or "")
+        grupo["fin"] = max(grupo["fin"], fila["ts"] or "")
+        grupo["ts"] = grupo["fin"]
+        uso, nuevo_uso = grupo["usage"], fila["usage"]
+        uso["output_tokens"] = max(uso["output_tokens"],
+                                   nuevo_uso["output_tokens"])
+        for clave_uso in ("input_tokens", "cache_creation_input_tokens",
+                          "cache_read_input_tokens"):
+            uso[clave_uso] = max(uso[clave_uso], nuevo_uso[clave_uso])
+    return list(grupos.values())
+
+
 def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str,
                      id_agente: str) -> list:
-    """Una entrada por mensaje del modelo con uso declarado.
+    """Una entrada por llamada real al modelo, con su uso declarado.
 
-    Se emite una generacion por llamada real, no una por subagente: es lo que
-    deja ver que la primera llamada crea la cache y las siguientes la leen.
+    Se emite una generacion por llamada, no una por subagente: es lo que deja
+    ver que la primera crea la cache y las siguientes la leen.
     """
     salida = []
     try:
@@ -106,7 +139,7 @@ def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str,
                     uso.get("cache_read_input_tokens") or 0,
             },
         })
-    return salida
+    return _colapsar(salida)
 
 
 def leer_invocaciones(carpeta: pathlib.Path) -> list:
@@ -256,6 +289,8 @@ def eventos_de_invocacion(eventos: list, invocaciones: list) -> list:
                 "model": inv["model"],
                 "session_id": inv["session_id"],
                 "id_generacion": inv["id_generacion"],
+                "inicio": inv.get("inicio"),
+                "fin": inv.get("fin"),
                 "usage": inv["usage"],
             },
             "esquema": 1,
@@ -343,6 +378,12 @@ def main():
                     "Code. No regenera nada y no escribe en events.jsonl.")
     parser.add_argument("--tirada",
                         help="Solo esta tirada. Por defecto, todas.")
+    parser.add_argument("--capitulos",
+                        help="Carpeta de capitulos a medir, para una novela ya "
+                             "archivada cuyos textos se movieron.")
+    parser.add_argument("--eventos",
+                        help="Registro alternativo, para subir una novela ya "
+                             "archivada sin tocar novela/events.jsonl.")
     parser.add_argument("--transcripts",
                         help="Carpeta de transcripts de Claude Code. Por "
                              "defecto se localiza sola en ~/.claude/projects.")
@@ -351,12 +392,26 @@ def main():
     parser.add_argument("--sin-metricas-actuales", action="store_true",
                         help="No recalcular las metricas de los capitulos ya "
                              "escritos.")
+    parser.add_argument("--reenviar-todo", action="store_true",
+                        help="Ignora el registro de lo ya enviado. OJO: la "
+                             "ingesta por OTLP no deduplica, asi que esto "
+                             "DUPLICA en el panel lo que ya estuviera.")
     parser.add_argument("--simular", action="store_true",
                         help="Muestra lo que se enviaria y no envia nada.")
     args = parser.parse_args()
 
     cfg = nucleo.cargar_config()
-    eventos = ob.leer_eventos(cfg, args.tirada)
+    if args.capitulos:
+        ob.usar_capitulos(args.capitulos)
+    if args.eventos:
+        # Se lee el fichero indicado sin alterar la configuracion ni el
+        # registro vivo: subir una tirada archivada no debe tocar la actual.
+        copia = json.loads(json.dumps(cfg))
+        copia["eventos"] = dict(copia.get("eventos") or {})
+        copia["eventos"]["fichero"] = args.eventos
+        eventos = ob.leer_eventos(copia, args.tirada)
+    else:
+        eventos = ob.leer_eventos(cfg, args.tirada)
     if not eventos:
         nucleo.salir({"script": "retroalimentar",
                       "error": "no hay eventos que subir en events.jsonl"}, 3)
@@ -385,10 +440,18 @@ def main():
         spans.extend(ob.construir_spans(cfg, de_esta, texto_ok))
         scores.extend(ob.construir_scores(cfg, de_esta))
 
+    if not args.reenviar_todo:
+        antes = len(spans)
+        spans = ob.nuevos(spans)
+        omitidos = antes - len(spans)
+    else:
+        omitidos = 0
+
     informe = _resumen(eventos, generaciones)
     informe.update({
         "script": "retroalimentar",
         "metricas_recalculadas": len(sinteticos),
+        "spans_ya_enviados_omitidos": omitidos,
         "spans": len(spans),
         "scores": len(scores),
         "trazas": sorted({ob.clave_traza(cfg, e.get("tirada"))

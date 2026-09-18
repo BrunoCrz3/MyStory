@@ -42,6 +42,7 @@ import base64
 import hashlib
 import json
 import os
+import pathlib
 import re
 import urllib.error
 import urllib.request
@@ -54,6 +55,9 @@ VARIABLES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_BASE_URL")
 TIEMPO_MAXIMO = 8          # segundos por envio: no bloquear la generacion
 MAX_LOTE_BYTES = 900_000   # la API rechaza cuerpos por encima de 1 MB
 RUTA_LOG = "novela/langfuse.log"
+# Registro de spans ya enviados. Hace falta porque la ingesta por OTLP NO hace
+# upsert por span id: reenviar un span crea otra observacion. Ver SPEC 14.4.
+RUTA_ENVIADOS = "novela/langfuse-enviados.txt"
 MAX_TEXTO = 20000          # tope del manuscrito que viaja como salida
 
 RUTA_OTLP = "/api/public/otel/v1/traces"
@@ -148,6 +152,45 @@ def _anotar(mensaje: str) -> None:
             fichero.write(f"{marca} {mensaje}\n")
     except OSError:
         pass  # ni siquiera un fallo de log puede tumbar la generacion
+
+
+def _ya_enviados() -> set:
+    """Span ids que ya viajaron alguna vez."""
+    ruta = nucleo.raiz() / RUTA_ENVIADOS
+    if not ruta.exists():
+        return set()
+    try:
+        return {l.strip() for l in ruta.read_text(encoding="utf-8").splitlines()
+                if l.strip()}
+    except OSError:
+        return set()
+
+
+def _marcar_enviados(ids) -> None:
+    """Se apunta SOLO tras un envio correcto: si falla, se reintentara."""
+    if not ids:
+        return
+    try:
+        ruta = nucleo.raiz() / RUTA_ENVIADOS
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        with ruta.open("a", encoding="utf-8") as fichero:
+            for ident in ids:
+                fichero.write(str(ident) + "\n")
+    except OSError:
+        pass
+
+
+def nuevos(spans: list) -> list:
+    """Descarta los spans que ya se enviaron en una ejecucion anterior."""
+    vistos = _ya_enviados()
+    salida, en_lote = [], set()
+    for span in spans:
+        ident = span.get("spanId")
+        if ident in vistos or ident in en_lote:
+            continue
+        en_lote.add(ident)
+        salida.append(span)
+    return salida
 
 
 def _motivo(exc: Exception) -> str:
@@ -513,8 +556,9 @@ def _generacion(traza, k, ev, texto_ok) -> dict:
              else _padre_de(k, ev.get("capitulo"), ev.get("intento"),
                             ev.get("fase")))
     clave = f"{k['raiz']}--gen-{datos.get('id_generacion') or ev.get('ts')}"
-    return _span(traza, clave, rol, "generation", ev.get("ts"), ev.get("ts"),
-                 padre, atributos)
+    return _span(traza, clave, rol, "generation",
+                 datos.get("inicio") or ev.get("ts"),
+                 datos.get("fin") or ev.get("ts"), padre, atributos)
 
 
 def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
@@ -603,6 +647,36 @@ def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
 # Scores
 # --------------------------------------------------------------------------
 
+_dir_capitulos = None
+
+
+def usar_capitulos(ruta) -> None:
+    """Mide los capitulos en otra carpeta, para subir una novela archivada."""
+    global _dir_capitulos
+    _dir_capitulos = ruta
+
+
+def _lineas_utiles(capitulo) -> list:
+    """Lineas de cuerpo del capitulo, con la misma regla que nucleo.
+
+    Si el fichero no esta (por ejemplo, una tirada ya archivada cuyos
+    capitulos se movieron), devuelve None en vez de cero: publicar un cero
+    seria publicar un dato falso.
+    """
+    if _dir_capitulos:
+        ruta = pathlib.Path(_dir_capitulos) / f"capitulo-{int(capitulo):02d}.md"
+    else:
+        ruta = nucleo.ruta_capitulo(capitulo)
+    if not ruta.exists():
+        return None
+    utiles = []
+    for linea in ruta.read_text(encoding="utf-8").splitlines():
+        limpia = linea.strip()
+        if limpia and not limpia.startswith("#"):
+            utiles.append(limpia)
+    return utiles
+
+
 def _aplanar(metricas: dict) -> dict:
     plano = {}
     for clave, valor in (metricas or {}).items():
@@ -667,9 +741,11 @@ def construir_scores(cfg: dict, eventos: list) -> list:
         elif ev.get("evento") == "capitulo_fin":
             observacion = k["cap"](cap)
             anadir(observacion, "intentos", ev.get("intento") or 1)
-            anadir(observacion, "palabras",
-                   len(nucleo.palabras(nucleo.cuerpo_capitulo(cap))))
-            anadir(observacion, "lineas", len(nucleo.lineas_capitulo(cap)))
+            lineas = _lineas_utiles(cap)
+            if lineas is not None:
+                anadir(observacion, "palabras",
+                       len(nucleo.palabras(" ".join(lineas))))
+                anadir(observacion, "lineas", len(lineas))
         elif ev.get("evento") == "escalado":
             anadir(k["cap"](cap), "escalado", 1)
     return lote
@@ -740,8 +816,10 @@ def flush() -> bool:
             return False
         ok = True
         for tanda in trocear(spans):
-            if not _peticion(cred, RUTA_OTLP, _envoltorio(cfg, tanda),
-                             {"x-langfuse-ingestion-version": "4"}):
+            if _peticion(cred, RUTA_OTLP, _envoltorio(cfg, tanda),
+                         {"x-langfuse-ingestion-version": "4"}):
+                _marcar_enviados(s.get("spanId") for s in tanda)
+            else:
                 _anotar(f"OTLP: tanda de {len(tanda)} spans rechazada")
                 ok = False
         for tanda in trocear(scores):
@@ -782,7 +860,10 @@ def exportar(ev: dict) -> bool:
         eventos = leer_eventos(cfg, ev.get("tirada"))
         if not any(e.get("ts") == ev.get("ts") for e in eventos):
             eventos.append(ev)
-        encolar(construir_spans(cfg, eventos, enviar_texto(cfg)),
+        # Solo lo que no haya viajado ya: sin este filtro, reconstruir el
+        # arbol en cada evento multiplicaria cada span por el numero de
+        # eventos de la tirada.
+        encolar(nuevos(construir_spans(cfg, eventos, enviar_texto(cfg))),
                 construir_scores(cfg, eventos))
         return True
     except SystemExit:

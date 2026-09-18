@@ -10,3 +10,4 @@ Thumbs.db
 
 # Log local de fallos de envio a Langfuse: diagnostico, no fuente de verdad.
 novela/langfuse.log
+novela/langfuse-enviados.txt

@@ -2952,6 +2952,13 @@ de modo que el mismo capítulo produce el mismo span desde cualquier proceso.
 Es también la razón de no usar el SDK oficial: no permite fijar el id de un
 span, así que con un proceso por evento el árbol no anidaría.
 
+**La ingesta por OTLP no hace upsert.** A diferencia de la API v3, reenviar un
+span con el mismo `spanId` **crea otra observación** en lugar de actualizarla.
+Por eso el exportador lleva un registro local de span ids ya enviados en
+`novela/langfuse-enviados.txt` y filtra con él antes de mandar nada. Sin ese
+filtro, reconstruir el árbol en cada evento multiplicaría cada span por el
+número de eventos de la tirada.
+
 **Por qué se reconstruye el árbol entero en cada envío.** Un span de OTLP viaja
 completo, con su inicio y su fin, y no se actualiza después. Como el inicio de
 una fase y su fin ocurren en procesos distintos, el exportador relee el
