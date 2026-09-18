@@ -33,3 +33,4 @@
 {"ts": "2026-09-18T15:16:08.061Z", "tirada": "20260918-0056", "evento": "fase_fin", "fase": "revision", "capitulo": null, "intento": null, "datos": {"veredicto": "APROBADO", "bloqueantes": 0, "mayores": 0, "menores": 8, "correcciones_propuestas": 0}, "esquema": 1}
 {"ts": "2026-09-18T15:18:21.331Z", "tirada": "20260918-0056", "evento": "fase_inicio", "fase": "entrega", "capitulo": null, "intento": null, "datos": {}, "esquema": 1}
 {"ts": "2026-09-18T15:18:43.462Z", "tirada": "20260918-0056", "evento": "fase_fin", "fase": "entrega", "capitulo": null, "intento": null, "datos": {"capitulos": 3, "unidad": "lineas", "total": 12}, "esquema": 1}
+{"ts": "2026-09-18T15:18:43.750Z", "tirada": "20260918-1518", "evento": "commit", "fase": null, "capitulo": null, "intento": null, "datos": {"sha": "1071f8f", "mensaje": "feat(entrega): manuscrito.md"}, "esquema": 1}
