@@ -1,0 +1,75 @@
+{
+  "comentario": [
+    "LINEA BASE CONGELADA. No se recalcula nunca. Si alguna vez hay que",
+    "cambiarla, se cambia a mano y se dice por que en ciclo/bitacora.md.",
+    "",
+    "Medida el 2026-09-18 con repeticion.monotonia_sintactica() sobre los tres",
+    "capitulos de 'El pagador de la 812', que es la ultima novela generada y la",
+    "unica que refleja como escribe el sistema hoy.",
+    "",
+    "Hay una segunda novela en archivo/la-sala-de-cotejo, y su monotonia es",
+    "0.6388: alli el tic esta entero (12 frases de 38 a 99 palabras, ninguna",
+    "corta, tres de cada cuatro lineas con punto y coma). Se deja FUERA de la",
+    "linea base a peticion del autor, porque promediar las dos daria 0.4658 y",
+    "eso mediria una prosa que el sistema ya no escribe. Queda anotada aqui",
+    "como el peor caso conocido, que es informacion util."
+  ],
+  "medida": "2026-09-18",
+  "novela": "El pagador de la 812",
+  "tirada": "20260918-1938",
+  "capitulos": 3,
+  "monotonia_sintactica": 0.2927,
+  "componentes": {
+    "apertura": 0.3636,
+    "puntuacion": 0.0833,
+    "uniformidad": 0.4311
+  },
+  "por_capitulo": [
+    {
+      "capitulo": 1,
+      "monotonia_sintactica": 0.2372,
+      "componentes": {
+        "apertura": 0.3333,
+        "puntuacion": 0.0,
+        "uniformidad": 0.3783
+      }
+    },
+    {
+      "capitulo": 2,
+      "monotonia_sintactica": 0.3224,
+      "componentes": {
+        "apertura": 0.3333,
+        "puntuacion": 0.25,
+        "uniformidad": 0.3838
+      }
+    },
+    {
+      "capitulo": 3,
+      "monotonia_sintactica": 0.4027,
+      "componentes": {
+        "apertura": 0.6667,
+        "puntuacion": 0.0,
+        "uniformidad": 0.5414
+      }
+    }
+  ],
+  "frases": 43,
+  "meta": 0.22,
+  "nota_meta": "El autor pidio meta 0.35 sobre una linea base de 0.4658 (las dos novelas), que es bajar un 25%. Congelada la base en 0.2927, la misma reduccion da 0.22. La meta original ya estaba cumplida de salida.",
+  "guardarrailes_base": {
+    "solape_medio": 0.0009,
+    "diversidad_media": 1.0,
+    "coste_tirada_usd": 8.2366,
+    "errores_continuidad": 0,
+    "errores_longitud": 0
+  },
+  "peor_caso_conocido": {
+    "novela": "La sala de cotejo",
+    "monotonia_sintactica": 0.6388,
+    "componentes": {
+      "apertura": 0.4545,
+      "puntuacion": 0.75,
+      "uniformidad": 0.7118
+    }
+  }
+}
