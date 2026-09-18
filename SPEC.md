@@ -1985,9 +1985,13 @@ Convención común a todos:
 | `leer_canon()` | Lee `novela/canon.md` como texto | `str` |
 | `secciones_canon(texto)` | Parte el canon por encabezados `## ` | `dict[str, str]` |
 | `ruta_capitulo(n)` | `novela/capitulos/capitulo-NN.md` | `Path` |
-| `capitulos_existentes()` | Lista ordenada de números de capítulo en disco | `list[int]` |
+| `carpeta_capitulos(base=None)` | Dónde viven los capítulos: los de la novela en curso, o los de cualquier otra base | `Path` |
+| `capitulos_existentes(base=None)` | Lista ordenada de números de capítulo en disco | `list[int]` |
 | `cuerpo_capitulo(n)` | Texto del capítulo sin la línea de título ni líneas vacías | `str` |
-| `lineas_capitulo(n)` | Lista de líneas de cuerpo no vacías | `list[str]` |
+| `lineas_de(ruta)` | Líneas de cuerpo de un fichero de capítulo, o `None` si no está | `list[str] \| None` |
+| `lineas_capitulo(n, base=None)` | Lista de líneas de cuerpo no vacías; vacía si el capítulo no existe | `list[str]` |
+| `leer_jsonl(ruta)` | Las líneas de un JSONL ya convertidas, saltándose las rotas | `list[dict]` |
+| `actualizar_config(premisa, capitulos, objetivo)` | Cambia en `config.json` **solo** esas tres claves | `dict` |
 | `palabras(texto)` | Tokeniza en palabras, minúsculas, sin puntuación, conservando tildes y ñ | `list[str]` |
 | `normalizar(texto)` | Minúsculas, sin tildes, sin puntuación, espacios colapsados; para comparar | `str` |
 | `ngramas(tokens, n)` | Conjunto de n-gramas como tuplas | `set` |
@@ -2000,6 +2004,17 @@ positivo. Si algo falla, imprime un JSON de error y sale con código `3`.
 `normalizar()` se usa para comparar frases y detectar reciclaje: quita tildes y
 puntuación para que "la cadencia exacta de un pulso" y "la cadencia, exacta, de
 un pulso" cuenten como la misma frase.
+
+**Las cuatro últimas llegaron después, y todas por el mismo motivo: había más de
+una copia de la misma regla.** `leer_jsonl()` sustituye a seis bucles repartidos
+por el repositorio que toleraban una línea rota cada uno a su manera.
+`lineas_de()` y `capitulos_existentes(base)` sustituyen a las copias que tenían
+`observabilidad.py`, `api.py` y el ciclo de mejora, y devuelven `None` frente a
+lista vacía cuando el fichero no está, porque un capítulo ausente no es un
+capítulo de cero líneas. `actualizar_config()` es **la única puerta** por la que
+se escribe en `config.json`: la regla de que solo se tocan `premisa`,
+`capitulos` y `longitud.objetivo` era una frase de `CLAUDE.md` que cumplía quien
+se acordaba, y ahora es la firma de una función que no acepta ninguna otra.
 
 ### 10.2 `scripts/eventos.py`
 
@@ -2663,6 +2678,10 @@ del span del capítulo aunque valgan lo mismo que ayer.
 | `monotonia_apertura` | `repeticion.py` | 0..1 | Capítulos anteriores que abren con el mismo tipo (12.4), sobre el total de anteriores. |
 | `monotonia_muletillas` | `repeticion.py` | 0..1 | `muletilla_max.por_mil` dividido entre `max_muletilla_por_mil`, recortado a 1.0. |
 | `monotonia_reciclaje` | `repeticion.py` | 0..1 | Frases recicladas (12.2) entre líneas del capítulo, recortado a 1.0. |
+| `monotonia_sintactica` | `repeticion.py` | 0..1, **más alto peor** | Media aritmética de sus tres componentes. Mide si todas las frases tienen la misma **forma**, que es lo que las métricas de vocabulario no ven. |
+| `monotonia_sintactica_apertura` | `repeticion.py` | 0..1 | Cuánto pesa la forma de apertura más repetida: `(repeticiones - 1) / (líneas - 1)`. 0 si cada línea abre distinto, 1 si todas abren igual. |
+| `monotonia_sintactica_puntuacion` | `repeticion.py` | 0..1 | Líneas con punto y coma o con raya intercalada, sobre el total. La raya **inicial** no cuenta: es diálogo, no inciso. |
+| `monotonia_sintactica_uniformidad` | `repeticion.py` | 0..1 | `1 - min(1, CV)` de la longitud en palabras de las frases, donde CV es la desviación entre la media. Todas las frases igual de largas da 1. |
 | `cobertura_beats` | `continuidad.py` | 0..1 | Marcadores de beat presentes sobre marcadores exigidos por la escaleta. |
 
 `cobertura_beats` **no sustituye** a la comprobación `beats_cubiertos`, que
@@ -2672,7 +2691,28 @@ aunque la cobertura sea 0.9. La fracción solo sirve para ver la tendencia.
 Los denominadores pueden ser cero en un capítulo vacío o en el primero de la
 novela. En ese caso `diversidad` vale 0.0, `monotonia_apertura` vale 0.0 y
 `cobertura_beats` vale 1.0, que es lo que corresponde a "no hay nada que
-incumplir".
+incumplir". Con una sola frase, `monotonia_sintactica_uniformidad` vale 0.0: no
+hay dispersión que medir y llamarlo uniformidad perfecta sería inventarse un
+dato.
+
+**`monotonia` y `monotonia_sintactica` no son la misma métrica y no se
+sustituyen.** La primera mira **qué** se repite: el tipo de apertura, las
+muletillas, las frases recicladas. La segunda mira **cómo** está construida la
+frase, y existe porque una prosa puede variar todas sus palabras y aun así
+escribir siempre la misma figura —larga, con punto y coma, subordinada y giro
+final—, que leída en tres capítulos parece estilo y en dieciocho es un tic.
+`repeticion.monotonia_sintactica(lineas)` es una **función pura** sobre una
+lista de líneas: no lee disco ni estado, y por eso la misma cuenta sirve para un
+capítulo en curso y para una novela archivada. Ver la sección 20.
+
+**Cómo llegan al panel.** El evento `validacion` lleva el bloque entero de
+métricas, que construye `informes.metricas_planas()`, y
+`observabilidad._aplanar()` deshace los diccionarios anidados un nivel antes de
+convertirlos en scores. Ninguna de las dos funciones conoce el nombre de ninguna
+métrica: una métrica nueva llega al panel sin tocarlas. Hasta que se unificaron,
+el orquestador escogía a mano siete claves y dejaba fuera justo las de esta
+tabla, mientras que `retroalimentar.py` mandaba el bloque completo: la misma
+tirada daba un panel en vivo y otro distinto al resubirla.
 
 ---
 
@@ -3207,17 +3247,19 @@ git push -u origin main
 
 ## 16. Inventario cerrado de entregables
 
-39 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
-hay 41, algo se ha inventado; si hay 37, algo falta.
+43 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
+hay 45, algo se ha inventado; si hay 41, algo falta.
 
-Los ocho últimos (32 a 39) llegaron con la interfaz web, que el autor pidió
-después de la primera construcción. Hasta entonces el inventario eran 31.
+El inventario ha crecido dos veces y las dos por petición del autor. Los ocho
+ficheros 32 a 39 llegaron con la interfaz web; hasta entonces eran 31. Los
+cuatro últimos, 40 a 43, llegaron con el ciclo de mejora automática (sección
+16.9 y sección 20).
 
 ### 16.1 Raíz
 
 | # | Fichero | Criterio de aceptación |
 |---|---|---|
-| 1 | `SPEC.md` | Este documento, con las 19 secciones numeradas |
+| 1 | `SPEC.md` | Este documento, con las 20 secciones numeradas |
 | 2 | `README.md` | Contenido literal de la sección 5.3. Menciona los 4 comandos |
 | 3 | `CLAUDE.md` | Contenido literal de la sección 5.2. 8 invariantes y 6 prohibiciones |
 | 4 | `config.json` | JSON válido con el contenido literal de la sección 4.1. `capitulos: 3`, `unidad: "lineas"`, `objetivo: 4` |
@@ -3317,6 +3359,21 @@ Las carpetas `novela/capitulos/` y `novela/informes/` se crean vacías.
 `novela/informes/*.json` y `manuscrito.md` **no** se crean en la construcción:
 los genera el sistema al ejecutarse.
 
+### 16.9 El ciclo de mejora automática (`ciclo/`)
+
+| # | Fichero | Criterio de aceptación |
+|---|---|---|
+| 40 | `ciclo-mejora.md` | Una página en lenguaje llano: qué mejora, cómo lo mide, cuándo para y qué recuerda. Se entiende sin saber programar |
+| 41 | `ciclo/ciclo.py` | `--arrancar`, `--si-procede` y `--estado`. Toca **un solo** fichero, `.claude/agents/escritor.md`, y dentro de él solo la región entre marcas. No calcula ninguna métrica propia |
+| 42 | `ciclo/linea-base.json` | La línea base **congelada**, medida sobre las novelas ya generadas. No se recalcula nunca. Lleva también los cuatro guardarraíles de referencia |
+| 43 | `ciclo/premisas.json` | Una premisa de ajuste, siempre la misma, y dos de confirmación que no se usan durante el ajuste |
+
+`ciclo/iteraciones.jsonl`, `ciclo/bitacora.md`, `ciclo/prompts/` y
+`ciclo/tiradas/` **no** se crean en la construcción: los escribe el ciclo al
+ejecutarse, igual que `events.jsonl`. `ciclo/.respaldo/` es la copia de la
+novela del autor mientras el ciclo corre, existe solo durante la ejecución y
+está ignorada por git.
+
 ### 16.8 Ficheros que NO deben existir
 
 `.mcp.json`, `requirements.txt`, `pyproject.toml`, `setup.py`, `Makefile`,
@@ -3343,7 +3400,7 @@ fichero no se instalan nunca solas y el sistema funciona entero sin ellas.
 `novela/langfuse.log` lo crea el sistema al ejecutarse si algún envío falla, y
 está ignorado por git: es diagnóstico, no fuente de verdad.
 
-**Recuento:** 7 + 7 + 3 + 4 + 11 + 6 + 1 = **39**.
+**Recuento:** 7 + 7 + 3 + 4 + 11 + 6 + 1 + 4 = **43**.
 
 ---
 
@@ -3658,4 +3715,54 @@ Ninguno bloquea la v1. Los dejo anotados para cuando el sistema ya funcione.
 
 ---
 
-*Fin del SPEC. 19 secciones, 27 ficheros, cero dependencias.*
+---
+
+## 20. El ciclo de mejora automática
+
+**Qué es:** un procedimiento que ajusta **una sola cosa** del sistema, comprueba
+con tiradas reales si el ajuste mejora algo, y para cuando lo consigue o cuando
+deja de merecer la pena. La explicación en lenguaje llano está en
+`ciclo-mejora.md`, que es lo que hay que leer primero. Aquí solo lo que el resto
+del SPEC necesita saber.
+
+**Qué mejora:** la monotonía sintáctica del escritor, medida con
+`repeticion.monotonia_sintactica()` (sección 12.8). Línea base **0,2927**,
+congelada sobre *El pagador de la 812*; meta **0,22**.
+
+**Qué toca:** `.claude/agents/escritor.md`, y dentro de él solo la región
+marcada entre `<!-- ciclo:inicio -->` y `<!-- ciclo:fin -->`. Nada más: ni
+umbrales, ni validadores, ni configuración más allá de `premisa`, que restaura
+al terminar por `nucleo.actualizar_config()`. Si hiciera falta cambiar algo
+fuera de esa región, el ciclo no lo hace: para y lo dice.
+
+**Qué reutiliza:** todo. `repeticion` para la métrica, `medir` para la longitud,
+el informe que el orquestador ya dejó en `novela/informes/` para la continuidad,
+`orquestador.generar()` para las tiradas y `orquestador.gastado()` para el
+coste. No define ni una métrica nueva.
+
+**Las cuatro paradas:** éxito (meta alcanzada y confirmada con dos premisas que
+no se usaron al ajustar), agotamiento (tres iteraciones sin mejorar un 3%),
+presupuesto (dinero u 8 iteraciones, comprobado **antes** de cada tirada) y daño
+(un guardarraíl roto dos veces seguidas, o la métrica empeora más de un 15%).
+Pare por lo que pare, el repositorio queda en el mejor estado conocido.
+
+**Por qué no registra en `events.jsonl`:** los once tipos de evento de la
+sección 14.3 están cerrados y un ciclo de mejora no es ninguno de ellos. Las
+tiradas que lanza sí registran sus eventos como siempre, y su `events.jsonl`
+viaja entero a `ciclo/tiradas/<id>/`. Lo que el ciclo anota sobre sí mismo va a
+sus dos ficheros de memoria.
+
+**Lo que cuesta:** una tirada de 3 capítulos costó 8,24 USD medidos. Una
+iteración son dos tiradas. El tope por defecto son 150 USD y se baja con
+`--presupuesto`.
+
+**Dos desviaciones respecto a lo que se pidió, ambas medidas y documentadas en
+`ciclo/linea-base.json`:** la continuidad no se recalcula al final —se lee del
+informe del momento en que el capítulo se aceptó, porque recalcularla sobre una
+novela archivada produce `hilo_cerrado_sin_abrir` que nunca existieron—, y el
+límite de errores de continuidad no es cero absoluto sino «ninguno nuevo
+respecto a la base», porque la novela de referencia ya arrastra tres.
+
+---
+
+*Fin del SPEC. 20 secciones, 43 ficheros, cero dependencias obligatorias.*

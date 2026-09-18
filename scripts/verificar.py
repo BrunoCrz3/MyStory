@@ -32,6 +32,10 @@ SCRIPTS = ["nucleo", "eventos", "medir", "repeticion", "continuidad",
            "retroalimentar", "intentos"]
 SERVIDOR = ["runner.py", "orquestador.py", "api.py",
             "static/index.html", "static/estilos.css", "static/app.js"]
+# El ciclo de mejora automatica (seccion 16.9). Sus dos ficheros de memoria
+# -iteraciones.jsonl y bitacora.md- y las carpetas prompts/ y tiradas/ no
+# entran: los crea el ciclo al ejecutarse, como events.jsonl.
+CICLO = ["ciclo.py", "linea-base.json", "premisas.json"]
 EJECUTABLES = [s for s in SCRIPTS if s != "nucleo"]
 
 INVENTARIO = (
@@ -42,7 +46,8 @@ INVENTARIO = (
     + [f".claude/commands/{c}.md" for c in COMANDOS]
     + [f"scripts/{s}.py" for s in SCRIPTS]
     + [f"server/{s}" for s in SERVIDOR]
-    + [".vscode/settings.json", "novela/estado.json"]
+    + [f"ciclo/{c}" for c in CICLO]
+    + ["ciclo-mejora.md", ".vscode/settings.json", "novela/estado.json"]
 )
 
 FICHEROS_PROHIBIDOS = ["requirements.txt", "pyproject.toml", "setup.py",
