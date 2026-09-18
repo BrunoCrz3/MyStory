@@ -40,6 +40,8 @@ import nucleo
 VARIABLES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_BASE_URL")
 
 TIEMPO_MAXIMO = 8          # segundos por envio: no bloquear la generacion
+# La API de ingesta rechaza lotes por encima de 1 MB (413). Se deja margen.
+MAX_LOTE_BYTES = 900_000
 RUTA_LOG = "novela/langfuse.log"
 MAX_TEXTO = 20000          # tope del manuscrito que viaja como salida
 
@@ -86,6 +88,11 @@ def activo(cfg: dict, cred: dict = None) -> bool:
     return bool(valor)
 
 
+def entorno(cfg: dict) -> str:
+    """Separa las trazas de prueba de las buenas en el panel de Langfuse."""
+    return str(_conf(cfg).get("entorno") or "default")
+
+
 def enviar_texto(cfg: dict) -> bool:
     """Si es False se envian metricas y metadatos, pero ningun texto de prosa
     ni de prompt. Por defecto True."""
@@ -111,6 +118,7 @@ def diagnostico() -> dict:
         "variables_ausentes": cred["faltan"],
         "activo": encendido,
         "enviar_texto": enviar_texto(cfg),
+        "entorno": entorno(cfg),
         "detalle": detalle,
     }
 
@@ -316,6 +324,7 @@ def _traza(cfg: dict, ev: dict, eventos: list, texto_ok: bool) -> dict:
         },
         "input": {"capitulos": cfg.get("capitulos"),
                   "longitud": cfg.get("longitud")},
+        "environment": entorno(cfg),
     }
     if texto_ok:
         cuerpo["input"]["premisa"] = cfg.get("premisa")
@@ -574,15 +583,35 @@ def flush() -> bool:
         cred = _credenciales()
         if not activo(cfg, cred):
             return False
-        if not _enviar(cred, lote):
-            _anotar(f"lote de {len(lote)} items rechazado por el servidor")
-            return False
+        for tanda in trocear(lote):
+            if not _enviar(cred, tanda):
+                _anotar(f"tanda de {len(tanda)} items rechazada por el servidor")
+                return False
         return True
     except SystemExit:
         return False
     except Exception as exc:                     # nunca sube al orquestador
         _anotar(f"lote de {len(lote)} items no enviado: {_motivo(exc)}")
         return False
+
+
+def trocear(lote: list, maximo: int = MAX_LOTE_BYTES) -> list:
+    """Parte el lote en tandas que quepan bajo el limite de la API.
+
+    Contar items no basta: un capitulo entero como salida de la traza pesa
+    mucho mas que un score. Se mide el JSON de verdad.
+    """
+    tandas, actual, peso = [], [], 2
+    for item in lote:
+        tamano = len(json.dumps(item, ensure_ascii=False, default=str).encode("utf-8")) + 1
+        if actual and peso + tamano > maximo:
+            tandas.append(actual)
+            actual, peso = [], 2
+        actual.append(item)
+        peso += tamano
+    if actual:
+        tandas.append(actual)
+    return tandas
 
 
 def encolar(lote: list) -> None:
