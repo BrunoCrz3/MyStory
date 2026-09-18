@@ -123,7 +123,7 @@ def prompt_de_rol(rol: str) -> str:
     return _FRONTMATTER.sub("", ruta.read_text(encoding="utf-8"), count=1).strip()
 
 
-def ejecutable() -> str:
+def ejecutable() -> str | None:
     """Ruta del binario de Claude Code, o None si no esta en el PATH."""
     return shutil.which("claude")
 
@@ -148,10 +148,31 @@ def _tokens(respuesta: dict) -> dict:
     return salida
 
 
-def _fallo(rol, modelo, motivo, inicio, sesion=None) -> dict:
+def _fallo(rol, modelo, motivo, inicio, sesion=None, respuesta=None) -> dict:
+    """Un resultado fallido, CON lo que la llamada haya costado ya.
+
+    Hay dos clases de fallo y confundirlas sale caro. Si se rompe antes de
+    llegar al modelo -no esta el binario, no hay saldo, no arranca- no se ha
+    gastado nada y el coste es cero de verdad. Pero si Claude Code contesto y
+    lo que falla es lo que contesto -is_error, o una herramienta denegada-, el
+    trabajo ya esta hecho y facturado: devolver cero ahi es mentir.
+
+    Y la mentira no se queda en el informe. El orquestador solo escribe el
+    evento `invocacion` si hay coste o hay exito, el tope de gasto se calcula
+    sumando esos eventos, y la pantalla de coste tambien. Un fallo caro que se
+    declara gratis desaparece de las tres cosas a la vez, y una tirada que
+    falle varias veces se puede comer el tope sin que nadie lo vea venir.
+    """
+    tokens = _tokens(respuesta) if respuesta else _vacio()
+    coste = 0.0
+    if respuesta:
+        try:
+            coste = float(respuesta.get("total_cost_usd") or 0.0)
+        except (TypeError, ValueError):
+            coste = 0.0
     return {"ok": False, "texto": "", "rol": rol, "modelo": modelo,
-            "session_id": sesion, "coste_usd": 0.0, "tokens": _vacio(),
-            "cache_aprovechada": False,
+            "session_id": sesion, "coste_usd": coste, "tokens": tokens,
+            "cache_aprovechada": tokens["cache_read_input_tokens"] > 0,
             "duracion_s": round(time.monotonic() - inicio, 1), "error": motivo}
 
 
@@ -241,7 +262,7 @@ def invocar(rol: str, prompt: str, cfg: dict = None, sesion: str = None,
     if respuesta.get("is_error"):
         return _fallo(rol, modelo,
                       str(respuesta.get("result") or "claude ha devuelto error")[:300],
-                      inicio, respuesta.get("session_id") or sesion)
+                      inicio, respuesta.get("session_id") or sesion, respuesta)
 
     # Una herramienta denegada NO marca is_error: la llamada sale con exito y
     # el modelo te cuenta tan tranquilo lo que ha hecho, salvo la parte que no
@@ -256,7 +277,7 @@ def invocar(rol: str, prompt: str, cfg: dict = None, sesion: str = None,
         return _fallo(rol, modelo,
                       f"la llamada no pudo usar {herramientas}: hacia falta "
                       f"aprobacion humana y esto corre solo",
-                      inicio, respuesta.get("session_id") or sesion)
+                      inicio, respuesta.get("session_id") or sesion, respuesta)
 
     tokens = _tokens(respuesta)
     try:
