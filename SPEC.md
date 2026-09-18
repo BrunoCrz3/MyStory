@@ -6,7 +6,6 @@ Documento ejecutable. Claude Code lee este fichero y construye el proyecto compl
 - **Orquestador:** Claude Code en VS Code. No hay claves de API. No hay clientes de modelos.
 - **Python:** 3.12, solo biblioteca estándar.
 - **Ficheros a crear en la construcción:** 27. Límite duro: 35.
-- **Ficheros preexistentes en el repositorio:** 1 (`flujo_agente_novela.drawio`). Total tras la construcción: **28**.
 
 ---
 
@@ -80,7 +79,7 @@ Si la carpeta todavía no es un repositorio Git (es el caso ahora mismo), ejecut
 cd C:\Users\student\Documents\MyStory1
 git init
 git branch -M main
-git remote add origin <URL_DE_TU_REPO_EN_GITHUB>
+git remote add origin <https://github.com/BrunoCrz3/MyStory1>
 ```
 
 ### 2.2 Prompt literal de arranque
@@ -102,8 +101,6 @@ Respeta estas reglas de construccion:
 - Todos los comandos documentados deben funcionar en PowerShell en Windows.
 - Ningun script asume que la unidad de longitud es "palabras": se lee de config.json.
 - No crees .mcp.json.
-- No toques flujo_agente_novela.drawio: es el diagrama del autor y se queda como esta.
-- README.md ya existe con una linea; sobrescribelo con el contenido de la seccion 5.3.
 
 Cuando termines:
 1. Ejecuta: python scripts/verificar.py
@@ -266,7 +263,7 @@ No se toca ningún script. `scripts/medir.py` lee `unidad` y cuenta de una forma
 ```
 MyStory1/
 ├── SPEC.md                              (1)  este documento
-├── README.md                            (2)  qué es esto y los 4 comandos  [se sobrescribe]
+├── README.md                            (2)  qué es esto y los 4 comandos
 ├── CLAUDE.md                            (3)  reglas permanentes para Claude Code
 ├── config.json                          (4)  la única configuración
 ├── .gitignore                           (5)
@@ -308,16 +305,9 @@ MyStory1/
         └── capitulo-01.md ...                generados en fase 3
 
 manuscrito.md                                 generado en fase 5
-
-flujo_agente_novela.drawio                    PREEXISTENTE: no se toca
 ```
 
-**27 ficheros creados en la construcción**, más 1 preexistente. El resto los
-genera el sistema al trabajar.
-
-`flujo_agente_novela.drawio` es el diagrama de flujo original del autor. Ya está
-en el repositorio, **no se crea ni se modifica ni se borra** durante la
-construcción, y no cuenta contra el límite de 35.
+**27 ficheros creados en la construcción.** El resto los genera el sistema al trabajar.
 
 No hay: `.mcp.json`, `requirements.txt`, `pyproject.toml`, `Makefile`, `tests/`, `src/`, `.venv/`, `Dockerfile`.
 
@@ -2209,8 +2199,7 @@ python scripts/verificar.py
 1. La versión de Python es 3.12 o superior.
 2. Existen los 27 ficheros del inventario de la sección 16.
 3. **No** existen ficheros prohibidos: `requirements.txt`, `pyproject.toml`,
-   `Makefile`, `.mcp.json`, carpetas `src/`, `tests/`, `.venv/`. Los ficheros
-   preexistentes de la sección 16.7 están permitidos y no se cuentan como sobrantes.
+   `Makefile`, `.mcp.json`, carpetas `src/`, `tests/`, `.venv/`.
 4. `config.json` es JSON válido y tiene todas las claves obligatorias con tipos
    correctos.
 5. `novela/estado.json` es JSON válido y tiene las 9 claves de la semilla.
@@ -2228,7 +2217,7 @@ python scripts/verificar.py
 
 ```
 [OK]    Python 3.12.10
-[OK]    27/27 ficheros del inventario presentes (+1 preexistente)
+[OK]    27/27 ficheros del inventario presentes
 [OK]    0 ficheros prohibidos
 [OK]    config.json valido
 [OK]    novela/estado.json valido
@@ -2871,10 +2860,8 @@ git push -u origin main
 
 ## 16. Inventario cerrado de entregables
 
-27 ficheros. Claude Code crea **exactamente estos** y ninguno más. A ellos se
-suma 1 fichero preexistente (sección 16.7) que no se toca, de modo que el
-repositorio termina con **28** ficheros. Si al terminar hay 29, algo se ha
-inventado; si hay 27, algo falta.
+27 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
+hay 28, algo se ha inventado; si hay 26, algo falta.
 
 ### 16.1 Raíz
 
@@ -2946,25 +2933,14 @@ La carpeta `novela/capitulos/` se crea vacía. `novela/canon.md`,
 `novela/escaleta.json`, `novela/events.jsonl` y `manuscrito.md` **no** se crean
 en la construcción: los genera el sistema al ejecutarse.
 
-### 16.7 Ficheros preexistentes (no se crean, no se tocan)
-
-| Fichero | Qué es | Qué hace Claude Code con él |
-|---|---|---|
-| `flujo_agente_novela.drawio` | El diagrama de flujo original del autor, del que nace este SPEC | **Nada.** No lo modifica, no lo mueve, no lo borra, no lo convierte a otro formato |
-
-Nota sobre `README.md`: ya existe en el repositorio con una sola línea
-(`# MyStory1`). La construcción lo **sobrescribe** con el contenido de la
-sección 5.3. No hay nada que conservar.
-
-### 16.8 Ficheros que NO deben existir
+### 16.7 Ficheros que NO deben existir
 
 `.mcp.json`, `requirements.txt`, `pyproject.toml`, `setup.py`, `Makefile`,
 `Dockerfile`, `docker-compose.yml`, `.env`, `.env.example`, `tests/`, `src/`,
 `.venv/`, `package.json`, y cualquier fichero que Claude Code considere "útil"
-y no esté en las tablas 16.1 a 16.7.
+y no esté en las tablas 16.1 a 16.6.
 
-**Recuento:** 5 + 7 + 3 + 4 + 7 + 1 = **27** creados, + 1 preexistente = **28**
-ficheros en el repositorio.
+**Recuento:** 5 + 7 + 3 + 4 + 7 + 1 = **27**.
 
 ---
 
@@ -3006,8 +2982,7 @@ propio mensaje dice qué falta.
 (Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch '\\\.git\\' }).Count
 ```
 
-Debe dar **28**: los 27 del inventario más `flujo_agente_novela.drawio`. Si da
-más, mira qué sobra:
+Debe dar **27**. Si da más, mira qué sobra:
 
 ```powershell
 Get-ChildItem -Recurse -File | Where-Object { $_.FullName -notmatch '\\\.git\\' } | Select-Object -ExpandProperty FullName
@@ -3280,4 +3255,4 @@ Ninguno bloquea la v1. Los dejo anotados para cuando el sistema ya funcione.
 
 ---
 
-*Fin del SPEC. 19 secciones, 27 ficheros creados, cero dependencias.*
+*Fin del SPEC. 19 secciones, 27 ficheros, cero dependencias.*

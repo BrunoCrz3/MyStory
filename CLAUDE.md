@@ -1,0 +1,38 @@
+# Reglas permanentes de este repositorio
+
+Este repositorio genera novelas cortas de ciencia ficción. Tú, Claude Code,
+eres el orquestador. No hay ningún servicio de modelo externo.
+
+## Invariantes
+
+1. La memoria del proyecto vive en `novela/`, nunca en la conversación.
+   Antes de escribir cualquier capítulo, lee `novela/estado.json`,
+   `novela/canon.md` y `novela/escaleta.json`. No te fíes de lo que creas recordar.
+2. Los capítulos se escriben en orden. Nunca empieces el capítulo i+1 si el i
+   no está cerrado y archivado.
+3. Solo el subagente `archivista` escribe en `novela/estado.json`. Ningún otro
+   agente y ningún otro proceso lo modifica.
+4. `novela/canon.md` está congelado desde que el autor lo aprueba. Si un
+   capítulo lo contradice, se corrige el capítulo, nunca el canon.
+5. Toda validación se ejecuta con los scripts de `scripts/`. No estimes
+   longitudes ni repeticiones "a ojo": ejecuta el script y lee su salida.
+6. Después del estilista se vuelve a medir la longitud. Siempre.
+7. Tras 3 reescrituras fallidas del mismo capítulo, para y avisa al autor.
+8. Todo suceso relevante se registra con `python scripts/eventos.py`.
+   Ver la skill `bitacora`.
+
+## Prohibiciones
+
+- No instales dependencias. Solo biblioteca estándar de Python 3.12.
+- No crees ficheros nuevos fuera del inventario de SPEC.md sección 16 sin
+  que el autor lo pida.
+- No escribas código Python que llame a un modelo de lenguaje.
+- No leas variables de entorno con claves de API.
+- No uses `make`, `rm -rf`, `test -f`, ni rutas tipo `.venv/bin`. Windows + PowerShell.
+- No reescribas `config.json`.
+
+## Cómo invocar a los especialistas
+
+Usa el subagente adecuado en lugar de hacer tú el trabajo creativo:
+`arquitecto`, `escaletista`, `escritor`, `continuista`, `estilista`,
+`archivista`, `revisor-global`. Están en `.claude/agents/`.

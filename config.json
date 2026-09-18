@@ -1,0 +1,27 @@
+{
+  "proyecto": "MyStory1",
+  "idioma": "es",
+  "premisa": "ESCRIBE AQUI TU PREMISA EN UNA O DOS FRASES",
+  "capitulos": 3,
+  "longitud": {
+    "unidad": "lineas",
+    "objetivo": 4,
+    "tolerancia": 0.0
+  },
+  "validacion": {
+    "max_reescrituras": 3,
+    "ngrama": 6,
+    "max_solape_ngramas": 0.02,
+    "max_aperturas_del_mismo_tipo": 1,
+    "max_muletilla_por_mil": 3.0
+  },
+  "git": {
+    "commit_por_capitulo": true,
+    "push_automatico": false,
+    "rama": "main"
+  },
+  "eventos": {
+    "activo": true,
+    "fichero": "novela/events.jsonl"
+  }
+}
