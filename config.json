@@ -30,5 +30,18 @@
       "enviar_texto": true,
       "entorno": "default"
     }
+  },
+  "servidor": {
+    "modelos": {
+      "arquitecto": "opus",
+      "escaletista": "opus",
+      "escritor": "opus",
+      "estilista": "opus",
+      "revisor-global": "opus",
+      "continuista": "haiku",
+      "archivista": "haiku"
+    },
+    "tope_usd": 5.0,
+    "espera_maxima_s": 900
   }
 }
