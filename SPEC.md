@@ -2525,6 +2525,38 @@ con la misma clave y valores incompatibles. El `revisor-global` lee el
 manuscrito entero y busca lo que solo existe a escala de novela: un personaje
 que desaparece a mitad, una promesa del capítulo 1 que el final no cumple.
 
+### 11.5 bis — El vocabulario de los hilos
+
+Las cinco capas de arriba comparan el plan con lo escrito, y para eso las dos
+partes tienen que **llamar igual a las mismas cosas**. Los hilos son el único
+sitio donde hay dos productores de identificadores: la escaleta los bautiza
+(`T01`, `T02`…) y el `archivista` los registra en `estado.json`.
+
+Si no coinciden, `continuidad.py` no puede hacer su trabajo y lo que denuncia no
+tiene arreglo: el plan manda cerrar `T01`, en el registro no hay ningún `T01`, y
+sale un `hilo_cerrado_sin_abrir` que el `escritor` no puede resolver por mucho
+que se le pida un parche, porque no habla de ningún párrafo. Ocurrió: en la
+tirada del 18 de septiembre el archivista registró `hilo_identidad_pagador`
+donde el plan decía `T01`, los tres cierres planificados dieron error, la
+revisión global dio `hilos_cerrados: False` y se pagaron cuatro parches inútiles
+intentando arreglarlo.
+
+Ni el formato de la sección 6.3 ni la ficha del archivista estaban mal: los dos
+decían ya lo correcto, `id` de la escaleta y los campos `abierto_en` y
+`cerrado_en`. Lo que fallaba era la implementación, y en dos sitios a la vez.
+**El orquestador no le pasaba nunca la escaleta**, así que se le pedía usar unos
+identificadores que no tenía forma de conocer; y `estado_mal_formado()` no
+exigía `abierto_en` ni `cerrado_en`, que no son decorativos: la comprobación 6
+de `continuidad.py` usa `cerrado_en` para saber que un hilo lo cerró **ese**
+capítulo, y sin él, al revalidar un capítulo ya archivado, el cierre correcto se
+denuncia como error.
+
+Las dos cosas se cumplen ahora en el momento de archivar, dentro del bucle de
+reintentos que ya existía: el archivista recibe los hilos del plan con su `id`,
+y el validador rechaza un registro donde falte alguno de los que la escaleta ya
+tiene abiertos, o donde un hilo no diga en qué capítulo se abrió y, si está
+cerrado, en cuál se cerró.
+
 ### 11.6 Qué se hace con cada severidad
 
 | Severidad | Acción | Se revalida |
@@ -3331,7 +3363,7 @@ salta igual. Ningún otro script puede leer el entorno.
 | # | Fichero | Criterio de aceptación |
 |---|---|---|
 | 33 | `runner.py` | **Único** fichero que sabe invocar Claude Code. `--output-format json` y el coste leído de la respuesta; `--restricted` siempre; nunca `--bare`; sesiones encadenadas con `--resume`. `--append-system-prompt` va el último argumento. `--probar` hace tres invocaciones reales |
-| 34 | `orquestador.py` | Recorre las cinco fases sin conversación. Importa los scripts de `scripts/`, no los reimplementa. Capítulos en orden, nunca en paralelo. Registra el coste como evento `invocacion`. Máximo de llamadas al modelo comprobado antes de cada invocación |
+| 34 | `orquestador.py` | Recorre las cinco fases sin conversación. Importa los scripts de `scripts/`, no los reimplementa. Capítulos en orden, nunca en paralelo. Registra el coste como evento `invocacion`. Máximo de llamadas al modelo comprobado antes de cada invocación. Dueño del contrato de `estado.json`: una sola definición (`CAMPOS_OBLIGATORIOS`, `CAMPOS_HILO`) que sirve para validarlo y para explicárselo al archivista **antes** de escribir, con los identificadores de hilo que fija la escaleta. Ver 11.5 bis |
 | 35 | `api.py` | Los siete endpoints. Sin estado en memoria: todo se relee de disco. Una generación a la vez, en segundo plano |
 | 36 | `static/index.html` | Las cuatro pantallas. Sin `<script src>` externo |
 | 37 | `static/estilos.css` | Sobrio y legible. Sin fuentes ni librerías de fuera |

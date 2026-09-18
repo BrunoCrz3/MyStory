@@ -76,7 +76,7 @@ CAMPOS_OBLIGATORIOS = {
     "aperturas": ("tipo", "capitulo"),
     "cierres": ("tipo", "capitulo"),
 }
-CAMPOS_HILO = ("id", "titulo", "estado")
+CAMPOS_HILO = ("id", "titulo", "estado", "abierto_en")
 ESTADOS_HILO = ("abierto", "cerrado")
 # `frases_usadas` no entra: es una lista plana de cadenas sin capitulo de
 # origen, y asi la quiere SPEC 6.3.
@@ -84,11 +84,15 @@ LISTAS_DEL_ESTADO = ("hechos", "resumenes", "frases_usadas", "aperturas",
                      "cierres", "entidades", "hilos")
 
 
-def contrato_estado() -> str:
+def contrato_estado(hilos_del_plan: list = None) -> str:
     """El contrato de estado.json en palabras, sacado de la misma definicion
     que lo valida. Se le manda al archivista ANTES de escribir, no despues de
     equivocarse: una instruccion previa cuesta unos cientos de caracteres y un
     reintento cuesta una invocacion entera con el capitulo y el estado dentro.
+
+    `hilos_del_plan` son los identificadores que la escaleta ya tiene abiertos
+    a estas alturas de la novela. Van en el texto porque el archivista tiene
+    que usar ESOS y no otros, y hasta ahora no habia forma de que lo supiera.
     """
     lineas = [
         "Estas siete claves son listas, siempre, aunque esten vacias: "
@@ -104,13 +108,32 @@ def contrato_estado() -> str:
     lineas += [
         f"  `hilos`: objetos con " + ", ".join(f"`{c}`" for c in CAMPOS_HILO)
         + f", y `estado` vale exactamente `{ESTADOS_HILO[0]}` o "
-          f"`{ESTADOS_HILO[1]}`, nada mas.",
+          f"`{ESTADOS_HILO[1]}`, nada mas. Ademas, un hilo `cerrado` lleva "
+          f"`cerrado_en` con el numero del capitulo que lo cierra; uno "
+          f"`abierto` lleva `cerrado_en: null`.",
         "  `frases_usadas`: esta si es una lista plana de cadenas.",
         "",
         "`tirada` es el identificador con formato AAAAMMDD-HHMM que se te da "
         "mas abajo, no la premisa ni ningun otro texto. `capitulos_escritos` "
         "es un numero.",
     ]
+    if hilos_del_plan:
+        lineas += [
+            "",
+            "LOS IDENTIFICADORES DE LOS HILOS NO TE LOS INVENTAS. Los pone la "
+            "escaleta y son estos, literalmente: "
+            + ", ".join(f"`{h}`" for h in hilos_del_plan) + ".",
+            "",
+            "Tienen que estar los " + str(len(hilos_del_plan)) + " en `hilos`, "
+            "con ese id exacto. Si describes el mismo hilo con un id tuyo "
+            "-`hilo_identidad_pagador` en vez de `T01`- el plan y el registro "
+            "dejan de hablar el mismo idioma, y a partir de ahi cada capitulo "
+            "que cierre un hilo dara un error que nadie puede arreglar.",
+            "",
+            "Puedes anadir algun hilo mas si el capitulo abre algo que la "
+            "escaleta no preveia, pero tendra que quedar cerrado antes del "
+            "final: la revision global exige que no quede ninguno abierto.",
+        ]
     return "\n".join(lineas)
 
 
@@ -262,7 +285,7 @@ def hilos_abiertos(estado: dict) -> list:
             if isinstance(h, dict) and h.get("estado") == "abierto"]
 
 
-def estado_mal_formado(estado: dict) -> list:
+def estado_mal_formado(estado: dict, hilos_del_plan: list = None) -> list:
     """Lo que esta mal en `estado.json`, en lenguaje que el archivista entiende.
 
     El archivista es el unico que escribe ese fichero, y hasta ahora nadie
@@ -300,10 +323,40 @@ def estado_mal_formado(estado: dict) -> list:
                 f"el hilo numero {i + 1} es texto suelto; cada hilo tiene que "
                 f"ser un objeto con "
                 + ", ".join(f"`{c}`" for c in CAMPOS_HILO))
-        elif hilo.get("estado") not in ESTADOS_HILO:
+            continue
+        nombre = hilo.get("id") or hilo.get("titulo") or i + 1
+        if hilo.get("estado") not in ESTADOS_HILO:
             fallos.append(
-                f"el hilo `{hilo.get('id') or hilo.get('titulo') or i + 1}` "
-                f"no trae `estado` con el valor `abierto` o `cerrado`")
+                f"el hilo `{nombre}` no trae `estado` con el valor `abierto` "
+                f"o `cerrado`")
+        if not isinstance(hilo.get("abierto_en"), int):
+            fallos.append(
+                f"el hilo `{nombre}` no dice en que capitulo se abrio: le "
+                f"falta `abierto_en` con un numero")
+        # `cerrado_en` no es decorativo: la comprobacion 6 de continuidad.py lo
+        # usa para saber que un hilo cerrado lo cerro ESTE capitulo. Sin el, al
+        # revalidar un capitulo ya archivado el cierre correcto se denuncia
+        # como error.
+        if hilo.get("estado") == "cerrado" and not isinstance(
+                hilo.get("cerrado_en"), int):
+            fallos.append(
+                f"el hilo `{nombre}` esta cerrado y no dice en que capitulo: "
+                f"le falta `cerrado_en` con un numero")
+
+    # Los hilos que la escaleta ya tiene abiertos a estas alturas tienen que
+    # estar en el registro CON SU ID. Es la comprobacion que faltaba: sin ella
+    # el archivista podia inventarse el vocabulario y nadie se enteraba hasta
+    # tres capitulos despues, cuando el plan mandaba cerrar `T01` y en el
+    # estado no habia ningun `T01`.
+    if hilos_del_plan:
+        presentes = {h.get("id") for h in (estado.get("hilos") or [])
+                     if isinstance(h, dict)}
+        faltan = [h for h in hilos_del_plan if h not in presentes]
+        if faltan:
+            fallos.append(
+                "faltan hilos de la escaleta, o los has registrado con otro "
+                "id: " + ", ".join(f"`{h}`" for h in faltan)
+                + ". Usa exactamente los identificadores del plan.")
 
     tirada = estado.get("tirada")
     if tirada is not None and not isinstance(tirada, str):
@@ -623,11 +676,32 @@ def _archivar(n, cfg, sesiones, avisar, intento):
     que hara estallar la siguiente fase.
     """
     maximo = max(1, int(cfg["validacion"].get("max_intentos_archivista", 2)))
+
+    # Los hilos que planifico la escaleta. El archivista tiene que usar ESTOS
+    # identificadores, y su ficha se lo pide desde siempre -"usa el mismo id y
+    # titulo que la escaleta"-, pero nadie le habia pasado nunca la escaleta.
+    # Se inventaba los ids, y como continuidad.py compara el plan contra el
+    # registro por id, cada cierre planificado daba `hilo_cerrado_sin_abrir`.
+    escaleta = nucleo.cargar_escaleta()
+    hilos_plan = [h for h in (escaleta.get("hilos") or []) if isinstance(h, dict)]
+    plan_cap = next((c for c in escaleta.get("capitulos", [])
+                     if c.get("n") == n), {})
+    # Los que a estas alturas ya tendrian que existir en el registro.
+    exigibles = [h.get("id") for h in hilos_plan
+                 if isinstance(h.get("abre_en"), int) and h["abre_en"] <= n
+                 and h.get("id")]
+
     correccion = ""
     for vuelta in range(1, maximo + 1):
         escribiendo("archivista",
                     _bloque("Forma exacta que tiene que tener estado.json",
-                            contrato_estado())
+                            contrato_estado(exigibles))
+                    + _bloque("Hilos que planifico la escaleta, con el id que "
+                              "tienes que usar", hilos_plan)
+                    + _bloque(f"Lo que el plan dice de los hilos en el "
+                              f"capitulo {n}",
+                              {"abre": plan_cap.get("abre_hilos") or [],
+                               "cierra": plan_cap.get("cierra_hilos") or []})
                     + _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
                     + _bloque("Estado actual", nucleo.cargar_estado())
                     # Su ficha le manda copiar aqui el identificador de tirada.
@@ -642,7 +716,7 @@ def _archivar(n, cfg, sesiones, avisar, intento):
                     f"anotar los hechos del capitulo {n}", avisar,
                     fase="redaccion", capitulo=n, intento=intento)
 
-        fallos = estado_mal_formado(nucleo.cargar_estado())
+        fallos = estado_mal_formado(nucleo.cargar_estado(), exigibles)
         if not fallos:
             return
         eventos.registrar("validacion", fase="redaccion", capitulo=n,
