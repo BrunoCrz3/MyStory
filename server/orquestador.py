@@ -62,6 +62,58 @@ SENAL_TRABAJANDO = "novela/.generando"
 FASES = ("canon", "escaleta", "redaccion", "revision", "entrega")
 
 
+# La forma que tiene que tener novela/estado.json. Es UNA sola definicion y
+# sirve para las dos cosas que antes se decian por separado y no coincidian:
+# validar lo que el archivista deja escrito, y explicarle de antemano lo que se
+# espera de el. Mientras el contrato vivio solo aqui y en prosa en su ficha, el
+# archivista mandaba `hilos` como cadenas sueltas y se le corregia DESPUES de
+# fallar: siete reintentos en la tirada del 18 de septiembre, doce llamadas
+# para tres capitulos.
+CAMPOS_OBLIGATORIOS = {
+    "hechos": ("clave", "valor", "tipo", "cita"),
+    "resumenes": ("capitulo", "resumen"),
+    "entidades": ("nombre", "tipo"),
+    "aperturas": ("tipo", "capitulo"),
+    "cierres": ("tipo", "capitulo"),
+}
+CAMPOS_HILO = ("id", "titulo", "estado")
+ESTADOS_HILO = ("abierto", "cerrado")
+# `frases_usadas` no entra: es una lista plana de cadenas sin capitulo de
+# origen, y asi la quiere SPEC 6.3.
+LISTAS_DEL_ESTADO = ("hechos", "resumenes", "frases_usadas", "aperturas",
+                     "cierres", "entidades", "hilos")
+
+
+def contrato_estado() -> str:
+    """El contrato de estado.json en palabras, sacado de la misma definicion
+    que lo valida. Se le manda al archivista ANTES de escribir, no despues de
+    equivocarse: una instruccion previa cuesta unos cientos de caracteres y un
+    reintento cuesta una invocacion entera con el capitulo y el estado dentro.
+    """
+    lineas = [
+        "Estas siete claves son listas, siempre, aunque esten vacias: "
+        + ", ".join(f"`{c}`" for c in LISTAS_DEL_ESTADO) + ".",
+        "",
+        "Sus elementos NO son cadenas de texto: son objetos con estos campos "
+        "obligatorios, y ninguno puede ir vacio.",
+        "",
+    ]
+    for clave, campos in CAMPOS_OBLIGATORIOS.items():
+        lineas.append(f"  `{clave}`: objetos con "
+                      + ", ".join(f"`{c}`" for c in campos) + ".")
+    lineas += [
+        f"  `hilos`: objetos con " + ", ".join(f"`{c}`" for c in CAMPOS_HILO)
+        + f", y `estado` vale exactamente `{ESTADOS_HILO[0]}` o "
+          f"`{ESTADOS_HILO[1]}`, nada mas.",
+        "  `frases_usadas`: esta si es una lista plana de cadenas.",
+        "",
+        "`tirada` es el identificador con formato AAAAMMDD-HHMM que se te da "
+        "mas abajo, no la premisa ni ningun otro texto. `capitulos_escritos` "
+        "es un numero.",
+    ]
+    return "\n".join(lineas)
+
+
 class Detenido(Exception):
     """El autor ha pedido parar. Se sube hasta generar(), que cierra limpio."""
 
@@ -222,24 +274,14 @@ def estado_mal_formado(estado: dict) -> list:
     Devuelve la lista de defectos; vacia significa que el estado esta sano.
     """
     fallos = []
-    for clave in ("hechos", "resumenes", "frases_usadas", "aperturas",
-                  "cierres", "entidades", "hilos"):
+    for clave in LISTAS_DEL_ESTADO:
         if not isinstance(estado.get(clave), list):
             fallos.append(f"`{clave}` tiene que ser una lista")
 
-    # Cada lista tiene su forma pactada en la ficha del archivista. Solo se
-    # exigen los campos sin los cuales el codigo de mas abajo se rompe: la
-    # riqueza del registro es cosa suya, la estructura es cosa nuestra.
-    obligatorios = {
-        "hechos": ("clave", "valor", "tipo", "cita"),
-        "resumenes": ("capitulo", "resumen"),
-        "entidades": ("nombre", "tipo"),
-        "aperturas": ("tipo", "capitulo"),
-        "cierres": ("tipo", "capitulo"),
-    }
-    # `frases_usadas` no entra aqui a proposito: es una lista plana de cadenas
-    # sin capitulo de origen, y asi la quiere SPEC 6.3.
-    for clave, campos in obligatorios.items():
+    # Solo se exigen los campos sin los cuales el codigo de mas abajo se rompe:
+    # la riqueza del registro es cosa del archivista, la estructura es cosa
+    # nuestra. Y es la misma definicion que se le manda por delante.
+    for clave, campos in CAMPOS_OBLIGATORIOS.items():
         for i, elem in enumerate(estado.get(clave) or []):
             if not isinstance(elem, dict):
                 fallos.append(
@@ -256,8 +298,9 @@ def estado_mal_formado(estado: dict) -> list:
         if not isinstance(hilo, dict):
             fallos.append(
                 f"el hilo numero {i + 1} es texto suelto; cada hilo tiene que "
-                f"ser un objeto con `id`, `titulo` y `estado`")
-        elif hilo.get("estado") not in ("abierto", "cerrado"):
+                f"ser un objeto con "
+                + ", ".join(f"`{c}`" for c in CAMPOS_HILO))
+        elif hilo.get("estado") not in ESTADOS_HILO:
             fallos.append(
                 f"el hilo `{hilo.get('id') or hilo.get('titulo') or i + 1}` "
                 f"no trae `estado` con el valor `abierto` o `cerrado`")
@@ -583,7 +626,9 @@ def _archivar(n, cfg, sesiones, avisar, intento):
     correccion = ""
     for vuelta in range(1, maximo + 1):
         escribiendo("archivista",
-                    _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
+                    _bloque("Forma exacta que tiene que tener estado.json",
+                            contrato_estado())
+                    + _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
                     + _bloque("Estado actual", nucleo.cargar_estado())
                     # Su ficha le manda copiar aqui el identificador de tirada.
                     # Nadie se lo daba, asi que se lo inventaba: acabo metiendo
@@ -612,9 +657,8 @@ def _archivar(n, cfg, sesiones, avisar, intento):
                f"formado; se pide rehacerlo ({vuelta} de {maximo - 1}).")
         correccion = _bloque(
             "CORRIGE ESTO, tu escritura anterior no vale",
-            fallos + ["Reescribe `novela/estado.json` entero respetando el "
-                      "formato de tu ficha: `hilos` es una lista de OBJETOS "
-                      "con `id`, `titulo` y `estado`, nunca de cadenas."])
+            fallos + ["Reescribe `novela/estado.json` entero respetando la "
+                      "forma exacta que tienes arriba."])
 
 
 def _escribir_capitulo(n, cfg, sesiones, avisar):
