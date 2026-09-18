@@ -63,6 +63,36 @@ NOMBRE_AGENTE = {
     "archivista": "Quien lleva el registro de hechos",
     "revisor-global": "Quien relee la novela entera",
 }
+# Que esta haciendo cada oficio, segun la fase y el capitulo. Se arma aqui y
+# no en el navegador por la misma razon que los nombres de arriba: un solo
+# sitio que cambiar, y la API se lee sin traductor.
+TAREA_AGENTE = {
+    "arquitecto": "Inventando el mundo de la novela",
+    "escaletista": "Planificando los capitulos",
+    "escritor": "Escribiendo el capitulo {cap}",
+    "continuista": "Buscando contradicciones en el capitulo {cap}",
+    "estilista": "Puliendo la prosa del capitulo {cap}",
+    "archivista": "Anotando los hechos del capitulo {cap}",
+    "revisor-global": "Releyendo la novela entera",
+}
+
+
+def _tarea(trabajo: dict) -> dict:
+    """El trabajo en curso, dicho para una pantalla. None si no hay ninguno."""
+    if not isinstance(trabajo, dict) or not trabajo.get("rol"):
+        return None
+    rol = trabajo["rol"]
+    cap = trabajo.get("capitulo")
+    plantilla = TAREA_AGENTE.get(rol, "Trabajando")
+    tarea = plantilla.format(cap=cap) if "{cap}" in plantilla and cap else (
+        plantilla if "{cap}" not in plantilla else "Trabajando")
+    intento = trabajo.get("intento")
+    if intento and intento > 1:
+        tarea += f" (intento {intento})"
+    return {"rol": rol, "agente": NOMBRE_AGENTE.get(rol, rol), "tarea": tarea,
+            "desde": trabajo.get("desde")}
+
+
 NOMBRE_SEVERIDAD = {
     "bloqueante": "Hay que corregirlo",
     "mayor": "Conviene corregirlo",
@@ -462,7 +492,16 @@ def _frase(ev: dict, previstos) -> str:
         return (f"El capitulo {cap} no ha salido bien despues de varios "
                 f"intentos. Hace falta que decidas tu.")
     if tipo == "invocacion":
-        return None          # ruido para el lector: solo suma al coste
+        # Antes se ocultaban por ruidosas. Se ensenan porque son justo lo que
+        # deja ver que oficio ha intervenido y cuanto ha tardado.
+        quien = NOMBRE_AGENTE.get(datos.get("rol"), datos.get("rol") or "")
+        if not quien:
+            return None
+        if datos.get("error"):
+            return f"{quien}: ha fallado la llamada"
+        segundos = datos.get("duracion_s")
+        cuanto = f" en {round(float(segundos))} s" if segundos else ""
+        return f"{quien} ha terminado su parte{cuanto}"
     if tipo == "commit":
         return None
     return None
@@ -481,7 +520,12 @@ async def progreso(id_novela: str):
         while True:
             cfg = nucleo.cargar_config()
             previstos = cfg.get("capitulos")
-            todos = _leer_eventos(carpeta)
+            marcha = orquestador.estado_actual(cfg)
+            # Solo la tirada que se esta mirando. El fichero guarda todas las
+            # generaciones que ha habido, y soltarlas enteras mezclaba en la
+            # misma bitacora capitulos de novelas distintas.
+            todos = [e for e in _leer_eventos(carpeta)
+                     if e.get("tirada") == marcha["tirada"]]
             nuevos = todos[vistos:]
             vistos = len(todos)
             for ev in nuevos:
@@ -492,13 +536,15 @@ async def progreso(id_novela: str):
                     {"tipo": "paso", "texto": frase, "evento": ev.get("evento"),
                      "capitulo": ev.get("capitulo"), "ts": ev.get("ts")},
                     ensure_ascii=False) + "\n\n"
-            marcha = orquestador.estado_actual(cfg)
             yield "data: " + json.dumps(
-                {"tipo": "estado", **{k: marcha[k] for k in
-                                      ("generando", "gastado_usd",
-                                       "invocaciones", "max_invocaciones",
-                                       "capitulos_escritos", "capitulo_en_curso",
-                                       "fases_terminadas", "escalado")}},
+                {"tipo": "estado",
+                 "trabajando": _tarea(marcha.get("trabajando")),
+                 "terminada": "entrega" in (marcha.get("fases_terminadas") or []),
+                 **{k: marcha[k] for k in
+                    ("generando", "gastado_usd", "invocaciones",
+                     "max_invocaciones", "capitulos_escritos",
+                     "capitulo_en_curso", "fases_terminadas", "escalado",
+                     "reescrituras", "parches")}},
                 ensure_ascii=False) + "\n\n"
             if not marcha["generando"]:
                 ocioso += 1

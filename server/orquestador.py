@@ -131,6 +131,38 @@ def _marcar_trabajando(tirada: str) -> None:
                                 "desde": time.time()}), encoding="utf-8")
 
 
+def _apuntar_trabajo(rol=None, fase=None, capitulo=None, intento=None) -> None:
+    """Anota en la senal quien esta llamando al modelo ahora mismo.
+
+    Va en `novela/.generando` y no en `events.jsonl` a proposito: es un dato
+    de un instante, no un suceso. El registro cuenta lo que ha pasado; esto
+    cuenta lo que esta pasando, y deja de ser verdad en cuanto la llamada
+    termina. Por eso la senal se borra al acabar y no deja rastro.
+    """
+    ruta = _ruta(SENAL_TRABAJANDO)
+    try:
+        datos = json.loads(ruta.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return                      # sin senal no hay generacion que anotar
+    datos["trabajando"] = None if rol is None else {
+        "rol": rol, "fase": fase, "capitulo": capitulo, "intento": intento,
+        "desde": time.time()}
+    try:
+        ruta.write_text(json.dumps(datos), encoding="utf-8")
+    except OSError:
+        pass                        # perder el indicador no para una novela
+
+
+def trabajo_actual() -> dict:
+    """Quien llama al modelo ahora mismo, o None si no hay nadie."""
+    try:
+        datos = json.loads(_ruta(SENAL_TRABAJANDO).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    trabajo = datos.get("trabajando")
+    return trabajo if isinstance(trabajo, dict) else None
+
+
 def _desmarcar() -> None:
     ruta = _ruta(SENAL_TRABAJANDO)
     if ruta.exists():
@@ -260,6 +292,22 @@ def estado_actual(cfg: dict = None) -> dict:
     cfg = cfg or nucleo.cargar_config()
     tirada = eventos.tirada_vigente(cfg)
     hechos = _eventos_de_tirada(cfg, tirada)
+    # Al cerrarse la fase de entrega, tirada_vigente() abre una tirada nueva
+    # para que la novela siguiente empiece limpia. Correcto para escribir,
+    # enganoso para mirar: en cuanto una novela terminaba, esta pantalla se
+    # quedaba a cero -ni capitulos, ni llamadas, ni fases- como si no hubiera
+    # pasado nada. Si la tirada vigente aun no tiene ni un evento, se cuenta
+    # la ultima que si lo tuvo, que es la que el autor acaba de ver correr.
+    if not any(e.get("evento") == "fase_inicio" for e in hechos):
+        # La ultima que arranco una fase, no simplemente la ultima del
+        # fichero: registrar un commit abre tirada si la anterior ya estaba
+        # cerrada, y una tirada con un solo `commit` dentro no es una
+        # generacion que ensenar.
+        arrancadas = [e.get("tirada") for e in _eventos_de_tirada(cfg, None)
+                      if e.get("evento") == "fase_inicio" and e.get("tirada")]
+        if arrancadas:
+            tirada = arrancadas[-1]
+            hechos = _eventos_de_tirada(cfg, tirada)
     fases_hechas = {e.get("fase") for e in hechos
                     if e.get("evento") == "fase_fin" and e.get("fase")}
     escritos = nucleo.capitulos_existentes()
@@ -280,6 +328,14 @@ def estado_actual(cfg: dict = None) -> dict:
         "gastado_usd": gastado(cfg, tirada),
         "invocaciones": invocaciones(cfg, tirada),
         "max_invocaciones": runner.max_invocaciones(cfg),
+        # Se cuentan aqui y no en el navegador. El front los contaba el solo
+        # segun llegaban por el flujo, y como el flujo reemite el registro
+        # entero cada vez que alguien vuelve a la pantalla, el numero crecia
+        # en cada visita aunque no se hubiera escrito nada.
+        "reescrituras": sum(1 for e in hechos
+                            if e.get("evento") == "reescritura"),
+        "parches": sum(1 for e in hechos if e.get("evento") == "parche"),
+        "trabajando": trabajo_actual(),
         "escalado": any(e.get("evento") == "escalado" for e in hechos),
     }
 
@@ -320,7 +376,11 @@ def invocar(rol, prompt, cfg, sesiones, fase=None, capitulo=None, intento=None):
             f"la novela lleva {hechas} llamadas al modelo y el maximo es "
             f"{maximo}. Se para para no reintentar sin fin.")
 
-    resultado = runner.invocar(rol, prompt, cfg, sesiones.get(rol))
+    _apuntar_trabajo(rol, fase, capitulo, intento)
+    try:
+        resultado = runner.invocar(rol, prompt, cfg, sesiones.get(rol))
+    finally:
+        _apuntar_trabajo(None)      # nadie trabaja mientras no se llame
     if resultado["session_id"]:
         sesiones[rol] = resultado["session_id"]
 

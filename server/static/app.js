@@ -88,7 +88,6 @@ $("#formulario").addEventListener("submit", async (ev) => {
 /* ------------------------------------------------ 2. progreso ----------- */
 
 let fuente = null;
-let reescrituras = 0;
 
 function anotar(texto, malo, ts) {
   const lista = $("#bitacora");
@@ -104,32 +103,77 @@ function anotar(texto, malo, ts) {
   li.scrollIntoView({ block: "nearest" });
 }
 
+/* Quien esta trabajando ahora y en que, o por que no hay nadie. Es lo unico
+   de esta pantalla que responde "sigue vivo o ha acabado", asi que se dice
+   sin rodeos en lugar de dejarlo en un "En reposo" que no distingue entre
+   "aun no ha empezado", "ha terminado" y "se ha parado a media novela". */
+function pintarQuienTrabaja(d) {
+  const trabajo = d.trabajando;
+  if (d.generando && trabajo) {
+    $("#p-fase").textContent = trabajo.tarea;
+    $("#p-agente").textContent = trabajo.agente;
+    $("#p-estado").textContent =
+      "Trabajando ahora mismo. Puedes cerrar esta página: el trabajo sigue.";
+    return;
+  }
+  if (d.generando) {
+    $("#p-fase").textContent = "Preparando el siguiente paso";
+    $("#p-agente").textContent = "Ningún oficio llamado en este instante";
+    $("#p-estado").textContent =
+      "En marcha. Puedes cerrar esta página: el trabajo sigue.";
+    return;
+  }
+  $("#p-agente").textContent = "Ningún proceso activo";
+  if (d.escalado) {
+    $("#p-fase").textContent = "Parada";
+    $("#p-estado").textContent =
+      "Se ha parado: un capítulo no ha salido bien y hace falta que decidas.";
+  } else if (d.terminada) {
+    $("#p-fase").textContent = "Terminada";
+    $("#p-estado").textContent =
+      `Novela terminada: ${(d.capitulos_escritos || []).length} capítulo(s) ` +
+      `y el manuscrito montado. No queda nada ejecutándose.`;
+  } else if ((d.capitulos_escritos || []).length) {
+    $("#p-fase").textContent = "Sin terminar";
+    $("#p-estado").textContent =
+      "No hay nada ejecutándose, y la novela se quedó a medias.";
+  } else {
+    $("#p-fase").textContent = "Sin empezar";
+    $("#p-estado").textContent = "Todavía no se ha escrito nada.";
+  }
+}
+
 let esperaReconexion = 1000;
 
 function escuchar() {
   if (fuente) return;
   fuente = new EventSource("/api/novelas/actual/eventos");
-  fuente.onopen = () => { esperaReconexion = 1000; };
+  // El servidor reemite el registro entero en cada conexion nueva, y a esta
+  // pantalla se vuelve cada vez que se cambia de pestana. Sin vaciar antes,
+  // la bitacora se duplicaba en cada visita.
+  fuente.onopen = () => {
+    esperaReconexion = 1000;
+    $("#bitacora").innerHTML = "";
+  };
   fuente.onmessage = (ev) => {
     const d = JSON.parse(ev.data);
     if (d.tipo === "paso") {
-      if (d.evento === "reescritura" || d.evento === "parche") reescrituras++;
       anotar(d.texto, d.evento === "escalado", d.ts);
-      if (d.evento === "fase_inicio" || d.evento === "capitulo_inicio" ||
-          d.evento === "borrador") $("#p-fase").textContent = d.texto;
-      $("#p-reescrituras").textContent = reescrituras;
     } else if (d.tipo === "estado") {
       $("#p-capitulos").textContent = (d.capitulos_escritos || []).length;
       $("#p-coste").textContent = dinero(d.gastado_usd);
       $("#p-tope").textContent =
         `${d.invocaciones} llamadas de ${d.max_invocaciones} como máximo`;
+
+      // Los dos numeros los cuenta el servidor sobre el registro. Antes los
+      // sumaba esta pagina segun llegaban los pasos, y como el flujo reemite
+      // el registro entero en cada conexion, crecian en cada visita.
+      $("#p-reescrituras").textContent = d.reescrituras ?? 0;
+      $("#p-correcciones").textContent =
+        `capítulos reescritos enteros · ${d.parches ?? 0} retoque(s) de párrafos`;
+
       $("#detener").hidden = !d.generando;
-      $("#p-estado").textContent = d.generando
-        ? "Escribiendo ahora mismo. Puedes cerrar esta página: el trabajo sigue."
-        : (d.escalado
-            ? "Se ha parado: un capítulo no ha salido bien y hace falta que decidas."
-            : "No se está escribiendo nada ahora mismo.");
-      if (!d.generando) $("#p-fase").textContent = "En reposo";
+      pintarQuienTrabaja(d);
     } else if (d.tipo === "fin") {
       fuente.close();
       fuente = null;
