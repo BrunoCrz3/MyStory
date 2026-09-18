@@ -354,6 +354,19 @@ def main():
     for ev in completos:
         lote.extend(ob.construir(cfg, ev, completos, texto_ok))
 
+    # Cada evento reafirma la traza de su tirada, asi que en una subida masiva
+    # salen cientos de trace-create identicos. El id de un item es el hash de su
+    # cuerpo, de modo que quedarse con el primero de cada id no pierde nada y
+    # recorta el envio a una fraccion.
+    vistos = set()
+    unicos = []
+    for item in lote:
+        if item["id"] in vistos:
+            continue
+        vistos.add(item["id"])
+        unicos.append(item)
+    lote = unicos
+
     informe = _resumen(eventos, generaciones)
     informe.update({
         "script": "retroalimentar",
