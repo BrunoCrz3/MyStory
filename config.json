@@ -10,6 +10,7 @@
   },
   "validacion": {
     "max_reescrituras": 3,
+    "max_intentos_archivista": 3,
     "ngrama": 6,
     "max_solape_ngramas": 0.02,
     "max_aperturas_del_mismo_tipo": 1,
@@ -41,7 +42,7 @@
       "continuista": "haiku",
       "archivista": "haiku"
     },
-    "tope_usd": 5.0,
+    "max_invocaciones": 120,
     "espera_maxima_s": 900
   }
 }

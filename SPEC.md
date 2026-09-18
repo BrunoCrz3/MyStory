@@ -3289,7 +3289,7 @@ salta igual. Ningún otro script puede leer el entorno.
 | # | Fichero | Criterio de aceptación |
 |---|---|---|
 | 33 | `runner.py` | **Único** fichero que sabe invocar Claude Code. `--output-format json` y el coste leído de la respuesta; `--restricted` siempre; nunca `--bare`; sesiones encadenadas con `--resume`. `--append-system-prompt` va el último argumento. `--probar` hace tres invocaciones reales |
-| 34 | `orquestador.py` | Recorre las cinco fases sin conversación. Importa los scripts de `scripts/`, no los reimplementa. Capítulos en orden, nunca en paralelo. Registra el coste como evento `invocacion`. Tope de gasto comprobado antes de cada invocación |
+| 34 | `orquestador.py` | Recorre las cinco fases sin conversación. Importa los scripts de `scripts/`, no los reimplementa. Capítulos en orden, nunca en paralelo. Registra el coste como evento `invocacion`. Máximo de llamadas al modelo comprobado antes de cada invocación |
 | 35 | `api.py` | Los siete endpoints. Sin estado en memoria: todo se relee de disco. Una generación a la vez, en segundo plano |
 | 36 | `static/index.html` | Las cuatro pantallas. Sin `<script src>` externo |
 | 37 | `static/estilos.css` | Sobrio y legible. Sin fuentes ni librerías de fuera |

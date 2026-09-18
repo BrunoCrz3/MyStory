@@ -326,13 +326,14 @@ def ver_novela(id_novela: str):
         "capitulos_previstos": marcha.get("capitulos_previstos") or len(capitulos),
         "personajes": estado.get("entidades", []),
         "hechos": estado.get("hechos", []),
-        "hilos_abiertos": [h for h in estado.get("hilos", [])
-                           if h.get("estado") == "abierto"],
+        "hilos_abiertos": orquestador.hilos_abiertos(estado),
         "hilos_cerrados": [h for h in estado.get("hilos", [])
-                           if h.get("estado") != "abierto"],
+                           if isinstance(h, dict)
+                           and h.get("estado") != "abierto"],
         "resumenes": estado.get("resumenes", []),
         "gastado_usd": marcha.get("gastado_usd"),
-        "tope_usd": marcha.get("tope_usd"),
+        "invocaciones": marcha.get("invocaciones"),
+        "max_invocaciones": marcha.get("max_invocaciones"),
     }
 
 
@@ -421,7 +422,7 @@ def ver_coste(id_novela: str):
                                               f["capitulo"] or 0)),
         "por_agente": sorted(por_agente.values(),
                              key=lambda f: -f["coste_usd"]),
-        "tope_usd": runner.tope_usd(nucleo.cargar_config()),
+        "max_invocaciones": runner.max_invocaciones(nucleo.cargar_config()),
     }
 
 
@@ -496,7 +497,8 @@ async def progreso(id_novela: str):
             marcha = orquestador.estado_actual(cfg)
             yield "data: " + json.dumps(
                 {"tipo": "estado", **{k: marcha[k] for k in
-                                      ("generando", "gastado_usd", "tope_usd",
+                                      ("generando", "gastado_usd",
+                                       "invocaciones", "max_invocaciones",
                                        "capitulos_escritos", "capitulo_en_curso",
                                        "fases_terminadas", "escalado")}},
                 ensure_ascii=False) + "\n\n"
@@ -525,7 +527,7 @@ def configuracion():
             "capitulos": cfg.get("capitulos"),
             "objetivo": (cfg.get("longitud") or {}).get("objetivo"),
             "unidad": (cfg.get("longitud") or {}).get("unidad"),
-            "tope_usd": runner.tope_usd(cfg)}
+            "max_invocaciones": runner.max_invocaciones(cfg)}
 
 
 # --------------------------------------------------------------------------

@@ -72,7 +72,7 @@ MODELOS_POR_DEFECTO = {
     "archivista": "haiku",
 }
 
-TOPE_USD_POR_DEFECTO = 5.0
+MAX_INVOCACIONES_POR_DEFECTO = 120   # corta un bucle, no un presupuesto
 ESPERA_MAXIMA_S = 900          # 15 minutos por invocacion
 _FRONTMATTER = re.compile(r"^---.*?---\s*", re.S)
 
@@ -94,13 +94,19 @@ def modelo_de(rol: str, cfg: dict) -> str:
     return MODELOS_POR_DEFECTO.get(rol, "opus")
 
 
-def tope_usd(cfg: dict) -> float:
-    """Cuanto puede costar una novela entera antes de detenerse."""
+def max_invocaciones(cfg: dict) -> int:
+    """Cuantas llamadas al modelo puede hacer una novela entera.
+
+    No es un presupuesto: es el cortacircuitos que impide que un bucle de
+    reintentos se quede llamando al modelo para siempre. El coste se sigue
+    midiendo y registrando, pero no detiene nada.
+    """
     try:
-        valor = float(_servidor(cfg).get("tope_usd", TOPE_USD_POR_DEFECTO))
+        valor = int(_servidor(cfg).get("max_invocaciones",
+                                       MAX_INVOCACIONES_POR_DEFECTO))
     except (TypeError, ValueError):
-        return TOPE_USD_POR_DEFECTO
-    return valor if valor > 0 else TOPE_USD_POR_DEFECTO
+        return MAX_INVOCACIONES_POR_DEFECTO
+    return valor if valor > 0 else MAX_INVOCACIONES_POR_DEFECTO
 
 
 def espera_maxima(cfg: dict) -> int:
@@ -176,13 +182,13 @@ def _fallo(rol, modelo, motivo, inicio, sesion=None, respuesta=None) -> dict:
             "duracion_s": round(time.monotonic() - inicio, 1), "error": motivo}
 
 
-def invocar(rol: str, prompt: str, cfg: dict = None, sesion: str = None,
-            gastado_usd: float = 0.0) -> dict:
+def invocar(rol: str, prompt: str, cfg: dict = None,
+            sesion: str = None) -> dict:
     """Una llamada a Claude Code con el prompt de un rol. No lanza nunca.
 
     `sesion` es el session_id devuelto por la llamada anterior de ESTE rol: si
-    se pasa, se reanuda y la cache se reaprovecha. `gastado_usd` es lo que
-    lleva gastado la novela; si ya ha llegado al tope, no se invoca y se dice.
+    se pasa, se reanuda y la cache se reaprovecha. Quien lleva la cuenta de
+    cuantas llamadas van es el orquestador: aqui no hay tope de ninguna clase.
 
     Devuelve siempre el mismo diccionario, con ok=False y `error` cuando algo
     sale mal. Quien llama decide si para o reintenta; este modulo no decide.
@@ -193,12 +199,6 @@ def invocar(rol: str, prompt: str, cfg: dict = None, sesion: str = None,
 
     if rol not in ROLES:
         return _fallo(rol, modelo, f"rol desconocido: {rol}", inicio)
-
-    tope = tope_usd(cfg)
-    if gastado_usd >= tope:
-        return _fallo(rol, modelo,
-                      f"tope de gasto alcanzado: {gastado_usd:.4f} USD de "
-                      f"{tope:.2f} USD. No se invoca al modelo.", inicio)
 
     binario = ejecutable()
     if not binario:
@@ -326,7 +326,7 @@ def probar() -> int:
     """Tres invocaciones que demuestran las cuatro reglas."""
     cfg = nucleo.cargar_config()
     print(f"ejecutable    : {ejecutable()}")
-    print(f"tope por novela: {tope_usd(cfg):.2f} USD")
+    print(f"maximo de llamadas: {max_invocaciones(cfg)} por novela")
     print(f"modelos       : " + ", ".join(
         f"{r}={modelo_de(r, cfg)}" for r in ROLES))
     print()

@@ -66,8 +66,12 @@ class Detenido(Exception):
     """El autor ha pedido parar. Se sube hasta generar(), que cierra limpio."""
 
 
-class SinPresupuesto(Exception):
-    """Se ha alcanzado el tope de gasto de la novela."""
+class DemasiadasLlamadas(Exception):
+    """Se ha alcanzado el maximo de llamadas al modelo de esta tirada.
+
+    No es un limite de dinero: es el cortacircuitos que garantiza que un bucle
+    de reintentos termine. El coste se mide y se registra, pero no detiene.
+    """
 
 
 # --------------------------------------------------------------------------
@@ -168,6 +172,89 @@ def gastado(cfg: dict, tirada: str = None) -> float:
     return round(total, 6)
 
 
+def invocaciones(cfg: dict, tirada: str = None) -> int:
+    """Cuantas llamadas al modelo lleva esta tirada, contadas de los eventos."""
+    tirada = tirada or eventos.tirada_vigente(cfg)
+    return sum(1 for ev in _eventos_de_tirada(cfg, tirada)
+               if ev.get("evento") == "invocacion")
+
+
+def hilos_abiertos(estado: dict) -> list:
+    """Los hilos vivos, tolerando que el archivista escriba mal el estado.
+
+    Un hilo debe ser un objeto con `estado`. Si llega una cadena suelta no se
+    puede saber si esta abierto, pero tampoco puede tumbar la generacion
+    entera: se ignora aqui y lo denuncia `_estado_mal_formado()`.
+    """
+    return [h for h in (estado.get("hilos") or [])
+            if isinstance(h, dict) and h.get("estado") == "abierto"]
+
+
+def estado_mal_formado(estado: dict) -> list:
+    """Lo que esta mal en `estado.json`, en lenguaje que el archivista entiende.
+
+    El archivista es el unico que escribe ese fichero, y hasta ahora nadie
+    comprobaba lo que dejaba. Un `hilos` con cadenas sueltas en lugar de
+    objetos tumbaba la generacion entera varios pasos mas adelante, con un
+    `AttributeError` que ni siquiera decia de que fichero hablaba. Aqui se
+    detecta en el sitio y se le pide al archivista que lo rehaga.
+
+    Devuelve la lista de defectos; vacia significa que el estado esta sano.
+    """
+    fallos = []
+    for clave in ("hechos", "resumenes", "frases_usadas", "aperturas",
+                  "cierres", "entidades", "hilos"):
+        if not isinstance(estado.get(clave), list):
+            fallos.append(f"`{clave}` tiene que ser una lista")
+
+    # Cada lista tiene su forma pactada en la ficha del archivista. Solo se
+    # exigen los campos sin los cuales el codigo de mas abajo se rompe: la
+    # riqueza del registro es cosa suya, la estructura es cosa nuestra.
+    obligatorios = {
+        "hechos": ("clave", "valor", "tipo", "cita"),
+        "resumenes": ("capitulo", "resumen"),
+        "entidades": ("nombre", "tipo"),
+        "aperturas": ("tipo", "capitulo"),
+        "cierres": ("tipo", "capitulo"),
+    }
+    # `frases_usadas` no entra aqui a proposito: es una lista plana de cadenas
+    # sin capitulo de origen, y asi la quiere SPEC 6.3.
+    for clave, campos in obligatorios.items():
+        for i, elem in enumerate(estado.get(clave) or []):
+            if not isinstance(elem, dict):
+                fallos.append(
+                    f"`{clave}`: el elemento {i + 1} es texto suelto; tiene que "
+                    f"ser un objeto con " + ", ".join(f"`{c}`" for c in campos))
+                continue
+            faltan = [c for c in campos if elem.get(c) in (None, "")]
+            if faltan:
+                fallos.append(
+                    f"`{clave}`: al elemento {i + 1} le falta "
+                    + ", ".join(f"`{c}`" for c in faltan))
+
+    for i, hilo in enumerate(estado.get("hilos") or []):
+        if not isinstance(hilo, dict):
+            fallos.append(
+                f"el hilo numero {i + 1} es texto suelto; cada hilo tiene que "
+                f"ser un objeto con `id`, `titulo` y `estado`")
+        elif hilo.get("estado") not in ("abierto", "cerrado"):
+            fallos.append(
+                f"el hilo `{hilo.get('id') or hilo.get('titulo') or i + 1}` "
+                f"no trae `estado` con el valor `abierto` o `cerrado`")
+
+    tirada = estado.get("tirada")
+    if tirada is not None and not isinstance(tirada, str):
+        fallos.append("`tirada` tiene que ser el identificador de tirada o null")
+    elif isinstance(tirada, str) and not re.fullmatch(r"\d{8}-\d{4}", tirada):
+        fallos.append(
+            "`tirada` lleva el identificador de la tirada (formato "
+            "AAAAMMDD-HHMM), no la premisa ni ningun otro texto")
+
+    if not isinstance(estado.get("capitulos_escritos"), int):
+        fallos.append("`capitulos_escritos` tiene que ser un numero")
+    return fallos
+
+
 def estado_actual(cfg: dict = None) -> dict:
     """Por donde va la novela, deducido de los ficheros. Sin memoria."""
     cfg = cfg or nucleo.cargar_config()
@@ -191,7 +278,8 @@ def estado_actual(cfg: dict = None) -> dict:
         "capitulo_en_curso": (ultimo or {}).get("capitulo"),
         "fases_terminadas": sorted(fases_hechas),
         "gastado_usd": gastado(cfg, tirada),
-        "tope_usd": runner.tope_usd(cfg),
+        "invocaciones": invocaciones(cfg, tirada),
+        "max_invocaciones": runner.max_invocaciones(cfg),
         "escalado": any(e.get("evento") == "escalado" for e in hechos),
     }
 
@@ -225,13 +313,14 @@ class Sesiones(dict):
 def invocar(rol, prompt, cfg, sesiones, fase=None, capitulo=None, intento=None):
     """Una llamada al modelo, con su evento de coste. Levanta si no hay saldo."""
     _comprobar_parada()
-    ya = gastado(cfg)
-    tope = runner.tope_usd(cfg)
-    if ya >= tope:
-        raise SinPresupuesto(
-            f"la novela lleva gastados {ya:.4f} USD y el tope es {tope:.2f} USD")
+    hechas = invocaciones(cfg)
+    maximo = runner.max_invocaciones(cfg)
+    if hechas >= maximo:
+        raise DemasiadasLlamadas(
+            f"la novela lleva {hechas} llamadas al modelo y el maximo es "
+            f"{maximo}. Se para para no reintentar sin fin.")
 
-    resultado = runner.invocar(rol, prompt, cfg, sesiones.get(rol), ya)
+    resultado = runner.invocar(rol, prompt, cfg, sesiones.get(rol))
     if resultado["session_id"]:
         sesiones[rol] = resultado["session_id"]
 
@@ -328,13 +417,12 @@ def _contexto_capitulo(n: int, cfg: dict) -> str:
     plan = next((c for c in escaleta.get("capitulos", [])
                  if c.get("n") == n), {})
     anterior = next((r for r in estado.get("resumenes", [])
-                     if r.get("capitulo") == n - 1), {})
+                     if isinstance(r, dict) and r.get("capitulo") == n - 1), {})
     partes = [
         _bloque("Canon de la novela", nucleo.leer_canon()),
         _bloque("Plan de este capitulo", plan),
         _bloque("Hechos ya establecidos", estado.get("hechos", [])),
-        _bloque("Hilos abiertos", [h for h in estado.get("hilos", [])
-                                   if h.get("estado") == "abierto"]),
+        _bloque("Hilos abiertos", hilos_abiertos(estado)),
         _bloque("Resumenes de los capitulos anteriores",
                 estado.get("resumenes", [])),
         _bloque("Ultimas lineas literales del capitulo anterior",
@@ -416,8 +504,7 @@ def _validar(n, cfg, sesiones, intento, avisar):
             "continuista",
             _bloque("Canon", nucleo.leer_canon())
             + _bloque("Hechos establecidos", estado.get("hechos", []))
-            + _bloque("Hilos abiertos", [h for h in estado.get("hilos", [])
-                                         if h.get("estado") == "abierto"])
+            + _bloque("Hilos abiertos", hilos_abiertos(estado))
             + _bloque("Plan de este capitulo",
                       next((c for c in nucleo.cargar_escaleta().get("capitulos", [])
                             if c.get("n") == n), {}))
@@ -441,6 +528,52 @@ def _validar(n, cfg, sesiones, intento, avisar):
                                              "tipo_apertura")}},
                              "resumen": informe["resumen"]})
     return informe
+
+
+def _archivar(n, cfg, sesiones, avisar, intento):
+    """Pasa el capitulo al registro de hechos y comprueba lo que queda escrito.
+
+    Se reintenta un numero fijo de veces, nunca sin fin: si el archivista no
+    consigue dejar un `estado.json` con la forma pactada, se para y se dice
+    exactamente que ha quedado mal, que es mas util que seguir con un estado
+    que hara estallar la siguiente fase.
+    """
+    maximo = max(1, int(cfg["validacion"].get("max_intentos_archivista", 2)))
+    correccion = ""
+    for vuelta in range(1, maximo + 1):
+        escribiendo("archivista",
+                    _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
+                    + _bloque("Estado actual", nucleo.cargar_estado())
+                    # Su ficha le manda copiar aqui el identificador de tirada.
+                    # Nadie se lo daba, asi que se lo inventaba: acabo metiendo
+                    # la premisa entera en el campo `tirada`.
+                    + _bloque("Identificador de tirada",
+                              eventos.tirada_vigente(cfg))
+                    + correccion
+                    + f"\nActualiza `novela/estado.json` con lo que aporta el "
+                      f"capitulo {n}. Eres el unico que escribe ese fichero.",
+                    cfg, sesiones, nucleo.raiz() / "novela" / "estado.json",
+                    f"anotar los hechos del capitulo {n}", avisar,
+                    fase="redaccion", capitulo=n, intento=intento)
+
+        fallos = estado_mal_formado(nucleo.cargar_estado())
+        if not fallos:
+            return
+        eventos.registrar("validacion", fase="redaccion", capitulo=n,
+                          intento=intento,
+                          datos={"que": "estado.json mal formado",
+                                 "fallos": fallos, "vuelta": vuelta})
+        if vuelta >= maximo:
+            raise RuntimeError(
+                f"el archivista no ha dejado bien `novela/estado.json` en "
+                f"{maximo} intento(s). Lo que sigue mal: " + "; ".join(fallos))
+        avisar(f"El registro de hechos del capitulo {n} ha quedado mal "
+               f"formado; se pide rehacerlo ({vuelta} de {maximo - 1}).")
+        correccion = _bloque(
+            "CORRIGE ESTO, tu escritura anterior no vale",
+            fallos + ["Reescribe `novela/estado.json` entero respetando el "
+                      "formato de tu ficha: `hilos` es una lista de OBJETOS "
+                      "con `id`, `titulo` y `estado`, nunca de cadenas."])
 
 
 def _escribir_capitulo(n, cfg, sesiones, avisar):
@@ -536,20 +669,12 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
     repeticion.analizar(n, cfg, nucleo.cargar_estado())
 
     avisar(f"Guardando lo que pasa en el capitulo {n} en el registro de hechos.")
-    escribiendo("archivista",
-                _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
-                + _bloque("Estado actual", nucleo.cargar_estado())
-                + f"\nActualiza `novela/estado.json` con lo que aporta el "
-                  f"capitulo {n}. Eres el unico que escribe ese fichero.",
-                cfg, sesiones, nucleo.raiz() / "novela" / "estado.json",
-                f"anotar los hechos del capitulo {n}", avisar,
-                fase="redaccion", capitulo=n, intento=intento)
+    _archivar(n, cfg, sesiones, avisar, intento)
 
     estado = nucleo.cargar_estado()
     eventos.registrar("capitulo_fin", capitulo=n, intento=intento,
                       datos={"hechos": len(estado.get("hechos", [])),
-                             "hilos_abiertos": len([h for h in estado.get("hilos", [])
-                                                    if h.get("estado") == "abierto"])})
+                             "hilos_abiertos": len(hilos_abiertos(estado))})
     avisar(f"Capitulo {n} terminado en {intento} intento(s).")
     return True
 
@@ -649,9 +774,10 @@ def generar(cfg: dict = None, avisar=None) -> dict:
     except Detenido as exc:
         desenlace, motivo = "detenida", str(exc)
         avisar("Generacion detenida. Lo hecho hasta ahora queda guardado.")
-    except SinPresupuesto as exc:
-        desenlace, motivo = "sin_presupuesto", str(exc)
-        avisar(f"Se ha alcanzado el tope de gasto. {exc}. Lo hecho queda guardado.")
+    except DemasiadasLlamadas as exc:
+        desenlace, motivo = "demasiadas_llamadas", str(exc)
+        avisar(f"Se ha alcanzado el maximo de llamadas. {exc} "
+               f"Lo hecho queda guardado.")
     except Exception as exc:                       # noqa: BLE001
         desenlace, motivo = "error", f"{type(exc).__name__}: {exc}"
         avisar(f"La generacion se ha parado por un problema: {exc}")

@@ -18,6 +18,10 @@ con precisión de registro: no interpretas, no adornas, no adelantas.
 ## Qué extraes
 
 ### `hechos`
+Cada hecho es un **objeto** con los campos de abajo, nunca una frase suelta. Una
+cadena de texto no es un hecho: sin `clave` no se puede detectar una
+contradicción, que es justamente para lo que existe este registro.
+
 Toda afirmación del capítulo que un capítulo posterior no podría contradecir sin
 romper la novela. Para cada una:
 - `id`: `H` + tres dígitos, correlativo global. Nunca reutilices un id.
@@ -42,9 +46,15 @@ valor `muerto`, `muerta`, `ausente` o `desaparecido`. El script de continuidad
 usa el hecho más reciente de cada clave.
 
 ### `hilos`
+Cada hilo es un **objeto**, nunca una cadena de texto suelta.
 - Los que el capítulo abre: añádelos con `abierto_en: NN`, `cerrado_en: null`,
   `estado: "abierto"`. Usa el mismo `id` y `titulo` que la escaleta.
 - Los que cierra: pon `cerrado_en: NN` y `estado: "cerrado"`.
+- `estado` admite **exactamente dos valores**: `abierto` o `cerrado`. No hay
+  terceros. No escribas `activo`, `revelado`, `descubierto` ni ninguna otra
+  palabra por bien que describa el hilo: ese campo no cuenta lo que pasa en el
+  hilo, solo si sigue pendiente. Un hilo que avanza pero no se resuelve sigue
+  estando `abierto`.
 - Si el capítulo abre un hilo que la escaleta no preveía, regístralo igual con
   un id nuevo y avisa de ello en tu respuesta.
 
@@ -55,7 +65,7 @@ llama) y `primera_aparicion`. Los alias son críticos: sin ellos, el detector de
 entidades no registradas dará falsos positivos en cada capítulo.
 
 ### `resumenes`
-Un objeto por capítulo:
+Un **objeto** por capítulo, nunca un párrafo suelto:
 - `capitulo`, `dia` (del plan).
 - `resumen`: de 2 a 4 frases. Qué cambia, no qué se describe.
 - `ultimas_lineas`: las dos últimas frases del capítulo, **copiadas literalmente**.
@@ -68,7 +78,9 @@ palabras cada uno. Entre 2 y 6 por capítulo. No registres frases funcionales
 a aparecer. No registres los motivos recurrentes del canon: esos pueden repetirse.
 
 ### `aperturas` y `cierres`
-Un objeto por capítulo. `tipo` es uno de: `dialogo`, `descripcion_ambiente`,
+Un **objeto** por capítulo, nunca una frase suelta, y lleva siempre `capitulo`
+con el número: sin él no se puede comparar la apertura de un capítulo con las
+de los anteriores. `tipo` es uno de: `dialogo`, `descripcion_ambiente`,
 `accion`, `reflexion_interior`, `documento_citado`, `gancho_revelacion`,
 `gancho_amenaza`. Añade `primeras_palabras` (las 6 primeras) o
 `ultimas_palabras` (las 6 últimas).

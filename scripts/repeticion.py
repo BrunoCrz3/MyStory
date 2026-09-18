@@ -40,6 +40,8 @@ def _tipo_apertura(n: int, estado: dict) -> str:
         return "dialogo"
     inicio = nucleo.normalizar(primera)
     for entidad in estado.get("entidades", []):
+        if not isinstance(entidad, dict):
+            continue      # lo denuncia estado_mal_formado(); aqui se ignora
         nombres = [entidad.get("nombre", "")] + list(entidad.get("alias", []))
         for nombre in nombres:
             clave = nucleo.normalizar(nombre)
@@ -130,7 +132,8 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
     # 4. Tipo de apertura frente a los ya registrados en el estado.
     tipo = _tipo_apertura(n, estado)
     previas = [a for a in estado.get("aperturas", [])
-               if a.get("tipo") == tipo and a.get("capitulo") != n]
+               if isinstance(a, dict)
+               and a.get("tipo") == tipo and a.get("capitulo") != n]
     if previas and len(previas) + 1 > max_aperturas:
         cap = previas[0].get("capitulo")
         incidencias.append({

@@ -52,8 +52,8 @@ $$("nav button").forEach((b) =>
       c.unidad === "lineas" ? "Se mide en líneas de texto."
                             : `Se mide en ${c.unidad}.`;
     $("#aviso-tope").textContent =
-      `La generación se detiene sola si llega a ${dinero(c.tope_usd)}, ` +
-      `para que no se dispare el gasto.`;
+      `La generación se detiene sola a las ${c.max_invocaciones} llamadas al ` +
+      `modelo, para que un reintento no se repita sin fin.`;
   } catch (e) { /* el formulario funciona igual con los valores en blanco */ }
 })();
 
@@ -104,9 +104,12 @@ function anotar(texto, malo, ts) {
   li.scrollIntoView({ block: "nearest" });
 }
 
+let esperaReconexion = 1000;
+
 function escuchar() {
   if (fuente) return;
   fuente = new EventSource("/api/novelas/actual/eventos");
+  fuente.onopen = () => { esperaReconexion = 1000; };
   fuente.onmessage = (ev) => {
     const d = JSON.parse(ev.data);
     if (d.tipo === "paso") {
@@ -118,7 +121,8 @@ function escuchar() {
     } else if (d.tipo === "estado") {
       $("#p-capitulos").textContent = (d.capitulos_escritos || []).length;
       $("#p-coste").textContent = dinero(d.gastado_usd);
-      $("#p-tope").textContent = `de ${dinero(d.tope_usd)} como máximo`;
+      $("#p-tope").textContent =
+        `${d.invocaciones} llamadas de ${d.max_invocaciones} como máximo`;
       $("#detener").hidden = !d.generando;
       $("#p-estado").textContent = d.generando
         ? "Escribiendo ahora mismo. Puedes cerrar esta página: el trabajo sigue."
@@ -131,7 +135,19 @@ function escuchar() {
       fuente = null;
     }
   };
-  fuente.onerror = () => { if (fuente) { fuente.close(); fuente = null; } };
+  // Si el servidor se cae o se reinicia, EventSource dispara onerror. Cerrar
+  // y no volver a intentarlo deja la pantalla congelada para siempre, sin
+  // decir nada: parecia que no pasaba nada cuando en realidad nadie
+  // escuchaba. Se reintenta con una espera que crece hasta medio minuto.
+  fuente.onerror = () => {
+    if (!fuente) return;
+    fuente.close();
+    fuente = null;
+    $("#p-estado").textContent =
+      "Se ha perdido la conexión con el servidor. Reintentando…";
+    esperaReconexion = Math.min(esperaReconexion * 2, 30000);
+    setTimeout(escuchar, esperaReconexion);
+  };
 }
 
 $("#detener").addEventListener("click", async () => {

@@ -67,6 +67,8 @@ def _nombres_del_canon() -> set:
 def _nombres_conocidos(estado: dict) -> set:
     conocidos = _nombres_del_canon()
     for entidad in estado.get("entidades", []):
+        if not isinstance(entidad, dict):
+            continue      # lo denuncia estado_mal_formado(); aqui se ignora
         etiquetas = [entidad.get("nombre", "")] + list(entidad.get("alias", []))
         for etiqueta in etiquetas:
             for trozo in nucleo.normalizar(etiqueta).split():
@@ -99,6 +101,8 @@ def _hechos_vigentes(hechos: list) -> dict:
     """Ultimo hecho registrado para cada clave."""
     vigentes = {}
     for hecho in hechos:
+        if not isinstance(hecho, dict):
+            continue          # lo denuncia estado_mal_formado(), aqui se ignora
         clave = hecho.get("clave")
         if clave:
             vigentes[clave] = hecho
@@ -222,7 +226,8 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
     # dejado en 'cerrado' y sin esta segunda condicion la comprobacion se
     # quejaria siempre de un cierre que es justamente el correcto.
     abiertos = {h.get("id") for h in estado.get("hilos", [])
-                if h.get("estado") == "abierto" or h.get("cerrado_en") == n}
+                if isinstance(h, dict)
+                and (h.get("estado") == "abierto" or h.get("cerrado_en") == n)}
     no_cerrables = []
     for hilo in plan.get("cierra_hilos", []):
         if hilo not in abiertos:
@@ -371,7 +376,8 @@ def modo_global(cfg: dict) -> dict:
     incidencias = []
 
     # 1. No queda ningun hilo abierto.
-    abiertos = [h for h in estado.get("hilos", []) if h.get("estado") == "abierto"]
+    abiertos = [h for h in estado.get("hilos", [])
+                if isinstance(h, dict) and h.get("estado") == "abierto"]
     for hilo in abiertos:
         incidencias.append({
             "severidad": "mayor", "tipo": "hilo_abierto_al_final",
@@ -396,6 +402,8 @@ def modo_global(cfg: dict) -> dict:
     # 3. Dos hechos con la misma clave y valores incompatibles.
     por_clave = {}
     for hecho in estado.get("hechos", []):
+        if not isinstance(hecho, dict):
+            continue
         por_clave.setdefault(hecho.get("clave"), []).append(hecho)
     choques = []
     for clave, lista in por_clave.items():

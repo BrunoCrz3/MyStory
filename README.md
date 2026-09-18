@@ -31,8 +31,11 @@ Cuatro pantallas:
 | **Cuánto ha costado** | El gasto total y el desglose por capítulo y por oficio. |
 
 La generación corre por detrás: puedes cerrar la pestaña y el trabajo sigue.
-Solo se genera una novela a la vez, y **se detiene sola** si el gasto llega al
-tope de `config.json` → `servidor.tope_usd`, que de fábrica son 5 dólares.
+Solo se genera una novela a la vez, y **se detiene sola** al llegar al máximo
+de llamadas al modelo de `config.json` → `servidor.max_invocaciones`, que de
+fábrica son 120. No es un presupuesto: es el freno que impide que un reintento
+se repita sin fin. El coste se sigue midiendo y se ve en la pantalla de cuentas,
+pero no detiene nada.
 
 Empezar una novela nueva **archiva la anterior** en `archivo/<nombre>/` antes de
 vaciar el sitio, así que no se pierde nada.
