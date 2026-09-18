@@ -1,51 +1,50 @@
-# Canon — El pagador de la 812
+# Canon — Las nueve escuchas
 
 ## Logline
-La custodia del depósito de Cal Menuda quiere saber quién lleva nueve años pagando puntualmente una celda cuyo dueño está muerto y que ningún cuerpo vivo podrá abrir jamás; para averiguarlo tiene que mover el bloque con sus propias manos, y cada traslado entrega una hora de su vida a la cuenta que investiga.
+La archivista del turno frío quiere saber quién lleva once años pagando la conserva de un tubo cuya dueña ya no vive y al que nadie ha gastado todavía ni una sola escucha; el único modo de averiguarlo es escucharlo, y cada hora que el Almacén le cobra por preguntar deja de haberle ocurrido a ella.
 
 ## Tema
-¿Cuidar indefinidamente lo que fue de otro es lealtad o una forma lenta de quedárselo?
+¿Vale más una memoria que nadie ha oído nunca que la vida que hay que gastar para oírla?
 
 ## Personajes
-- **Eneida Volsk** — Función: custodia única del depósito, la que baja a las galerías y transporta los bloques dentro de su propio cuerpo. Edad: 33. Alias: "la de la cal". Deseo: saber quién paga la celda que nadie puede abrir. Miedo: llegar a no distinguir qué recuerdos suyos son realmente suyos. Arco: de guardiana que cobra sin preguntar a deudora que descubre el precio de su propia curiosidad.
-- **Marcial Oyarzun** — Función: cobrador y auditor del depósito, decide qué celdas se vacían por impago y firma cada vencimiento. Edad: 57. Alias: "el vencimiento". Deseo: cerrar el libro de cuentas sin dejar una sola línea sin dueño vivo. Miedo: que alguien audite lo que él mismo firmó hace años. Arco: de aplicador exacto del reglamento a hombre que busca por escrito una excepción para sí.
-- **Gorka Nistal** — Función: aprendiz de mostrador, atiende los retornos y cobra las horas a los colonos en el vestíbulo. Edad: 19. Alias: "el de la ventanilla". Deseo: que lo acrediten como custodio antes de cumplir veinte. Miedo: bajar a las galerías y volver a subir siendo otro. Arco: de chico que envidia el oficio a testigo que entiende lo que cuesta y decide qué hacer con lo que ha visto.
+- **Amparo Ledesma** — Función: archivista del turno frío, cataloga y etiqueta los tubos del Almacén de Bocasal. Edad: 41. Alias: "la del frío". Deseo: poner nombre al que paga el tubo 344 sin gastarle una escucha. Miedo: acabar sin horas propias y tener que alquilarse las de otros para saber quién ha sido. Arco: de funcionaria que conserva sin preguntar a deudora que decide qué memoria merece quedar entera.
+- **Tobías Munt** — Función: tasador del Almacén, fija en horas lo que vale cada memoria decantada y firma los vertidos por impago. Edad: 58. Alias: "el que tasa". Deseo: cerrar el censo sin un solo tubo a nombre de un cuerpo muerto. Miedo: que alguien tase algún día lo que él decantó y no declaró. Arco: de tasador exacto a hombre que busca una excepción escrita con su propia letra.
+- **Selim Varga** — Función: escuchante de alquiler, vive las memorias ajenas por encargo de quienes no pueden pagarlas con sus horas. Edad: 26. Alias: "el prestado". Deseo: reunir horas suficientes para no tener que vivir nunca más lo de otros. Miedo: no reconocer cuál de todas las tardes que recuerda fue suya. Arco: de oficio alquilado a testigo que se niega a entrar en un tubo por primera vez.
 
 ## Escenario
-El depósito de rentas de Cal Menuda, colonia minera de novecientos habitantes sobre una meseta de polvo blanco. Todo ocurre en el mismo edificio: un vestíbulo con mostrador y contador a la vista, y bajo él once galerías excavadas en la veta con mil cien celdas numeradas, de las que trescientas cuarenta están ocupadas. Dentro trabajan tres personas y ninguna más. Nadie cuenta meses: el tiempo se mide en vencimientos de cuarenta días y, para lo corto, en horas corrientes, las que marca el contador del vestíbulo y nunca se detiene.
+El Almacén de Bocasal, colonia de seiscientos habitantes levantada sobre una laguna de sal drenada. Todo ocurre dentro del mismo edificio: un mostrador de conserva, doce filas con dos mil cuatrocientos tubos de salmuera fría —de los que ochocientos dieciséis están llenos— y, al fondo, el cuarto de escucha con una sola silla. Dentro trabajan tres personas y nadie más. No hay calendario: el tiempo se cuenta en fríos, lo que tarda la bomba en volver a helar la salmuera, unas dieciocho horas, y por debajo de eso en horas decantadas, la unidad con la que allí se cobra todo.
 
 ## Premisa especulativa
-- **Reglas:** El depósito extrae de un cuerpo bloques de memoria medidos en las horas que duró vivirlas y los guarda en celdas numeradas; cada bloque paga renta por hora de custodia y la puede pagar cualquiera, porque el registro anota quién paga y no de quién es; el titular puede pedir un retorno y volver a vivir su bloque durante exactamente lo que duró; los bloques solo cambian de celda a mano, transportados dentro del cuerpo de la custodia.
-- **Límites:** Un cuerpo no admite más de seis horas de bloque a la vez, y por encima de eso el material sencillamente no entra; de cada bloque existe un único ejemplar y el depósito no lo duplica; un bloque solo se abre en el cuerpo del que salió, así que si ese cuerpo ha muerto queda cerrado para siempre, conservable pero ilegible; cuarenta días sin pagar y la celda se vacía sin aviso y sin vuelta atrás.
-- **Coste:** Cada traslado cobra a la custodia una hora de su vida vivida, que sale de ella y entra en el depósito archivada bajo la cuenta del bloque transportado; a cambio se le queda pegado un resto del bloque ajeno que no sabe separar de lo propio. Eneida Volsk paga en horas que dejan de ser suyas y pasan a pertenecer a quien costea esa cuenta: cuanto más averigua, menos pasado tiene y más le debe al pagador.
+- **Reglas:** El Almacén decanta la memoria de un cuerpo y la guarda en tubos de salmuera fría, medida en las horas que costó vivirla; cualquiera puede alquilar horas de cualquier tubo y vivirlas como propias mientras dure la escucha; el registro anota quién paga la conserva de cada tubo y jamás de quién salió; y la conserva no se paga en dinero, sino en horas decantadas del propio cuerpo, única moneda de la colonia.
+- **Límites:** Un tubo admite nueve escuchas y a la décima solo devuelve ruido, que no se revierte; un cuerpo no puede decantar más de cuatrocientas horas en toda su vida, y pasada esa cuenta el Almacén no le acepta ni una más; la salmuera no conserva nada vivido hace más de treinta años; doce días de impago y el tubo se vierte sin aviso.
+- **Coste:** Lo que se paga sale del cuerpo, no de la bolsa: la hora decantada deja de haberle ocurrido a quien la paga, aunque siga ocurriéndoles a los demás. Amparo Ledesma lleva trescientas sesenta y una de sus cuatrocientas horas gastadas en catalogar lo ajeno; para identificar al pagador del 344 tiene que seguir pagando consultas, y cada consulta le quita un trozo de la única vida con la que podría comparar lo que oiga.
 
 ## Cronología previa
-- Año -22: los primeros mineros comprueban que bajo el polvo blanco ningún cuerpo retiene nada de más de dos años, y se excavan las galerías para guardar fuera lo que dentro no aguanta.
-- Año -14: se fija la renta por hora corriente y el vencimiento de cuarenta días; el primer vaciado por impago se ejecuta sin previo aviso y sienta jurisprudencia.
-- Año -9: se abre la celda 812 a nombre de una cuenta que nadie reclama y empieza a pagarse puntualmente, vencimiento tras vencimiento.
-- Año -6: Eneida Volsk entra como custodia y hace su primer traslado; esa hora suya figura desde entonces en una cuenta ajena.
-- Año -1: Marcial Oyarzun recibe el encargo de auditar todas las cuentas mudas de Cal Menuda y cerrarlas.
-- Día -3: el recibo de la 812 llega pagado por adelantado hasta un vencimiento que todavía no existe en el libro.
+- Año -30: se drena la laguna y se descubre que la salmuera fría retiene lo decantado; se conservan los primeros tubos sin saber todavía cuántas veces resisten.
+- Año -22: se fija la hora decantada como moneda de conserva y el vertido a los doce días de impago; el primer vertido se ejecuta sin avisar y queda como norma.
+- Año -16: un tubo escuchado diez veces devuelve ruido delante de testigos; se sella en nueve el máximo y se abre el registro de escuchas gastadas.
+- Año -11: se llena el tubo 344 a nombre de una cuenta que nunca reclama nada, y alguien empieza a pagar su conserva frío tras frío.
+- Año -5: Amparo Ledesma entra en el turno frío y decanta sus primeras horas para pagar el puesto.
+- Día -4: Tobías Munt recibe orden de verter antes del próximo cierre todos los tubos cuyo cuerpo de origen conste muerto.
 
 ## Glosario
-- **Bloque**: porción de memoria extraída de un cuerpo, medida en las horas que costó vivirla.
-- **Celda**: hueco numerado de las galerías donde se custodia un bloque.
-- **Retorno**: devolución temporal de un bloque al cuerpo del que salió, por el tiempo exacto que duró.
-- **Traslado**: movimiento de un bloque de una celda a otra, siempre dentro del cuerpo de la custodia.
-- **Vencimiento**: plazo de cuarenta días al término del cual una renta impagada provoca el vaciado.
-- **Vaciado**: borrado definitivo de un bloque por impago; no se anuncia y no se revierte.
-- **Cuenta muda**: cuenta cuyo cuerpo de origen ha muerto; se le puede pagar renta, nunca abrirla.
-- **Hora corriente**: unidad de cobro del mostrador, la que marca el contador del vestíbulo.
+- **Tubo**: recipiente numerado de salmuera fría donde se conserva una memoria decantada.
+- **Decantar**: sacar de un cuerpo una memoria y medirla en las horas que duró vivirla.
+- **Escucha**: alquiler durante el cual alguien vive como propia la memoria de un tubo.
+- **Ruido**: lo que devuelve un tubo agotado; no se distingue nada y no hay vuelta atrás.
+- **Conserva**: renta que mantiene helado un tubo, pagada siempre en horas decantadas.
+- **Vertido**: vaciado de un tubo impagado en la laguna; no se anuncia y no se recupera.
+- **Frío**: unidad de tiempo de la colonia, lo que tarda la bomba en helar de nuevo la salmuera.
 
 ## Términos prohibidos
 - copia de seguridad
-- implante
 - holograma
 - telepatía
 - inteligencia artificial
 - reencarnación
+- fantasma
 
 ## Motivos recurrentes
-- El contador del vestíbulo sumando horas también cuando no hay nadie delante.
-- La cal blanca metida bajo las uñas, que delata quién ha bajado a las galerías.
-- Los sobres de recibo con el nombre del pagador tachado a mano antes de archivarse.
+- La escarcha de los tubos deshecha en la forma exacta de una mano que acaba de apoyarse.
+- El zumbido de la bomba parándose un instante cada hora y el silencio que deja detrás.
+- Los guantes de lona puestos a secar en el respaldo, tiesos de sal, cada vez más pequeños.
