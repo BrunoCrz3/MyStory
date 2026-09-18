@@ -1,4 +1,4 @@
-"""La API HTTP y el servidor del frontend.
+r"""La API HTTP y el servidor del frontend.
 
 No decide nada sobre la novela: pregunta a los ficheros y al orquestador. Todo
 lo que devuelve sale de `novela/` o de `archivo/<nombre>/`, nunca de una
@@ -27,7 +27,6 @@ import re
 import shutil
 import sys
 import threading
-import time
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
@@ -38,7 +37,6 @@ from fastapi import FastAPI, HTTPException            # noqa: E402
 from fastapi.responses import FileResponse, StreamingResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles           # noqa: E402
 
-import eventos                                        # noqa: E402
 import intentos                                       # noqa: E402
 import nucleo                                         # noqa: E402
 import orquestador                                    # noqa: E402
