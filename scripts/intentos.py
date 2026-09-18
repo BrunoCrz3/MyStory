@@ -183,16 +183,7 @@ def comparar(antes: str, despues: str) -> dict:
 def _eventos_de(capitulo: int, ruta_eventos: Path) -> dict:
     """Modo y marca de tiempo de cada intento, sacados del registro."""
     modos, sellos = {}, {}
-    if not ruta_eventos.exists():
-        return {"modos": modos, "sellos": sellos}
-    for linea in ruta_eventos.read_text(encoding="utf-8").splitlines():
-        linea = linea.strip()
-        if not linea:
-            continue
-        try:
-            ev = json.loads(linea)
-        except json.JSONDecodeError:
-            continue
+    for ev in nucleo.leer_jsonl(ruta_eventos):
         if ev.get("capitulo") != capitulo:
             continue
         intento = ev.get("intento")

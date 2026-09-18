@@ -174,20 +174,8 @@ def _desmarcar() -> None:
 
 def _eventos_de_tirada(cfg: dict, tirada: str = None) -> list:
     ruta = nucleo.raiz() / cfg["eventos"].get("fichero", "novela/events.jsonl")
-    if not ruta.exists():
-        return []
-    salida = []
-    for linea in ruta.read_text(encoding="utf-8").splitlines():
-        linea = linea.strip()
-        if not linea:
-            continue
-        try:
-            ev = json.loads(linea)
-        except json.JSONDecodeError:
-            continue
-        if tirada is None or ev.get("tirada") == tirada:
-            salida.append(ev)
-    return salida
+    return [ev for ev in nucleo.leer_jsonl(ruta)
+            if tirada is None or ev.get("tirada") == tirada]
 
 
 def gastado(cfg: dict, tirada: str = None) -> float:

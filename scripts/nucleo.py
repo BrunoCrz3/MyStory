@@ -106,6 +106,35 @@ def cargar_config() -> dict:
     return cfg
 
 
+# Las UNICAS tres claves de config.json que se pueden cambiar por programa.
+# La regla estaba escrita en CLAUDE.md y la cumplia quien se acordaba; aqui es
+# la firma de la funcion la que la hace cumplir, y no hay otra puerta.
+CLAVES_EDITABLES = ("premisa", "capitulos", "longitud.objetivo")
+
+
+def actualizar_config(premisa: str = None, capitulos: int = None,
+                      objetivo: int = None) -> dict:
+    """Cambia en config.json solo las tres claves editables. Devuelve el todo.
+
+    Lo que no se pasa no se toca, y no hay forma de pasar otra cosa: el resto
+    del fichero -umbrales, git, eventos, observabilidad, servidor- se reescribe
+    tal cual estaba y en el mismo orden, porque json.load conserva el orden de
+    las claves y json.dump lo respeta.
+    """
+    ruta = raiz() / "config.json"
+    cfg = json.loads(ruta.read_text(encoding="utf-8"))
+    if premisa is not None:
+        cfg["premisa"] = str(premisa)
+    if capitulos is not None:
+        cfg["capitulos"] = int(capitulos)
+    if objetivo is not None:
+        cfg["longitud"] = dict(cfg.get("longitud") or {})
+        cfg["longitud"]["objetivo"] = int(objetivo)
+    ruta.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n",
+                    encoding="utf-8")
+    return cfg
+
+
 def cargar_estado() -> dict:
     """Lee novela/estado.json. Si no existe, devuelve la semilla vacia."""
     ruta = raiz() / "novela" / "estado.json"
@@ -125,6 +154,33 @@ def guardar_estado(estado: dict) -> None:
         json.dumps(estado, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+
+
+def leer_jsonl(ruta) -> list:
+    """Las lineas de un fichero JSONL, ya convertidas y sin las rotas.
+
+    Habia seis copias de este bucle repartidas por el repositorio -eventos,
+    informes, intentos, la API, el orquestador-, y las seis toleraban una
+    linea mal formada de manera distinta. Un registro que se lee de seis
+    maneras acaba contando seis historias.
+    """
+    ruta = Path(ruta)
+    try:
+        texto = ruta.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        # Vale igual para los transcripts de Claude Code, que no son nuestros
+        # y pueden traer cualquier cosa.
+        return []
+    filas = []
+    for linea in texto.splitlines():
+        linea = linea.strip()
+        if not linea:
+            continue
+        try:
+            filas.append(json.loads(linea))
+        except json.JSONDecodeError:
+            continue        # una linea rota no invalida el resto del registro
+    return filas
 
 
 def cargar_escaleta() -> dict:
@@ -169,9 +225,15 @@ def ruta_capitulo(n: int) -> Path:
     return raiz() / "novela" / "capitulos" / f"capitulo-{int(n):02d}.md"
 
 
-def capitulos_existentes() -> list:
+def carpeta_capitulos(base=None) -> Path:
+    """Donde viven los capitulos. Por defecto los de la novela en curso, pero
+    vale cualquier base: una novela archivada, una tirada del ciclo de mejora."""
+    return Path(base) if base else raiz() / "novela" / "capitulos"
+
+
+def capitulos_existentes(base=None) -> list:
     """Lista ordenada de los numeros de capitulo presentes en disco."""
-    carpeta = raiz() / "novela" / "capitulos"
+    carpeta = carpeta_capitulos(base)
     if not carpeta.is_dir():
         return []
     numeros = []
@@ -187,19 +249,24 @@ def cuerpo_capitulo(n: int) -> str:
     return "\n".join(lineas_capitulo(n))
 
 
-def lineas_capitulo(n: int) -> list:
-    """Lineas de cuerpo no vacias: se descartan las vacias y las que abren
-    con '#' (el titulo del capitulo no cuenta para la longitud)."""
-    ruta = ruta_capitulo(n)
+def lineas_de(ruta) -> list:
+    """Lineas de cuerpo no vacias de un fichero de capitulo, o None si no esta.
+
+    Se descartan las vacias y las que abren con '#' (el titulo no cuenta para
+    la longitud). Devuelve None -y no lista vacia- cuando el fichero no existe,
+    porque no es lo mismo un capitulo de cero lineas que un capitulo ausente:
+    publicar un cero por un fichero que se movio seria publicar un dato falso.
+    """
+    ruta = Path(ruta)
     if not ruta.exists():
-        return []
-    utiles = []
-    for linea in ruta.read_text(encoding="utf-8").splitlines():
-        limpia = linea.strip()
-        if not limpia or limpia.startswith("#"):
-            continue
-        utiles.append(limpia)
-    return utiles
+        return None
+    return [ln.strip() for ln in ruta.read_text(encoding="utf-8").splitlines()
+            if ln.strip() and not ln.strip().startswith("#")]
+
+
+def lineas_capitulo(n: int, base=None) -> list:
+    """Lineas de cuerpo del capitulo n. Lista vacia si no existe."""
+    return lineas_de(carpeta_capitulos(base) / f"capitulo-{int(n):02d}.md") or []
 
 
 def palabras(texto: str) -> list:

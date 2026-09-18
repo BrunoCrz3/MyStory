@@ -106,18 +106,7 @@ def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str,
     ver que la primera crea la cache y las siguientes la leen.
     """
     salida = []
-    try:
-        texto = fichero.read_text(encoding="utf-8")
-    except (OSError, UnicodeDecodeError):
-        return salida
-    for linea in texto.splitlines():
-        linea = linea.strip()
-        if not linea:
-            continue
-        try:
-            fila = json.loads(linea)
-        except json.JSONDecodeError:
-            continue
+    for fila in nucleo.leer_jsonl(fichero):
         if fila.get("type") != "assistant":
             continue
         mensaje = fila.get("message") or {}

@@ -226,19 +226,14 @@ def _decir(mensaje: str) -> None:
     print(mensaje, file=sys.stderr, flush=True)
 
 
-def _lineas_de(fichero: Path) -> list:
-    return [ln.strip() for ln in fichero.read_text(encoding="utf-8").splitlines()
-            if ln.strip() and not ln.strip().startswith("#")]
-
-
 def _monotonia_de_carpeta(carpeta: Path) -> dict:
     """La monotonia sintactica de una novela entera, capitulos agrupados."""
-    caps = sorted(carpeta.glob("capitulo-*.md"))
+    numeros = nucleo.capitulos_existentes(carpeta)
     todas = []
-    for cap in caps:
-        todas += _lineas_de(cap)
+    for n in numeros:
+        todas += nucleo.lineas_capitulo(n, carpeta)
     medida = repeticion.monotonia_sintactica(todas)
-    medida["capitulos"] = len(caps)
+    medida["capitulos"] = len(numeros)
     return medida
 
 
@@ -317,14 +312,9 @@ def _restaurar_novela_y_config() -> None:
 
 
 def _poner_premisa(premisa: str) -> None:
-    """Cambia SOLO la clave 'premisa' de config.json. El resto se reescribe
-    igual que estaba, en el mismo orden: json.load conserva el orden de las
-    claves y json.dump lo respeta."""
-    ruta = RAIZ / "config.json"
-    cfg = json.loads(ruta.read_text(encoding="utf-8"))
-    cfg["premisa"] = premisa
-    ruta.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8")
+    """Cambia SOLO la clave 'premisa'. Quien garantiza ese "solo" es
+    nucleo.actualizar_config(), que no acepta ninguna otra clave."""
+    nucleo.actualizar_config(premisa=premisa)
 
 
 def _novela_en_blanco() -> None:
@@ -770,11 +760,7 @@ def _cierre_en_prosa(cierre: dict, base_doc: dict, adoptados: list) -> str:
 
 def estado() -> dict:
     base_doc = _leer_json(LINEA_BASE, "la linea base")
-    lineas = []
-    if REGISTRO.exists():
-        for ln in REGISTRO.read_text(encoding="utf-8").splitlines():
-            if ln.strip():
-                lineas.append(json.loads(ln))
+    lineas = nucleo.leer_jsonl(REGISTRO)
     resultados = [r for r in lineas if r.get("tipo") == "resultado"]
     cierres = [r for r in lineas if r.get("tipo") == "cierre"]
     return {

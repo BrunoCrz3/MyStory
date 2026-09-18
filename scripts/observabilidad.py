@@ -385,20 +385,8 @@ def _span(traza: str, clave: str, nombre: str, tipo: str, inicio: str,
 def leer_eventos(cfg: dict, tirada: str = None) -> list:
     """Todas las lineas de events.jsonl, opcionalmente de una sola tirada."""
     ruta = nucleo.raiz() / cfg["eventos"].get("fichero", "novela/events.jsonl")
-    if not ruta.exists():
-        return []
-    salida = []
-    for linea in ruta.read_text(encoding="utf-8").splitlines():
-        linea = linea.strip()
-        if not linea:
-            continue
-        try:
-            ev = json.loads(linea)
-        except json.JSONDecodeError:
-            continue
-        if tirada is None or ev.get("tirada") == tirada:
-            salida.append(ev)
-    return salida
+    return [ev for ev in nucleo.leer_jsonl(ruta)
+            if tirada is None or ev.get("tirada") == tirada]
 
 
 def _agregados(eventos: list) -> dict:
@@ -796,18 +784,9 @@ def _lineas_utiles(capitulo) -> list:
     capitulos se movieron), devuelve None en vez de cero: publicar un cero
     seria publicar un dato falso.
     """
-    if _dir_capitulos:
-        ruta = pathlib.Path(_dir_capitulos) / f"capitulo-{int(capitulo):02d}.md"
-    else:
-        ruta = nucleo.ruta_capitulo(capitulo)
-    if not ruta.exists():
-        return None
-    utiles = []
-    for linea in ruta.read_text(encoding="utf-8").splitlines():
-        limpia = linea.strip()
-        if limpia and not limpia.startswith("#"):
-            utiles.append(limpia)
-    return utiles
+    return nucleo.lineas_de(
+        nucleo.carpeta_capitulos(_dir_capitulos)
+        / f"capitulo-{int(capitulo):02d}.md")
 
 
 def _aplanar(metricas: dict) -> dict:

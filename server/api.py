@@ -134,32 +134,11 @@ def _sello(carpeta: Path) -> float:
 
 
 def _leer_eventos(carpeta: Path) -> list:
-    ruta = carpeta / "events.jsonl"
-    if not ruta.exists():
-        return []
-    salida = []
-    for linea in ruta.read_text(encoding="utf-8").splitlines():
-        linea = linea.strip()
-        if not linea:
-            continue
-        try:
-            salida.append(json.loads(linea))
-        except json.JSONDecodeError:
-            continue
-    return salida
+    return nucleo.leer_jsonl(carpeta / "events.jsonl")
 
 
 def _capitulos_de(carpeta: Path) -> list:
-    dir_cap = carpeta / "capitulos"
-    if not dir_cap.is_dir():
-        return []
-    numeros = []
-    for f in dir_cap.glob("capitulo-*.md"):
-        try:
-            numeros.append(int(f.stem.split("-")[-1]))
-        except ValueError:
-            continue
-    return sorted(numeros)
+    return nucleo.capitulos_existentes(carpeta / "capitulos")
 
 
 def _texto_capitulo(carpeta: Path, n: int) -> str:
@@ -243,11 +222,6 @@ def _archivar_actual() -> str:
     return destino.name
 
 
-SEMILLA_ESTADO = {"tirada": None, "capitulos_escritos": 0, "hechos": [],
-                  "hilos": [], "entidades": [], "resumenes": [],
-                  "frases_usadas": [], "aperturas": [], "cierres": []}
-
-
 def _vaciar_actual() -> None:
     actual = RAIZ / "novela"
     for nombre in ("canon.md", "escaleta.json", "events.jsonl",
@@ -261,7 +235,7 @@ def _vaciar_actual() -> None:
             shutil.rmtree(carpeta)
         carpeta.mkdir(parents=True, exist_ok=True)
     (actual / "estado.json").write_text(
-        json.dumps(SEMILLA_ESTADO, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(nucleo.SEMILLA_ESTADO, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8")
     manuscrito = RAIZ / "manuscrito.md"
     if manuscrito.exists():
@@ -269,16 +243,15 @@ def _vaciar_actual() -> None:
 
 
 def _guardar_peticion(premisa: str, capitulos: int, objetivo: int) -> dict:
-    """Escribe en config.json SOLO las tres claves que pide la web."""
-    ruta = RAIZ / "config.json"
-    cfg = json.loads(ruta.read_text(encoding="utf-8"))
-    cfg["premisa"] = premisa
-    cfg["capitulos"] = int(capitulos)
-    cfg["longitud"] = dict(cfg.get("longitud") or {})
-    cfg["longitud"]["objetivo"] = int(objetivo)
-    ruta.write_text(json.dumps(cfg, ensure_ascii=False, indent=2) + "\n",
-                    encoding="utf-8")
-    return cfg
+    """Escribe en config.json SOLO las tres claves que pide la web.
+
+    Quien decide cuales son esas tres es nucleo.actualizar_config(), que no
+    acepta ninguna otra. Antes la regla estaba escrita aqui y repetida en el
+    ciclo de mejora: bastaba con que alguien anadiese una linea en cualquiera
+    de los dos sitios para saltarsela sin querer.
+    """
+    return nucleo.actualizar_config(premisa=premisa, capitulos=capitulos,
+                                    objetivo=objetivo)
 
 
 _hilo = None
