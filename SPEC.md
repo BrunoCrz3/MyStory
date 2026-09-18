@@ -3207,10 +3207,10 @@ git push -u origin main
 
 ## 16. Inventario cerrado de entregables
 
-38 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
-hay 40, algo se ha inventado; si hay 36, algo falta.
+39 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
+hay 41, algo se ha inventado; si hay 37, algo falta.
 
-Los siete últimos (32 a 38) llegaron con la interfaz web, que el autor pidió
+Los ocho últimos (32 a 39) llegaron con la interfaz web, que el autor pidió
 después de la primera construcción. Hasta entonces el inventario eran 31.
 
 ### 16.1 Raíz
@@ -3223,6 +3223,7 @@ después de la primera construcción. Hasta entonces el inventario eran 31.
 | 4 | `config.json` | JSON válido con el contenido literal de la sección 4.1. `capitulos: 3`, `unidad: "lineas"`, `objetivo: 4` |
 | 5 | `.gitignore` | Sección 5.1, más `novela/langfuse.log`. **No** ignora `novela/` |
 | 29 | `requirements-opcional.txt` | Declara `langfuse` como dependencia **opcional**. El núcleo no la necesita: el exportador usa `urllib`. No se instala sola |
+| 39 | `.vscode/settings.json` | Solo le dice al editor dónde buscar: `extraPaths` con `scripts` y `server`, y el intérprete del entorno virtual. No cambia cómo se ejecuta nada |
 
 ### 16.2 Subagentes (`.claude/agents/`)
 
@@ -3342,7 +3343,7 @@ fichero no se instalan nunca solas y el sistema funciona entero sin ellas.
 `novela/langfuse.log` lo crea el sistema al ejecutarse si algún envío falla, y
 está ignorado por git: es diagnóstico, no fuente de verdad.
 
-**Recuento:** 6 + 7 + 3 + 4 + 11 + 6 + 1 = **38**.
+**Recuento:** 7 + 7 + 3 + 4 + 11 + 6 + 1 = **39**.
 
 ---
 

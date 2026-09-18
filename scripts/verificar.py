@@ -35,13 +35,14 @@ SERVIDOR = ["runner.py", "orquestador.py", "api.py",
 EJECUTABLES = [s for s in SCRIPTS if s != "nucleo"]
 
 INVENTARIO = (
-    ["SPEC.md", "README.md", "CLAUDE.md", "config.json", ".gitignore"]
+    ["SPEC.md", "README.md", "CLAUDE.md", "config.json", ".gitignore",
+     "requirements-opcional.txt"]
     + [f".claude/agents/{a}.md" for a in AGENTES]
     + [f".claude/skills/{s}/SKILL.md" for s in SKILLS]
     + [f".claude/commands/{c}.md" for c in COMANDOS]
     + [f"scripts/{s}.py" for s in SCRIPTS]
     + [f"server/{s}" for s in SERVIDOR]
-    + ["novela/estado.json"]
+    + [".vscode/settings.json", "novela/estado.json"]
 )
 
 FICHEROS_PROHIBIDOS = ["requirements.txt", "pyproject.toml", "setup.py",

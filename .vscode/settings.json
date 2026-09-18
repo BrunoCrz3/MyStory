@@ -1,0 +1,17 @@
+{
+  // Esto no cambia como se ejecuta nada: solo le dice al editor donde buscar.
+  //
+  // Los ficheros de server/ hacen sys.path.insert(..., "scripts") antes de
+  // importar nucleo, eventos o informes. Al ejecutarlos funciona, pero el
+  // analizador del editor no ejecuta nada: veia "import nucleo" sin resolver y
+  // lo marcaba en rojo. Con extraPaths mira tambien en esas dos carpetas.
+  "python.analysis.extraPaths": [
+    "scripts",
+    "server"
+  ],
+
+  // El interprete del proyecto es el del entorno virtual, que es donde estan
+  // fastapi y uvicorn, las dos unicas dependencias. Sin esto el editor tambien
+  // marcaba "from fastapi import ..." como no resuelto.
+  "python.defaultInterpreterPath": ".venv/Scripts/python.exe"
+}
