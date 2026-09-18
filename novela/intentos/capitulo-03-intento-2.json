@@ -1,0 +1,257 @@
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 3,
+  "generado": "2026-09-18T20:27:49.443Z",
+  "tirada": "20260918-1938",
+  "intento": 2,
+  "metricas": {
+    "longitud": {
+      "capitulo": 3,
+      "unidad": "lineas",
+      "objetivo": 4,
+      "medido": 4,
+      "minimo": 4,
+      "maximo": 4,
+      "lineas_sin_cierre": 0,
+      "en_norma": true
+    },
+    "repeticion": {
+      "ngramas_total": 462,
+      "ngramas_repetidos": 0,
+      "solape": 0.0,
+      "umbral_solape": 0.02,
+      "frases_recicladas": 0,
+      "muletilla_max": {
+        "palabra": "habian",
+        "por_mil": 8.6
+      },
+      "tipo_apertura": "accion",
+      "diversidad": 1.0,
+      "monotonia": 0.3333,
+      "monotonia_componentes": {
+        "apertura": 0.0,
+        "muletillas": 1.0,
+        "reciclaje": 0.0
+      }
+    },
+    "continuidad": {
+      "comprobaciones": [
+        {
+          "id": "beats_cubiertos",
+          "ok": true
+        },
+        {
+          "id": "terminos_prohibidos",
+          "ok": true
+        },
+        {
+          "id": "cronologia",
+          "ok": true
+        },
+        {
+          "id": "personajes_ausentes",
+          "ok": true
+        },
+        {
+          "id": "pov_presente",
+          "ok": true
+        },
+        {
+          "id": "hilos_cerrables",
+          "ok": false,
+          "detalle": "T02, T03"
+        },
+        {
+          "id": "entidades_no_registradas",
+          "ok": false,
+          "detalle": "bocasal no esta registrada"
+        }
+      ],
+      "cobertura_beats": 1.0,
+      "marcadores_totales": 6
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'habian' aparece 4 veces (8.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'primera' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'unico' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pasillo' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'gastar' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'selim' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'silla' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tenia' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vuelta' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'llevaba' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'persona' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pasado' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cuerpo' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'propia' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'conserva' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nadie' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'salio' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tobias' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nueve' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'volvio' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'horas' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'mostrador' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'casilla' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nombre' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'quedaban' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "hilo_cerrado_sin_abrir",
+      "detalle": "El plan manda cerrar el hilo T02 y ese hilo no consta abierto en novela/estado.json.",
+      "origen": "continuidad"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "hilo_cerrado_sin_abrir",
+      "detalle": "El plan manda cerrar el hilo T03 y ese hilo no consta abierto en novela/estado.json.",
+      "origen": "continuidad"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "entidad_no_registrada",
+      "detalle": "Bocasal aparece en el capitulo y no esta en entidades ni en el canon.",
+      "origen": "continuidad"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 2,
+    "menor": 26
+  },
+  "por_origen": {
+    "medir": 0,
+    "repeticion": 25,
+    "continuidad": 3,
+    "continuista": 0
+  },
+  "continuista_incluido": true
+}

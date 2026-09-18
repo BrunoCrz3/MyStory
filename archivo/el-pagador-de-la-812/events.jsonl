@@ -1,0 +1,6 @@
+{"ts": "2026-09-18T16:34:59.270Z", "tirada": "20260918-1634", "evento": "fase_inicio", "fase": "canon", "capitulo": null, "intento": null, "datos": {}, "esquema": 1}
+{"ts": "2026-09-18T16:39:30.402Z", "tirada": "20260918-1634", "evento": "fase_fin", "fase": "canon", "capitulo": null, "intento": null, "datos": {"personajes": 3}, "esquema": 1}
+{"ts": "2026-09-18T16:39:30.729Z", "tirada": "20260918-1634", "evento": "commit", "fase": null, "capitulo": null, "intento": null, "datos": {"sha": "90b1367", "mensaje": "feat(canon): biblia narrativa de El pagador de la 812"}, "esquema": 1}
+{"ts": "2026-09-18T16:39:35.920Z", "tirada": "20260918-1634", "evento": "fase_inicio", "fase": "escaleta", "capitulo": null, "intento": null, "datos": {}, "esquema": 1}
+{"ts": "2026-09-18T16:43:38.487Z", "tirada": "20260918-1634", "evento": "fase_fin", "fase": "escaleta", "capitulo": null, "intento": null, "datos": {"capitulos": 3}, "esquema": 1}
+{"ts": "2026-09-18T16:43:38.843Z", "tirada": "20260918-1634", "evento": "commit", "fase": null, "capitulo": null, "intento": null, "datos": {"sha": "b02cf4b", "mensaje": "feat(escaleta): plan de 3 capitulos"}, "esquema": 1}

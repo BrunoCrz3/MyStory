@@ -1,0 +1,148 @@
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 2,
+  "generado": "2026-09-18T20:20:40.148Z",
+  "tirada": "20260918-1938",
+  "intento": 1,
+  "metricas": {
+    "longitud": {
+      "capitulo": 2,
+      "unidad": "lineas",
+      "objetivo": 4,
+      "medido": 4,
+      "minimo": 4,
+      "maximo": 4,
+      "lineas_sin_cierre": 0,
+      "en_norma": true
+    },
+    "repeticion": {
+      "ngramas_total": 349,
+      "ngramas_repetidos": 1,
+      "solape": 0.0029,
+      "umbral_solape": 0.02,
+      "frases_recicladas": 0,
+      "muletilla_max": {
+        "palabra": "tobias",
+        "por_mil": 8.5
+      },
+      "tipo_apertura": "dialogo",
+      "diversidad": 1.0,
+      "monotonia": 0.3333,
+      "monotonia_componentes": {
+        "apertura": 0.0,
+        "muletillas": 1.0,
+        "reciclaje": 0.0
+      }
+    },
+    "continuidad": {
+      "comprobaciones": [
+        {
+          "id": "beats_cubiertos",
+          "ok": true
+        },
+        {
+          "id": "terminos_prohibidos",
+          "ok": true
+        },
+        {
+          "id": "cronologia",
+          "ok": true
+        },
+        {
+          "id": "personajes_ausentes",
+          "ok": true
+        },
+        {
+          "id": "pov_presente",
+          "ok": true
+        },
+        {
+          "id": "hilos_cerrables",
+          "ok": false,
+          "detalle": "T01"
+        },
+        {
+          "id": "entidades_no_registradas",
+          "ok": true
+        }
+      ],
+      "cobertura_beats": 1.0,
+      "marcadores_totales": 4
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tobias' aparece 3 veces (8.5 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'amparo' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'recibos' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'registro' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'anotada' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cierre' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'excepcion' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vivir' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cifra' aparece 2 veces (5.6 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "hilo_cerrado_sin_abrir",
+      "detalle": "El plan manda cerrar el hilo T01 y ese hilo no consta abierto en novela/estado.json.",
+      "origen": "continuidad"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 1,
+    "menor": 9
+  },
+  "por_origen": {
+    "medir": 0,
+    "repeticion": 9,
+    "continuidad": 1,
+    "continuista": 0
+  },
+  "continuista_incluido": true
+}

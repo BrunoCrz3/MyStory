@@ -1,0 +1,9 @@
+# 2. Con su propia letra
+
+—He pagado una hora limpia por un nombre y el Almacén me ha devuelto una casilla vacía —dijo Amparo desde la boca de la fila novena, con los guantes tiesos de sal colgando de una mano—. La consulta está cobrada, Tobías. Sácame los recibos. Tobías Munt, arrodillado entre los tubos con el registro abierto en el suelo, tardó en contestar lo que tarda la bomba en pararse y volver a arrancar, y en ese silencio supo que ya no había manera de negarse por escrito.
+
+Los recibos del 344 salieron atados por años, uno por cada frío desde hacía once, y en todos estaba la misma letra apretada, la suya, la que firma los vertidos que no se discuten. Amparo los miró a él antes que al papel. Ciento treinta y ocho horas decantadas de su propio cuerpo para mantener helado un tubo, ni una sola de ellas anotada en el censo que él mismo cerraba cada cierre, porque un tasador que declara lo que decanta deja de ser el que tasa y pasa a ser mercancía fría como los demás.
+
+—No me preguntes qué hay dentro —dijo, y empezó a redactar la excepción allí mismo, sobre la tapa del registro, apoyando la hoja con la mano a la que le faltaba el anular—. Pregúntame cómo se salva. Y se lo leyó en voz alta mientras lo escribía: un tubo que consta en uso no se vierte, y constar en uso significa una escucha gastada, firmada y anotada en la placa antes del cierre. Ocho quedarían. La primera de las nueve se iba en salvar las otras, y la excepción no valía nada hasta que alguien entrase a vivir lo que él llevaba once años pagando para que nadie viviera.
+
+Bajó al mostrador y mandó llamar a Selim Varga, el prestado, que cobraba por vivir lo ajeno y aún no había aprendido a preguntar de quién era. El muchacho llegó con la escarcha del pasillo todavía en el pelo y se quedó de pie, esperando la cifra, porque a él siempre se le decía primero la cifra. —Trescientos cuarenta y cuatro —dijo Tobías Munt.

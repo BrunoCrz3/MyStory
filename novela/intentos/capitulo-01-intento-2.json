@@ -1,0 +1,172 @@
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 1,
+  "generado": "2026-09-18T20:10:44.749Z",
+  "tirada": "20260918-1938",
+  "intento": 2,
+  "metricas": {
+    "longitud": {
+      "capitulo": 1,
+      "unidad": "lineas",
+      "objetivo": 4,
+      "medido": 4,
+      "minimo": 4,
+      "maximo": 4,
+      "lineas_sin_cierre": 0,
+      "en_norma": true
+    },
+    "repeticion": {
+      "ngramas_total": 269,
+      "ngramas_repetidos": 0,
+      "solape": 0.0,
+      "umbral_solape": 0.02,
+      "frases_recicladas": 0,
+      "muletilla_max": {
+        "palabra": "conserva",
+        "por_mil": 10.9
+      },
+      "tipo_apertura": "descripcion_ambiente",
+      "diversidad": 1.0,
+      "monotonia": 0.3333,
+      "monotonia_componentes": {
+        "apertura": 0.0,
+        "muletillas": 1.0,
+        "reciclaje": 0.0
+      }
+    },
+    "continuidad": {
+      "comprobaciones": [
+        {
+          "id": "beats_cubiertos",
+          "ok": true
+        },
+        {
+          "id": "terminos_prohibidos",
+          "ok": true
+        },
+        {
+          "id": "cronologia",
+          "ok": true
+        },
+        {
+          "id": "personajes_ausentes",
+          "ok": true
+        },
+        {
+          "id": "pov_presente",
+          "ok": true
+        },
+        {
+          "id": "hilos_cerrables",
+          "ok": true
+        },
+        {
+          "id": "entidades_no_registradas",
+          "ok": false,
+          "detalle": "almacen no esta registrada"
+        }
+      ],
+      "cobertura_beats": 1.0,
+      "marcadores_totales": 4
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'conserva' aparece 3 veces (10.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vertido' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cuerpo' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'arriba' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'mostrador' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'escrito' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'placa' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'haber' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nueve' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'ninguna' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'registro' aparece 2 veces (7.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "entidad_no_registrada",
+      "detalle": "Almacén aparece en el capitulo y no esta en entidades ni en el canon.",
+      "origen": "continuidad"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "contradiccion_plan_texto",
+      "detalle": "El plan especifica 'A Amparo le quedan treinta y nueve horas de las cuatrocientas' pero el texto tiene 'a ella le quedaron treinta y ocho horas' (tras gastar 362 horas, no 361). La contradicción es en el estado final de horas tras pagar la primera consulta.",
+      "origen": "continuista"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "entidad_no_registrada",
+      "detalle": "Almacén aparece en el capitulo y no esta en entidades ni en el canon.",
+      "origen": "continuista"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 1,
+    "menor": 13
+  },
+  "por_origen": {
+    "medir": 0,
+    "repeticion": 11,
+    "continuidad": 1,
+    "continuista": 2
+  },
+  "continuista_incluido": true
+}
