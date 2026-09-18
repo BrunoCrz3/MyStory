@@ -1,76 +1,77 @@
 {
-  "generada": "2026-09-18T16:41:50Z",
+  "generada": "2026-09-18T17:12:00Z",
   "capitulos_totales": 3,
   "capitulos": [
     {
       "n": 1,
-      "titulo": "Pagada por adelantado",
-      "pov": "Eneida Volsk",
+      "titulo": "Lo que cuesta preguntar",
+      "pov": "Amparo Ledesma",
       "dia": 1,
       "analepsis": false,
-      "funcion": "Detonante: la celda muda deja de ser rutina y empieza a costar",
-      "momento": "Vestíbulo y galería novena, cierre de vencimiento; apertura con un objeto en la mano (el recibo)",
+      "funcion": "Detonante: catalogar deja de ser gratis y el 344 pasa a estar condenado",
+      "momento": "Mostrador de conserva, turno frío, antes del primer cierre; apertura con un documento leído (la orden de vertido)",
       "beats": [
         {
           "id": "B1.1",
-          "texto": "Eneida ve en el libro que la 812 está pagada hasta un vencimiento que aún no existe y decide bajar a comprobarlo",
+          "texto": "Amparo encuentra el 344 en la orden de vertido porque el cuerpo del que salió consta muerto, y comprueba que no tiene ninguna de sus nueve escuchas gastada",
           "marcadores": [
-            "812",
-            "vencimiento"
+            "344",
+            "vertido"
           ]
         },
         {
           "id": "B1.2",
-          "texto": "Eneida hace el traslado del bloque de la 812 y una hora de su vida queda archivada bajo la cuenta que investiga",
+          "texto": "Amparo paga la primera consulta al registro para saber quién abona la conserva del 344 y el Almacén le descuenta la hora del cuerpo",
           "marcadores": [
-            "Eneida",
-            "traslado"
+            "Amparo",
+            "consulta"
           ]
         }
       ],
       "informacion_nueva": [
-        "La renta de la 812 está cubierta más allá del último vencimiento inscrito en el libro",
-        "Cada vez que Eneida mueve ese bloque, la hora que paga entra en la cuenta del pagador desconocido"
+        "El tubo 344 conserva intactas sus nueve escuchas: nadie lo ha vivido nunca",
+        "Alguien paga su conserva frío tras frío aunque el cuerpo de origen conste muerto",
+        "A Amparo le quedan treinta y nueve horas de las cuatrocientas y cada consulta le cuesta una"
       ],
       "abre_hilos": [
         "T01",
         "T02"
       ],
       "cierra_hilos": [],
-      "cambio_mundo": "El bloque de la 812 cambia de celda y el saldo de Eneida cambia de dueño: ya no es solo custodia, es deudora de la cuenta que quiere auditar",
-      "gancho": "El contador suma una hora que Eneida no ha trabajado",
+      "cambio_mundo": "El 344 entra en la lista de tubos que se vierten en el próximo cierre y Amparo deja de ser la que cataloga sin preguntar: empieza a gastarse a sí misma para averiguarlo",
+      "gancho": "La escarcha del 344 guarda la forma de una mano que no es la suya",
       "tamano_objetivo": 4
     },
     {
       "n": 2,
-      "titulo": "El vencimiento firma una excepción",
-      "pov": "Marcial Oyarzun",
+      "titulo": "Con su propia letra",
+      "pov": "Tobías Munt",
       "dia": 2,
       "analepsis": false,
-      "funcion": "Escalada: el pagador tiene nombre y el reglamento se dobla para protegerlo",
-      "momento": "Mostrador del vestíbulo y libro de cuentas; apertura con voces en la ventanilla (diálogo)",
+      "funcion": "Escalada: el pagador tiene nombre y para salvar el tubo hay que gastarle la primera escucha",
+      "momento": "Fila novena, entre los tubos, con el registro abierto en el suelo; apertura con voces (Amparo reclamando la consulta pagada)",
       "beats": [
         {
           "id": "B2.1",
-          "texto": "Gorka entrega el recibo de la 812 sin tachar y Marcial ve su propia letra en un pago de hace nueve años",
+          "texto": "La consulta de Amparo obliga a sacar los recibos del 344 y Tobías reconoce en once años de pagos su propia letra y las horas que decantó sin declarar",
           "marcadores": [
-            "Gorka",
+            "Tobías",
             "recibo"
           ]
         },
         {
           "id": "B2.2",
-          "texto": "Marcial redacta y firma una excepción que impide vaciar la 812 y aparta la cuenta de la auditoría",
+          "texto": "Tobías redacta la excepción que salva al 344 del vertido y contrata a Selim para que la haga válida gastando la primera escucha antes del cierre",
           "marcadores": [
-            "Marcial",
+            "Selim",
             "excepción"
           ]
         }
       ],
       "informacion_nueva": [
-        "Quien paga la 812 desde hace nueve años es Marcial Oyarzun",
-        "Las horas que Eneida ha ido perdiendo figuran acumuladas bajo esa cuenta",
-        "Marcial puede cerrar la auditoría de todas las cuentas mudas menos de esta"
+        "Quien paga la conserva del 344 desde hace once años es Tobías Munt",
+        "Lo paga con horas decantadas que nunca declaró al censo",
+        "Un tubo solo se libra del vertido si consta en uso, y constar en uso significa gastarle una escucha"
       ],
       "abre_hilos": [
         "T03"
@@ -78,55 +79,55 @@
       "cierra_hilos": [
         "T01"
       ],
-      "cambio_mundo": "La 812 deja de ser una cuenta sin dueño: queda inscrita a nombre de Marcial y el libro de cuentas pasa a tener una línea que su propio auditor no puede cerrar",
-      "gancho": "Gorka copia el número de la celda antes de archivar el sobre",
+      "cambio_mundo": "El 344 deja de ser un tubo sin dueño y queda atado por escrito al nombre del tasador, y salvarlo pasa a costar exactamente aquello que lo hacía valioso: una de sus nueve escuchas",
+      "gancho": "Tobías le dice a Selim el número del tubo antes que el precio",
       "tamano_objetivo": 4
     },
     {
       "n": 3,
-      "titulo": "Lo que se queda pegado",
-      "pov": "Gorka Nistal",
+      "titulo": "Las nueve intactas",
+      "pov": "Selim Varga",
       "dia": 3,
       "analepsis": false,
-      "funcion": "Clímax y resolución: el testigo ve el precio y elige qué hacer con lo que ha visto",
-      "momento": "Escalera y boca de la galería novena, con el vestíbulo vacío arriba; apertura en movimiento (la bajada)",
+      "funcion": "Clímax y resolución: el escuchante se niega y la archivista paga lo que queda de sí misma",
+      "momento": "Cuarto de escucha, la silla única, con la bomba a punto de parar; apertura en movimiento (Selim entrando y sentándose)",
       "beats": [
         {
           "id": "B3.1",
-          "texto": "Gorka baja por primera vez a la galería y espera a Eneida en la boca de la escalera",
+          "texto": "Selim se sienta en la silla con el tubo ya montado y se levanta sin entrar, por primera vez en su oficio",
           "marcadores": [
-            "Gorka",
-            "galería"
+            "Selim",
+            "silla"
           ]
         },
         {
           "id": "B3.2",
-          "texto": "Eneida sale del último traslado de la 812 con cal en las uñas y repite en voz alta un recuerdo que no es suyo",
+          "texto": "Amparo paga la conserva con sus últimas horas y pone el tubo a su nombre vivo, que lo saca del vertido sin gastarle ninguna escucha",
           "marcadores": [
-            "Eneida",
-            "cal"
+            "Amparo",
+            "conserva"
           ]
         },
         {
           "id": "B3.3",
-          "texto": "Gorka archiva el recibo con el nombre de Marcial sin tachar y renuncia a pedir la acreditación de custodio",
+          "texto": "El registro queda con el nombre de Tobías escrito como pagador de los once años y el 344 vuelve a la fila con las nueve escuchas enteras",
           "marcadores": [
-            "Marcial",
-            "812"
+            "Tobías",
+            "344"
           ]
         }
       ],
       "informacion_nueva": [
-        "El resto pegado del bloque devuelve a Eneida un recuerdo ajeno que ya no distingue de los propios",
-        "El pago de nueve años era la manera de Marcial de sostener una cuenta que nunca podrá abrirse",
-        "Gorka decide que el nombre del pagador quede escrito en el archivo en vez de acreditarse él"
+        "Selim deja el oficio antes que vivir la única memoria que nadie ha vivido",
+        "El 344 se salva por el nombre de una viva, no por una escucha gastada",
+        "Amparo se queda sin horas propias y sin saber nunca qué guarda el tubo que ha pagado"
       ],
       "abre_hilos": [],
       "cierra_hilos": [
         "T02",
         "T03"
       ],
-      "cambio_mundo": "El depósito conserva por fin un recibo con el nombre del pagador a la vista, Eneida se queda sin las horas que pagó y con memoria ajena dentro, y Gorka sigue en el mostrador por decisión propia",
+      "cambio_mundo": "El Almacén cierra el censo con un tubo inscrito a nombre de una archivista sin horas, el nombre del pagador de once años por fin escrito en el registro y un escuchante menos en la colonia",
       "gancho": "Cierre",
       "tamano_objetivo": 4
     }
@@ -134,19 +135,19 @@
   "hilos": [
     {
       "id": "T01",
-      "titulo": "Quién paga la celda 812 desde hace nueve años",
+      "titulo": "Quién paga la conserva del tubo 344 desde hace once años",
       "abre_en": 1,
       "cierra_en": 2
     },
     {
       "id": "T02",
-      "titulo": "Qué le cuesta a Eneida averiguarlo: las horas que pierde y el resto ajeno que se le queda",
+      "titulo": "Cuánto le queda a Amparo de sus cuatrocientas horas y qué pierde por preguntar",
       "abre_en": 1,
       "cierra_en": 3
     },
     {
       "id": "T03",
-      "titulo": "Si Gorka baja a las galerías y consigue la acreditación de custodio",
+      "titulo": "Si alguien gastará la primera escucha del 344 antes del cierre",
       "abre_en": 2,
       "cierra_en": 3
     }
