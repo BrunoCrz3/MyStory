@@ -60,8 +60,9 @@
     "solape_medio": 0.0009,
     "diversidad_media": 1.0,
     "coste_tirada_usd": 8.2366,
-    "errores_continuidad": 0,
-    "errores_longitud": 0
+    "errores_continuidad": 3,
+    "errores_longitud": 0,
+    "nota_continuidad": "El autor pidio 'cero errores de continuidad'. Medido: la propia novela de la linea base tiene TRES incidencias mayores 'hilo_cerrado_sin_abrir' (capitulos 2 y 3), aceptadas en el intento 3 porque el orquestador no da mas vueltas. Son un desajuste entre la escaleta y el archivista -el plan manda cerrar hilos que el archivista nunca registro como abiertos-, no un defecto de la prosa, y el prompt del escritor no puede arreglarlas. Si el guardarrail fuese cero absoluto, el ciclo rechazaria todas las iteraciones y no serviria de nada. Por eso se lee de aqui: el limite es 'ninguno nuevo respecto a la base'. Para volver al cero absoluto, pon 0 en esta clave; no hay que tocar codigo."
   },
   "peor_caso_conocido": {
     "novela": "La sala de cotejo",

@@ -15,3 +15,7 @@ novela/langfuse-enviados.txt
 # Senales de un momento de la generacion web: no son fuente de verdad.
 novela/.detener
 novela/.generando
+
+# Copia de seguridad de la novela del autor mientras corre el ciclo de
+# mejora: existe solo durante la ejecucion y se borra al terminar.
+ciclo/.respaldo/
