@@ -623,6 +623,10 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
     intento = 1
     maximo = int(cfg["validacion"].get("max_reescrituras", 3))
 
+    # Cuantos avisos mayores dejo el parche anterior. Sirve para no pagar un
+    # parche detras de otro cuando ninguno arregla nada. Ver mas abajo.
+    mayores_antes = None
+
     avisar(f"Escribiendo el capitulo {n} de {cfg.get('capitulos')}.")
     escribiendo("escritor",
                 _contexto_capitulo(n, cfg)
@@ -665,12 +669,26 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
             continue
 
         if mayores:
-            if intento >= maximo:
+            # Un parche que no reduce los avisos no los va a reducir al
+            # repetirlo. Medido en la tirada del 18 de septiembre: el capitulo
+            # 2 fue 1 aviso -> parche -> 1 aviso -> parche -> 1 aviso, y el 3
+            # igual con 2, mientras los avisos MENORES subian de 20 a 26. Son
+            # cuatro invocaciones del escritor pagadas a cambio de empeorar el
+            # texto. Casi siempre es un aviso que un parche no puede tocar
+            # -'hilo_cerrado_sin_abrir' habla de la escaleta y del archivista,
+            # no de un parrafo-, y el escritor no tiene forma de arreglarlo.
+            estancado = mayores_antes is not None and len(mayores) >= mayores_antes
+            if estancado:
+                avisar(f"El parche anterior no ha reducido los {len(mayores)} "
+                       f"aviso(s) del capitulo {n}; no se insiste, porque "
+                       f"repetirlo cuesta y no arregla. Se acepta asi.")
+            elif intento >= maximo:
                 avisar(f"Quedan {len(mayores)} aviso(s) menores en el capitulo "
                        f"{n}; se acepta asi para no dar mas vueltas.")
             else:
                 avisar(f"El capitulo {n} tiene {len(mayores)} aviso(s); se "
                        f"retocan solo esos parrafos.")
+                mayores_antes = len(mayores)
                 escribiendo("escritor",
                             _bloque("Texto actual", nucleo.cuerpo_capitulo(n))
                             + _bloque("Avisos, cada uno con su cita", mayores)
@@ -687,11 +705,21 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
 
     # Pulido y archivo.
     avisar(f"Puliendo la prosa del capitulo {n}.")
+    # Se le da la medida YA TOMADA, no solo el objetivo de config.json. En la
+    # tirada del 18 de septiembre el estilista dejo fuera de tamano dos de los
+    # tres capitulos y hubo que invocarlo otra vez para cada uno: cinco
+    # llamadas donde debian bastar tres, y el estilista es el segundo rol mas
+    # caro de la novela. Decirle cuanto mide ahora y entre que y que tiene que
+    # seguir midiendo cuesta cien caracteres.
     invocar("estilista",
             _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
             + _bloque("Frases ya usadas que no puedes introducir",
                       nucleo.cargar_estado().get("frases_usadas", []))
-            + _bloque("Tamano objetivo", cfg.get("longitud"))
+            + _bloque("Tamano: como esta ahora y en que margen tiene que "
+                      "seguir estando cuando termines",
+                      {k: v for k, v in medir.medir(n, cfg).items()
+                       if k in ("unidad", "objetivo", "medido", "minimo",
+                                "maximo")})
             + f"\nPule `novela/capitulos/capitulo-{n:02d}.md` sin cambiar "
               f"hechos ni dialogo sustantivo.",
             cfg, sesiones, fase="redaccion", capitulo=n, intento=intento)
