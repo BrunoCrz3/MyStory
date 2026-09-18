@@ -1,0 +1,23 @@
+# Dependencias OPCIONALES. El nucleo no necesita ninguna.
+#
+# Nada de este fichero hace falta para que la novela se genere ni para que las
+# trazas lleguen a Langfuse. scripts/observabilidad.py habla con la API de
+# ingesta usando urllib, de la biblioteca estandar, y por eso sigue en pie la
+# regla de CLAUDE.md: el sistema funciona entero con Python 3.12 y nada mas.
+#
+# Se instala aparte, y solo si quieres el SDK oficial:
+#
+#     pip install -r requirements-opcional.txt
+#
+# Para que sirve:
+#   - Consultar desde Python las metricas que ya estan en el panel
+#     (comparar dos tiradas, sacar series de scores, exportar a un cuaderno).
+#   - Usar el cliente oficial en scripts propios que no formen parte del
+#     pipeline.
+#
+# Si decides que el exportador use el SDK en lugar de urllib, ten en cuenta que
+# cada evento del pipeline es un proceso separado: los identificadores de span
+# tienen que seguir siendo deterministas para que la jerarquia anide. Es la
+# razon por la que hoy no se usa.
+
+langfuse>=2.0
