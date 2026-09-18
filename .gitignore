@@ -11,3 +11,7 @@ Thumbs.db
 # Log local de fallos de envio a Langfuse: diagnostico, no fuente de verdad.
 novela/langfuse.log
 novela/langfuse-enviados.txt
+
+# Senales de un momento de la generacion web: no son fuente de verdad.
+novela/.detener
+novela/.generando

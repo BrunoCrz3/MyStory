@@ -3207,8 +3207,11 @@ git push -u origin main
 
 ## 16. Inventario cerrado de entregables
 
-31 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
-hay 33, algo se ha inventado; si hay 29, algo falta.
+38 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
+hay 40, algo se ha inventado; si hay 36, algo falta.
+
+Los siete últimos (32 a 38) llegaron con la interfaz web, que el autor pidió
+después de la primera construcción. Hasta entonces el inventario eran 31.
 
 ### 16.1 Raíz
 
@@ -3268,6 +3271,7 @@ extensión. Ninguno tiene permiso de escritura sobre `config.json`. Solo
 | 27 | `verificar.py` | Las 11 comprobaciones de la sección 10.8. Salida legible, no JSON |
 | 30 | `observabilidad.py` | Exportador a Langfuse (sección 14.4). Único módulo que lee variables de entorno y habla por red. No lanza excepciones jamás. `--estado` diagnostica sin mostrar valores |
 | 31 | `retroalimentar.py` | Sube tiradas ya ejecutadas leyendo `events.jsonl`, los informes y los transcripts de Claude Code. `--simular` no envía nada. No escribe en `events.jsonl` |
+| 32 | `intentos.py` | Congela texto e informe de cada intento en `novela/intentos/`, enganchado en `eventos.registrar()`. Calcula el diff al leer, nunca lo guarda |
 
 Criterio común a los scripts: `python scripts/<nombre>.py --help` funciona; no
 aparecen en ellos las cadenas `requests`, `httpx`, `anthropic`, `openai`,
@@ -3279,7 +3283,29 @@ su lista `EXENCIONES` y le sigue aplicando todos los demás patrones: si alguna
 vez contiene una clave literal o una dependencia externa, la comprobación 9
 salta igual. Ningún otro script puede leer el entorno.
 
-### 16.6 Estado inicial (`novela/`)
+### 16.6 La interfaz web (`server/`)
+
+| # | Fichero | Criterio de aceptación |
+|---|---|---|
+| 33 | `runner.py` | **Único** fichero que sabe invocar Claude Code. `--output-format json` y el coste leído de la respuesta; `--restricted` siempre; nunca `--bare`; sesiones encadenadas con `--resume`. `--append-system-prompt` va el último argumento. `--probar` hace tres invocaciones reales |
+| 34 | `orquestador.py` | Recorre las cinco fases sin conversación. Importa los scripts de `scripts/`, no los reimplementa. Capítulos en orden, nunca en paralelo. Registra el coste como evento `invocacion`. Tope de gasto comprobado antes de cada invocación |
+| 35 | `api.py` | Los siete endpoints. Sin estado en memoria: todo se relee de disco. Una generación a la vez, en segundo plano |
+| 36 | `static/index.html` | Las cuatro pantallas. Sin `<script src>` externo |
+| 37 | `static/estilos.css` | Sobrio y legible. Sin fuentes ni librerías de fuera |
+| 38 | `static/app.js` | JavaScript plano, sin compilar. Nada de jerga en lo que se pinta |
+
+Criterio común: `server/` tiene exactamente **dos** dependencias, `fastapi` y
+`uvicorn`, instaladas en `.venv`. `scripts/` sigue sin ninguna. Se arranca con
+un solo comando, `.\.venv\Scripts\python.exe -m uvicorn server.api:app
+--port 8000`, que ya dice en qué dirección abrirlo.
+
+**Los dos caminos conviven.** El conversacional —los comandos de
+`.claude/commands/`— sigue intacto: el orquestador no lo sustituye, hace el
+mismo recorrido sin que haya que dirigirlo. Lo que ambos comparten vive en
+`scripts/` y en `.claude/agents/`, y por eso el historial de intentos se guarda
+igual se genere por donde se genere.
+
+### 16.7 Estado inicial (`novela/`)
 
 | # | Fichero | Criterio de aceptación |
 |---|---|---|
@@ -3290,12 +3316,24 @@ Las carpetas `novela/capitulos/` y `novela/informes/` se crean vacías.
 `novela/informes/*.json` y `manuscrito.md` **no** se crean en la construcción:
 los genera el sistema al ejecutarse.
 
-### 16.7 Ficheros que NO deben existir
+### 16.8 Ficheros que NO deben existir
 
 `.mcp.json`, `requirements.txt`, `pyproject.toml`, `setup.py`, `Makefile`,
 `Dockerfile`, `docker-compose.yml`, `.env`, `.env.example`, `tests/`, `src/`,
-`.venv/`, `package.json`, y cualquier fichero que Claude Code considere "útil"
-y no esté en las tablas 16.1 a 16.6.
+`package.json`, y cualquier fichero que Claude Code considere "útil"
+y no esté en las tablas 16.1 a 16.7.
+
+`.venv/` **sí** existe desde que hay interfaz web, y está ignorada por git.
+Antes estaba prohibida, y lo estaba con razón: mientras todo fue biblioteca
+estándar, un entorno virtual solo podía significar que alguien había metido una
+dependencia por la puerta de atrás. `fastapi` y `uvicorn` son las dos únicas
+que hay, solo las usa `server/`, y la comprobación 9 de `verificar.py` sigue
+vigilando que `scripts/` no tenga ninguna.
+
+`novela/intentos/`, `novela/.detener` y `novela/.generando` los crea el sistema
+al ejecutarse. Los dos últimos son señales de un momento y están ignorados por
+git; la carpeta de intentos es parte del registro de la novela y sí se
+versiona.
 
 `requirements-opcional.txt` **sí** existe y no contradice la regla: lo prohibido
 es `requirements.txt`, que implicaría dependencias obligatorias. Las de este
@@ -3304,7 +3342,7 @@ fichero no se instalan nunca solas y el sistema funciona entero sin ellas.
 `novela/langfuse.log` lo crea el sistema al ejecutarse si algún envío falla, y
 está ignorado por git: es diagnóstico, no fuente de verdad.
 
-**Recuento:** 6 + 7 + 3 + 4 + 10 + 1 = **31**.
+**Recuento:** 6 + 7 + 3 + 4 + 11 + 6 + 1 = **38**.
 
 ---
 

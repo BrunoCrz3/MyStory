@@ -1,7 +1,41 @@
 # MyStory1 — generador de novelas cortas de ciencia ficción
 
 Sistema de escritura asistida que funciona dentro de Claude Code en VS Code.
-Sin claves de API, sin dependencias, sin base de datos.
+Sin claves de API y sin base de datos.
+
+Hay **dos formas de usarlo**, y las dos valen:
+
+- **Hablando con Claude Code**, con los cuatro comandos de abajo. Es como
+  nació y sigue intacto.
+- **Desde la web**, escribiendo la premisa en un formulario y dándole a un
+  botón. Sirve para enseñárselo a alguien que no programa.
+
+## La interfaz web
+
+Un solo comando, desde la raíz del repositorio, en PowerShell:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn server.api:app --port 8000
+```
+
+Al arrancar escribe la dirección en la que abrirlo, que será
+**http://127.0.0.1:8000**. Se para con Ctrl+C.
+
+Cuatro pantallas:
+
+| Pantalla | Para qué |
+|---|---|
+| **Nueva novela** | Escribes de qué va, cuántos capítulos y cómo de largos, y le das a generar. |
+| **Cómo va** | En qué paso está, qué se ha detectado, cuántas veces ha habido que reescribir y cuánto lleva gastado. Con botón de detener. |
+| **Leer** | El manuscrito con formato, capítulo a capítulo, con los personajes y los cabos sueltos al lado. Junto a cada capítulo, cómo se llegó a él. |
+| **Cuánto ha costado** | El gasto total y el desglose por capítulo y por oficio. |
+
+La generación corre por detrás: puedes cerrar la pestaña y el trabajo sigue.
+Solo se genera una novela a la vez, y **se detiene sola** si el gasto llega al
+tope de `config.json` → `servidor.tope_usd`, que de fábrica son 5 dólares.
+
+Empezar una novela nueva **archiva la anterior** en `archivo/<nombre>/` antes de
+vaciar el sitio, así que no se pierde nada.
 
 ## Los cuatro comandos
 
@@ -14,7 +48,8 @@ Sin claves de API, sin dependencias, sin base de datos.
 
 ## Antes de empezar
 
-Edita `config.json`: pon tu premisa y el número de capítulos.
+Edita `config.json`: pon tu premisa y el número de capítulos. Si usas la web,
+eso mismo lo rellena el formulario.
 
 ## Cómo está hecho
 
@@ -237,9 +272,14 @@ No escribe en `events.jsonl`.
 
 ## Dependencias
 
-Ninguna. El envío usa `urllib` de la biblioteca estándar, y OTLP se habla en
-JSON, así que no hace falta ni el SDK ni protobuf. `requirements-opcional.txt`
-solo sirve si quieres el SDK oficial para consultar el panel desde Python.
+Para Langfuse, ninguna. El envío usa `urllib` de la biblioteca estándar, y OTLP
+se habla en JSON, así que no hace falta ni el SDK ni protobuf.
+`requirements-opcional.txt` solo sirve si quieres el SDK oficial para consultar
+el panel desde Python.
+
+Las únicas dependencias del proyecto son las dos del servidor web, `fastapi` y
+`uvicorn`, instaladas en `.venv`. Los scripts de `scripts/` siguen sin ninguna,
+y `verificar.py` lo comprueba en cada pasada.
 
 El SDK no se usa para exportar por un motivo técnico: no permite fijar el
 identificador de un span, y aquí cada evento del pipeline es un proceso

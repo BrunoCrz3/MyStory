@@ -29,7 +29,9 @@ SKILLS = ["escribir-capitulo", "validar-capitulo", "bitacora"]
 COMANDOS = ["nueva-novela", "escribir", "estado", "entregar"]
 SCRIPTS = ["nucleo", "eventos", "medir", "repeticion", "continuidad",
            "informes", "ensamblar", "verificar", "observabilidad",
-           "retroalimentar"]
+           "retroalimentar", "intentos"]
+SERVIDOR = ["runner.py", "orquestador.py", "api.py",
+            "static/index.html", "static/estilos.css", "static/app.js"]
 EJECUTABLES = [s for s in SCRIPTS if s != "nucleo"]
 
 INVENTARIO = (
@@ -38,13 +40,18 @@ INVENTARIO = (
     + [f".claude/skills/{s}/SKILL.md" for s in SKILLS]
     + [f".claude/commands/{c}.md" for c in COMANDOS]
     + [f"scripts/{s}.py" for s in SCRIPTS]
+    + [f"server/{s}" for s in SERVIDOR]
     + ["novela/estado.json"]
 )
 
 FICHEROS_PROHIBIDOS = ["requirements.txt", "pyproject.toml", "setup.py",
                        "Makefile", "Dockerfile", "docker-compose.yml",
                        ".mcp.json", ".env", ".env.example", "package.json"]
-CARPETAS_PROHIBIDAS = ["src", "tests", ".venv"]
+# .venv/ dejo de estar prohibida cuando el autor pidio la interfaz web: el
+# servidor necesita fastapi y uvicorn, que no estan en la biblioteca estandar.
+# Siguen siendo las dos unicas dependencias, y solo las usa server/. Los
+# scripts de scripts/ siguen sin ninguna, y la comprobacion 9 lo vigila.
+CARPETAS_PROHIBIDAS = ["src", "tests"]
 
 # Las cadenas se construyen por trozos a proposito: asi este fichero puede
 # buscarlas sin contenerlas, y la comprobacion 9 no se delata a si misma.
