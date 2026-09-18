@@ -59,19 +59,35 @@ para que no repita el trabajo mecánico. Devuelve su propio JSON de incidencias.
 2. Si dos incidencias apuntan a la misma cita y al mismo problema, deja una sola:
    la de mayor severidad.
 3. Calcula el recuento: `{"bloqueante": X, "mayor": Y, "menor": Z}`.
-4. Registra el resultado:
+4. **Persiste el informe completo.** Vuelca la respuesta JSON del `continuista`
+   del paso 4 en un fichero temporal y pásasela al script, que reejecuta los
+   tres validadores deterministas y guarda todo en
+   `novela/informes/capitulo_NN.json`:
+
+```powershell
+python scripts/informes.py --capitulo NN --intento <intento> --continuista <fichero.json>
+```
+
+   Las métricas se guardan siempre, haya incidencias o no. Nunca escribas en
+   `novela/informes/` a mano ni con otro script: `informes.py` es la única
+   puerta. Esquema en SPEC.md sección 6.6.
+
+5. Registra el resultado:
 
 ```powershell
 python scripts/eventos.py --evento validacion --capitulo NN --intento <intento> --datos "<json compacto con metricas y recuento>"
 ```
 
-5. Devuelve al procedimiento que te llamó: el recuento y la lista completa,
+6. Devuelve al procedimiento que te llamó: el recuento y la lista completa,
    con las bloqueantes primero.
 
 ## Reglas
 
 - Nunca declares un capítulo válido sin haber ejecutado los cuatro pasos, salvo
   el atajo del paso 1.
+- El informe se persiste **siempre**, también cuando el capítulo sale limpio y
+  también cuando se toma el atajo del paso 1. Un informe sin incidencias no es
+  un informe vacío: sus métricas son lo que permite calibrar los umbrales.
 - Nunca estimes una métrica: ejecuta el script y lee su salida.
 - Las incidencias menores se registran pero nunca detienen el flujo.
 - Si un script falla al ejecutarse (no si encuentra incidencias: si falla),

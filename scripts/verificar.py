@@ -28,7 +28,7 @@ AGENTES = ["arquitecto", "escaletista", "escritor", "continuista",
 SKILLS = ["escribir-capitulo", "validar-capitulo", "bitacora"]
 COMANDOS = ["nueva-novela", "escribir", "estado", "entregar"]
 SCRIPTS = ["nucleo", "eventos", "medir", "repeticion", "continuidad",
-           "ensamblar", "verificar"]
+           "informes", "ensamblar", "verificar"]
 EJECUTABLES = [s for s in SCRIPTS if s != "nucleo"]
 
 INVENTARIO = (

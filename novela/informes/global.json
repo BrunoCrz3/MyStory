@@ -1,0 +1,514 @@
+{
+  "esquema": 1,
+  "tipo": "global",
+  "generado": "2026-09-18T15:47:03.953Z",
+  "tirada": "20260918-1518",
+  "capitulos": [
+    1,
+    2,
+    3
+  ],
+  "continuidad": {
+    "script": "continuidad",
+    "modo": "global",
+    "comprobaciones": [
+      {
+        "id": "hilos_cerrados",
+        "ok": true
+      },
+      {
+        "id": "capitulos_completos",
+        "ok": true
+      },
+      {
+        "id": "hechos_coherentes",
+        "ok": true
+      }
+    ],
+    "incidencias": [],
+    "resumen": {
+      "bloqueante": 0,
+      "mayor": 0,
+      "menor": 0
+    }
+  },
+  "repeticion": {
+    "script": "repeticion",
+    "modo": "global",
+    "capitulos": [
+      {
+        "script": "repeticion",
+        "capitulo": 1,
+        "metricas": {
+          "ngramas_total": 195,
+          "ngramas_repetidos": 0,
+          "solape": 0.0,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "nadia",
+            "por_mil": 10.0
+          },
+          "tipo_apertura": "descripcion_ambiente"
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nadia' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'lampara' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'palma' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'final' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nombre' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'fecha' aparece 2 veces (10.0 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 6
+        }
+      },
+      {
+        "script": "repeticion",
+        "capitulo": 2,
+        "metricas": {
+          "ngramas_total": 247,
+          "ngramas_repetidos": 0,
+          "solape": 0.0,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "renglon",
+            "por_mil": 11.9
+          },
+          "tipo_apertura": "accion"
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'renglon' aparece 3 veces (11.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'pluma' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'halima' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'cierre' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'organismo' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'lecturas' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'enfriamiento' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'hubiera' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'dejado' aparece 2 veces (7.9 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 9
+        }
+      },
+      {
+        "script": "repeticion",
+        "capitulo": 3,
+        "metricas": {
+          "ngramas_total": 220,
+          "ngramas_repetidos": 0,
+          "solape": 0.0,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "halima",
+            "por_mil": 13.3
+          },
+          "tipo_apertura": "dialogo"
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'halima' aparece 3 veces (13.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nadia' aparece 2 veces (8.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'palma' aparece 2 veces (8.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'version' aparece 2 veces (8.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'lectora' aparece 2 veces (8.9 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nombre' aparece 2 veces (8.9 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 6
+        }
+      }
+    ],
+    "repeticiones_entre_capitulos": [],
+    "resumen": {
+      "bloqueante": 0,
+      "mayor": 0,
+      "menor": 21
+    }
+  },
+  "ritmo": {
+    "observaciones": [
+      "El capitulo 2 es valle necesario, no caida: pone el reloj, expropia el cuaderno y produce el giro del custodio. Su mejor economia es una sola palabra, el «de usted» de Nadia, que demuestra que la perdida del capitulo 1 persiste sin gastar una linea en recordarlo.",
+      "La sintaxis del capitulo 2 no acompana a su funcion: su ultima linea es la mas larga de la novela, en el capitulo mas arido.",
+      "La tesis se enuncia en vez de deducirse: «el Cotejo no absolvia a nadie, no habia version sin causa, solo una que alguien se avenia a sostener con su nombre delante». A esta escala es razonable, pero es el unico punto donde el narrador explica lo que la accion ya hacia.",
+      "La informacion llega donde debe: el plazo aparece en el capitulo 2 y no en el 1. Si el cierre se anunciara en la apertura, la segunda lectura se leeria como cuenta atras y no como busqueda.",
+      "El final esta ganado, no aparece de la nada. Lo unico que el lector no podia anticipar, que Nadia elija la version que la acusa, es precisamente lo que el capitulo 1 hace inevitable. No hay deus ex machina; hay consecuencia."
+    ],
+    "veredicto_ritmo": "Sostenido. Arco completo en 12 lineas: peticion, presion y plazo, inversion de la peticion y firma."
+  },
+  "veredicto": "APROBADO",
+  "correcciones_propuestas": [],
+  "titulos": {
+    "novela": "La sala de cotejo",
+    "capitulos": [
+      {
+        "n": 1,
+        "titulo": "Segunda lectura"
+      },
+      {
+        "n": 2,
+        "titulo": "Lo que se apunta"
+      },
+      {
+        "n": 3,
+        "titulo": "Conservar"
+      }
+    ],
+    "nota": "Se confirman los cuatro sin cambios. Forman una progresion de ordinal a procedimiento a orden, que es el movimiento del libro."
+  },
+  "sinopsis": {
+    "50": "Bajo un embalse vaciado, Nadia Olvera gasta sus últimas dos lecturas del Cotejo buscando una versión de la humanidad cuyo final no salga de su mano. No existe. Cada consulta le cobra un recuerdo de Teodoro, el custodio que la espera. Al salir de la sala, ya no sabe quién es.",
+    "150": "El depósito de Aguastintas cierra en dos días. Bajo el embalse vaciado, en una sala de doce metros por ocho, la lámina del Cotejo transcribe cualquier versión posible de la humanidad que un lector acreditado le pida con la palma apoyada. Nadia Olvera es la última acreditada y le quedan dos de las tres lecturas de su vida. Busca una sola versión en la que el final no venga de ella. Cada consulta le borra un recuerdo, y el archivo empieza por los que la unen a Teodoro Bassi, el custodio que anota en su cuaderno lo que ella pierde. La inspectora Halima Vreede levanta acta y se cree neutral. Cuando Nadia entiende que no hay versión sin causa, gasta la última lectura en una orden irreversible: conservar aquella que la nombra a ella. Lo demás queda ilegible para siempre. Halima firma debajo. Nadia sale sin saber quién es Teodoro."
+  },
+  "metricas": {
+    "longitud": {
+      "unidad": "lineas",
+      "objetivo": 4,
+      "por_capitulo": [
+        {
+          "capitulo": 1,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        },
+        {
+          "capitulo": 2,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        },
+        {
+          "capitulo": 3,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        }
+      ],
+      "total": 12,
+      "fuera_de_norma": []
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nadia' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'lampara' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'palma' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'final' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nombre' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'fecha' aparece 2 veces (10.0 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'renglon' aparece 3 veces (11.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pluma' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'halima' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cierre' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'organismo' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'lecturas' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'enfriamiento' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'hubiera' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'dejado' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'halima' aparece 3 veces (13.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nadia' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'palma' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'version' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'lectora' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nombre' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "ambiguedad",
+      "capitulo": 1,
+      "ancla": "en el renglón de encima, ella alcanzó a ver otro nombre tachado con dos rayas que ya no conseguía reconocer como suyo",
+      "explicacion": "«Como suyo» admite dos lecturas: el nombre de un recuerdo que ya no reconoce como propio (correcta) o su propio nombre tachado (falsa pero disponible). Al ser el gancho de cierre del capitulo 1, la ambiguedad cae en el sitio de maxima exposicion. Se resuelve retrospectivamente en el capitulo 2 con «dos recuerdos tachados».",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "arco_incompleto",
+      "capitulo": 3,
+      "ancla": "Halima, que acababa de devolverle el cuaderno a Teodoro para el último apunte",
+      "explicacion": "El giro de Teodoro del capitulo 2 cierra solo por implicacion. La colision esta armada (Halima le ordeno que constara cuanto presenciara, el cuaderno ya es documento del organismo, y el capitulo 3 se lo pone en las manos en la misma frase en que Nadia pregunta quien es), pero falta cualquier senal externa del custodio en el capitulo 3: ni un gesto, ni la pluma. Con POV Halima no cabe interioridad, pero si cabria un gesto observable.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "alcance_especulativo",
+      "capitulo": 3,
+      "ancla": "de cuantas se habían escrito allí desde que hubo lectores acreditados era la única que aún se dejaba leer; lo demás Halima lo vio apagarse de arriba abajo",
+      "explicacion": "El canon define conservar como la orden que «marca una sola version como la que continua y vuelve ilegibles todas las demas para siempre». El texto rinde la segunda mitad (la ilegibilidad) y solo sobre lo escrito alli; la primera mitad, que una version de la humanidad continua y las otras dejan de ser posibles, no se enuncia. El coste queda pagado en lo intimo y escatimado en lo cosmico.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "canon_sin_usar",
+      "capitulo": null,
+      "ancla": "El vaho del aliento empañando la lámina y borrando una línea antes de leerla",
+      "explicacion": "De los tres motivos recurrentes del canon, dos funcionan y este no aparece jamas. Tampoco se usa el termino de glosario «Resto», que existia precisamente para nombrar lo que el capitulo 3 describe sin nombrar, ni la regla «permite comparar dos versiones a la vez».",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "eco_innecesario",
+      "capitulo": 3,
+      "ancla": "se volvió hacia el custodio",
+      "explicacion": "Eco con «al volverse hacia el hombre de la puerta» del capitulo 1. Los capitulos 1 y 3 cierran con el mismo suceso (Nadia no reconoce a Teodoro), lo cual es repeticion ganada porque el canon la prescribe y el segundo golpe escala. Pero el gesto que la introduce no escala: es el unico punto del libro donde la rima suena a copia en vez de a variacion.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "estructura_repetida",
+      "capitulo": null,
+      "ancla": "acababa de devolverle el cuaderno a Teodoro para el último apunte",
+      "explicacion": "Los tres capitulos cierran sobre el cuaderno, aunque los tipos registrados (gancho_revelacion / reflexion_interior / dialogo) sean distintos. El canon lo autoriza como motivo recurrente; se deja constancia de que la variedad de cierres es de forma, no de objeto.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "capitulo": 2,
+      "ancla": "renglón",
+      "explicacion": "Cinco apariciones en 12 lineas, tres de ellas en el capitulo 2. Esta en el limite entre lexico del mundo y tic. Lo salva que la palabra significa algo en este libro (una vida medida en lineas de registro). Con una repeticion mas habria pasado a mayor.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "ritmo",
+      "capitulo": 2,
+      "ancla": "Halima le devolvió el cuaderno para que completara el renglón del día",
+      "explicacion": "La ultima linea del capitulo 2 es con diferencia la mas larga de la novela: tres puntos y coma, dos incisos y un dos puntos en una sola frase, en el capitulo que ya es el mas arido. El capitulo se defiende por contenido y se penaliza por respiracion.",
+      "origen": "revisor-global"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 0,
+    "menor": 29
+  },
+  "revisor_incluido": true
+}

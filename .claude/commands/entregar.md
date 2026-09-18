@@ -30,7 +30,18 @@ Salvo que el argumento sea `saltar-revision`:
      propuestas como entrada.
    - Vuelve al paso 3 una sola vez. Si sigue sin aprobarse, escala al autor y
      no entres en bucle.
-6. `python scripts/eventos.py --evento fase_fin --fase revision` y commit.
+6. **Persiste el informe global.** Vuelca la respuesta del `revisor-global` en
+   un fichero JSON temporal (veredicto, incidencias, ritmo, correcciones,
+   títulos y sinopsis) y guárdalo:
+
+```powershell
+python scripts/informes.py --global --revisor <fichero.json>
+```
+
+   Escribe `novela/informes/global.json` con la continuidad, la repetición y el
+   ritmo del manuscrito completo. Esquema en SPEC.md sección 6.6.
+
+7. `python scripts/eventos.py --evento fase_fin --fase revision` y commit.
 
 ## Fase 5 — Entrega
 

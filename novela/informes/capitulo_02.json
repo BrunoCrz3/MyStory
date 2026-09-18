@@ -1,0 +1,132 @@
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 2,
+  "generado": "2026-09-18T15:46:06.696Z",
+  "tirada": "20260918-1518",
+  "intento": null,
+  "metricas": {
+    "longitud": {
+      "capitulo": 2,
+      "unidad": "lineas",
+      "objetivo": 4,
+      "medido": 4,
+      "minimo": 4,
+      "maximo": 4,
+      "lineas_sin_cierre": 0,
+      "en_norma": true
+    },
+    "repeticion": {
+      "ngramas_total": 247,
+      "ngramas_repetidos": 0,
+      "solape": 0.0,
+      "umbral_solape": 0.02,
+      "frases_recicladas": 0,
+      "muletilla_max": {
+        "palabra": "renglon",
+        "por_mil": 11.9
+      },
+      "tipo_apertura": "accion"
+    },
+    "continuidad": {
+      "comprobaciones": [
+        {
+          "id": "beats_cubiertos",
+          "ok": true
+        },
+        {
+          "id": "terminos_prohibidos",
+          "ok": true
+        },
+        {
+          "id": "cronologia",
+          "ok": true
+        },
+        {
+          "id": "personajes_ausentes",
+          "ok": true
+        },
+        {
+          "id": "pov_presente",
+          "ok": true
+        },
+        {
+          "id": "hilos_cerrables",
+          "ok": true
+        },
+        {
+          "id": "entidades_no_registradas",
+          "ok": true
+        }
+      ]
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'renglon' aparece 3 veces (11.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pluma' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'halima' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cierre' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'organismo' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'lecturas' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'enfriamiento' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'hubiera' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'dejado' aparece 2 veces (7.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 0,
+    "menor": 9
+  },
+  "por_origen": {
+    "medir": 0,
+    "repeticion": 9,
+    "continuidad": 0,
+    "continuista": 0
+  },
+  "continuista_incluido": true
+}

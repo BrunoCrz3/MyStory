@@ -1,0 +1,114 @@
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 3,
+  "generado": "2026-09-18T15:46:06.706Z",
+  "tirada": "20260918-1518",
+  "intento": null,
+  "metricas": {
+    "longitud": {
+      "capitulo": 3,
+      "unidad": "lineas",
+      "objetivo": 4,
+      "medido": 4,
+      "minimo": 4,
+      "maximo": 4,
+      "lineas_sin_cierre": 0,
+      "en_norma": true
+    },
+    "repeticion": {
+      "ngramas_total": 220,
+      "ngramas_repetidos": 0,
+      "solape": 0.0,
+      "umbral_solape": 0.02,
+      "frases_recicladas": 0,
+      "muletilla_max": {
+        "palabra": "halima",
+        "por_mil": 13.3
+      },
+      "tipo_apertura": "dialogo"
+    },
+    "continuidad": {
+      "comprobaciones": [
+        {
+          "id": "beats_cubiertos",
+          "ok": true
+        },
+        {
+          "id": "terminos_prohibidos",
+          "ok": true
+        },
+        {
+          "id": "cronologia",
+          "ok": true
+        },
+        {
+          "id": "personajes_ausentes",
+          "ok": true
+        },
+        {
+          "id": "pov_presente",
+          "ok": true
+        },
+        {
+          "id": "hilos_cerrables",
+          "ok": true
+        },
+        {
+          "id": "entidades_no_registradas",
+          "ok": true
+        }
+      ]
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'halima' aparece 3 veces (13.3 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nadia' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'palma' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'version' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'lectora' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nombre' aparece 2 veces (8.9 por mil, umbral 3.0)",
+      "origen": "repeticion"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 0,
+    "mayor": 0,
+    "menor": 6
+  },
+  "por_origen": {
+    "medir": 0,
+    "repeticion": 6,
+    "continuidad": 0,
+    "continuista": 0
+  },
+  "continuista_incluido": true
+}

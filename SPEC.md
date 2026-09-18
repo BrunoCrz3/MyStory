@@ -5,7 +5,7 @@ Documento ejecutable. Claude Code lee este fichero y construye el proyecto compl
 - **Repositorio destino:** `C:\Users\student\Documents\MyStory1`
 - **Orquestador:** Claude Code en VS Code. No hay claves de API. No hay clientes de modelos.
 - **Python:** 3.12, solo biblioteca estándar.
-- **Ficheros a crear en la construcción:** 27. Límite duro: 35.
+- **Ficheros a crear en la construcción:** 28. Límite duro: 35.
 
 ---
 
@@ -293,21 +293,25 @@ MyStory1/
 │   ├── medir.py                         (22)  longitud
 │   ├── repeticion.py                    (23)  n-gramas, muletillas, aperturas
 │   ├── continuidad.py                   (24)  comprobaciones mecánicas de coherencia
-│   ├── ensamblar.py                     (25)  manuscrito.md
-│   └── verificar.py                     (26)  autocomprobación de la instalación
+│   ├── informes.py                      (25)  ÚNICA función que escribe novela/informes/
+│   ├── ensamblar.py                     (26)  manuscrito.md
+│   └── verificar.py                     (27)  autocomprobación de la instalación
 │
 └── novela/
-    ├── estado.json                      (27)  semilla vacía, creada en la construcción
+    ├── estado.json                      (28)  semilla vacía, creada en la construcción
     ├── canon.md                              generado en fase 1
     ├── escaleta.json                         generado en fase 2
     ├── events.jsonl                          generado al ejecutar
-    └── capitulos/
-        └── capitulo-01.md ...                generados en fase 3
+    ├── capitulos/
+    │   └── capitulo-01.md ...                generados en fase 3
+    └── informes/
+        ├── capitulo_NN.json ...              generados en cada validación
+        └── global.json                       generado en fase 4
 
 manuscrito.md                                 generado en fase 5
 ```
 
-**27 ficheros creados en la construcción.** El resto los genera el sistema al trabajar.
+**28 ficheros creados en la construcción.** El resto los genera el sistema al trabajar.
 
 No hay: `.mcp.json`, `requirements.txt`, `pyproject.toml`, `Makefile`, `tests/`, `src/`, `.venv/`, `Dockerfile`.
 
@@ -654,7 +658,100 @@ El silencio volvió a llegar, puntual, con la cadencia exacta de un pulso.
 
 Una línea JSON por suceso. Esquema completo en la sección 14.
 
-### 6.6 Qué vive en ficheros y qué vive en la conversación
+### 6.6 `novela/informes/` — los informes de validación
+
+Cada validación deja constancia en disco. `novela/events.jsonl` guarda **que**
+una validación ocurrió y su recuento; `novela/informes/` guarda **qué** dijo,
+entera: todas las métricas y todas las incidencias.
+
+**Regla dura:** `scripts/informes.py` es la **única** puerta de escritura de
+esta carpeta, por el mismo motivo por el que solo `eventos.py` escribe
+`events.jsonl`. Ningún agente escribe aquí.
+
+**Las métricas se guardan siempre**, dispare o no una incidencia. Un informe
+sin incidencias sigue siendo un informe: la serie de métricas limpias es lo que
+permite calibrar los umbrales (sección 19.2, punto 2).
+
+#### 6.6.1 `novela/informes/capitulo_NN.json`
+
+Uno por capítulo, sobrescrito en cada validación. Refleja la última.
+
+```json
+{
+  "esquema": 1,
+  "tipo": "capitulo",
+  "capitulo": 2,
+  "generado": "2026-09-18T15:46:02.114Z",
+  "tirada": "20260918-0056",
+  "intento": 3,
+  "metricas": {
+    "longitud": { "capitulo": 2, "unidad": "lineas", "objetivo": 4,
+                  "medido": 4, "minimo": 4, "maximo": 4,
+                  "lineas_sin_cierre": 0, "en_norma": true },
+    "repeticion": { "ngramas_total": 214, "ngramas_repetidos": 0,
+                    "solape": 0.0, "umbral_solape": 0.02,
+                    "frases_recicladas": 0,
+                    "muletilla_max": { "palabra": "renglon", "por_mil": 11.9 },
+                    "tipo_apertura": "accion" },
+    "continuidad": { "comprobaciones": [ { "id": "beats_cubiertos", "ok": true } ] }
+  },
+  "incidencias": [
+    { "origen": "repeticion", "severidad": "menor", "tipo": "muletilla",
+      "detalle": "'renglon' aparece 3 veces (11.9 por mil, umbral 3.0)" }
+  ],
+  "resumen": { "bloqueante": 0, "mayor": 0, "menor": 9 },
+  "por_origen": { "medir": 0, "repeticion": 9, "continuidad": 0, "continuista": 0 },
+  "continuista_incluido": true
+}
+```
+
+| Campo | Qué es |
+|---|---|
+| `esquema` | Versión del formato. Vale `1` |
+| `tipo` | `capitulo` |
+| `capitulo`, `intento` | Cuál y de qué intento; `intento` puede ser `null` |
+| `generado`, `tirada` | ISO-8601 UTC con `Z`, y la tirada vigente |
+| `metricas.longitud` | Salida de `medir.py` sin `script` ni `incidencias` |
+| `metricas.repeticion` | El bloque `metricas` de `repeticion.py`, íntegro |
+| `metricas.continuidad` | Las 7 comprobaciones de `continuidad.py --capitulo`, con su `ok` |
+| `incidencias` | Lista única y fusionada. **Cada una lleva `origen`** |
+| `origen` | `medir`, `repeticion`, `continuidad` o `continuista` |
+| `resumen` | Recuento por severidad de la lista fusionada |
+| `por_origen` | Cuántas incidencias aportó cada validador |
+| `continuista_incluido` | `false` si se guardó sin pasar por el subagente |
+
+#### 6.6.2 `novela/informes/global.json`
+
+Uno por novela, escrito en la fase 4. Añade el **ritmo**, que ningún script
+puede medir y aporta el subagente `revisor-global`.
+
+| Campo | Qué es |
+|---|---|
+| `esquema`, `tipo`, `generado`, `tirada` | Como arriba; `tipo` vale `global` |
+| `capitulos` | Números de capítulo incluidos |
+| `continuidad` | Salida íntegra de `continuidad.py --global` |
+| `repeticion` | Salida íntegra de `repeticion.py --global`, con `repeticiones_entre_capitulos` |
+| `ritmo` | Del `revisor-global`: `observaciones` y `veredicto_ritmo` |
+| `veredicto` | `APROBADO` o `REQUIERE CORRECCIONES` |
+| `correcciones_propuestas` | Lista; vacía si está aprobado |
+| `titulos`, `sinopsis` | Título de novela y capítulos; sinopsis de 50 y 150 palabras |
+| `metricas.longitud` | Por capítulo, total y `fuera_de_norma` |
+| `incidencias`, `resumen` | Fusionadas, con `origen` incluido `revisor-global` |
+| `revisor_incluido` | `false` si se guardó sin pasar por el subagente |
+
+#### 6.6.3 Cuándo se escriben
+
+| Momento | Comando |
+|---|---|
+| Al validar un capítulo (skill `validar-capitulo`, tras fusionar) | `python scripts/informes.py --capitulo NN --intento <n> --continuista <fichero.json>` |
+| Al cerrar la novela (fase 4, tras el `revisor-global`) | `python scripts/informes.py --global --revisor <fichero.json>` |
+| Para regenerar todos de golpe | `python scripts/informes.py --todos` |
+
+Los ficheros JSON del `continuista` y del `revisor-global` son temporales: el
+orquestador vuelca en ellos la respuesta del subagente y se los pasa al script.
+No forman parte del inventario y no se versionan.
+
+### 6.7 Qué vive en ficheros y qué vive en la conversación
 
 | Información | Dónde vive | Sobrevive a un reinicio |
 |---|---|---|
@@ -667,6 +764,8 @@ Una línea JSON por suceso. Esquema completo en la sección 14.
 | Texto de cada capítulo | `novela/capitulos/*.md` | **Sí** |
 | Configuración | `config.json` | **Sí** |
 | Historial de sucesos | `novela/events.jsonl` | **Sí** |
+| Informes de validación por capítulo | `novela/informes/capitulo_NN.json` | **Sí** |
+| Informe global del manuscrito | `novela/informes/global.json` | **Sí** |
 | Número de intento de reescritura en curso | Conversación | No: si se corta, el capítulo se reintenta desde el intento 1 |
 | Borrador intermedio antes de guardarse | Conversación | No |
 | Razonamiento del continuista | Conversación (y su recuento agregado en `events.jsonl`) | Parcialmente |
@@ -1850,7 +1949,7 @@ No se genera PDF. La entrega es `manuscrito.md`.
 
 ## 10. Los scripts Python
 
-Siete ficheros en `scripts/`. Todos con Python 3.12 y **solo biblioteca estándar**:
+Ocho ficheros en `scripts/`. Todos con Python 3.12 y **solo biblioteca estándar**:
 `json`, `argparse`, `pathlib`, `re`, `datetime`, `collections`, `unicodedata`, `sys`.
 
 Convención común a todos:
@@ -2146,7 +2245,48 @@ raya de diálogo, y no está en la lista de palabras vacías capitalizadas.
 
 **Códigos:** `0`, `1` o `2` según la peor severidad.
 
-### 10.6 `scripts/ensamblar.py`
+### 10.6 `scripts/informes.py`
+
+**Qué hace:** persiste en `novela/informes/` el resultado completo de una
+validación. Es la **única** puerta de escritura de esa carpeta, igual que
+`eventos.py` lo es de `events.jsonl`. Esquema en la sección 6.6.
+
+**No calcula nada por su cuenta:** importa `medir`, `repeticion` y
+`continuidad`, guarda lo que devuelven, y le añade las incidencias de juicio
+que le pasa el orquestador (el `continuista` por capítulo, el `revisor-global`
+al cerrar). Cada incidencia queda etiquetada con el validador que la produjo,
+en un campo `origen`.
+
+**Uso:**
+
+```powershell
+python scripts/informes.py --capitulo 2 --intento 3 --continuista informe.json
+python scripts/informes.py --todos
+python scripts/informes.py --global --revisor revision.json
+```
+
+**Argumentos:**
+
+| Argumento | Qué hace |
+|---|---|
+| `--capitulo N` | Escribe `novela/informes/capitulo_NN.json` |
+| `--todos` | Regenera el informe de todos los capítulos en disco |
+| `--global` | Escribe `novela/informes/global.json` |
+| `--continuista <fichero>` | JSON con la salida del subagente `continuista` |
+| `--continuista-dir <carpeta>` | Con `--todos`: carpeta con `capitulo_NN.json` |
+| `--revisor <fichero>` | Con `--global`: JSON con el informe del `revisor-global` |
+| `--intento N` | Intento al que corresponde la validación |
+
+**Regla:** las métricas se escriben **siempre**, dispare o no una incidencia.
+Un capítulo limpio produce un informe con `incidencias: []` y el bloque
+`metricas` completo. Sin esa serie de métricas limpias no hay forma de
+calibrar los umbrales (sección 19.2, punto 2).
+
+**Devuelve:** por stdout, un JSON corto con la ruta escrita y el recuento.
+**Códigos:** `0` sin incidencias; `1` mayores o menores; `2` alguna
+bloqueante; `3` error.
+
+### 10.7 `scripts/ensamblar.py`
 
 **Qué hace:** concatena los capítulos en `manuscrito.md`. Determinista, sin criterio.
 
@@ -2183,7 +2323,7 @@ python scripts/ensamblar.py --salida entrega/novela.md
 **Códigos:** `0` si están todos los capítulos de la escaleta; `2` si falta
 alguno (lo dice en `faltantes` y **no** escribe el manuscrito).
 
-### 10.7 `scripts/verificar.py`
+### 10.8 `scripts/verificar.py`
 
 **Qué comprueba:** que el sistema está bien construido. Se ejecuta una vez tras
 la construcción, y cuando algo no cuadre.
@@ -2197,7 +2337,7 @@ python scripts/verificar.py
 **Qué comprueba, en orden:**
 
 1. La versión de Python es 3.12 o superior.
-2. Existen los 27 ficheros del inventario de la sección 16.
+2. Existen los 28 ficheros del inventario de la sección 16.
 3. **No** existen ficheros prohibidos: `requirements.txt`, `pyproject.toml`,
    `Makefile`, `.mcp.json`, carpetas `src/`, `tests/`, `.venv/`.
 4. `config.json` es JSON válido y tiene todas las claves obligatorias con tipos
@@ -2217,7 +2357,7 @@ python scripts/verificar.py
 
 ```
 [OK]    Python 3.12.10
-[OK]    27/27 ficheros del inventario presentes
+[OK]    28/28 ficheros del inventario presentes
 [OK]    0 ficheros prohibidos
 [OK]    config.json valido
 [OK]    novela/estado.json valido
@@ -2225,7 +2365,7 @@ python scripts/verificar.py
 [OK]    3/3 skills con frontmatter correcto
 [OK]    4/4 comandos con frontmatter correcto
 [OK]    scripts sin dependencias externas ni claves
-[OK]    6/6 scripts ejecutables
+[OK]    7/7 scripts ejecutables
 [FALLO] git: la carpeta no es un repositorio. Ejecuta: git init
 
 11 comprobaciones, 10 correctas, 1 fallo.
@@ -2861,7 +3001,7 @@ git push -u origin main
 ## 16. Inventario cerrado de entregables
 
 27 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
-hay 28, algo se ha inventado; si hay 26, algo falta.
+hay 29, algo se ha inventado; si hay 27, algo falta.
 
 ### 16.1 Raíz
 
@@ -2915,8 +3055,9 @@ extensión. Ninguno tiene permiso de escritura sobre `config.json`. Solo
 | 22 | `medir.py` | `--capitulo` y `--todos`. Lee la unidad de `config.json`. Comprueba cierre de frase en modo `lineas`. Sale con `2` si está fuera de norma |
 | 23 | `repeticion.py` | `--capitulo` y `--global`. Las 5 comprobaciones de la sección 12. Nunca devuelve bloqueantes. Muletillas marcadas `no_aplica` por debajo de 200 palabras |
 | 24 | `continuidad.py` | `--capitulo`, `--escaleta` y `--global`. Las 7 + 5 + 3 comprobaciones de la sección 10.5 |
-| 25 | `ensamblar.py` | Produce `manuscrito.md`. No escribe nada si falta algún capítulo |
-| 26 | `verificar.py` | Las 11 comprobaciones de la sección 10.7. Salida legible, no JSON |
+| 25 | `informes.py` | ÚNICA puerta de escritura de `novela/informes/`. `--capitulo`, `--todos` y `--global`. Guarda las métricas SIEMPRE, haya incidencias o no. Ver sección 6.7 |
+| 26 | `ensamblar.py` | Produce `manuscrito.md`. No escribe nada si falta algún capítulo |
+| 27 | `verificar.py` | Las 11 comprobaciones de la sección 10.8. Salida legible, no JSON |
 
 Criterio común a los scripts: `python scripts/<nombre>.py --help` funciona; no
 aparecen en ellos las cadenas `requests`, `httpx`, `anthropic`, `openai`,
@@ -2927,11 +3068,12 @@ aparecen en ellos las cadenas `requests`, `httpx`, `anthropic`, `openai`,
 
 | # | Fichero | Criterio de aceptación |
 |---|---|---|
-| 27 | `estado.json` | La semilla literal de la sección 6.3: 9 claves, listas vacías, `tirada: null`, `capitulos_escritos: 0` |
+| 28 | `estado.json` | La semilla literal de la sección 6.3: 9 claves, listas vacías, `tirada: null`, `capitulos_escritos: 0` |
 
-La carpeta `novela/capitulos/` se crea vacía. `novela/canon.md`,
-`novela/escaleta.json`, `novela/events.jsonl` y `manuscrito.md` **no** se crean
-en la construcción: los genera el sistema al ejecutarse.
+Las carpetas `novela/capitulos/` y `novela/informes/` se crean vacías.
+`novela/canon.md`, `novela/escaleta.json`, `novela/events.jsonl`,
+`novela/informes/*.json` y `manuscrito.md` **no** se crean en la construcción:
+los genera el sistema al ejecutarse.
 
 ### 16.7 Ficheros que NO deben existir
 
@@ -2940,7 +3082,7 @@ en la construcción: los genera el sistema al ejecutarse.
 `.venv/`, `package.json`, y cualquier fichero que Claude Code considere "útil"
 y no esté en las tablas 16.1 a 16.6.
 
-**Recuento:** 5 + 7 + 3 + 4 + 7 + 1 = **27**.
+**Recuento:** 5 + 7 + 3 + 4 + 8 + 1 = **28**.
 
 ---
 
