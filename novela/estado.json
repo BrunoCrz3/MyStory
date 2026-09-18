@@ -1,6 +1,6 @@
 {
   "tirada": "20260918-0056",
-  "capitulos_escritos": 1,
+  "capitulos_escritos": 2,
   "hechos": [
     {
       "id": "H001",
@@ -65,6 +65,46 @@
       "valor": "sobre la anotación del día hay otro nombre tachado que Nadia ya no reconoce como suyo",
       "tipo": "objeto",
       "cita": "en el renglón de encima, ella alcanzó a ver otro nombre tachado con dos rayas que ya no conseguía reconocer como suyo"
+    },
+    {
+      "id": "H009",
+      "capitulo": 2,
+      "clave": "cuaderno-cobros:propiedad",
+      "valor": "incorporado al acta de cierre como pieza del expediente; pasa a ser documento del organismo sin anular las lecturas ya acreditadas",
+      "tipo": "mundo",
+      "cita": "aquel registro se incorporaba al acta de cierre como pieza del expediente y pasaba a ser documento del organismo, sin que eso anulara ninguna de las lecturas ya acreditadas"
+    },
+    {
+      "id": "H010",
+      "capitulo": 2,
+      "clave": "cierre-deposito:plazo",
+      "valor": "Halima fija el cierre para el final del enfriamiento de mañana, el único que aún se consiente",
+      "tipo": "cronologia",
+      "cita": "Fijó el cierre para el final del único enfriamiento que aún consentía, el de mañana"
+    },
+    {
+      "id": "H011",
+      "capitulo": 2,
+      "clave": "acta:omision-reconocimiento",
+      "valor": "Teodoro omite deliberadamente en el renglón que Nadia ha dejado de reconocerlo",
+      "tipo": "objeto",
+      "cita": "el apunte consignaba lo que el archivo se había llevado, no que ella hubiera dejado de reconocerlo"
+    },
+    {
+      "id": "H012",
+      "capitulo": 2,
+      "clave": "registro:constancia-no-reconocimiento",
+      "valor": "no consta en ningún papel del organismo que Nadia haya dejado de reconocer a Teodoro",
+      "tipo": "mundo",
+      "cita": "mientras esa línea no llegara a ningún papel del organismo no quedaría constancia de quién había dejado de ser él para ella"
+    },
+    {
+      "id": "H013",
+      "capitulo": 2,
+      "clave": "cuaderno-lectora:contenido",
+      "valor": "cuatro años de acreditación, dos recuerdos tachados y ni una línea más",
+      "tipo": "objeto",
+      "cita": "cuatro años de acreditación, dos recuerdos tachados y ni una línea más en todo el cuaderno de la lectora"
     }
   ],
   "hilos": [
@@ -91,7 +131,8 @@
         "Nadia",
         "Olvera",
         "la tercera lectora",
-        "la lectora acreditada"
+        "la lectora acreditada",
+        "la lectora"
       ],
       "primera_aparicion": 1
     },
@@ -125,19 +166,34 @@
       "dia": 1,
       "resumen": "Nadia gasta la segunda de sus tres lecturas pidiendo una versión en la que el final no venga de ella, y la lámina vuelve a transcribir su propio nombre como causa, mientras la inspectora levanta acta sin decir nada. El cobro de esa lectura se lleva el recuerdo de la tarde en que conoció a Teodoro: al volverse hacia él tiene que preguntarle cómo se llama. Teodoro se lo dice y lo apunta en el cuaderno bajo la fecha, sin obligarla a repetir la pregunta. A Nadia le queda una sola lectura y Teodoro ha pasado a ser un desconocido que la conoce.",
       "ultimas_lineas": "La lámpara empezó a enfriarse y ella retiró la palma de la lámina; al volverse hacia el hombre de la puerta, que ya tenía la pluma levantada, Nadia fue a buscar la tarde en que lo había conocido y encontró un hueco liso, sin bordes ni orilla, así que tuvo que preguntarle cómo se llamaba. Teodoro se lo dijo despacio y lo apuntó en el cuaderno, bajo la fecha, sin pedirle que repitiera la pregunta; en el renglón de encima, ella alcanzó a ver otro nombre tachado con dos rayas que ya no conseguía reconocer como suyo."
+    },
+    {
+      "capitulo": 2,
+      "dia": 1,
+      "resumen": "Teodoro entrega el cuaderno de cobros y Halima lo incorpora al acta de cierre: el registro pasa a ser documento del organismo, aunque ninguna de las lecturas ya acreditadas queda anulada. La inspectora fija el cierre del depósito para el final del único enfriamiento que aún consiente, el de mañana, y le advierte que en el acta debe constar cuanto haya presenciado dentro de la sala. Al completar el renglón del día, Teodoro anota lo que el archivo se ha llevado y calla que Nadia ya no lo reconoce. Por primera vez el custodio decide qué no escribir, y esa línea no llega a ningún papel del organismo.",
+      "ultimas_lineas": "Fijó el cierre para el final del único enfriamiento que aún consentía, el de mañana, y le advirtió que en el acta debía constar cuanto él hubiera presenciado dentro de la sala; a tres pasos de los dos, Nadia le preguntaba al custodio, de usted, si le daría tiempo a usar la que le quedaba.\nHalima le devolvió el cuaderno para que completara el renglón del día, y él añadió, junto al nombre escrito desde el enfriamiento anterior, las lecturas gastadas, el estado de la lámpara, el goteo de la pared norte: el apunte consignaba lo que el archivo se había llevado, no que ella hubiera dejado de reconocerlo; con el usted todavía en el oído, Teodoro paró la pluma sobre el blanco que venía después y lo entregó así, pensando que mientras esa línea no llegara a ningún papel del organismo no quedaría constancia de quién había dejado de ser él para ella."
     }
   ],
   "frases_usadas": [
     "puesto sin énfasis, como se pone una fecha",
     "encontró un hueco liso, sin bordes ni orilla",
     "el nombre que sostenía el final",
-    "sin pedirle que repitiera la pregunta"
+    "sin pedirle que repitiera la pregunta",
+    "con la pluma atravesada encima",
+    "Teodoro paró la pluma sobre el blanco que venía después",
+    "con el usted todavía en el oído",
+    "quién había dejado de ser él para ella"
   ],
   "aperturas": [
     {
       "capitulo": 1,
       "tipo": "descripcion_ambiente",
       "primeras_palabras": "El agua del embalse vaciado seguía"
+    },
+    {
+      "capitulo": 2,
+      "tipo": "accion",
+      "primeras_palabras": "Teodoro cruzó la sala sin que"
     }
   ],
   "cierres": [
@@ -145,6 +201,11 @@
       "capitulo": 1,
       "tipo": "gancho_revelacion",
       "ultimas_palabras": "ya no conseguía reconocer como suyo"
+    },
+    {
+      "capitulo": 2,
+      "tipo": "reflexion_interior",
+      "ultimas_palabras": "dejado de ser él para ella"
     }
   ]
 }
