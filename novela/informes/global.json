@@ -1,0 +1,985 @@
+{
+  "esquema": 1,
+  "tipo": "global",
+  "generado": "2026-09-18T20:35:20.532Z",
+  "tirada": "20260918-1938",
+  "capitulos": [
+    1,
+    2,
+    3
+  ],
+  "continuidad": {
+    "script": "continuidad",
+    "modo": "global",
+    "comprobaciones": [
+      {
+        "id": "hilos_cerrados",
+        "ok": false
+      },
+      {
+        "id": "capitulos_completos",
+        "ok": true
+      },
+      {
+        "id": "hechos_coherentes",
+        "ok": true
+      }
+    ],
+    "incidencias": [
+      {
+        "severidad": "mayor",
+        "tipo": "hilo_abierto_al_final",
+        "detalle": "El hilo hilo_sistema_conserva (El funcionamiento del sistema de conserva y vertido) sigue abierto desde el capitulo None."
+      },
+      {
+        "severidad": "mayor",
+        "tipo": "hilo_abierto_al_final",
+        "detalle": "El hilo hilo_selim_varga (¿Quién es Selim Varga y qué implica 'vivir lo ajeno'?) sigue abierto desde el capitulo None."
+      }
+    ],
+    "resumen": {
+      "bloqueante": 0,
+      "mayor": 2,
+      "menor": 0
+    }
+  },
+  "repeticion": {
+    "script": "repeticion",
+    "modo": "global",
+    "capitulos": [
+      {
+        "script": "repeticion",
+        "capitulo": 1,
+        "metricas": {
+          "ngramas_total": 264,
+          "ngramas_repetidos": 0,
+          "solape": 0.0,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "conserva",
+            "por_mil": 11.2
+          },
+          "tipo_apertura": "descripcion_ambiente",
+          "diversidad": 1.0,
+          "monotonia": 0.3333,
+          "monotonia_componentes": {
+            "apertura": 0.0,
+            "muletillas": 1.0,
+            "reciclaje": 0.0
+          }
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'conserva' aparece 3 veces (11.2 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nueve' aparece 3 veces (11.2 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'vertido' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'cuerpo' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'mostrador' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'escrito' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'placa' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'haber' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'ninguna' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'treinta' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'registro' aparece 2 veces (7.4 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 11
+        }
+      },
+      {
+        "script": "repeticion",
+        "capitulo": 2,
+        "metricas": {
+          "ngramas_total": 392,
+          "ngramas_repetidos": 1,
+          "solape": 0.0026,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "tobias",
+            "por_mil": 7.6
+          },
+          "tipo_apertura": "dialogo",
+          "diversidad": 1.0,
+          "monotonia": 0.3333,
+          "monotonia_componentes": {
+            "apertura": 0.0,
+            "muletillas": 1.0,
+            "reciclaje": 0.0
+          }
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'tobias' aparece 3 veces (7.6 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'almacen' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'devuelto' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'casilla' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'amparo' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'contestar' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'cuerpo' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'recibos' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'registro' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'anotada' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'excepcion' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'vivir' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'cifra' aparece 2 veces (5.0 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 13
+        }
+      },
+      {
+        "script": "repeticion",
+        "capitulo": 3,
+        "metricas": {
+          "ngramas_total": 463,
+          "ngramas_repetidos": 0,
+          "solape": 0.0,
+          "umbral_solape": 0.02,
+          "frases_recicladas": 0,
+          "muletilla_max": {
+            "palabra": "habian",
+            "por_mil": 10.7
+          },
+          "tipo_apertura": "accion",
+          "diversidad": 1.0,
+          "monotonia": 0.3333,
+          "monotonia_componentes": {
+            "apertura": 0.0,
+            "muletillas": 1.0,
+            "reciclaje": 0.0
+          }
+        },
+        "incidencias": [
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'habian' aparece 5 veces (10.7 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'primera' aparece 3 veces (6.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'unico' aparece 3 veces (6.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'pasillo' aparece 3 veces (6.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'gastar' aparece 3 veces (6.4 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'silla' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'vuelta' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'hacia' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'persona' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'pudiera' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'pasado' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'cuerpo' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'propia' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nunca' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'conserva' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nadie' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'salio' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'tobias' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nueve' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'horas' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'mostrador' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'tenia' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'casilla' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'nombre' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          },
+          {
+            "severidad": "menor",
+            "tipo": "muletilla",
+            "detalle": "'quedaban' aparece 2 veces (4.3 por mil, umbral 3.0)"
+          }
+        ],
+        "resumen": {
+          "bloqueante": 0,
+          "mayor": 0,
+          "menor": 25
+        }
+      }
+    ],
+    "repeticiones_entre_capitulos": [
+      {
+        "ngrama": "los vertidos que no se discuten",
+        "capitulos": [
+          1,
+          2
+        ]
+      }
+    ],
+    "resumen": {
+      "bloqueante": 0,
+      "mayor": 0,
+      "menor": 49
+    }
+  },
+  "ritmo": {
+    "veredicto_ritmo": "Dos capítulos de avance limpio y un tercero que resuelve tres veces. El libro no tiene un capítulo muerto, pero sí un final amontonado donde el clímax verdadero queda enterrado por su propia resolución.",
+    "observaciones": [
+      "El clímax real del libro es Selim levantándose de la silla sin haber entrado: es la única acción que cuesta algo y que nadie puede deshacer, y está resuelta en dos líneas a mitad del último capítulo. Después el texto sigue otros tres movimientos (pago, firma, censo) y el lector termina recordando el trámite, no la negativa.",
+      "El coste de la premisa se paga de verdad y ese es el mayor acierto del conjunto: Amparo queda a cero, Tobías deja de tasar, Selim deja el oficio, y el tubo sigue sin que nadie lo oiga. Nadie sale ileso y nadie compra la memoria: el libro cumple su tema sin explicarlo ni una vez.",
+      "La información que resuelve la trama llega en el último párrafo útil, dicha por el narrador y no por un personaje, y sin haber sido plantada. Una revelación que no se puede releer hacia atrás no es un giro: es un anuncio.",
+      "La decisión más cara de la novela —gastar las treinta y ocho horas que le quedan de vida— ocupa media frase y ningún latido de duda. Amparo va al mostrador 'sin discutir'. Falta el segundo en que podría no hacerlo; sin él, la renuncia no se siente, se entiende.",
+      "El capítulo 2 sostiene la tensión mejor que los otros dos porque tiene un reloj visible (el cierre) y un obstáculo con cara. El capítulo 3 hereda el reloj —'a cuatro horas del cierre'— y luego lo abandona: nada del desenlace vuelve a mirarlo."
+    ]
+  },
+  "veredicto": "REQUIERE CORRECCIONES",
+  "correcciones_propuestas": [
+    {
+      "orden": 1,
+      "capitulo": 1,
+      "incidencias": [
+        "RG01",
+        "RG06"
+      ],
+      "accion": "parchear",
+      "instruccion": "En el párrafo de apertura, sembrar la grieta que después resolverá el libro: al leer el encabezado de la orden, Amparo debe reparar en que el registro nunca ha anotado de qué cuerpo salió un tubo, y por tanto en que la lista no puede saber lo que dice saber. Una frase, sin desarrollarla y sin que ella saque conclusiones. Con eso, la regla del capítulo 3 deja de ser una regla nueva y pasa a ser la respuesta a una pregunta que el lector ya se hizo en la página uno."
+    },
+    {
+      "orden": 2,
+      "capitulo": 1,
+      "incidencias": [
+        "RG04"
+      ],
+      "accion": "parchear",
+      "instruccion": "Dar motivo a que Amparo pague la consulta teniendo ya la sospecha de cómo se salva un tubo: que lo que compra con esa hora no sea la salvación del 344 sino el nombre del pagador. Basta con que el texto marque la diferencia —quiere el nombre, no el remedio— para que el gasto sea una elección de carácter y no un despiste. Prohibido que el narrador adelante que ella conoce la regla."
+    },
+    {
+      "orden": 3,
+      "capitulo": 2,
+      "incidencias": [
+        "RG03"
+      ],
+      "accion": "parchear",
+      "instruccion": "Incluir, en la escena de los recibos, la única pregunta que Amparo tiene que hacer y que ahora no hace: por qué escribió el 344 en su propia lista. La respuesta de Tobías debe cerrar la puerta de la omisión (la orden le llega cotejada contra el censo que él firma, u otra restricción igual de concreta), en dos frases y sin justificarse. Su excepción solo tiene sentido dramático después de que el lector vea que borrar el número no era una opción."
+    },
+    {
+      "orden": 4,
+      "capitulo": 2,
+      "incidencias": [
+        "RG02"
+      ],
+      "accion": "parchear",
+      "instruccion": "Fijar en esta escena cuánto cuesta la conserva por frío y cuánto se debe realmente, y hacer que la cifra sea compatible con que treinta y ocho horas basten en el capítulo 3. La vía más limpia: que lo caro no sea el atraso sino el traspaso —poner un nombre vivo en la casilla cuesta una tarifa fija que el Almacén cobra entera— y que Tobías la diga en voz alta mientras redacta. Así la cifra final está puesta por el tasador, que es quien tasa, y no por el narrador en el desenlace."
+    },
+    {
+      "orden": 5,
+      "capitulo": 3,
+      "incidencias": [
+        "RG01",
+        "RG02"
+      ],
+      "accion": "regenerar",
+      "instruccion": "Reescribir el tercer párrafo entero. La regla que salva al tubo ya no puede presentarse como información nueva: debe ejecutarse, no anunciarse. Amparo llega al mostrador, paga la tarifa establecida en el capítulo 2 y firma; el porqué ya lo sabe el lector desde el capítulo 1. Eliminar la frase 'y la tenía desde hacía dos fríos'. Sustituir 'la conserva entera' por la cifra concreta que el capítulo 2 haya fijado. Añadir un latido de duda antes de pagar: un gesto, no una reflexión."
+    },
+    {
+      "orden": 6,
+      "capitulo": 3,
+      "incidencias": [
+        "RG05",
+        "RG10"
+      ],
+      "accion": "regenerar",
+      "instruccion": "Mantener el POV de Selim hasta el final, como manda la escaleta. Lo que hacen Amparo y Tobías debe verse desde el pasillo, por lo que Selim alcanza a oír y a ver mientras se va: la firma que no lee, el nombre que oye decir, las dos manos en la escarcha al pasar por la fila siete camino de la puerta. Fundir las dos firmas en una sola secuencia vista desde fuera, para que la de Amparo no quede desactivada por la de Tobías. La última imagen del libro no se toca."
+    },
+    {
+      "orden": 7,
+      "capitulo": 3,
+      "incidencias": [
+        "RG07",
+        "RG08"
+      ],
+      "accion": "parchear",
+      "instruccion": "Sustituir 'esa misma noche' por una medida en fríos y 'más pequeños que el invierno pasado' por una referencia a fríos o a temporadas de sal. Variar la tercera aparición de 'letra apretada': en este capítulo basta con nombrar lo que escribe, no cómo escribe."
+    },
+    {
+      "orden": 8,
+      "capitulo": null,
+      "incidencias": [
+        "RG09"
+      ],
+      "accion": "archivista",
+      "instruccion": "Fuera del texto: cerrar 'hilo_sistema_conserva' en estado.json y marcar 'hilo_selim_varga' como cerrado deliberadamente abierto, de modo que la comprobación de hilos de continuidad.py --global no lo reporte como cabo suelto. No requiere tocar ningún capítulo."
+    }
+  ],
+  "titulos": {
+    "novela": "Las nueve escuchas",
+    "capitulos": [
+      {
+        "n": 1,
+        "titulo": "Lo que cuesta preguntar"
+      },
+      {
+        "n": 2,
+        "titulo": "Con su propia letra"
+      },
+      {
+        "n": 3,
+        "titulo": "Un nombre vivo"
+      }
+    ],
+    "nota": "El título del capítulo 3 cambia respecto a la escaleta ('Las nueve intactas'): chocaba con el título de la novela y nombraba el objeto en vez de la resolución. 'Un nombre vivo' nombra exactamente lo que ocurre y lo que cuesta."
+  },
+  "sinopsis": {
+    "corta": "En el Almacén de Bocasal la memoria se guarda en salmuera y se paga con horas de vida. La archivista Amparo Ledesma descubre un tubo condenado al vertido que alguien lleva once años pagando sin escucharlo nunca. Averiguar quién le costará lo único que todavía le pertenece: su propio tiempo.",
+    "larga": "En la colonia de Bocasal, levantada sobre una laguna de sal drenada, las memorias se decantan de los cuerpos y se conservan heladas en tubos de salmuera. Mantener uno cuesta horas de vida, la única moneda que allí se acepta: cada hora pagada deja de haberle ocurrido a quien la paga. Amparo Ledesma, archivista del turno frío, encuentra el tubo 344 en la orden de vertido y descubre que conserva sus nueve escuchas intactas. Nadie lo ha vivido nunca, y sin embargo alguien lleva once años pagándolo frío tras frío. Preguntar quién le cuesta una hora del cuerpo y el registro le devuelve la casilla vacía. Cuando el nombre aparece, resulta ser el del hombre que firma los vertidos, y salvar el tubo exige gastarle la primera escucha: destruir justo aquello que once años de silencio han servido para proteger. Quedan cuatro horas escasas hasta el próximo cierre del Almacén."
+  },
+  "metricas": {
+    "longitud": {
+      "unidad": "lineas",
+      "objetivo": 4,
+      "por_capitulo": [
+        {
+          "capitulo": 1,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        },
+        {
+          "capitulo": 2,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        },
+        {
+          "capitulo": 3,
+          "unidad": "lineas",
+          "objetivo": 4,
+          "medido": 4,
+          "minimo": 4,
+          "maximo": 4,
+          "lineas_sin_cierre": 0,
+          "en_norma": true
+        }
+      ],
+      "total": 12,
+      "fuera_de_norma": []
+    }
+  },
+  "incidencias": [
+    {
+      "severidad": "mayor",
+      "tipo": "hilo_abierto_al_final",
+      "detalle": "El hilo hilo_sistema_conserva (El funcionamiento del sistema de conserva y vertido) sigue abierto desde el capitulo None.",
+      "origen": "continuidad"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "hilo_abierto_al_final",
+      "detalle": "El hilo hilo_selim_varga (¿Quién es Selim Varga y qué implica 'vivir lo ajeno'?) sigue abierto desde el capitulo None.",
+      "origen": "continuidad"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'conserva' aparece 3 veces (11.2 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nueve' aparece 3 veces (11.2 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vertido' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cuerpo' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'mostrador' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'escrito' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'placa' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'haber' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'ninguna' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'treinta' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'registro' aparece 2 veces (7.4 por mil, umbral 3.0)",
+      "capitulo": 1,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tobias' aparece 3 veces (7.6 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'almacen' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'devuelto' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'casilla' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'amparo' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'contestar' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cuerpo' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'recibos' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'registro' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'anotada' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'excepcion' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vivir' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cifra' aparece 2 veces (5.0 por mil, umbral 3.0)",
+      "capitulo": 2,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'habian' aparece 5 veces (10.7 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'primera' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'unico' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pasillo' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'gastar' aparece 3 veces (6.4 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'silla' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'vuelta' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'hacia' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'persona' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pudiera' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'pasado' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'cuerpo' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'propia' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nunca' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'conserva' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nadie' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'salio' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tobias' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nueve' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'horas' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'mostrador' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'tenia' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'casilla' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'nombre' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "muletilla",
+      "detalle": "'quedaban' aparece 2 veces (4.3 por mil, umbral 3.0)",
+      "capitulo": 3,
+      "origen": "repeticion"
+    },
+    {
+      "severidad": "bloqueante",
+      "tipo": "regla_tardia_contradictoria",
+      "capitulo": 3,
+      "detalle": "RG01: la regla que salva el tubo ('el Almacén no vierte lo que tiene un nombre vivo respondiendo por ello') se enuncia por primera vez en el desenlace y contradice el encabezado de la orden del capítulo 1, que atribuye el vertido a constar muerto el cuerpo de origen.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "aritmetica_de_la_premisa",
+      "capitulo": 3,
+      "detalle": "RG02: 138 horas por once años de conserva (cap. 2) no cuadran con las 38 horas que pagan 'la conserva entera' (cap. 3); tampoco se aclara qué compra ese pago si el tubo estaba al día.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "logica_de_personaje",
+      "capitulo": 1,
+      "detalle": "RG03: Tobías escribe de su puño la lista que condena el tubo que lleva once años pagando en secreto, y la novela nunca explica por qué no lo omitió.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "informacion_retenida_sin_motivo",
+      "capitulo": 3,
+      "detalle": "RG04: Amparo tenía la solución 'desde hacía dos fríos', lo que vuelve retroactivamente evitable el coste de los capítulos 1 y 2 sin que el texto muestre por qué calla.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "mayor",
+      "tipo": "ruptura_de_pov",
+      "capitulo": 3,
+      "detalle": "RG05: la escaleta fija POV de Selim Varga y los dos últimos párrafos saltan a interioridad de Amparo y de Tobías.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "contradiccion_con_canon",
+      "capitulo": 1,
+      "detalle": "RG06: el canon dice que el registro jamás anota de quién salió un tubo; la orden de vertido presupone lo contrario.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "lexico_fuera_de_mundo",
+      "capitulo": 3,
+      "detalle": "RG07: 'esa misma noche' y 'el invierno pasado' introducen calendario en una colonia que, por canon, solo cuenta en fríos.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "formula_convertida_en_tic",
+      "capitulo": 3,
+      "detalle": "RG08: 'letra apretada' en los tres capítulos y 'los vertidos que no se discuten' dos veces casi literal; la tercera aparición degrada un eco que ya había hecho su trabajo.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "hilos_abiertos_en_estado",
+      "capitulo": 3,
+      "detalle": "RG09: 'hilo_sistema_conserva' e 'hilo_selim_varga' quedan abiertos en estado.json; no son cabos sueltos como lectura, pero harán saltar la comprobación de hilos de continuidad.py --global.",
+      "origen": "revisor-global"
+    },
+    {
+      "severidad": "menor",
+      "tipo": "duplicacion_de_funcion_dramatica",
+      "capitulo": 3,
+      "detalle": "RG10: dos firmas consecutivas con la misma función dramática; la de Tobías resta peso a la de Amparo.",
+      "origen": "revisor-global"
+    }
+  ],
+  "resumen": {
+    "bloqueante": 1,
+    "mayor": 6,
+    "menor": 54
+  },
+  "revisor_incluido": true
+}
