@@ -1,11 +1,302 @@
 {
-  "tirada": null,
-  "capitulos_escritos": 0,
-  "hechos": [],
-  "hilos": [],
-  "entidades": [],
-  "resumenes": [],
-  "frases_usadas": [],
-  "aperturas": [],
-  "cierres": []
+  "tirada": "20260918-1938",
+  "capitulos_escritos": 3,
+  "hechos": [
+    {
+      "clave": "orden_vertido_344",
+      "valor": "El tubo 344 aparece en la orden de vertido",
+      "tipo": "evento",
+      "cita": "encabezaba la hoja que Tobías Munt había dejado boca arriba"
+    },
+    {
+      "clave": "tubo_nunca_usado",
+      "valor": "El tubo 344 tiene 9 muescas de escucha intactas después de 11 años",
+      "tipo": "revelación",
+      "cita": "nueve muescas de escucha y ninguna gastada. Las nueve enteras."
+    },
+    {
+      "clave": "pago_fantasma",
+      "valor": "Once años de conserva pagados sin que nadie haya utilizado el tubo",
+      "tipo": "misterio",
+      "cita": "Once años de conserva pagados frío tras frío por alguien que no había entrado ni una sola vez a vivir lo que pagaba"
+    },
+    {
+      "clave": "consulta_pagador",
+      "valor": "Amparo gasta una hora de su cuerpo preguntando por el pagador",
+      "tipo": "acción",
+      "cita": "pidió al registro el nombre del que abonaba la conserva. El Almacén le cobró la consulta antes de contestarla: una hora decantada limpia del cuerpo."
+    },
+    {
+      "clave": "registro_en_blanco",
+      "valor": "La casilla del pagador en el registro viene devuelta en blanco",
+      "tipo": "obstáculo",
+      "cita": "El registro devolvió la fila del 344 con la casilla del pagador en blanco"
+    },
+    {
+      "clave": "mano_escarcha",
+      "valor": "Amparo encuentra una mano abierta con dedos largos y sin anular",
+      "tipo": "clue",
+      "cita": "la escarcha ya guardaba una mano abierta. No era la suya: los dedos eran más largos y le faltaba el anular."
+    },
+    {
+      "clave": "tobias_es_pagador",
+      "valor": "Tobías Munt es quien ha pagado la conserva del tubo 344 durante 11 años",
+      "tipo": "revelación",
+      "cita": "Ciento treinta y ocho horas decantadas de su propio cuerpo para mantener helado un tubo, y ni una sola anotada en el censo que él mismo cerraba"
+    },
+    {
+      "clave": "conflicto_tasador",
+      "valor": "Un tasador no puede declarar sus propios gastos sin dejar de ser tasador",
+      "tipo": "regla_del_mundo",
+      "cita": "un tasador que declara lo que decanta deja de ser el que tasa y pasa a ser mercancía fría como los demás"
+    },
+    {
+      "clave": "excepcion_tubo_uso",
+      "valor": "Un tubo que consta en uso no se vierte; constar en uso requiere escucha gastada, firmada y anotada antes del cierre",
+      "tipo": "regla_del_mundo",
+      "cita": "un tubo que consta en uso no se vierte, y constar en uso significa una escucha gastada, firmada y anotada en la placa antes del cierre"
+    },
+    {
+      "clave": "estrategia_salvacion",
+      "valor": "Tobías crea una excepción: alguien debe 'entrar a vivir' lo que él ha estado pagando para salvar el tubo",
+      "tipo": "acción",
+      "cita": "la excepción no valía nada hasta que alguien entrase a vivir lo que él llevaba once años pagando para que nadie viviera"
+    },
+    {
+      "clave": "selim_llamado",
+      "valor": "Tobías llama a Selim Varga, 'el prestado', que cobra por vivir lo ajeno",
+      "tipo": "evento",
+      "cita": "mandó llamar a Selim Varga, el prestado, que cobraba por vivir lo ajeno y aún no había aprendido a preguntar de quién era"
+    },
+    {
+      "clave": "mano_sin_anular",
+      "valor": "Tobías tiene una mano con el anular faltante",
+      "tipo": "pista_visual",
+      "cita": "sujetando la hoja con la mano a la que le faltaba el anular"
+    },
+    {
+      "clave": "selim_rechaza",
+      "valor": "Selim Varga rechaza entrar al cuarto de escucha y abandona su oficio",
+      "tipo": "acción",
+      "cita": "dejaba el oficio y no pensaba cobrarlo"
+    },
+    {
+      "clave": "regla_almacen_pagador",
+      "valor": "El Almacén no vierte lo que tiene un nombre vivo respondiendo por ello",
+      "tipo": "regla_del_mundo",
+      "cita": "el Almacén no vierte lo que tiene un nombre vivo respondiendo por ello"
+    },
+    {
+      "clave": "amparo_paga_conserva",
+      "valor": "Amparo paga la conserva entera del 344 con sus 38 horas de vida",
+      "tipo": "acción",
+      "cita": "Pagó la conserva entera con las treinta y ocho horas que le quedaban de las cuatrocientas de su vida"
+    },
+    {
+      "clave": "amparo_firma_registro",
+      "valor": "Amparo firma su nombre como pagadora del tubo 344 en el registro",
+      "tipo": "acción",
+      "cita": "firmó la fila con su nombre y salió del mostrador convertida en la primera persona de Bocasal sin una sola hora propia"
+    },
+    {
+      "clave": "amparo_sin_horas",
+      "valor": "Amparo queda sin ninguna hora de su cuerpo para gastar",
+      "tipo": "consecuencia",
+      "cita": "dueña de una memoria que no escuchará nunca porque ya no le queda con qué pagarse la entrada"
+    },
+    {
+      "clave": "tobias_cierra_censo",
+      "valor": "Tobías cierra el censo escribiendo sus 11 años de gastos registrados con su nombre",
+      "tipo": "acción",
+      "cita": "Escribió con su letra apretada los once años atrasados en la casilla que le correspondía desde el principio, y al firmarlos dejó de ser el que tasa"
+    },
+    {
+      "clave": "dos_manos_escarcha",
+      "valor": "Dos manos aparecen en la escarcha del tubo 344, una de Tobías y otra de Amparo",
+      "tipo": "imagen_final",
+      "cita": "en la escarcha del tubo quedaban dos manos apoyadas, y a ninguna de las dos le faltaba nada que el registro pudiera anotar"
+    }
+  ],
+  "hilos": [
+    {
+      "id": "hilo_identidad_pagador",
+      "titulo": "¿Quién pagaba el tubo 344?",
+      "estado": "cerrado"
+    },
+    {
+      "id": "hilo_sistema_conserva",
+      "titulo": "El funcionamiento del sistema de conserva y vertido",
+      "estado": "abierto"
+    },
+    {
+      "id": "hilo_precio_verdad",
+      "titulo": "El costo de investigar: la vida se paga en horas",
+      "estado": "cerrado"
+    },
+    {
+      "id": "hilo_mano_misteriosa",
+      "titulo": "¿De quién es la mano en la escarcha?",
+      "estado": "cerrado"
+    },
+    {
+      "id": "hilo_salvacion_tubo",
+      "titulo": "¿Cómo se salva un tubo de la orden de vertido?",
+      "estado": "cerrado"
+    },
+    {
+      "id": "hilo_selim_varga",
+      "titulo": "¿Quién es Selim Varga y qué implica 'vivir lo ajeno'?",
+      "estado": "abierto"
+    }
+  ],
+  "entidades": [
+    {
+      "nombre": "Amparo Ledesma",
+      "tipo": "personaje",
+      "rol": "protagonista, nueva pagadora del 344",
+      "atributos": [
+        "lleva guantes",
+        "tiene acceso al registro",
+        "trabajaba por el Almacén",
+        "ha gastado todas sus 38 horas salvando el tubo 344",
+        "conocía desde hace dos frías la regla del Almacén sobre nombres vivos",
+        "firmó su nombre en el registro como pagadora",
+        "no tiene más horas propias que gastar",
+        "su mano está apoyada en la escarcha del 344"
+      ]
+    },
+    {
+      "nombre": "Tobías Munt",
+      "tipo": "personaje",
+      "rol": "ex-tasador, ya no tiene autoridad",
+      "atributos": [
+        "letra apretada",
+        "ha decantado 138 horas de su propio cuerpo",
+        "le falta el anular en una mano",
+        "escribió los 11 años atrasados en el censo",
+        "al firmar sus gastos dejó de ser el que tasa",
+        "su mano está apoyada en la escarcha del 344",
+        "ya no tiene forma de negarse"
+      ]
+    },
+    {
+      "nombre": "Tubo 344",
+      "tipo": "objeto",
+      "rol": "núcleo de la novela",
+      "atributos": [
+        "9 muescas intactas",
+        "nunca usado",
+        "11 años pagados por Tobías, salvado por Amparo",
+        "en fila siete",
+        "pagado y en regla",
+        "tiene dos manos apoyadas en su escarcha"
+      ]
+    },
+    {
+      "nombre": "El Almacén",
+      "tipo": "institución",
+      "rol": "sistema de conserva y control",
+      "atributos": [
+        "cobra por consultas de registro",
+        "registra pagadores",
+        "posee autoridad sobre vertidos"
+      ]
+    },
+    {
+      "nombre": "La mano",
+      "tipo": "objeto/evidencia",
+      "rol": "clue perturbador",
+      "atributos": [
+        "dedos largos",
+        "falta anular",
+        "encontrada en escarcha"
+      ]
+    },
+    {
+      "nombre": "Mostrador de conserva",
+      "tipo": "lugar",
+      "rol": "escena inicial",
+      "atributos": [
+        "donde se dejan órdenes",
+        "acceso al registro"
+      ]
+    },
+    {
+      "nombre": "Selim Varga",
+      "tipo": "personaje",
+      "rol": "vividor rechazante",
+      "atributos": [
+        "llevaba vividos: una boda, dos entierros, catorce tardes",
+        "joven",
+        "llega con escarcha en el pelo",
+        "entiende lo que se le pide al oír el silencio",
+        "abandona el oficio sin cobrar",
+        "deja en el respaldo los guantes de lona"
+      ]
+    }
+  ],
+  "resumenes": [
+    {
+      "capitulo": 1,
+      "resumen": "Amparo Ledesma, empleada del Almacén, descubre que el tubo 344 está en la orden de vertido. Al investigar, encuentra que ha sido pagado durante once años pero nunca fue utilizado. Su intento por saber quién lo pagaba cuesta una hora de su cuerpo, y el registro devuelve la casilla en blanco. El capítulo cierra con el perturbador hallazgo de una mano abierta junto al tubo."
+    },
+    {
+      "capitulo": 2,
+      "resumen": "Amparo exige a Tobías Munt los recibos del 344. Los recibos revelan que Tobías, el tasador, es quien ha pagado la conserva del tubo durante once años decantando 138 horas de su propio cuerpo. Tobías no pudo declararse a sí mismo sin dejar de ser tasador. Crea una excepción: un tubo en uso no se vierte. Para activarla, llama a Selim Varga, 'el prestado', que cobra por vivir lo ajeno. El capítulo termina cuando Tobías pronuncia la cifra: 'Trescientos cuarenta y cuatro'."
+    },
+    {
+      "capitulo": 3,
+      "resumen": "Selim Varga entra al cuarto de escucha pero rechaza vivir el silencio de once años guardado en el tubo 344. Abandona su oficio sin cobrar. Amparo, quien conocía desde hace tiempo la regla fundamental del Almacén (no vierte lo que tiene un nombre vivo respondiendo por ello), paga la conserva entera del tubo con sus 38 horas de vida. Firma su nombre en el registro y queda sin hora propia. Tobías cierra el censo escribiendo sus 11 años de gastos con su nombre, dejando de ser tasador. Dos manos aparecen en la escarcha del tubo: la de Tobías y la de Amparo, completas, sin nada que registrar."
+    }
+  ],
+  "frases_usadas": [
+    "Orden de vertido: relación de tubos a vaciar antes del cierre por constar muerto el cuerpo de origen",
+    "Las nueve enteras",
+    "Once años de conserva pagados frío tras frío por alguien que no había entrado ni una sola vez a vivir lo que pagaba",
+    "la de haber preguntado",
+    "la escarcha ya guardaba una mano abierta",
+    "un tasador que declara lo que decanta deja de ser el que tasa y pasa a ser mercancía fría como los demás",
+    "No me preguntes qué hay dentro",
+    "Pregúntame cómo se salva",
+    "un tubo que consta en uso no se vierte",
+    "constar en uso significa una escucha gastada, firmada y anotada en la placa antes del cierre",
+    "la excepción no valía nada hasta que alguien entrase a vivir lo que él llevaba once años pagando para que nadie viviera",
+    "el prestado, que cobraba por vivir lo ajeno y aún no había aprendido a preguntar de quién era",
+    "Trescientos cuarenta y cuatro",
+    "Ese silencio de un instante lo conocía mejor que su propia voz, porque era el único que nunca le habían alquilado",
+    "dejaba el oficio y no pensaba cobrarlo",
+    "la pregunta de cómo se libra un tubo del vertido se quedó en el pasillo sin contestar",
+    "el Almacén no vierte lo que tiene un nombre vivo respondiendo por ello",
+    "dueña de una memoria que no escuchará nunca porque ya no le queda con qué pagarse la entrada",
+    "dejó de ser el que tasa",
+    "valía exactamente lo mismo que el día que se llenó",
+    "en la escarcha del tubo quedaban dos manos apoyadas, y a ninguna de las dos le faltaba nada que el registro pudiera anotar"
+  ],
+  "aperturas": [
+    {
+      "tipo": "orden",
+      "capitulo": 1
+    },
+    {
+      "tipo": "exigencia_recibos",
+      "capitulo": 2,
+      "elemento": "Amparo demanda a Tobías los recibos del 344"
+    }
+  ],
+  "cierres": [
+    {
+      "tipo": "hallazgo_mano",
+      "capitulo": 1
+    },
+    {
+      "tipo": "llamada_selim",
+      "capitulo": 2,
+      "elemento": "Tobías nombra a Selim Varga y pronuncia 'Trescientos cuarenta y cuatro'"
+    },
+    {
+      "tipo": "dos_manos_escarcha",
+      "capitulo": 3,
+      "elemento": "Dos manos aparecen en la escarcha: la de Tobías y la de Amparo, completas"
+    }
+  ]
 }
