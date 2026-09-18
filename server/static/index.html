@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taller de novelas</title>
+<link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+
+<header>
+  <h1>Taller de novelas</h1>
+  <nav>
+    <button data-pantalla="nueva" class="activa">Nueva novela</button>
+    <button data-pantalla="progreso">Cómo va</button>
+    <button data-pantalla="lector">Leer</button>
+    <button data-pantalla="coste">Cuánto ha costado</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ------------------------------------------------ 1. Nueva novela -->
+<section id="nueva" class="pantalla visible">
+  <h2>Escribir una novela nueva</h2>
+  <p class="intro">
+    Cuenta de qué va la historia y el taller la escribe entero: inventa el
+    mundo, planifica los capítulos, los escribe, los revisa buscando
+    contradicciones y monta el libro.
+  </p>
+
+  <form id="formulario">
+    <label for="premisa">¿De qué va la historia?</label>
+    <textarea id="premisa" rows="4" required></textarea>
+    <small>Una o dos frases. Cuanto más concreto sea el conflicto, mejor sale.</small>
+
+    <div class="pareja">
+      <div>
+        <label for="capitulos">¿Cuántos capítulos?</label>
+        <input id="capitulos" type="number" min="1" max="20" required>
+        <small>Se escriben uno detrás de otro, en orden.</small>
+      </div>
+      <div>
+        <label for="objetivo">¿Cómo de largo cada capítulo?</label>
+        <input id="objetivo" type="number" min="1" max="400" required>
+        <small id="ayuda-objetivo">Se mide en líneas.</small>
+      </div>
+    </div>
+
+    <p class="aviso" id="aviso-tope"></p>
+    <button type="submit" id="generar">Escribir la novela</button>
+    <p class="error" id="error-nueva" hidden></p>
+  </form>
+</section>
+
+<!-- ------------------------------------------------ 2. Progreso -->
+<section id="progreso" class="pantalla">
+  <h2>Cómo va</h2>
+
+  <div class="tarjetas">
+    <div class="tarjeta">
+      <span class="etiqueta">Ahora mismo</span>
+      <strong id="p-fase">Sin empezar</strong>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Capítulos terminados</span>
+      <strong id="p-capitulos">0</strong>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Veces que ha habido que reescribir</span>
+      <strong id="p-reescrituras">0</strong>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Lleva gastado</span>
+      <strong id="p-coste">0,00 $</strong>
+      <span class="etiqueta" id="p-tope"></span>
+    </div>
+  </div>
+
+  <button id="detener" class="secundario" hidden>Detener</button>
+  <p class="intro" id="p-estado">Todavía no se está escribiendo nada.</p>
+
+  <h3>Lo que va pasando</h3>
+  <ol id="bitacora" class="bitacora"></ol>
+</section>
+
+<!-- ------------------------------------------------ 3. Lector -->
+<section id="lector" class="pantalla">
+  <h2>Leer</h2>
+  <div class="selector">
+    <label for="novela">Novela</label>
+    <select id="novela"></select>
+  </div>
+
+  <div class="lector-cuerpo">
+    <article id="manuscrito">
+      <p class="intro">Elige una novela.</p>
+    </article>
+
+    <aside id="ficha">
+      <h3>Quién sale</h3>
+      <ul id="personajes"><li class="vacio">Todavía nadie.</li></ul>
+      <h3>Cabos sueltos</h3>
+      <ul id="hilos-abiertos"><li class="vacio">Ninguno.</li></ul>
+      <h3>Cabos ya cerrados</h3>
+      <ul id="hilos-cerrados"><li class="vacio">Ninguno.</li></ul>
+    </aside>
+  </div>
+</section>
+
+<!-- ------------------------------------------------ 4. Coste -->
+<section id="coste" class="pantalla">
+  <h2>Cuánto ha costado</h2>
+  <div class="selector">
+    <label for="novela-coste">Novela</label>
+    <select id="novela-coste"></select>
+  </div>
+
+  <p class="aviso" id="nota-coste" hidden></p>
+
+  <div class="tarjetas">
+    <div class="tarjeta">
+      <span class="etiqueta">Total</span><strong id="c-total">0,00 $</strong>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Escribir de verdad</span>
+      <strong id="c-trabajo">0,00 $</strong>
+      <span class="etiqueta">Con el contexto ya cargado</span>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Cargar el contexto</span>
+      <strong id="c-arranque">0,00 $</strong>
+      <span class="etiqueta">La primera vez de cada sesión</span>
+    </div>
+    <div class="tarjeta">
+      <span class="etiqueta">Llamadas que aprovecharon lo ya cargado</span>
+      <strong id="c-cache">0 de 0</strong>
+    </div>
+  </div>
+
+  <h3>Por capítulo</h3>
+  <table id="tabla-capitulos"><thead><tr>
+    <th>Capítulo</th><th>Coste</th><th>Llamadas</th><th>Reescrituras</th>
+  </tr></thead><tbody></tbody></table>
+
+  <h3>Por oficio</h3>
+  <table id="tabla-agentes"><thead><tr>
+    <th>Quién</th><th>Coste</th><th>Llamadas</th><th>Palabras escritas (aprox.)</th>
+  </tr></thead><tbody></tbody></table>
+
+  <h3>Comprobaciones de cada capítulo</h3>
+  <div id="metricas"></div>
+</section>
+
+</main>
+
+<!-- Historial de intentos, sobre la pantalla -->
+<div id="capa" hidden>
+  <div class="ventana">
+    <button id="cerrar-capa" aria-label="Cerrar">×</button>
+    <h2 id="h-titulo">Cómo se llegó a este capítulo</h2>
+    <p class="intro" id="h-resumen"></p>
+    <div id="h-cuerpo"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>
