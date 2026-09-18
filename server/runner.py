@@ -243,6 +243,21 @@ def invocar(rol: str, prompt: str, cfg: dict = None, sesion: str = None,
                       str(respuesta.get("result") or "claude ha devuelto error")[:300],
                       inicio, respuesta.get("session_id") or sesion)
 
+    # Una herramienta denegada NO marca is_error: la llamada sale con exito y
+    # el modelo te cuenta tan tranquilo lo que ha hecho, salvo la parte que no
+    # pudo hacer. Medido: sin --permission-mode, el Write del capitulo queda
+    # denegado, is_error es false y el fichero no existe. En una generacion
+    # desatendida eso es lo peor que puede pasar, porque el orquestador sigue
+    # adelante creyendo que hay capitulo. Aqui se convierte en fallo.
+    denegados = respuesta.get("permission_denials") or []
+    if denegados:
+        herramientas = ", ".join(sorted({str(d.get("tool_name") or "?")
+                                         for d in denegados}))
+        return _fallo(rol, modelo,
+                      f"la llamada no pudo usar {herramientas}: hacia falta "
+                      f"aprobacion humana y esto corre solo",
+                      inicio, respuesta.get("session_id") or sesion)
+
     tokens = _tokens(respuesta)
     try:
         coste = float(respuesta.get("total_cost_usd") or 0.0)   # regla 1

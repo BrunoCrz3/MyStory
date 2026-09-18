@@ -34,6 +34,7 @@ Python 3.12, solo biblioteca estandar.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -253,6 +254,53 @@ def invocar(rol, prompt, cfg, sesiones, fase=None, capitulo=None, intento=None):
     return resultado
 
 
+def _huella(ruta: Path):
+    """Como esta un fichero ahora mismo, o None si no existe."""
+    try:
+        return hashlib.sha1(ruta.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def escribiendo(rol, prompt, cfg, sesiones, destino, que, avisar, **contexto):
+    """Invoca a un rol que TIENE que dejar un fichero cambiado, y lo comprueba.
+
+    Un paso que no escribe nada no da error por su cuenta: el modelo contesta
+    que lo ha hecho y se queda tan ancho. Con alguien mirando se ve enseguida;
+    desatendido, el orquestador sigue adelante creyendo que hay capitulo y
+    envenena todo lo que viene detras. Asi que se compara el fichero antes y
+    despues, y si no ha cambiado se repite una vez.
+
+    Los dos desenlaces malos NO son el mismo y no se tratan igual:
+
+      - El fichero no existe. Ahi no hay nada que validar ni que corregir, y
+        seguir es imposible: se para con un motivo claro.
+      - El fichero existe pero ha quedado igual. Eso no es un fallo de
+        escritura, es un capitulo que no mejora, y para eso ya esta el bucle
+        de validacion, que lo revalidara y acabara escalando si toca. Abortar
+        aqui seria robarle su trabajo.
+    """
+    antes = _huella(destino)
+    invocar(rol, prompt, cfg, sesiones, **contexto)
+    ahora = _huella(destino)
+
+    if ahora is None:
+        # Solo aqui se reintenta. Repetir por un texto que no cambia seria
+        # pagar otra invocacion a cambio de nada.
+        avisar(f"El paso de {que} no ha dejado el fichero; se repite una vez.")
+        invocar(rol, prompt, cfg, sesiones, **contexto)
+        ahora = _huella(destino)
+        if ahora is None:
+            raise RuntimeError(
+                f"{rol} no ha llegado a escribir {destino.name} en dos "
+                f"intentos. La generacion no puede seguir sin eso.")
+
+    if ahora == antes:
+        avisar(f"El paso de {que} ha dejado el texto igual que estaba.")
+        return False
+    return True
+
+
 # --------------------------------------------------------------------------
 # El contexto que recibe cada rol
 # --------------------------------------------------------------------------
@@ -309,15 +357,14 @@ def fase_canon(cfg, sesiones, avisar):
         return
     eventos.registrar("fase_inicio", fase="canon")
     avisar("Creando la biblia de la novela: personajes, mundo y reglas.")
-    invocar("arquitecto",
-            _bloque("Premisa", cfg.get("premisa"))
-            + _bloque("Numero de capitulos", cfg.get("capitulos"))
-            + _bloque("Tamano de cada capitulo", cfg.get("longitud"))
-            + "\nEscribe `novela/canon.md` con los diez encabezados que exige "
-              "tu formato. No escribas ningun otro fichero.",
-            cfg, sesiones, fase="canon")
-    if not (nucleo.raiz() / "novela" / "canon.md").exists():
-        raise RuntimeError("el arquitecto no ha dejado novela/canon.md")
+    escribiendo("arquitecto",
+                _bloque("Premisa", cfg.get("premisa"))
+                + _bloque("Numero de capitulos", cfg.get("capitulos"))
+                + _bloque("Tamano de cada capitulo", cfg.get("longitud"))
+                + "\nEscribe `novela/canon.md` con los diez encabezados que "
+                  "exige tu formato. No escribas ningun otro fichero.",
+                cfg, sesiones, nucleo.raiz() / "novela" / "canon.md",
+                "inventar el mundo", avisar, fase="canon")
     eventos.registrar("fase_fin", fase="canon", datos={"creado": True})
 
 
@@ -327,13 +374,14 @@ def fase_escaleta(cfg, sesiones, avisar):
         return
     eventos.registrar("fase_inicio", fase="escaleta")
     avisar(f"Planificando los {cfg.get('capitulos')} capitulos.")
-    invocar("escaletista",
-            _bloque("Canon aprobado", nucleo.leer_canon())
-            + _bloque("Configuracion", {"capitulos": cfg.get("capitulos"),
-                                        "longitud": cfg.get("longitud")})
-            + "\nEscribe `novela/escaleta.json` con el plan completo. No "
-              "escribas ningun otro fichero.",
-            cfg, sesiones, fase="escaleta")
+    escribiendo("escaletista",
+                _bloque("Canon aprobado", nucleo.leer_canon())
+                + _bloque("Configuracion", {"capitulos": cfg.get("capitulos"),
+                                            "longitud": cfg.get("longitud")})
+                + "\nEscribe `novela/escaleta.json` con el plan completo. No "
+                  "escribas ningun otro fichero.",
+                cfg, sesiones, nucleo.raiz() / "novela" / "escaleta.json",
+                "planificar los capitulos", avisar, fase="escaleta")
 
     revision = continuidad.modo_escaleta(cfg)
     graves = [i for i in revision.get("incidencias", [])
@@ -402,11 +450,14 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
     maximo = int(cfg["validacion"].get("max_reescrituras", 3))
 
     avisar(f"Escribiendo el capitulo {n} de {cfg.get('capitulos')}.")
-    invocar("escritor",
-            _contexto_capitulo(n, cfg)
-            + f"\nModo: borrador. Escribe `novela/capitulos/capitulo-{n:02d}.md` "
-              f"desde cero. No escribas ningun otro fichero.",
-            cfg, sesiones, fase="redaccion", capitulo=n, intento=intento)
+    escribiendo("escritor",
+                _contexto_capitulo(n, cfg)
+                + f"\nModo: borrador. Escribe "
+                  f"`novela/capitulos/capitulo-{n:02d}.md` desde cero. No "
+                  f"escribas ningun otro fichero.",
+                cfg, sesiones, nucleo.ruta_capitulo(n),
+                f"escribir el capitulo {n}", avisar,
+                fase="redaccion", capitulo=n, intento=intento)
     eventos.registrar("borrador", capitulo=n, intento=intento)
 
     while True:
@@ -425,14 +476,16 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
                 return False
             avisar(f"El capitulo {n} tiene {len(graves)} error(es) que hay que "
                    f"corregir. Se reescribe entero.")
-            invocar("escritor",
-                    _contexto_capitulo(n, cfg)
-                    + _bloque("Texto actual", nucleo.cuerpo_capitulo(n))
-                    + _bloque("Errores que hay que corregir", graves)
-                    + f"\nModo: reescritura. Vuelve a escribir "
-                      f"`novela/capitulos/capitulo-{n:02d}.md` entero "
-                      f"resolviendo cada uno.",
-                    cfg, sesiones, fase="redaccion", capitulo=n, intento=intento)
+            escribiendo("escritor",
+                        _contexto_capitulo(n, cfg)
+                        + _bloque("Texto actual", nucleo.cuerpo_capitulo(n))
+                        + _bloque("Errores que hay que corregir", graves)
+                        + f"\nModo: reescritura. Vuelve a escribir "
+                          f"`novela/capitulos/capitulo-{n:02d}.md` entero "
+                          f"resolviendo cada uno.",
+                        cfg, sesiones, nucleo.ruta_capitulo(n),
+                        f"reescribir el capitulo {n}", avisar,
+                        fase="redaccion", capitulo=n, intento=intento)
             eventos.registrar("reescritura", capitulo=n, intento=intento)
             intento += 1
             continue
@@ -444,14 +497,15 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
             else:
                 avisar(f"El capitulo {n} tiene {len(mayores)} aviso(s); se "
                        f"retocan solo esos parrafos.")
-                invocar("escritor",
-                        _bloque("Texto actual", nucleo.cuerpo_capitulo(n))
-                        + _bloque("Avisos, cada uno con su cita", mayores)
-                        + f"\nModo: parche. Corrige SOLO esos parrafos de "
-                          f"`novela/capitulos/capitulo-{n:02d}.md`. El resto "
-                          f"debe salir igual.",
-                        cfg, sesiones, fase="redaccion", capitulo=n,
-                        intento=intento)
+                escribiendo("escritor",
+                            _bloque("Texto actual", nucleo.cuerpo_capitulo(n))
+                            + _bloque("Avisos, cada uno con su cita", mayores)
+                            + f"\nModo: parche. Corrige SOLO esos parrafos de "
+                              f"`novela/capitulos/capitulo-{n:02d}.md`. El "
+                              f"resto debe salir igual.",
+                            cfg, sesiones, nucleo.ruta_capitulo(n),
+                            f"retocar el capitulo {n}", avisar,
+                            fase="redaccion", capitulo=n, intento=intento)
                 eventos.registrar("parche", capitulo=n, intento=intento)
                 intento += 1
                 continue    # un parche SIEMPRE se revalida
@@ -482,12 +536,14 @@ def _escribir_capitulo(n, cfg, sesiones, avisar):
     repeticion.analizar(n, cfg, nucleo.cargar_estado())
 
     avisar(f"Guardando lo que pasa en el capitulo {n} en el registro de hechos.")
-    invocar("archivista",
-            _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
-            + _bloque("Estado actual", nucleo.cargar_estado())
-            + f"\nActualiza `novela/estado.json` con lo que aporta el capitulo "
-              f"{n}. Eres el unico que escribe ese fichero.",
-            cfg, sesiones, fase="redaccion", capitulo=n, intento=intento)
+    escribiendo("archivista",
+                _bloque("Texto del capitulo", nucleo.cuerpo_capitulo(n))
+                + _bloque("Estado actual", nucleo.cargar_estado())
+                + f"\nActualiza `novela/estado.json` con lo que aporta el "
+                  f"capitulo {n}. Eres el unico que escribe ese fichero.",
+                cfg, sesiones, nucleo.raiz() / "novela" / "estado.json",
+                f"anotar los hechos del capitulo {n}", avisar,
+                fase="redaccion", capitulo=n, intento=intento)
 
     estado = nucleo.cargar_estado()
     eventos.registrar("capitulo_fin", capitulo=n, intento=intento,
