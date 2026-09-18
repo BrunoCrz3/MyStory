@@ -1,0 +1,134 @@
+{
+  "generada": "2026-09-18T00:00:00Z",
+  "capitulos_totales": 3,
+  "capitulos": [
+    {
+      "n": 1,
+      "titulo": "Segunda lectura",
+      "pov": "Nadia Olvera",
+      "dia": 1,
+      "analepsis": false,
+      "funcion": "Detonante: el coste deja de ser abstracto y empieza a cobrarse en Teodoro",
+      "momento": "Sala de cotejo, primer enfriamiento del dia. Apertura por ambiente: la filtracion de la pared norte",
+      "beats": [
+        {
+          "id": "B1.1",
+          "texto": "Nadia gasta su segunda lectura pidiendo una version donde el final no venga de ella y la lamina transcribe otra vez su nombre como causa",
+          "marcadores": [
+            "lamina",
+            "Nadia"
+          ]
+        },
+        {
+          "id": "B1.2",
+          "texto": "El cobro se lleva el recuerdo del dia en que conocio al custodio y Nadia pregunta a Teodoro como se llama mientras el lo apunta",
+          "marcadores": [
+            "Teodoro",
+            "cuaderno"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "La segunda lectura tampoco produce una version donde el final no lo cause Nadia",
+        "El archivo esta cobrando en el orden mas caro: empieza por lo que Nadia recuerda de Teodoro"
+      ],
+      "abre_hilos": [
+        "T01",
+        "T02"
+      ],
+      "cierra_hilos": [],
+      "cambio_mundo": "Teodoro deja de ser para Nadia alguien conocido: a partir de aqui es un desconocido que la conoce, y solo le queda una lectura",
+      "gancho": "El cuaderno registra el cobro con un nombre tachado que Nadia ya no puede leer como suyo",
+      "tamano_objetivo": 4
+    },
+    {
+      "n": 2,
+      "titulo": "Lo que se apunta",
+      "pov": "Teodoro Bassi",
+      "dia": 1,
+      "analepsis": false,
+      "funcion": "Escalada: el plazo se cierra y el custodio decide por primera vez que callar",
+      "momento": "Sala de cotejo, enfriamiento siguiente. Apertura por accion: Teodoro actua en la primera linea",
+      "beats": [
+        {
+          "id": "B2.1",
+          "texto": "Teodoro entrega el registro de cobros y Halima lo incorpora como pieza del acta de cierre",
+          "marcadores": [
+            "Teodoro",
+            "cuaderno"
+          ]
+        },
+        {
+          "id": "B2.2",
+          "texto": "Halima fija el cierre para el enfriamiento siguiente y Teodoro omite en el acta que Nadia ya no lo reconoce",
+          "marcadores": [
+            "enfriamiento",
+            "acta"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "El acta no anula las lecturas ya acreditadas, pero fija el cierre del deposito en el enfriamiento siguiente",
+        "El registro de cobros pasa a ser documento del organismo y deja de ser de Teodoro"
+      ],
+      "abre_hilos": [],
+      "cierra_hilos": [],
+      "cambio_mundo": "La tercera lectura pasa a ser la ultima que la lamina respondera a nadie, y el registro deja de ser un archivo fiel porque el custodio ya omite",
+      "gancho": "La linea que Teodoro no escribe es la unica prueba de lo que Nadia ha perdido",
+      "tamano_objetivo": 4
+    },
+    {
+      "n": 3,
+      "titulo": "Conservar",
+      "pov": "Halima Vreede",
+      "dia": 2,
+      "analepsis": false,
+      "funcion": "Climax y resolucion: la orden final se da y la firma deja de ser neutral",
+      "momento": "Sala de cotejo, ultimo enfriamiento antes del cierre. Apertura por dialogo: la primera linea es habla",
+      "beats": [
+        {
+          "id": "B3.1",
+          "texto": "Nadia no pide otra version en su tercera lectura: ordena conservar sobre una de las ya transcritas y el resto queda ilegible",
+          "marcadores": [
+            "conservar",
+            "Nadia"
+          ]
+        },
+        {
+          "id": "B3.2",
+          "texto": "Halima firma el acta con su nombre y Nadia sale preguntando quien es Teodoro",
+          "marcadores": [
+            "Halima",
+            "Teodoro"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "El Cotejo no exculpa: no existe version sin causa, solo una version que alguien acepta sostener",
+        "La orden conservar deja el resto ilegible y convierte la firma de Halima en parte de la decision"
+      ],
+      "abre_hilos": [],
+      "cierra_hilos": [
+        "T01",
+        "T02"
+      ],
+      "cambio_mundo": "Una sola version de la humanidad continua y todas las demas quedan ilegibles para siempre; Nadia sale sin Teodoro dentro y Halima sale con su nombre dentro del acta",
+      "gancho": "Teodoro se queda solo con el registro, unico sitio donde esa vida compartida sigue escrita",
+      "tamano_objetivo": 4
+    }
+  ],
+  "hilos": [
+    {
+      "id": "T01",
+      "titulo": "La version donde el final no lo causa Nadia",
+      "abre_en": 1,
+      "cierra_en": 3
+    },
+    {
+      "id": "T02",
+      "titulo": "El cobro: lo que Nadia recuerda de Teodoro",
+      "abre_en": 1,
+      "cierra_en": 3
+    }
+  ]
+}
