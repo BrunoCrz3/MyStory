@@ -66,7 +66,8 @@ En `config.json`:
 "observabilidad": {
   "langfuse": {
     "activo": null,
-    "enviar_texto": true
+    "enviar_texto": true,
+    "entorno": "default"
   }
 }
 ```

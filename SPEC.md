@@ -2887,26 +2887,52 @@ Ejemplo de fichero real:
 
 ### 14.4 Cómo está conectado Langfuse
 
+**Transporte.** Dos endpoints, por una razón que conviene no olvidar:
+
+| Qué | Dónde | Por qué |
+|---|---|---|
+| Trazas y observaciones | `POST /api/public/otel/v1/traces` | OTLP/HTTP en JSON, con la cabecera `x-langfuse-ingestion-version: 4`. Es el camino que la documentación señala para instrumentación propia |
+| Scores | `POST /api/public/ingestion`, eventos `score-create` | OTLP no transporta scores |
+
+La API de ingesta v3 **se apaga en Langfuse Cloud el 16 de noviembre de 2026**
+para todo excepto los scores, que se siguen aceptando por ella. Los despliegues
+autoalojados no se ven afectados por esa fecha hasta que activen el modo
+v4-only. Además, marcar el tipo de una observación por esa vía exigía
+`observation-create`, marcada como deprecada dentro de la propia API: las dos
+razones apuntaban a OTLP.
+
 **Correspondencia de conceptos:**
 
-| Concepto de este sistema | Concepto de Langfuse | Cómo se deriva |
+| Concepto de este sistema | Observación de Langfuse | Cómo se deriva |
 |---|---|---|
-| Una tirada de novela | **Trace** | `id` = `nov-<proyecto>-<tirada>`; `sessionId` = el proyecto, para agrupar tiradas de la misma premisa |
-| Una fase | **Span** hijo del trace | Del par `fase_inicio` / `fase_fin` con la misma `fase` |
-| Un capítulo | **Span** hijo de la fase `redaccion` | Del par `capitulo_inicio` / `capitulo_fin` con el mismo `capitulo` |
-| Un intento (borrador, reescritura, parche) | **Span** hijo del capítulo | Cada evento `borrador`/`reescritura`/`parche` con su `intento` |
-| Una llamada a modelo | **Generation** hija del intento | Evento `invocacion`. Nombre = rol del subagente |
-| Una validación | **Event** dentro del span del intento | Evento `validacion` |
-| Cada métrica de validación | **Score** numérico del span del capítulo | Todo `datos.metricas.*`, dispare o no incidencia |
-| Recuento por severidad | **Score** numérico | `datos.resumen.bloqueante`, `.mayor`, `.menor` |
-| Número de intentos de un capítulo | **Score** numérico | El `intento` del `capitulo_fin` |
-| Un escalado | **Score** numérico y `level: ERROR` en el span | Presencia de un evento `escalado` |
+| Una tirada de novela | Span **raíz**, que lleva los atributos de la traza | En OTLP no hay objeto traza: `langfuse.trace.*` van en la raíz |
+| Una fase | `span` hijo de la raíz | Del par `fase_inicio` / `fase_fin` |
+| Un capítulo | `span` hijo de la fase `redaccion` | Del par `capitulo_inicio` / `capitulo_fin` |
+| Un intento | `span` hijo del capítulo | `borrador`/`reescritura`/`parche`, cerrado por su `validacion` |
+| **Una ejecución de subagente** | **`agent`** hijo del intento | Evento `invocacion` agrupado por `datos.id_agente` |
+| Una llamada al modelo | `generation` hija del `agent` | Evento `invocacion` |
+| Una validación | **`evaluator`** | Evento `validacion` |
+| Un commit | `event` colgando de la raíz | Evento `commit` |
+| Cada métrica de validación | **Score** del span del capítulo | Todo `datos.metricas.*`, dispare o no incidencia |
+| Recuento por severidad | Score numérico | `datos.resumen.*` |
+| Intentos, palabras, líneas | Score numérico | Del `capitulo_fin` |
+| Un escalado | `event` con `level: ERROR` y score | Evento `escalado` |
+
+Que cada subagente sea de tipo `agent` y no un span genérico no es cosmético:
+es lo que le da nodo propio en el grafo de agentes y permite ver de quién son
+las llamadas sin abrir cada una.
+
+**Atributos usados**, todos del espacio `langfuse.*`: `trace.name`,
+`trace.input`, `trace.output`, `trace.tags`, `trace.metadata.*`, `session.id`,
+`environment`, `observation.type`, `observation.input`, `observation.output`,
+`observation.metadata.*`, `observation.level`, `observation.status_message`,
+`observation.model.name`, `observation.usage_details`,
+`observation.cost_details`.
 
 **Dónde se toca el código.** En un solo sitio: la función `registrar()` de
 `scripts/eventos.py`, que llama a `observabilidad.exportar(ev)` después de
 escribir la línea en disco. Ninguna skill, ningún subagente y ningún otro
-script participan. Esa es toda la razón por la que existe la regla de que nadie
-escribe `events.jsonl` directamente.
+script participan.
 
 ```python
 def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dict:
@@ -2919,10 +2945,18 @@ def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dic
 
 **Por qué los identificadores son deterministas.** Cada evento del pipeline es
 una invocación separada de `python scripts/eventos.py`: un proceso nuevo, sin
-memoria del anterior. Para que los spans aniden, el id de cada uno se deriva de
-sus campos (`<traza>--cap-02--int-3`) en vez de guardarse en memoria. La API de
-ingesta hace *upsert* por id, así que el orden de llegada da igual y
-reejecutar el envío actualiza en lugar de duplicar.
+memoria del anterior. El id de traza (32 hex) y el de cada span (16 hex) se
+derivan por hash de una clave legible (`nov-MyStory1-20260918-0056--cap-02--int-3`),
+de modo que el mismo capítulo produce el mismo span desde cualquier proceso.
+
+Es también la razón de no usar el SDK oficial: no permite fijar el id de un
+span, así que con un proceso por evento el árbol no anidaría.
+
+**Por qué se reconstruye el árbol entero en cada envío.** Un span de OTLP viaja
+completo, con su inicio y su fin, y no se actualiza después. Como el inicio de
+una fase y su fin ocurren en procesos distintos, el exportador relee el
+histórico y manda el árbol completo. Con decenas de eventos es gratis, y a
+cambio la traza queda coherente aunque se haya perdido un envío anterior.
 
 **Garantías, en orden de importancia:**
 
@@ -2936,22 +2970,24 @@ reejecutar el envío actualiza en lugar de duplicar.
    nunca la URL, ni las cabeceras, ni el cuerpo.
 4. El vaciado va en un `atexit`: sin él se perderían las últimas trazas, porque
    el proceso de un evento dura milisegundos.
+5. Los envíos se trocean por **tamaño real del JSON**, no por número de
+   elementos: la API rechaza cuerpos por encima de 1 MB.
 
 **Configuración**, en `config.json`:
 
 ```json
 "observabilidad": {
-  "langfuse": { "activo": null, "enviar_texto": true }
+  "langfuse": { "activo": null, "enviar_texto": true, "entorno": "default" }
 }
 ```
 
 `activo: null` significa "enciéndete si están las tres variables de entorno".
-`enviar_texto: false` manda métricas y metadatos pero ningún texto de prosa ni
-de prompt.
+`enviar_texto: false` manda métricas y metadatos pero ningún texto. `entorno`
+separa las tiradas de prueba de las buenas en el panel.
 
-**Sin dependencias.** El transporte es la API de ingesta por HTTP con `urllib`.
-`requirements-opcional.txt` existe para quien quiera el SDK oficial, y el
-sistema no lo usa.
+**Sin dependencias.** OTLP se habla en JSON con `urllib`, así que no hacen
+falta ni el SDK ni protobuf. `requirements-opcional.txt` existe para quien
+quiera el SDK oficial, y el sistema no lo usa.
 
 ### 14.5 El evento `invocacion` y el coste
 
@@ -2979,7 +3015,8 @@ Forma de `datos`:
 }
 ```
 
-Los cuatro contadores viajan **separados** a `usageDetails`. Es lo que permite
+Los cuatro contadores viajan **separados** en el atributo
+`langfuse.observation.usage_details`. Es lo que permite
 distinguir el trabajo real del contexto que se recarga: en una tirada normal
 los tokens de lectura de caché son mayoría abrumadora, porque son el canon y el
 estado releídos una y otra vez.
@@ -2987,7 +3024,11 @@ estado releídos una y otra vez.
 **El coste no se calcula aquí.** No hay tabla de tarifas en el repositorio. Se
 envían el modelo y el desglose, y Langfuse aplica su propia tarifa, que
 distingue caché barata de tokens nuevos. Si `total_cost_usd` viene informado,
-se manda como `costDetails.total` y manda sobre el cálculo.
+se manda en `langfuse.observation.cost_details` y manda sobre el cálculo.
+
+`datos.id_agente` agrupa las llamadas de una misma ejecución de subagente bajo
+una sola observación de tipo `agent`. En la retroalimentación sale del
+`toolUseId` que Claude Code guarda en el `.meta.json` del subagente.
 
 ### 14.6 Dónde encajaría un servidor MCP
 
