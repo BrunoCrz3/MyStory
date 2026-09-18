@@ -23,5 +23,11 @@
   "eventos": {
     "activo": true,
     "fichero": "novela/events.jsonl"
+  },
+  "observabilidad": {
+    "langfuse": {
+      "activo": null,
+      "enviar_texto": true
+    }
   }
 }

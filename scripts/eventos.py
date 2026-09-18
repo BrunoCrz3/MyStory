@@ -2,10 +2,12 @@
 novela/events.jsonl.
 
 Ningun otro script y ninguna otra herramienta escribe ese fichero. Esa regla es
-lo que permite enchufar Langfuse mas adelante tocando un solo sitio: la funcion
-registrar() de este fichero. Ver SPEC secciones 14.4 y 14.5.
+lo que permite que Langfuse se enchufe en un solo sitio: la funcion registrar()
+de este fichero. Ver SPEC secciones 14.4 y 14.6.
 
-Python 3.12, solo biblioteca estandar. Sin red, sin variables de entorno.
+Python 3.12, solo biblioteca estandar. Este fichero no habla por red ni lee
+variables de entorno: delega las dos cosas en scripts/observabilidad.py, que es
+el unico modulo del sistema que hace ambas, y cuyo fallo nunca se propaga.
 """
 
 import argparse
@@ -13,12 +15,16 @@ import json
 from datetime import datetime, timezone
 
 import nucleo
+import observabilidad
 
 ESQUEMA = 1
 
 EVENTOS = [
     "fase_inicio", "fase_fin", "capitulo_inicio", "borrador", "validacion",
     "reescritura", "parche", "capitulo_fin", "escalado", "commit",
+    # 'invocacion' registra UNA llamada a modelo con su desglose de tokens.
+    # Es el unico evento que produce una 'generation' en Langfuse. Ver SPEC 14.6.
+    "invocacion",
 ]
 
 FASES = ["canon", "escaleta", "redaccion", "revision", "entrega"]
@@ -93,12 +99,17 @@ def _escribir_linea(cfg: dict, ev: dict) -> None:
 def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dict:
     """Construye el evento, lo escribe como una linea JSON y lo devuelve.
 
-    PUNTO DE EXTENSION: aqui, y solo aqui, se anadira el envio a Langfuse.
+    PUNTO DE EXTENSION UNICO: el envio a Langfuse entra aqui y solo aqui.
+
+    El orden importa. Primero se escribe en disco, que es la fuente de verdad, y
+    solo despues se intenta exportar. observabilidad.exportar() no lanza nunca:
+    si Langfuse esta caido, si no hay red o si faltan las variables de entorno,
+    devuelve False, lo anota en novela/langfuse.log y la generacion sigue.
     """
     cfg = nucleo.cargar_config()
     ev = _construir(cfg, evento, fase, capitulo, intento, datos)
-    _escribir_linea(cfg, ev)          # v1: esto es todo
-    # _exportar(ev)                   # v2: aqui, y solo aqui, entra Langfuse
+    _escribir_linea(cfg, ev)          # fuente de verdad: siempre, y primero
+    observabilidad.exportar(ev)       # destino adicional: nunca obligatorio
     return ev
 
 

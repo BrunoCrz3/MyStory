@@ -7,3 +7,6 @@ Thumbs.db
 .env
 *.env
 !.env.example
+
+# Log local de fallos de envio a Langfuse: diagnostico, no fuente de verdad.
+novela/langfuse.log

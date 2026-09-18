@@ -28,7 +28,8 @@ AGENTES = ["arquitecto", "escaletista", "escritor", "continuista",
 SKILLS = ["escribir-capitulo", "validar-capitulo", "bitacora"]
 COMANDOS = ["nueva-novela", "escribir", "estado", "entregar"]
 SCRIPTS = ["nucleo", "eventos", "medir", "repeticion", "continuidad",
-           "informes", "ensamblar", "verificar"]
+           "informes", "ensamblar", "verificar", "observabilidad",
+           "retroalimentar"]
 EJECUTABLES = [s for s in SCRIPTS if s != "nucleo"]
 
 INVENTARIO = (
@@ -56,6 +57,12 @@ PATRONES_PROHIBIDOS = [
     "os" + ".environ",
     "pip" + " install",
 ]
+
+# observabilidad.py es el UNICO script al que se le permite leer variables de
+# entorno, porque es el unico que habla con Langfuse y las credenciales solo
+# pueden venir de ahi. Sigue sujeto a todos los demas patrones: si alguna vez
+# contiene una clave literal o una dependencia externa, la comprobacion salta.
+EXENCIONES = {"observabilidad": {"os" + ".environ"}}
 
 CLAVES_ESTADO = ["aperturas", "capitulos_escritos", "cierres", "entidades",
                  "frases_usadas", "hechos", "hilos", "resumenes", "tirada"]
@@ -205,8 +212,9 @@ def comprobar_dependencias():
         if not ruta.exists():
             continue
         texto = ruta.read_text(encoding="utf-8")
+        permitidos = EXENCIONES.get(nombre, set())
         for patron in PATRONES_PROHIBIDOS:
-            if patron in texto:
+            if patron in texto and patron not in permitidos:
                 hallazgos.append(f"{nombre}.py contiene '{patron}'")
     anota(not hallazgos,
           "scripts sin dependencias externas ni claves" if not hallazgos
