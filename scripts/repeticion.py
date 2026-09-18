@@ -107,7 +107,11 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
             por_mil = round(veces * 1000 / total_palabras, 1)
             if muletilla_max is None:
                 muletilla_max = {"palabra": palabra, "por_mil": por_mil}
-            if por_mil > umbral_muletilla:
+            # Una muletilla es un tic por repeticion: con una sola aparicion
+            # no lo es, por mucho que la frecuencia por mil supere el umbral.
+            # Sin esta condicion, un capitulo de entre 200 y 333 palabras
+            # marcaria como muletilla cada palabra de contenido que contiene.
+            if veces >= 2 and por_mil > umbral_muletilla:
                 incidencias.append({
                     "severidad": "menor", "tipo": "muletilla",
                     "detalle": (f"'{palabra}' aparece {veces} veces "
