@@ -1,0 +1,23 @@
+{
+  "comentario": [
+    "Premisas de evaluacion del ciclo de mejora. No tienen nada que ver con la",
+    "novela que el autor este escribiendo: existen solo para que dos tiradas",
+    "sean comparables entre si.",
+    "",
+    "'ajuste' es SIEMPRE la misma en todas las iteraciones. Si cambiara, la",
+    "metrica dejaria de medir el prompt y pasaria a medir la premisa.",
+    "",
+    "'confirmacion' son dos premisas que el ciclo NO usa mientras ajusta. Solo",
+    "se gastan al final, para comprobar que la mejora no era sobreajuste a la",
+    "premisa de ajuste. Si se usaran antes, dejarian de servir para eso.",
+    "",
+    "Ninguna de las tres repite el tema de las novelas ya escritas (memoria",
+    "almacenada fuera del cuerpo, archivos que cobran recuerdos): una premisa",
+    "parecida traeria prosa parecida y ensuciaria la comparacion."
+  ],
+  "ajuste": "En una estacion ballenera del Atlantico donde el hielo se vende por horas de silencio, un afinador de boyas descubre que una de las suyas lleva dos inviernos repitiendo una senal que nadie emitio.",
+  "confirmacion": [
+    "En una ciudad que se reconstruye cada primavera con los escombros de la anterior, una aparejadora encuentra en un muro nuevo una puerta que ya estaba en el muro de hace veinte anos.",
+    "En un tren de mercancias que no para nunca porque parar le costaria la concesion, la maquinista recibe la orden de recoger un vagon que no figura en ningun manifiesto y que pesa mas cada dia."
+  ]
+}
