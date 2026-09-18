@@ -11,6 +11,8 @@ Codigos de salida: 0 limpio; 1 hay mayores o menores; 3 error de ejecucion.
 """
 
 import argparse
+import re
+import statistics
 from collections import Counter
 
 import nucleo
@@ -18,6 +20,14 @@ import nucleo
 MINIMO_PALABRAS_MULETILLA = 200
 VENTANA_BORDES = 6
 COINCIDENCIAS_BORDE = 4
+
+# Monotonia sintactica (SPEC 12.8). Marcas con las que puede abrir una linea de
+# dialogo: todas cuentan como la misma forma de apertura.
+MARCAS_DIALOGO = ('"', "«", "—", "–", "-", "“")
+
+# Un corte de frase es un punto, interrogacion, exclamacion o puntos
+# suspensivos seguidos de espacio. Una linea puede llevar varias frases.
+_CORTE_FRASE = re.compile(r"(?<=[.?!…])\s+")
 
 
 def _tokens(n: int) -> list:
@@ -48,6 +58,91 @@ def _tipo_apertura(n: int, estado: dict) -> str:
             if clave and inicio.startswith(clave):
                 return "accion"
     return "descripcion_ambiente"
+
+
+def frases_de(lineas: list) -> list:
+    """Parte las lineas en frases. Una linea puede llevar mas de una."""
+    sueltas = []
+    for linea in lineas:
+        for trozo in _CORTE_FRASE.split(linea):
+            trozo = trozo.strip()
+            if trozo:
+                sueltas.append(trozo)
+    return sueltas
+
+
+def _forma_de_apertura(linea: str) -> str:
+    """Con que forma abre una linea.
+
+    Tres clases, y ninguna necesita analisis gramatical: `dialogo` si abre con
+    una marca de dialogo; la propia palabra si la primera es funcional (el, la,
+    en, cuando...), porque ahi la forma ES la palabra; y `contenido` si abre con
+    cualquier palabra con significado, que es como abren todas las frases que
+    empiezan por el nombre del personaje o por el verbo.
+    """
+    if linea[:1] in MARCAS_DIALOGO:
+        return "dialogo"
+    palabras = nucleo.normalizar(linea).split()
+    if not palabras:
+        return "vacia"
+    return palabras[0] if palabras[0] in nucleo.vacias() else "contenido"
+
+
+def monotonia_sintactica(lineas: list) -> dict:
+    """Cuanto se parecen entre si las frases POR SU FORMA, no por sus palabras.
+
+    0 es maxima variedad y 1 maxima monotonia. Es la media de tres componentes,
+    que se devuelven siempre por separado porque una mejora que venga de uno
+    solo no es una mejora del ritmo:
+
+      apertura     Cuanto pesa la forma de apertura mas repetida. 0 si todas
+                   las lineas abren distinto, 1 si todas abren igual.
+      puntuacion   Lineas con punto y coma o con raya intercalada, sobre el
+                   total. La raya inicial no cuenta: eso es dialogo, no un
+                   inciso, y penalizarla empujaria a escribir sin dialogo.
+      uniformidad  1 menos el coeficiente de variacion de la longitud de las
+                   frases, recortado a [0, 1]. Todas las frases igual de largas
+                   da 1; una mezcla de frases cortas y largas se acerca a 0.
+
+    Funcion pura sobre una lista de lineas: no lee disco ni el estado. Asi la
+    misma cuenta sirve para un capitulo en curso y para una novela archivada.
+    No dispara incidencias nunca. Ver SPEC seccion 12.8.
+    """
+    total = len(lineas)
+    if not total:
+        return {"monotonia_sintactica": 0.0, "frases": 0,
+                "componentes": {"apertura": 0.0, "puntuacion": 0.0,
+                                "uniformidad": 0.0}}
+
+    formas = [_forma_de_apertura(linea) for linea in lineas]
+    repetida = max(formas.count(f) for f in set(formas))
+    apertura = round((repetida - 1) / (total - 1), 4) if total > 1 else 0.0
+
+    marcadas = 0
+    for linea in lineas:
+        inciso = ("—" in linea[1:] or "–" in linea[1:]) and                  linea[:1] not in ("—", "–")
+        if ";" in linea or inciso:
+            marcadas += 1
+    puntuacion = round(marcadas / total, 4)
+
+    largos = [len(nucleo.palabras(f)) for f in frases_de(lineas)]
+    largos = [x for x in largos if x]
+    media = statistics.fmean(largos) if largos else 0.0
+    if len(largos) > 1 and media:
+        variacion = statistics.pstdev(largos) / media
+        uniformidad = round(max(0.0, 1.0 - min(1.0, variacion)), 4)
+    else:
+        # Con una sola frase no hay dispersion que medir, y decir que es
+        # perfectamente uniforme seria inventarse un dato.
+        uniformidad = 0.0
+
+    return {
+        "monotonia_sintactica": round(
+            (apertura + puntuacion + uniformidad) / 3, 4),
+        "frases": len(largos),
+        "componentes": {"apertura": apertura, "puntuacion": puntuacion,
+                        "uniformidad": uniformidad},
+    }
 
 
 def _coincidencias_en_orden(a: list, b: list) -> int:
@@ -169,6 +264,8 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
     posiciones = max(len(tokens) - tam_ngrama + 1, 0)
     diversidad = round(len(propios) / posiciones, 4) if posiciones else 0.0
 
+    sintactica = monotonia_sintactica(nucleo.lineas_capitulo(n))
+
     mono_apertura = round(len(previas) / len(anteriores), 4) if anteriores else 0.0
     por_mil_max = (muletilla_max or {}).get("por_mil") or 0.0
     mono_muletillas = (round(min(1.0, por_mil_max / umbral_muletilla), 4)
@@ -202,6 +299,9 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
                 "muletillas": mono_muletillas,
                 "reciclaje": mono_reciclaje,
             },
+            "monotonia_sintactica": sintactica["monotonia_sintactica"],
+            "monotonia_sintactica_componentes": sintactica["componentes"],
+            "frases": sintactica["frases"],
         },
         "incidencias": incidencias,
         "resumen": resumen,
