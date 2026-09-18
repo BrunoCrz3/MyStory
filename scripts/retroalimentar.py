@@ -63,7 +63,8 @@ def carpeta_transcripts(ruta: str = None):
     return None
 
 
-def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str) -> list:
+def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str,
+                     id_agente: str) -> list:
     """Una entrada por mensaje del modelo con uso declarado.
 
     Se emite una generacion por llamada real, no una por subagente: es lo que
@@ -92,6 +93,7 @@ def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str) -> list:
             "ts": fila.get("timestamp"),
             "rol": rol,
             "descripcion": descripcion,
+            "id_agente": id_agente,
             "model": mensaje.get("model"),
             "session_id": fila.get("sessionId"),
             "id_generacion": fila.get("requestId") or fila.get("uuid"),
@@ -128,7 +130,10 @@ def leer_invocaciones(carpeta: pathlib.Path) -> list:
         invocaciones.extend(_invocaciones_de(
             transcript,
             datos.get("agentType") or "modelo",
-            datos.get("description") or ""))
+            datos.get("description") or "",
+            # toolUseId identifica UNA ejecucion del subagente: es lo que
+            # agrupa sus llamadas bajo una sola observacion de tipo 'agent'.
+            datos.get("toolUseId") or meta.stem))
     return sorted(invocaciones, key=lambda i: i["ts"] or "")
 
 
@@ -186,22 +191,43 @@ def _situar(linea: list, invocacion: dict) -> dict:
     return contexto
 
 
-def _intento_siguiente(eventos: list, capitulo, marca: str):
-    """Numero del proximo intento de ese capitulo a partir de esa hora.
+def _intento_real(eventos: list, capitulo, marca: str, vigente):
+    """Intento al que pertenece de verdad una invocacion de ese capitulo.
 
-    El escritor produce el borrador ANTES de que se registre el evento
-    'borrador': sus llamadas caen en el hueco entre capitulo_inicio y el
-    intento que ellas mismas generan. Mirar hacia delante las devuelve al
-    intento al que de verdad pertenecen, que es lo que permite ver de un
-    vistazo cuantas reescrituras necesito cada capitulo.
+    El trabajo del modelo precede al evento que lo anota: el escritor produce
+    el borrador ANTES de que se registre 'borrador', asi que por hora cae en
+    el intento anterior o en ninguno. La regla es:
+
+      - si aun no hay intento abierto, es del proximo que se abra;
+      - si el intento vigente YA se valido y despues hay otro intento, la
+        invocacion pertenece a ese siguiente, no al ya cerrado;
+      - si no hay ninguno despues, se queda en el vigente. Ahi caen el
+        estilista y el archivista, que trabajan tras la ultima validacion.
+
+    Sin esto, las reescrituras se contabilizan en el intento equivocado y el
+    panel miente sobre cuantas pasadas costo cada capitulo.
     """
-    candidatos = [e for e in eventos
+    marca = marca or ""
+    del_capitulo = [e for e in eventos if e.get("capitulo") == capitulo]
+    posteriores = sorted(
+        (e for e in del_capitulo
+         if e.get("evento") in ob.EVENTOS_DE_INTENTO and (e.get("ts") or "") > marca),
+        key=lambda e: e.get("ts") or "")
+
+    if vigente is None:
+        return posteriores[0].get("intento") if posteriores else None
+
+    abierto = max((e.get("ts") or "") for e in del_capitulo
                   if e.get("evento") in ob.EVENTOS_DE_INTENTO
-                  and e.get("capitulo") == capitulo
-                  and (e.get("ts") or "") >= (marca or "")]
-    if not candidatos:
-        return None
-    return min(candidatos, key=lambda e: e.get("ts") or "").get("intento")
+                  and e.get("intento") == vigente
+                  and (e.get("ts") or "") <= marca)
+    ya_validado = any(e.get("evento") == "validacion"
+                      and e.get("intento") == vigente
+                      and abierto <= (e.get("ts") or "") <= marca
+                      for e in del_capitulo)
+    if ya_validado and posteriores:
+        return posteriores[0].get("intento")
+    return vigente
 
 
 def eventos_de_invocacion(eventos: list, invocaciones: list) -> list:
@@ -212,10 +238,10 @@ def eventos_de_invocacion(eventos: list, invocaciones: list) -> list:
         contexto = _situar(linea, inv)
         if not contexto.get("tirada"):
             continue
-        if (contexto.get("capitulo") is not None
-                and contexto.get("intento") is None):
-            contexto["intento"] = _intento_siguiente(
-                eventos, contexto["capitulo"], inv.get("ts"))
+        if contexto.get("capitulo") is not None:
+            contexto["intento"] = _intento_real(
+                eventos, contexto["capitulo"], inv.get("ts"),
+                contexto.get("intento"))
         salida.append({
             "ts": inv["ts"],
             "tirada": contexto["tirada"],
@@ -225,6 +251,8 @@ def eventos_de_invocacion(eventos: list, invocaciones: list) -> list:
             "intento": contexto.get("intento"),
             "datos": {
                 "rol": inv["rol"],
+                "descripcion": inv["descripcion"],
+                "id_agente": inv["id_agente"],
                 "model": inv["model"],
                 "session_id": inv["session_id"],
                 "id_generacion": inv["id_generacion"],
@@ -350,29 +378,21 @@ def main():
     completos = sorted(eventos + generaciones + sinteticos,
                        key=lambda e: e.get("ts") or "")
     texto_ok = ob.enviar_texto(cfg)
-    lote = []
-    for ev in completos:
-        lote.extend(ob.construir(cfg, ev, completos, texto_ok))
-
-    # Cada evento reafirma la traza de su tirada, asi que en una subida masiva
-    # salen cientos de trace-create identicos. El id de un item es el hash de su
-    # cuerpo, de modo que quedarse con el primero de cada id no pierde nada y
-    # recorta el envio a una fraccion.
-    vistos = set()
-    unicos = []
-    for item in lote:
-        if item["id"] in vistos:
-            continue
-        vistos.add(item["id"])
-        unicos.append(item)
-    lote = unicos
+    # El arbol se construye por tirada: cada una es una traza distinta.
+    spans, scores = [], []
+    for tirada in sorted({e.get("tirada") for e in completos if e.get("tirada")}):
+        de_esta = [e for e in completos if e.get("tirada") == tirada]
+        spans.extend(ob.construir_spans(cfg, de_esta, texto_ok))
+        scores.extend(ob.construir_scores(cfg, de_esta))
 
     informe = _resumen(eventos, generaciones)
     informe.update({
         "script": "retroalimentar",
         "metricas_recalculadas": len(sinteticos),
-        "items_de_ingesta": len(lote),
-        "trazas": sorted({ob.id_traza(cfg, e.get("tirada")) for e in completos}),
+        "spans": len(spans),
+        "scores": len(scores),
+        "trazas": sorted({ob.clave_traza(cfg, e.get("tirada"))
+                          for e in completos if e.get("tirada")}),
     })
     if aviso:
         informe["aviso"] = aviso
@@ -389,23 +409,14 @@ def main():
         informe["variables_ausentes"] = diagnostico["variables_ausentes"]
         nucleo.salir(informe, 3)
 
-    # Se envia por tandas: un lote unico de miles de items es fragil y la API
-    # lo rechazaria por tamano.
-    enviados = 0
-    fallidos = 0
-    for inicio in range(0, len(lote), 100):
-        ob.encolar(lote[inicio:inicio + 100])
-        if ob.flush():
-            enviados += len(lote[inicio:inicio + 100])
-        else:
-            fallidos += len(lote[inicio:inicio + 100])
+    # El troceo por tamano lo hace el propio exportador en flush().
+    ob.encolar(spans, scores)
+    correcto = ob.flush()
 
-    informe["enviado"] = fallidos == 0
-    informe["items_enviados"] = enviados
-    informe["items_fallidos"] = fallidos
-    informe["detalle"] = ("todo enviado" if not fallidos else
+    informe["enviado"] = correcto
+    informe["detalle"] = ("todo enviado" if correcto else
                           "envio incompleto: ver novela/langfuse.log")
-    nucleo.salir(informe, 0 if not fallidos else 3)
+    nucleo.salir(informe, 0 if correcto else 3)
 
 
 if __name__ == "__main__":

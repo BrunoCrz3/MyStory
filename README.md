@@ -33,6 +33,13 @@ Langfuse es un destino añadido. Si se cae, si no hay red o si faltan las
 claves, la novela se genera igual: el fallo se anota en `novela/langfuse.log`
 y el proceso continúa.
 
+**Cómo viaja.** Las trazas y observaciones van por **OpenTelemetry** a
+`/api/public/otel/v1/traces`, en OTLP/HTTP con JSON. Los scores van aparte,
+por `/api/public/ingestion`. Están separados por una razón concreta: la API de
+ingesta se apaga en Langfuse Cloud el **16 de noviembre de 2026** para todo
+menos los scores, que se siguen aceptando por ahí. OTLP es el camino que la
+documentación señala para instrumentación propia como esta.
+
 ## Cómo se enciende
 
 Tres variables de entorno del usuario en Windows:
@@ -70,28 +77,41 @@ En `config.json`:
 - `enviar_texto`: con `false` viajan las métricas y los metadatos, pero **no**
   el texto de la prosa ni el de los prompts. Sirve para medir sin publicar el
   contenido.
+- `entorno`: separa las tiradas de prueba de las buenas. Ponlo a `production`
+  cuando escribas en serio y a `development` mientras trasteas; en el panel se
+  filtran por separado y no se mezclan las estadísticas.
 
 ## La forma del panel
 
 Lo que verás no es una lista plana de llamadas, sino el flujo de la novela:
 
 ```
-TRAZA  MyStory1                        una por tirada
- ├── canon                             fase
- │    └── 4 generaciones (arquitecto)
- ├── escaleta
- │    └── 15 generaciones (escaletista)
- ├── redaccion
- │    ├── capitulo 01                  aquí cuelgan los scores
- │    │    ├── intento 1 (borrador)
- │    │    │    └── generaciones: escritor, continuista
- │    │    └── intento 2 (parche)
- │    │         └── generaciones: estilista, archivista
- │    ├── capitulo 02
- │    └── capitulo 03
- ├── revision
- └── ensamblado
+TRAZA  MyStory1                          una por tirada
+ ├── [span]  canon
+ │    └── [agent] arquitecto             el subagente, como nodo propio
+ │           └── 8 generation            sus llamadas al modelo
+ ├── [span]  escaleta
+ │    └── [agent] escaletista
+ ├── [span]  redaccion
+ │    ├── [span] capitulo 01             aquí cuelgan los scores
+ │    │    ├── [span] intento 1 (borrador)
+ │    │    │    ├── [agent] escritor
+ │    │    │    ├── [agent] continuista
+ │    │    │    └── [evaluator] validacion
+ │    │    └── [span] intento 2 (parche)
+ │    │         ├── [agent] estilista
+ │    │         └── [agent] archivista
+ │    ├── [span] capitulo 02
+ │    └── [span] capitulo 03
+ ├── [event] commit
+ ├── [span]  revision
+ └── [span]  ensamblado
 ```
+
+**Cada subagente es una observación de tipo `agent`**, no un span genérico. Eso
+le da nodo propio en el grafo de agentes de Langfuse y permite ver de quién
+son las llamadas sin abrir cada una. Las validaciones son de tipo `evaluator`,
+porque eso es lo que hacen: juzgar la calidad de un capítulo.
 
 **Cómo se lee de un vistazo.** Un capítulo con tres intentos necesitó dos
 correcciones; uno con un solo intento salió a la primera. Es la señal más
@@ -186,5 +206,10 @@ veces actualiza en vez de duplicar. No escribe en `events.jsonl`.
 
 ## Dependencias
 
-Ninguna. El envío usa `urllib` de la biblioteca estándar. `requirements-opcional.txt`
-solo hace falta si quieres el SDK oficial para consultar el panel desde Python.
+Ninguna. El envío usa `urllib` de la biblioteca estándar, y OTLP se habla en
+JSON, así que no hace falta ni el SDK ni protobuf. `requirements-opcional.txt`
+solo sirve si quieres el SDK oficial para consultar el panel desde Python.
+
+El SDK no se usa para exportar por un motivo técnico: no permite fijar el
+identificador de un span, y aquí cada evento del pipeline es un proceso
+distinto. Sin identificadores deterministas, el árbol no anidaría.

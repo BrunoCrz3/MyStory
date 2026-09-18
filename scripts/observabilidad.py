@@ -1,8 +1,16 @@
 """Exportador a Langfuse: el unico sitio del sistema que habla por red.
 
-Se engancha en un solo punto, la funcion registrar() de scripts/eventos.py, tal
-como anticipa SPEC seccion 14.4. Ningun subagente, ninguna skill y ningun otro
-script lo invoca.
+Se engancha en un solo punto, la funcion registrar() de scripts/eventos.py.
+Ningun subagente, ninguna skill y ningun otro script lo invoca.
+
+TRANSPORTE. Las trazas y las observaciones van por OpenTelemetry a
+`POST /api/public/otel/v1/traces`, en OTLP/HTTP con codificacion JSON. Los
+scores van aparte, por `POST /api/public/ingestion` con eventos `score-create`.
+
+Por que estan separados: la API de ingesta v3 se apaga en Langfuse Cloud el 16
+de noviembre de 2026 para todo MENOS los scores, que siguen aceptandose por esa
+via. Para trazas y observaciones, la documentacion senala OTLP como el camino de
+la instrumentacion propia. Ver SPEC seccion 14.4.
 
 Reglas que este modulo cumple sin excepcion:
 
@@ -13,14 +21,18 @@ Reglas que este modulo cumple sin excepcion:
   3. Las credenciales salen solo de variables de entorno del sistema y NUNCA se
      escriben en ningun sitio: ni en el log, ni en un error, ni en un
      diagnostico. Si falta alguna se dice cual por su nombre, sin su valor.
-  4. Sin dependencias. El transporte es la API de ingesta de Langfuse por HTTP,
-     con urllib de la biblioteca estandar.
+  4. Sin dependencias. Todo con urllib de la biblioteca estandar.
 
-Por que ids deterministas: cada evento del pipeline es una invocacion separada
-de `python scripts/eventos.py`, un proceso nuevo sin memoria del anterior. Para
-que los spans aniden (novela > fase > capitulo > intento > generacion) el id de
-cada uno se deriva de sus campos, no de un contador en memoria. La API de
-ingesta hace upsert por id, asi que el orden de llegada no importa.
+IDS DETERMINISTAS. Cada evento del pipeline es una invocacion separada de
+`python scripts/eventos.py`: un proceso nuevo, sin memoria del anterior. Para
+que el arbol anide, el id de traza (32 hex) y el de cada span (16 hex) se
+derivan por hash de una clave legible, no de un contador en memoria. Asi el
+mismo capitulo produce el mismo span id desde cualquier proceso.
+
+Un span de OTLP viaja entero, con su inicio y su fin: no hay "update". Por eso
+el arbol se reconstruye completo desde el historico en cada envio, en lugar de
+mandar trozos sueltos. Con decenas de eventos es gratis, y a cambio la traza
+esta siempre completa aunque se haya perdido un envio anterior.
 
 Python 3.12, solo biblioteca estandar.
 """
@@ -40,15 +52,21 @@ import nucleo
 VARIABLES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_BASE_URL")
 
 TIEMPO_MAXIMO = 8          # segundos por envio: no bloquear la generacion
-# La API de ingesta rechaza lotes por encima de 1 MB (413). Se deja margen.
-MAX_LOTE_BYTES = 900_000
+MAX_LOTE_BYTES = 900_000   # la API rechaza cuerpos por encima de 1 MB
 RUTA_LOG = "novela/langfuse.log"
 MAX_TEXTO = 20000          # tope del manuscrito que viaja como salida
 
-# Eventos que abren un intento dentro de un capitulo.
+RUTA_OTLP = "/api/public/otel/v1/traces"
+RUTA_SCORES = "/api/public/ingestion"
+
 EVENTOS_DE_INTENTO = ("borrador", "reescritura", "parche")
 
-_pendientes = []
+# La fase se llama 'entrega' en el pipeline y 'ensamblado' en el panel.
+NOMBRES_FASE = {"canon": "canon", "escaleta": "escaleta",
+                "redaccion": "redaccion", "revision": "revision",
+                "entrega": "ensamblado"}
+
+_pendientes = {"spans": [], "scores": []}
 _registrado_atexit = False
 
 
@@ -74,18 +92,12 @@ def _conf(cfg: dict) -> dict:
 
 
 def activo(cfg: dict, cred: dict = None) -> bool:
-    """Por defecto activo si las tres variables estan; inactivo si no.
-
-    Una clave explicita observabilidad.langfuse.activo manda sobre el defecto,
-    pero sin credenciales no se puede enviar nada aunque se pida.
-    """
+    """Por defecto activo si las tres variables estan; inactivo si no."""
     cred = cred or _credenciales()
     if cred["faltan"]:
         return False
     valor = _conf(cfg).get("activo")
-    if valor is None:
-        return True
-    return bool(valor)
+    return True if valor is None else bool(valor)
 
 
 def entorno(cfg: dict) -> str:
@@ -108,12 +120,12 @@ def diagnostico() -> dict:
     if encendido:
         detalle = "listo para enviar"
     elif cred["faltan"]:
-        detalle = ("faltan variables de entorno: "
-                   + ", ".join(cred["faltan"]))
+        detalle = "faltan variables de entorno: " + ", ".join(cred["faltan"])
     else:
         detalle = "observabilidad.langfuse.activo es false"
     return {
         "script": "observabilidad",
+        "transporte": "OTLP/HTTP JSON para trazas; score-create para scores",
         "variables_presentes": [v for v in VARIABLES if v not in cred["faltan"]],
         "variables_ausentes": cred["faltan"],
         "activo": encendido,
@@ -139,58 +151,110 @@ def _anotar(mensaje: str) -> None:
 
 
 def _motivo(exc: Exception) -> str:
-    """Descripcion de un fallo sin URL, sin cabeceras y sin cuerpo.
-
-    Se limita al tipo y, si es HTTP, al codigo. Asi es imposible que una clave
-    o un host acaben en el log por la via de un mensaje de excepcion.
-    """
+    """Tipo del fallo y, si es HTTP, su codigo. Nunca la URL ni el cuerpo."""
     if isinstance(exc, urllib.error.HTTPError):
         return f"HTTPError {exc.code}"
     return type(exc).__name__
 
 
 # --------------------------------------------------------------------------
-# Identificadores deterministas
+# Identificadores y tiempos
 # --------------------------------------------------------------------------
 
 def _limpio(texto: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "-", str(texto)).strip("-") or "x"
 
 
-def _corto(texto: str) -> str:
-    return hashlib.sha1(str(texto).encode("utf-8")).hexdigest()[:16]
+def _hex(clave: str, digitos: int) -> str:
+    """Id hexadecimal estable derivado de una clave legible.
+
+    OTLP exige 32 hex para la traza y 16 para el span. El hash da el mismo
+    resultado en cualquier proceso, que es lo que permite anidar sin estado.
+    """
+    return hashlib.sha1(str(clave).encode("utf-8")).hexdigest()[:digitos]
 
 
-def id_traza(cfg: dict, tirada: str) -> str:
+def clave_traza(cfg: dict, tirada: str) -> str:
     return f"nov-{_limpio(cfg.get('proyecto', 'novela'))}-{_limpio(tirada)}"
 
 
-def _id_fase(traza: str, fase: str) -> str:
-    return f"{traza}--fase-{_limpio(fase)}"
+def id_traza(cfg: dict, tirada: str) -> str:
+    return _hex(clave_traza(cfg, tirada), 32)
 
 
-def _id_capitulo(traza: str, capitulo) -> str:
-    return f"{traza}--cap-{int(capitulo):02d}"
+def _id_span(clave: str) -> str:
+    return _hex(clave, 16)
 
 
-def _id_intento(traza: str, capitulo, intento) -> str:
-    return f"{_id_capitulo(traza, capitulo)}--int-{int(intento)}"
-
-
-def _padre(traza: str, ev: dict) -> str:
-    """Span al que cuelga un evento: intento > capitulo > fase > traza."""
-    cap, intento, fase = ev.get("capitulo"), ev.get("intento"), ev.get("fase")
-    if cap is not None and intento is not None:
-        return _id_intento(traza, cap, intento)
-    if cap is not None:
-        return _id_capitulo(traza, cap)
-    if fase:
-        return _id_fase(traza, fase)
-    return None
+def _nanos(marca: str) -> str:
+    """ISO-8601 con Z a nanosegundos unix, que es lo que pide OTLP."""
+    if not marca:
+        return "0"
+    try:
+        momento = datetime.fromisoformat(str(marca).replace("Z", "+00:00"))
+    except ValueError:
+        return "0"
+    if momento.tzinfo is None:
+        momento = momento.replace(tzinfo=timezone.utc)
+    return str(int(momento.timestamp() * 1_000_000_000))
 
 
 # --------------------------------------------------------------------------
-# Lectura del historico para los agregados de la traza
+# Atributos de OpenTelemetry
+# --------------------------------------------------------------------------
+
+def _valor(dato):
+    if isinstance(dato, bool):
+        return {"boolValue": dato}
+    if isinstance(dato, int):
+        return {"intValue": str(dato)}
+    if isinstance(dato, float):
+        return {"doubleValue": dato}
+    if isinstance(dato, (list, tuple)):
+        return {"arrayValue": {"values": [_valor(x) for x in dato]}}
+    return {"stringValue": str(dato)}
+
+
+def _atributos(pares: dict) -> list:
+    return [{"key": clave, "value": _valor(dato)}
+            for clave, dato in pares.items() if dato is not None]
+
+
+def _texto(dato) -> str:
+    """Los campos de entrada y salida viajan como texto en OTLP."""
+    if isinstance(dato, str):
+        return dato
+    return json.dumps(dato, ensure_ascii=False, default=str)
+
+
+def _span(traza: str, clave: str, nombre: str, tipo: str, inicio: str,
+          fin: str, padre: str = None, atributos: dict = None,
+          nivel: str = None, mensaje: str = None) -> dict:
+    """Un span de OTLP con los atributos del modelo de datos de Langfuse."""
+    attrs = {"langfuse.observation.type": tipo}
+    if nivel:
+        attrs["langfuse.observation.level"] = nivel
+    if mensaje:
+        attrs["langfuse.observation.status_message"] = mensaje
+    attrs.update(atributos or {})
+    span = {
+        "traceId": traza,
+        "spanId": _id_span(clave),
+        "name": nombre,
+        "kind": 1,
+        "startTimeUnixNano": _nanos(inicio),
+        "endTimeUnixNano": _nanos(fin or inicio),
+        "attributes": _atributos(attrs),
+        "status": {"code": 2, "message": mensaje} if nivel == "ERROR"
+                  else {"code": 1},
+    }
+    if padre:
+        span["parentSpanId"] = _id_span(padre)
+    return span
+
+
+# --------------------------------------------------------------------------
+# Lectura del historico
 # --------------------------------------------------------------------------
 
 def leer_eventos(cfg: dict, tirada: str = None) -> list:
@@ -213,12 +277,7 @@ def leer_eventos(cfg: dict, tirada: str = None) -> list:
 
 
 def _agregados(eventos: list) -> dict:
-    """Reescrituras, coste, duracion y modelos de una tirada completa.
-
-    Se recalcula leyendo el fichero entero en cada evento. Con decenas de lineas
-    es gratis, y a cambio la traza queda siempre coherente aunque un envio se
-    haya perdido por falta de red.
-    """
+    """Reescrituras, coste, duracion y modelos de una tirada completa."""
     reescrituras = sum(1 for e in eventos
                        if e.get("evento") in ("reescritura", "parche"))
     coste = 0.0
@@ -245,7 +304,8 @@ def _agregados(eventos: list) -> dict:
             duracion = None
     return {"reescrituras": reescrituras, "coste_usd": round(coste, 6),
             "modelos": modelos, "duracion_s": duracion,
-            "inicio": marcas[0] if marcas else None}
+            "inicio": marcas[0] if marcas else None,
+            "fin": marcas[-1] if marcas else None}
 
 
 def _version_prompt_escritor() -> str:
@@ -253,7 +313,7 @@ def _version_prompt_escritor() -> str:
     if not ruta.exists():
         return "ausente"
     try:
-        return _corto(ruta.read_text(encoding="utf-8"))[:8]
+        return _hex(ruta.read_text(encoding="utf-8"), 8)
     except OSError:
         return "ilegible"
 
@@ -279,8 +339,7 @@ def _manuscrito() -> str:
     capitulos = nucleo.capitulos_existentes()
     if capitulos:
         try:
-            primero = nucleo.ruta_capitulo(capitulos[0]).read_text(encoding="utf-8")
-            return (primero
+            return (nucleo.ruta_capitulo(capitulos[0]).read_text(encoding="utf-8")
                     + "\n\n[truncado: el manuscrito completo esta en manuscrito.md]")
         except OSError:
             pass
@@ -288,66 +347,265 @@ def _manuscrito() -> str:
 
 
 # --------------------------------------------------------------------------
-# Construccion del lote de ingesta
+# Construccion del arbol de spans
 # --------------------------------------------------------------------------
 
-def _item(tipo: str, cuerpo: dict, sello: str) -> dict:
-    semilla = json.dumps(cuerpo, sort_keys=True, default=str)
-    return {"id": _corto(tipo + semilla), "type": tipo,
-            "timestamp": sello, "body": cuerpo}
+def _claves(traza_legible: str):
+    """Fabricas de claves legibles. El hash las convierte en ids."""
+    return {
+        "raiz": f"{traza_legible}--raiz",
+        "fase": lambda f: f"{traza_legible}--fase-{_limpio(f)}",
+        "cap": lambda c: f"{traza_legible}--cap-{int(c):02d}",
+        "int": lambda c, i: f"{traza_legible}--cap-{int(c):02d}--int-{int(i)}",
+        "agente": lambda a: f"{traza_legible}--agente-{_limpio(a)}",
+    }
 
 
-def _traza(cfg: dict, ev: dict, eventos: list, texto_ok: bool) -> dict:
-    """La traza de la novela: una por tirada, agrupadas por session_id."""
-    traza = id_traza(cfg, ev.get("tirada"))
-    agr = _agregados(eventos)
-    cuerpo = {
-        "id": traza,
-        "name": cfg.get("proyecto") or "novela",
-        # session_id = identificador de la novela, no de la tirada: asi varias
-        # tiradas de la misma premisa quedan agrupadas y se pueden comparar.
-        "sessionId": _limpio(cfg.get("proyecto") or "novela"),
-        "timestamp": agr["inicio"] or ev.get("ts"),
-        "tags": [
+def _padre_de(k, capitulo, intento, fase):
+    if capitulo is not None and intento is not None:
+        return k["int"](capitulo, intento)
+    if capitulo is not None:
+        return k["cap"](capitulo)
+    if fase:
+        return k["fase"](fase)
+    return k["raiz"]
+
+
+def _tramos(eventos: list) -> dict:
+    """Inicio y fin de cada fase, capitulo e intento, leidos del historico."""
+    fases, caps, intentos = {}, {}, {}
+    ultimo = None
+    for ev in sorted(eventos, key=lambda e: e.get("ts") or ""):
+        tipo, ts = ev.get("evento"), ev.get("ts")
+        ultimo = ts or ultimo
+        fase, cap, it = ev.get("fase"), ev.get("capitulo"), ev.get("intento")
+        if tipo == "fase_inicio" and fase:
+            fases.setdefault(fase, {})["inicio"] = ts
+        elif tipo == "fase_fin" and fase:
+            fases.setdefault(fase, {})["fin"] = ts
+            fases[fase]["salida"] = ev.get("datos")
+        elif tipo == "capitulo_inicio" and cap is not None:
+            caps.setdefault(cap, {})["inicio"] = ts
+        elif tipo == "capitulo_fin" and cap is not None:
+            caps.setdefault(cap, {}).update(
+                {"fin": ts, "salida": ev.get("datos"), "intentos": it})
+        elif tipo in EVENTOS_DE_INTENTO and cap is not None:
+            clave = (cap, it or 1)
+            intentos.setdefault(clave, {}).update(
+                {"inicio": ts, "modo": tipo,
+                 "entrada": (ev.get("datos") or {}).get("incidencias")})
+            caps.setdefault(cap, {}).setdefault("inicio", ts)
+        elif tipo == "validacion" and cap is not None and it is not None:
+            intentos.setdefault((cap, it), {})["fin"] = ts
+    return {"fases": fases, "capitulos": caps, "intentos": intentos,
+            "ultimo": ultimo}
+
+
+def _raiz(cfg, traza, k, eventos, agr, texto_ok):
+    """El span raiz lleva los atributos de la traza: en OTLP no hay objeto
+    traza aparte, se infiere de aqui."""
+    entrada = {"capitulos": cfg.get("capitulos"),
+               "longitud": cfg.get("longitud")}
+    if texto_ok:
+        entrada["premisa"] = cfg.get("premisa")
+    tirada = next((e.get("tirada") for e in eventos if e.get("tirada")), None)
+    atributos = {
+        "langfuse.trace.name": cfg.get("proyecto") or "novela",
+        "langfuse.trace.input": _texto(entrada),
+        "langfuse.session.id": _limpio(cfg.get("proyecto") or "novela"),
+        "langfuse.environment": entorno(cfg),
+        "langfuse.trace.tags": [
             f"umbrales:{_perfil_umbrales(cfg)}",
             f"escritor:{_version_prompt_escritor()}",
-            f"tirada:{ev.get('tirada')}",
+            f"tirada:{tirada}",
         ] + [f"modelo:{m}" for m in agr["modelos"]],
-        "metadata": {
-            "tirada": ev.get("tirada"),
-            "config_efectiva": {k: cfg.get(k) for k in
-                                ("proyecto", "idioma", "capitulos", "longitud",
-                                 "validacion")},
-            "coste_total_usd": agr["coste_usd"],
-            "duracion_total_s": agr["duracion_s"],
-            "reescrituras_totales": agr["reescrituras"],
-        },
-        "input": {"capitulos": cfg.get("capitulos"),
-                  "longitud": cfg.get("longitud")},
-        "environment": entorno(cfg),
+        "langfuse.trace.metadata.tirada": tirada,
+        "langfuse.trace.metadata.config_efectiva": _texto(
+            {c: cfg.get(c) for c in ("proyecto", "idioma", "capitulos",
+                                     "longitud", "validacion")}),
+        "langfuse.trace.metadata.coste_total_usd": agr["coste_usd"],
+        "langfuse.trace.metadata.duracion_total_s": agr["duracion_s"],
+        "langfuse.trace.metadata.reescrituras_totales": agr["reescrituras"],
     }
     if texto_ok:
-        cuerpo["input"]["premisa"] = cfg.get("premisa")
         salida = _manuscrito()
         if salida:
-            cuerpo["output"] = salida
-    return cuerpo
+            atributos["langfuse.trace.output"] = salida
+    return _span(traza, k["raiz"], cfg.get("proyecto") or "novela", "span",
+                 agr["inicio"], agr["fin"], None, atributos)
 
 
-def _scores_validacion(traza: str, ev: dict) -> list:
-    """Todas las metricas del informe, dispare o no una incidencia, mas el
-    recuento por severidad. Cuelgan del span del CAPITULO, que es lo que
-    permite comparar una tirada con la siguiente."""
-    cap = ev.get("capitulo")
-    if cap is None:
-        return []
-    obs = _id_capitulo(traza, cap)
+def _agentes(eventos: list) -> dict:
+    """Agrupa las invocaciones por ejecucion de subagente.
+
+    Cada subagente es UNA observacion de tipo 'agent' con sus llamadas dentro,
+    no un span generico: es lo que le da nodo propio en el grafo de agentes.
+    """
+    grupos = {}
+    for ev in eventos:
+        if ev.get("evento") != "invocacion":
+            continue
+        datos = ev.get("datos") or {}
+        ident = datos.get("id_agente")
+        if not ident:
+            continue
+        grupo = grupos.setdefault(ident, {
+            "rol": datos.get("rol") or "modelo",
+            "descripcion": datos.get("descripcion"),
+            "capitulo": ev.get("capitulo"), "intento": ev.get("intento"),
+            "fase": ev.get("fase"), "inicio": ev.get("ts"), "fin": ev.get("ts"),
+            "llamadas": 0})
+        grupo["llamadas"] += 1
+        if (ev.get("ts") or "") < (grupo["inicio"] or ""):
+            grupo["inicio"] = ev.get("ts")
+        if (ev.get("ts") or "") > (grupo["fin"] or ""):
+            grupo["fin"] = ev.get("ts")
+    return grupos
+
+
+def _generacion(traza, k, ev, texto_ok) -> dict:
+    """Una llamada al modelo. Tokens y modelo se LEEN, nunca se estiman."""
     datos = ev.get("datos") or {}
-    metricas = datos.get("metricas") or {}
-    resumen = datos.get("resumen") or {}
+    uso = datos.get("usage") or {}
+    rol = datos.get("rol") or "modelo"
 
+    detalle = {}
+    for origen, destino in (("input_tokens", "input"),
+                            ("output_tokens", "output"),
+                            ("cache_creation_input_tokens",
+                             "cache_creation_input_tokens"),
+                            ("cache_read_input_tokens",
+                             "cache_read_input_tokens")):
+        if uso.get(origen) is not None:
+            try:
+                detalle[destino] = int(uso[origen] or 0)
+            except (TypeError, ValueError):
+                pass
+
+    atributos = {
+        "langfuse.observation.model.name": datos.get("model"),
+        "langfuse.observation.usage_details": json.dumps(detalle),
+        "langfuse.observation.metadata.capitulo": ev.get("capitulo"),
+        "langfuse.observation.metadata.intento": ev.get("intento"),
+        "langfuse.observation.metadata.rol": rol,
+        "langfuse.observation.metadata.session_id": datos.get("session_id"),
+        "langfuse.observation.metadata.cache_leida":
+            bool(detalle.get("cache_read_input_tokens")),
+        "langfuse.observation.metadata.cache_creada":
+            bool(detalle.get("cache_creation_input_tokens")),
+    }
+    # El coste lo calcula Langfuse con el modelo y los tokens. Solo se manda
+    # explicito si la invocacion trajo el suyo.
+    if datos.get("total_cost_usd") is not None:
+        try:
+            atributos["langfuse.observation.cost_details"] = json.dumps(
+                {"total": float(datos["total_cost_usd"])})
+        except (TypeError, ValueError):
+            pass
+    if texto_ok:
+        if datos.get("prompt"):
+            atributos["langfuse.observation.input"] = _texto(datos["prompt"])
+        if datos.get("respuesta"):
+            atributos["langfuse.observation.output"] = _texto(datos["respuesta"])
+
+    ident = datos.get("id_agente")
+    padre = (k["agente"](ident) if ident
+             else _padre_de(k, ev.get("capitulo"), ev.get("intento"),
+                            ev.get("fase")))
+    clave = f"{k['raiz']}--gen-{datos.get('id_generacion') or ev.get('ts')}"
+    return _span(traza, clave, rol, "generation", ev.get("ts"), ev.get("ts"),
+                 padre, atributos)
+
+
+def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
+    """Arbol completo de una tirada, en spans de OTLP."""
+    if not eventos:
+        return []
+    tirada = next((e.get("tirada") for e in eventos if e.get("tirada")), None)
+    legible = clave_traza(cfg, tirada)
+    traza = id_traza(cfg, tirada)
+    k = _claves(legible)
+    agr = _agregados(eventos)
+    tramos = _tramos(eventos)
+    spans = [_raiz(cfg, traza, k, eventos, agr, texto_ok)]
+
+    for fase, datos in tramos["fases"].items():
+        spans.append(_span(
+            traza, k["fase"](fase), NOMBRES_FASE.get(fase, fase), "span",
+            datos.get("inicio") or agr["inicio"],
+            datos.get("fin") or tramos["ultimo"], k["raiz"],
+            {"langfuse.observation.metadata.fase": fase,
+             "langfuse.observation.output": _texto(datos.get("salida"))
+             if datos.get("salida") else None}))
+
+    for cap, datos in tramos["capitulos"].items():
+        spans.append(_span(
+            traza, k["cap"](cap), f"capitulo {int(cap):02d}", "span",
+            datos.get("inicio"), datos.get("fin") or tramos["ultimo"],
+            k["fase"]("redaccion"),
+            {"langfuse.observation.metadata.capitulo": cap,
+             "langfuse.observation.metadata.intentos": datos.get("intentos"),
+             "langfuse.observation.output": _texto(datos.get("salida"))
+             if datos.get("salida") else None}))
+
+    for (cap, intento), datos in tramos["intentos"].items():
+        spans.append(_span(
+            traza, k["int"](cap, intento),
+            f"intento {intento} ({datos.get('modo', 'borrador')})", "span",
+            datos.get("inicio"), datos.get("fin") or datos.get("inicio"),
+            k["cap"](cap),
+            {"langfuse.observation.metadata.capitulo": cap,
+             "langfuse.observation.metadata.intento": intento,
+             "langfuse.observation.metadata.modo": datos.get("modo"),
+             "langfuse.observation.input": _texto(datos["entrada"])
+             if datos.get("entrada") else None}))
+
+    for ident, grupo in _agentes(eventos).items():
+        spans.append(_span(
+            traza, k["agente"](ident), grupo["rol"], "agent",
+            grupo["inicio"], grupo["fin"],
+            _padre_de(k, grupo["capitulo"], grupo["intento"], grupo["fase"]),
+            {"langfuse.observation.metadata.rol": grupo["rol"],
+             "langfuse.observation.metadata.llamadas": grupo["llamadas"],
+             "langfuse.observation.input": grupo.get("descripcion")}))
+
+    for ev in eventos:
+        tipo = ev.get("evento")
+        datos = ev.get("datos") or {}
+        if tipo == "invocacion":
+            spans.append(_generacion(traza, k, ev, texto_ok))
+        elif tipo == "validacion":
+            # Una validacion juzga la calidad de un capitulo: en el modelo de
+            # Langfuse eso es un 'evaluator', no un evento suelto.
+            spans.append(_span(
+                traza, f"{k['raiz']}--val-{ev.get('ts')}", "validacion",
+                "evaluator", ev.get("ts"), ev.get("ts"),
+                _padre_de(k, ev.get("capitulo"), ev.get("intento"),
+                          ev.get("fase")),
+                {"langfuse.observation.input": _texto(datos.get("metricas")),
+                 "langfuse.observation.output": _texto(datos.get("resumen"))}))
+        elif tipo == "escalado":
+            spans.append(_span(
+                traza, f"{k['raiz']}--esc-{ev.get('ts')}", "escalado", "event",
+                ev.get("ts"), ev.get("ts"),
+                _padre_de(k, ev.get("capitulo"), None, ev.get("fase")),
+                {"langfuse.observation.output": _texto(datos)},
+                nivel="ERROR", mensaje="escalado al autor"))
+        elif tipo == "commit":
+            spans.append(_span(
+                traza, f"{k['raiz']}--commit-{ev.get('ts')}", "commit", "event",
+                ev.get("ts"), ev.get("ts"), k["raiz"],
+                {"langfuse.observation.output": _texto(datos)}))
+    return spans
+
+
+# --------------------------------------------------------------------------
+# Scores
+# --------------------------------------------------------------------------
+
+def _aplanar(metricas: dict) -> dict:
     plano = {}
-    for clave, valor in metricas.items():
+    for clave, valor in (metricas or {}).items():
         if clave == "monotonia_componentes" and isinstance(valor, dict):
             for sub, subvalor in valor.items():
                 plano[f"monotonia_{sub}"] = subvalor
@@ -356,196 +614,64 @@ def _scores_validacion(traza: str, ev: dict) -> list:
                 plano["muletilla_por_mil"] = valor["por_mil"]
         else:
             plano[clave] = valor
-
-    items = []
-    for nombre, valor in plano.items():
-        if isinstance(valor, bool):
-            items.append((nombre, 1 if valor else 0, "NUMERIC"))
-        elif isinstance(valor, (int, float)):
-            items.append((nombre, valor, "NUMERIC"))
-        elif isinstance(valor, str):
-            items.append((nombre, valor, "CATEGORICAL"))
-
-    for sev in ("bloqueante", "mayor", "menor"):
-        if sev in resumen:
-            items.append((f"incidencias_{sev}", resumen[sev], "NUMERIC"))
-
-    lote = []
-    for nombre, valor, tipo in items:
-        cuerpo = {"id": f"{obs}--sc-{_limpio(nombre)}-i{ev.get('intento')}",
-                  "traceId": traza, "observationId": obs,
-                  "name": nombre, "dataType": tipo,
-                  "value": valor if tipo == "NUMERIC" else str(valor)}
-        lote.append(_item("score-create", cuerpo, ev.get("ts")))
-    return lote
+    return plano
 
 
-def _scores_cierre(traza: str, ev: dict) -> list:
-    """Intentos que necesito el capitulo, y palabras y lineas del texto final."""
-    cap = ev.get("capitulo")
-    if cap is None:
-        return []
-    obs = _id_capitulo(traza, cap)
-    valores = {
-        "intentos": ev.get("intento") or 1,
-        "palabras": len(nucleo.palabras(nucleo.cuerpo_capitulo(cap))),
-        "lineas": len(nucleo.lineas_capitulo(cap)),
-    }
-    return [_item("score-create", {
-        "id": f"{obs}--sc-{nombre}", "traceId": traza, "observationId": obs,
-        "name": nombre, "value": valor, "dataType": "NUMERIC"}, ev.get("ts"))
-        for nombre, valor in valores.items()]
+def construir_scores(cfg: dict, eventos: list) -> list:
+    """Scores del span de cada capitulo: lo que permite comparar tiradas.
 
-
-def _generacion(traza: str, ev: dict, texto_ok: bool) -> dict:
-    """Una invocacion a modelo: cuelga del intento correspondiente.
-
-    Los tokens y el modelo se LEEN del evento, no se estiman. El coste lo
-    calcula Langfuse a partir del modelo y del desglose de tokens, de modo que
-    una invocacion con la cache caliente sale muy por debajo de la primera. Si
-    el evento trae total_cost_usd, ese valor manda sobre el calculo.
+    Van por la API de ingesta con eventos score-create, que es la unica parte
+    de esa API que sigue viva tras el 16 de noviembre de 2026.
     """
-    datos = ev.get("datos") or {}
-    uso = datos.get("usage") or {}
-    rol = datos.get("rol") or datos.get("agentType") or "modelo"
+    if not eventos:
+        return []
+    tirada = next((e.get("tirada") for e in eventos if e.get("tirada")), None)
+    legible = clave_traza(cfg, tirada)
+    traza = id_traza(cfg, tirada)
+    k = _claves(legible)
+    ent = entorno(cfg)
+    lote = []
 
-    detalle = {}
-    for destino in ("input_tokens", "output_tokens",
-                    "cache_creation_input_tokens", "cache_read_input_tokens"):
-        if uso.get(destino) is not None:
-            clave = {"input_tokens": "input", "output_tokens": "output"}.get(
-                destino, destino)
-            try:
-                detalle[clave] = int(uso[destino] or 0)
-            except (TypeError, ValueError):
-                pass
+    def anadir(observacion, nombre, valor, intento=None):
+        if isinstance(valor, bool):
+            valor, tipo = (1 if valor else 0), "NUMERIC"
+        elif isinstance(valor, (int, float)):
+            tipo = "NUMERIC"
+        elif isinstance(valor, str):
+            valor, tipo = str(valor), "CATEGORICAL"
+        else:
+            return
+        cuerpo = {"id": _hex(f"{observacion}{nombre}{intento}", 32),
+                  "traceId": traza, "observationId": _id_span(observacion),
+                  "name": nombre, "value": valor, "dataType": tipo,
+                  "environment": ent}
+        lote.append({"id": _hex(f"sc{observacion}{nombre}{intento}", 32),
+                     "type": "score-create",
+                     "timestamp": datetime.now(timezone.utc)
+                     .isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+                     "body": cuerpo})
 
-    cuerpo = {
-        "id": datos.get("id_generacion") or _corto(json.dumps(
-            [ev.get("ts"), rol, ev.get("capitulo"), ev.get("intento")],
-            default=str)),
-        "traceId": traza,
-        "name": rol,
-        "startTime": datos.get("inicio") or ev.get("ts"),
-        "endTime": datos.get("fin") or ev.get("ts"),
-        "model": datos.get("model") or datos.get("modelo"),
-        "usageDetails": detalle,
-        "metadata": {
-            "capitulo": ev.get("capitulo"),
-            "intento": ev.get("intento"),
-            "rol": rol,
-            "session_id": datos.get("session_id"),
-            "cache_leida": bool(detalle.get("cache_read_input_tokens")),
-            "cache_creada": bool(detalle.get("cache_creation_input_tokens")),
-        },
-    }
-    padre = _padre(traza, ev)
-    if padre:
-        cuerpo["parentObservationId"] = padre
-    if datos.get("total_cost_usd") is not None:
-        try:
-            cuerpo["costDetails"] = {"total": float(datos["total_cost_usd"])}
-        except (TypeError, ValueError):
-            pass
-    if texto_ok:
-        if datos.get("prompt"):
-            cuerpo["input"] = datos["prompt"]
-        if datos.get("respuesta"):
-            cuerpo["output"] = datos["respuesta"]
-    return cuerpo
-
-
-# La fase se llama 'entrega' en el pipeline y 'ensamblado' en el panel.
-NOMBRES_FASE = {"canon": "canon", "escaleta": "escaleta",
-                "redaccion": "redaccion", "revision": "revision",
-                "entrega": "ensamblado"}
-
-
-def construir(cfg: dict, ev: dict, eventos: list, texto_ok: bool) -> list:
-    """Traduce UN evento del pipeline a items de ingesta de Langfuse."""
-    traza = id_traza(cfg, ev.get("tirada"))
-    sello = ev.get("ts")
-    tipo = ev.get("evento")
-    cap, intento, fase = ev.get("capitulo"), ev.get("intento"), ev.get("fase")
-    datos = ev.get("datos") or {}
-
-    lote = [_item("trace-create", _traza(cfg, ev, eventos, texto_ok), sello)]
-
-    if tipo == "fase_inicio" and fase:
-        lote.append(_item("span-create", {
-            "id": _id_fase(traza, fase), "traceId": traza,
-            "name": NOMBRES_FASE.get(fase, fase), "startTime": sello,
-            "metadata": {"fase": fase}}, sello))
-
-    elif tipo == "fase_fin" and fase:
-        lote.append(_item("span-update", {
-            "id": _id_fase(traza, fase), "traceId": traza,
-            "name": NOMBRES_FASE.get(fase, fase), "endTime": sello,
-            "output": datos}, sello))
-
-    elif tipo == "capitulo_inicio" and cap is not None:
-        lote.append(_item("span-create", {
-            "id": _id_capitulo(traza, cap), "traceId": traza,
-            "parentObservationId": _id_fase(traza, "redaccion"),
-            "name": f"capitulo {int(cap):02d}", "startTime": sello,
-            "metadata": {"capitulo": cap}}, sello))
-
-    elif tipo in EVENTOS_DE_INTENTO and cap is not None:
-        numero = intento or 1
-        # El span del capitulo se reafirma por si el capitulo_inicio no llego:
-        # la ingesta hace upsert, de modo que repetirlo es inocuo.
-        lote.append(_item("span-create", {
-            "id": _id_capitulo(traza, cap), "traceId": traza,
-            "parentObservationId": _id_fase(traza, "redaccion"),
-            "name": f"capitulo {int(cap):02d}", "startTime": sello}, sello))
-        lote.append(_item("span-create", {
-            "id": _id_intento(traza, cap, numero), "traceId": traza,
-            "parentObservationId": _id_capitulo(traza, cap),
-            "name": f"intento {numero} ({tipo})", "startTime": sello,
-            "input": datos.get("incidencias"),
-            "metadata": {"capitulo": cap, "intento": numero, "modo": tipo}},
-            sello))
-
-    elif tipo == "validacion":
-        if cap is not None and intento is not None:
-            lote.append(_item("span-update", {
-                "id": _id_intento(traza, cap, intento), "traceId": traza,
-                "endTime": sello, "output": datos}, sello))
-        cuerpo = {"id": _corto(f"val{traza}{cap}{intento}{sello}"),
-                  "traceId": traza, "name": "validacion", "startTime": sello,
-                  "input": datos.get("metricas"), "output": datos.get("resumen")}
-        padre = _padre(traza, ev)
-        if padre:
-            cuerpo["parentObservationId"] = padre
-        lote.append(_item("event-create", cuerpo, sello))
-        lote.extend(_scores_validacion(traza, ev))
-
-    elif tipo == "capitulo_fin" and cap is not None:
-        lote.append(_item("span-update", {
-            "id": _id_capitulo(traza, cap), "traceId": traza,
-            "name": f"capitulo {int(cap):02d}", "endTime": sello,
-            "output": datos}, sello))
-        lote.extend(_scores_cierre(traza, ev))
-
-    elif tipo == "escalado" and cap is not None:
-        lote.append(_item("span-update", {
-            "id": _id_capitulo(traza, cap), "traceId": traza,
-            "level": "ERROR", "statusMessage": "escalado al autor",
-            "output": datos}, sello))
-        lote.append(_item("score-create", {
-            "id": f"{_id_capitulo(traza, cap)}--sc-escalado", "traceId": traza,
-            "observationId": _id_capitulo(traza, cap), "name": "escalado",
-            "value": 1, "dataType": "NUMERIC"}, sello))
-
-    elif tipo == "invocacion":
-        lote.append(_item("generation-create",
-                          _generacion(traza, ev, texto_ok), sello))
-
-    elif tipo == "commit":
-        lote.append(_item("event-create", {
-            "id": _corto(f"commit{traza}{sello}"), "traceId": traza,
-            "name": "commit", "startTime": sello, "input": datos}, sello))
-
+    for ev in eventos:
+        cap = ev.get("capitulo")
+        if cap is None:
+            continue
+        datos = ev.get("datos") or {}
+        if ev.get("evento") == "validacion":
+            observacion = k["cap"](cap)
+            for nombre, valor in _aplanar(datos.get("metricas")).items():
+                anadir(observacion, nombre, valor, ev.get("intento"))
+            for sev in ("bloqueante", "mayor", "menor"):
+                if sev in (datos.get("resumen") or {}):
+                    anadir(observacion, f"incidencias_{sev}",
+                           datos["resumen"][sev], ev.get("intento"))
+        elif ev.get("evento") == "capitulo_fin":
+            observacion = k["cap"](cap)
+            anadir(observacion, "intentos", ev.get("intento") or 1)
+            anadir(observacion, "palabras",
+                   len(nucleo.palabras(nucleo.cuerpo_capitulo(cap))))
+            anadir(observacion, "lineas", len(nucleo.lineas_capitulo(cap)))
+        elif ev.get("evento") == "escalado":
+            anadir(k["cap"](cap), "escalado", 1)
     return lote
 
 
@@ -553,57 +679,38 @@ def construir(cfg: dict, ev: dict, eventos: list, texto_ok: bool) -> list:
 # Envio
 # --------------------------------------------------------------------------
 
-def _enviar(cred: dict, lote: list) -> bool:
+def _peticion(cred: dict, ruta: str, cuerpo: dict, cabeceras: dict = None):
     valores = cred["valores"]
-    url = valores["LANGFUSE_BASE_URL"].rstrip("/") + "/api/public/ingestion"
-    cuerpo = json.dumps({"batch": lote}, ensure_ascii=False,
-                        default=str).encode("utf-8")
+    url = valores["LANGFUSE_BASE_URL"].rstrip("/") + ruta
+    datos = json.dumps(cuerpo, ensure_ascii=False, default=str).encode("utf-8")
     autorizacion = base64.b64encode(
         f"{valores['LANGFUSE_PUBLIC_KEY']}:{valores['LANGFUSE_SECRET_KEY']}"
         .encode("utf-8")).decode("ascii")
-    peticion = urllib.request.Request(url, data=cuerpo, method="POST")
+    peticion = urllib.request.Request(url, data=datos, method="POST")
     peticion.add_header("Content-Type", "application/json")
     peticion.add_header("Authorization", "Basic " + autorizacion)
+    for clave, valor in (cabeceras or {}).items():
+        peticion.add_header(clave, valor)
     with urllib.request.urlopen(peticion, timeout=TIEMPO_MAXIMO) as respuesta:
         return 200 <= respuesta.status < 300
 
 
-def flush() -> bool:
-    """Envia lo pendiente. Se llama al terminar el proceso y no propaga nada.
-
-    Sin este vaciado las ultimas trazas se perderian: el proceso de un evento
-    dura milisegundos y termina antes de que convenga hablar por red.
-    """
-    global _pendientes
-    if not _pendientes:
-        return True
-    lote, _pendientes = _pendientes, []
-    try:
-        cfg = nucleo.cargar_config()
-        cred = _credenciales()
-        if not activo(cfg, cred):
-            return False
-        for tanda in trocear(lote):
-            if not _enviar(cred, tanda):
-                _anotar(f"tanda de {len(tanda)} items rechazada por el servidor")
-                return False
-        return True
-    except SystemExit:
-        return False
-    except Exception as exc:                     # nunca sube al orquestador
-        _anotar(f"lote de {len(lote)} items no enviado: {_motivo(exc)}")
-        return False
+def _envoltorio(cfg: dict, spans: list) -> dict:
+    return {"resourceSpans": [{
+        "resource": {"attributes": _atributos({
+            "service.name": cfg.get("proyecto") or "novela",
+            "deployment.environment.name": entorno(cfg)})},
+        "scopeSpans": [{
+            "scope": {"name": "mystory1.observabilidad", "version": "2"},
+            "spans": spans}]}]}
 
 
-def trocear(lote: list, maximo: int = MAX_LOTE_BYTES) -> list:
-    """Parte el lote en tandas que quepan bajo el limite de la API.
-
-    Contar items no basta: un capitulo entero como salida de la traza pesa
-    mucho mas que un score. Se mide el JSON de verdad.
-    """
+def trocear(items: list, maximo: int = MAX_LOTE_BYTES) -> list:
+    """Parte en tandas que quepan bajo el limite de tamano de la API."""
     tandas, actual, peso = [], [], 2
-    for item in lote:
-        tamano = len(json.dumps(item, ensure_ascii=False, default=str).encode("utf-8")) + 1
+    for item in items:
+        tamano = len(json.dumps(item, ensure_ascii=False,
+                                default=str).encode("utf-8")) + 1
         if actual and peso + tamano > maximo:
             tandas.append(actual)
             actual, peso = [], 2
@@ -614,11 +721,48 @@ def trocear(lote: list, maximo: int = MAX_LOTE_BYTES) -> list:
     return tandas
 
 
-def encolar(lote: list) -> None:
+def flush() -> bool:
+    """Envia lo pendiente. Se llama al terminar el proceso y no propaga nada.
+
+    Sin este vaciado las ultimas trazas se perderian: el proceso de un evento
+    dura milisegundos y termina antes de que convenga hablar por red.
+    """
+    global _pendientes
+    spans = _pendientes["spans"]
+    scores = _pendientes["scores"]
+    if not spans and not scores:
+        return True
+    _pendientes = {"spans": [], "scores": []}
+    try:
+        cfg = nucleo.cargar_config()
+        cred = _credenciales()
+        if not activo(cfg, cred):
+            return False
+        ok = True
+        for tanda in trocear(spans):
+            if not _peticion(cred, RUTA_OTLP, _envoltorio(cfg, tanda),
+                             {"x-langfuse-ingestion-version": "4"}):
+                _anotar(f"OTLP: tanda de {len(tanda)} spans rechazada")
+                ok = False
+        for tanda in trocear(scores):
+            if not _peticion(cred, RUTA_SCORES, {"batch": tanda}):
+                _anotar(f"scores: tanda de {len(tanda)} rechazada")
+                ok = False
+        return ok
+    except SystemExit:
+        return False
+    except Exception as exc:                     # nunca sube al orquestador
+        _anotar(f"envio de {len(spans)} spans y {len(scores)} scores "
+                f"fallido: {_motivo(exc)}")
+        return False
+
+
+def encolar(spans: list = None, scores: list = None) -> None:
     global _registrado_atexit
-    if not lote:
+    if not spans and not scores:
         return
-    _pendientes.extend(lote)
+    _pendientes["spans"].extend(spans or [])
+    _pendientes["scores"].extend(scores or [])
     if not _registrado_atexit:
         atexit.register(flush)
         _registrado_atexit = True
@@ -627,7 +771,8 @@ def encolar(lote: list) -> None:
 def exportar(ev: dict) -> bool:
     """Punto de entrada que llama eventos.registrar(). No lanza nunca.
 
-    Devuelve True si el evento ha quedado encolado para su envio.
+    Reconstruye el arbol entero de la tirada porque un span de OTLP viaja
+    completo y no se actualiza despues. Devuelve True si quedo encolado.
     """
     try:
         cfg = nucleo.cargar_config()
@@ -637,7 +782,8 @@ def exportar(ev: dict) -> bool:
         eventos = leer_eventos(cfg, ev.get("tirada"))
         if not any(e.get("ts") == ev.get("ts") for e in eventos):
             eventos.append(ev)
-        encolar(construir(cfg, ev, eventos, enviar_texto(cfg)))
+        encolar(construir_spans(cfg, eventos, enviar_texto(cfg)),
+                construir_scores(cfg, eventos))
         return True
     except SystemExit:
         return False
@@ -650,8 +796,9 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(
         prog="observabilidad.py",
-        description="Exportador a Langfuse. Se engancha en eventos.registrar(). "
-                    "Ejecutado a mano solo diagnostica, y nunca muestra claves.")
+        description="Exportador a Langfuse por OpenTelemetry. Se engancha en "
+                    "eventos.registrar(). Ejecutado a mano solo diagnostica, "
+                    "y nunca muestra claves.")
     parser.add_argument("--estado", action="store_true",
                         help="Dice si la integracion esta activa y que variables "
                              "de entorno faltan, por su nombre y sin su valor.")
