@@ -1067,7 +1067,7 @@ está lo bastante concretada: concrétala o descártala.
 ---
 name: estilista
 description: Pule la prosa de un capítulo ya validado en continuidad, sin alterar hechos, diálogo sustantivo ni beats. Úsalo en la fase 3, después de que el capítulo pase las validaciones.
-tools: Read, Write, Glob
+tools: Read, Write, Glob, Bash
 model: opus
 ---
 
