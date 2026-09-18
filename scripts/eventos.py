@@ -14,6 +14,7 @@ import argparse
 import json
 from datetime import datetime, timezone
 
+import intentos
 import nucleo
 import observabilidad
 
@@ -110,12 +111,18 @@ def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dic
     solo despues se intenta exportar. observabilidad.exportar() no lanza nunca:
     si Langfuse esta caido, si no hay red o si faltan las variables de entorno,
     devuelve False, lo anota en novela/langfuse.log y la generacion sigue.
+
+    intentos.guardar() se engancha aqui por la misma razon que la exportacion:
+    este es el unico sitio por el que pasan todos los sucesos. Congela el texto
+    y el informe del intento que se acaba de cerrar, que si no se pierden al
+    sobrescribirlos el intento siguiente. Tampoco lanza nunca.
     """
     cfg = nucleo.cargar_config()
     ev = _construir(cfg, evento, fase, capitulo, intento, datos)
     _escribir_linea(cfg, ev)          # fuente de verdad: siempre, y primero
     if evento in EVENTOS_DE_ARRANQUE:
         observabilidad.anunciar()     # por stderr: stdout es JSON
+    intentos.guardar(ev)              # historial: tampoco obligatorio
     observabilidad.exportar(ev)       # destino adicional: nunca obligatorio
     return ev
 
