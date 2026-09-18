@@ -1,0 +1,154 @@
+{
+  "generada": "2026-09-18T16:41:50Z",
+  "capitulos_totales": 3,
+  "capitulos": [
+    {
+      "n": 1,
+      "titulo": "Pagada por adelantado",
+      "pov": "Eneida Volsk",
+      "dia": 1,
+      "analepsis": false,
+      "funcion": "Detonante: la celda muda deja de ser rutina y empieza a costar",
+      "momento": "Vestíbulo y galería novena, cierre de vencimiento; apertura con un objeto en la mano (el recibo)",
+      "beats": [
+        {
+          "id": "B1.1",
+          "texto": "Eneida ve en el libro que la 812 está pagada hasta un vencimiento que aún no existe y decide bajar a comprobarlo",
+          "marcadores": [
+            "812",
+            "vencimiento"
+          ]
+        },
+        {
+          "id": "B1.2",
+          "texto": "Eneida hace el traslado del bloque de la 812 y una hora de su vida queda archivada bajo la cuenta que investiga",
+          "marcadores": [
+            "Eneida",
+            "traslado"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "La renta de la 812 está cubierta más allá del último vencimiento inscrito en el libro",
+        "Cada vez que Eneida mueve ese bloque, la hora que paga entra en la cuenta del pagador desconocido"
+      ],
+      "abre_hilos": [
+        "T01",
+        "T02"
+      ],
+      "cierra_hilos": [],
+      "cambio_mundo": "El bloque de la 812 cambia de celda y el saldo de Eneida cambia de dueño: ya no es solo custodia, es deudora de la cuenta que quiere auditar",
+      "gancho": "El contador suma una hora que Eneida no ha trabajado",
+      "tamano_objetivo": 4
+    },
+    {
+      "n": 2,
+      "titulo": "El vencimiento firma una excepción",
+      "pov": "Marcial Oyarzun",
+      "dia": 2,
+      "analepsis": false,
+      "funcion": "Escalada: el pagador tiene nombre y el reglamento se dobla para protegerlo",
+      "momento": "Mostrador del vestíbulo y libro de cuentas; apertura con voces en la ventanilla (diálogo)",
+      "beats": [
+        {
+          "id": "B2.1",
+          "texto": "Gorka entrega el recibo de la 812 sin tachar y Marcial ve su propia letra en un pago de hace nueve años",
+          "marcadores": [
+            "Gorka",
+            "recibo"
+          ]
+        },
+        {
+          "id": "B2.2",
+          "texto": "Marcial redacta y firma una excepción que impide vaciar la 812 y aparta la cuenta de la auditoría",
+          "marcadores": [
+            "Marcial",
+            "excepción"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "Quien paga la 812 desde hace nueve años es Marcial Oyarzun",
+        "Las horas que Eneida ha ido perdiendo figuran acumuladas bajo esa cuenta",
+        "Marcial puede cerrar la auditoría de todas las cuentas mudas menos de esta"
+      ],
+      "abre_hilos": [
+        "T03"
+      ],
+      "cierra_hilos": [
+        "T01"
+      ],
+      "cambio_mundo": "La 812 deja de ser una cuenta sin dueño: queda inscrita a nombre de Marcial y el libro de cuentas pasa a tener una línea que su propio auditor no puede cerrar",
+      "gancho": "Gorka copia el número de la celda antes de archivar el sobre",
+      "tamano_objetivo": 4
+    },
+    {
+      "n": 3,
+      "titulo": "Lo que se queda pegado",
+      "pov": "Gorka Nistal",
+      "dia": 3,
+      "analepsis": false,
+      "funcion": "Clímax y resolución: el testigo ve el precio y elige qué hacer con lo que ha visto",
+      "momento": "Escalera y boca de la galería novena, con el vestíbulo vacío arriba; apertura en movimiento (la bajada)",
+      "beats": [
+        {
+          "id": "B3.1",
+          "texto": "Gorka baja por primera vez a la galería y espera a Eneida en la boca de la escalera",
+          "marcadores": [
+            "Gorka",
+            "galería"
+          ]
+        },
+        {
+          "id": "B3.2",
+          "texto": "Eneida sale del último traslado de la 812 con cal en las uñas y repite en voz alta un recuerdo que no es suyo",
+          "marcadores": [
+            "Eneida",
+            "cal"
+          ]
+        },
+        {
+          "id": "B3.3",
+          "texto": "Gorka archiva el recibo con el nombre de Marcial sin tachar y renuncia a pedir la acreditación de custodio",
+          "marcadores": [
+            "Marcial",
+            "812"
+          ]
+        }
+      ],
+      "informacion_nueva": [
+        "El resto pegado del bloque devuelve a Eneida un recuerdo ajeno que ya no distingue de los propios",
+        "El pago de nueve años era la manera de Marcial de sostener una cuenta que nunca podrá abrirse",
+        "Gorka decide que el nombre del pagador quede escrito en el archivo en vez de acreditarse él"
+      ],
+      "abre_hilos": [],
+      "cierra_hilos": [
+        "T02",
+        "T03"
+      ],
+      "cambio_mundo": "El depósito conserva por fin un recibo con el nombre del pagador a la vista, Eneida se queda sin las horas que pagó y con memoria ajena dentro, y Gorka sigue en el mostrador por decisión propia",
+      "gancho": "Cierre",
+      "tamano_objetivo": 4
+    }
+  ],
+  "hilos": [
+    {
+      "id": "T01",
+      "titulo": "Quién paga la celda 812 desde hace nueve años",
+      "abre_en": 1,
+      "cierra_en": 2
+    },
+    {
+      "id": "T02",
+      "titulo": "Qué le cuesta a Eneida averiguarlo: las horas que pierde y el resto ajeno que se le queda",
+      "abre_en": 1,
+      "cierra_en": 3
+    },
+    {
+      "id": "T03",
+      "titulo": "Si Gorka baja a las galerías y consigue la acreditación de custodio",
+      "abre_en": 2,
+      "cierra_en": 3
+    }
+  ]
+}
