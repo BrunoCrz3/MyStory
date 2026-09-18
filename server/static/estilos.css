@@ -192,6 +192,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 2rem 1rem; overflow-y: auto; z-index: 10;
 }
 
+#capa[hidden] { display: none; }
+
 .ventana {
   background: var(--papel); border-radius: 4px; max-width: 48rem; width: 100%;
   padding: 1.75rem; position: relative;
