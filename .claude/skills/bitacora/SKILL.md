@@ -32,12 +32,22 @@ python scripts/eventos.py --evento <tipo> [--fase <fase>] [--capitulo <n>] [--in
 
 El identificador de tirada y la marca de tiempo los pone el script. Tú no los pasas.
 
-### Qué NO se registra
+### Qué NO se registra a mano
 
-No hay tokens, no hay coste, no hay latencia de modelo. Claude Code es el
-orquestador y no hay llamadas a una API que instrumentar. Lo que se traza son
-los sucesos del pipeline y los resultados de las validaciones. Ver SPEC.md
-sección 14.
+Los tokens y el modelo **no** se anotan durante la tirada: ningún script llama
+a una API, así que el orquestador no los ve. Existen, pero en los transcripts
+de Claude Code, y se recuperan después con:
+
+```powershell
+python scripts/retroalimentar.py --simular   # enseña qué subiría, sin subir
+python scripts/retroalimentar.py             # lo sube a Langfuse
+```
+
+Tampoco se anota el coste: no hay tabla de tarifas en el repositorio. Se envían
+modelo y tokens, y Langfuse aplica la suya. Ver SPEC.md secciones 14.4 y 14.5.
+
+Lo que sí se registra a mano son los sucesos del pipeline y los resultados de
+las validaciones, con la tabla de arriba.
 
 ## Parte B — Commits
 

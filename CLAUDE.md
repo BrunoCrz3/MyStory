@@ -20,14 +20,25 @@ eres el orquestador. No hay ningún servicio de modelo externo.
 7. Tras 3 reescrituras fallidas del mismo capítulo, para y avisa al autor.
 8. Todo suceso relevante se registra con `python scripts/eventos.py`.
    Ver la skill `bitacora`.
+9. La exportación a Langfuse vive en un solo sitio: `eventos.registrar()`
+   llamando a `observabilidad.exportar()`. No la repartas por los agentes ni
+   por el orquestador. `events.jsonl` es la fuente de verdad y nunca se apaga;
+   un fallo de Langfuse nunca interrumpe la generación.
 
 ## Prohibiciones
 
 - No instales dependencias. Solo biblioteca estándar de Python 3.12.
+  `requirements-opcional.txt` es opcional de verdad: no se instala, y el
+  sistema entero funciona sin él.
 - No crees ficheros nuevos fuera del inventario de SPEC.md sección 16 sin
   que el autor lo pida.
 - No escribas código Python que llame a un modelo de lenguaje.
-- No leas variables de entorno con claves de API.
+- No leas variables de entorno **salvo en `scripts/observabilidad.py`**, que es
+  el único módulo que habla con Langfuse y el único que puede leer
+  `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` y `LANGFUSE_BASE_URL`. No las
+  imprimas nunca, ni completas ni parciales, ni en un error ni en un
+  diagnóstico. Si falta alguna, di cuál por su nombre. Ningún otro script lee
+  el entorno, y no hay claves en el código ni en la configuración.
 - No uses `make`, `rm -rf`, `test -f`, ni rutas tipo `.venv/bin`. Windows + PowerShell.
 - No reescribas `config.json`.
 

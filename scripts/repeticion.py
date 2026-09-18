@@ -159,7 +159,7 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
 
     # 6. Monotonia y diversidad. Estas dos no disparan incidencias: son
     # metricas de serie, pensadas para comparar tiradas entre si en Langfuse.
-    # Ver SPEC seccion 12.6.
+    # Ver SPEC seccion 12.8.
     #
     #   diversidad  0..1, mas alto es mejor: n-gramas distintos sobre posiciones.
     #   monotonia   0..1, mas alto es PEOR: media de los tres componentes.

@@ -136,7 +136,7 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
                 })
     # Fraccion de marcadores presentes, 0..1. La comprobacion sigue siendo
     # booleana (un solo marcador ausente ya es bloqueante), pero la fraccion se
-    # guarda como metrica para poder comparar tiradas. Ver SPEC seccion 12.6.
+    # guarda como metrica para poder comparar tiradas. Ver SPEC seccion 12.8.
     cobertura_beats = (round((marcadores_totales - len(faltan)) / marcadores_totales, 4)
                        if marcadores_totales else 1.0)
     comprobaciones.append({

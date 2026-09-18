@@ -39,7 +39,7 @@ El proceso tiene cinco fases.
 
 **Fase 5 — La entrega.** Un script junta todos los capítulos en `manuscrito.md`. Ese es el resultado.
 
-Además, todo lo que pasa se anota como una línea por suceso en `novela/events.jsonl`: cuándo empezó cada fase, cuántas incidencias tuvo cada validación, cuántos intentos hizo falta. Hoy es un fichero de texto que puedes abrir. Mañana será la fuente de las métricas de Langfuse.
+Además, todo lo que pasa se anota como una línea por suceso en `novela/events.jsonl`: cuándo empezó cada fase, cuántas incidencias tuvo cada validación, cuántos intentos hizo falta. Es un fichero de texto que puedes abrir, y además la fuente de las métricas que se envían a Langfuse (sección 14).
 
 **Lo único que tú haces** es lanzar cuatro comandos y aprobar dos documentos. Está todo en la tabla de la sección 17.
 
@@ -168,7 +168,8 @@ Trabajo normal: sección 13 (flujo completo) y sección 17 (qué ejecutas tú y 
 | AGENTE REVISOR GLOBAL | Subagente `revisor-global` | Lectura completa; contexto propio obligatorio |
 | ENSAMBLADOR | `scripts/ensamblar.py` | Determinista |
 | ESTADO PERSISTIDO | `novela/estado.json`, `novela/canon.md`, `novela/escaleta.json` | Ficheros, no memoria |
-| (nuevo) Registro de sucesos | `scripts/eventos.py` → `novela/events.jsonl` | Preparación para Langfuse |
+| (nuevo) Registro de sucesos | `scripts/eventos.py` → `novela/events.jsonl` | Fuente de verdad local y origen de las trazas de Langfuse |
+| (nuevo) Observabilidad | `scripts/observabilidad.py`, `scripts/retroalimentar.py` | Exportación a Langfuse. Único punto del sistema que habla por red |
 
 ---
 
@@ -2648,6 +2649,31 @@ del autor.
 | Apertura repetida | `max_aperturas_del_mismo_tipo` | 1 | mayor |
 | Cierre repetido | (4 de 6 palabras) | — | menor |
 
+### 12.8 Métricas de serie: monotonía, diversidad y cobertura
+
+Las comprobaciones de 12.1 a 12.5 dicen si un capítulo pasa o no pasa. Estas
+tres no juzgan nada: **no disparan incidencias nunca**. Existen para poder
+comparar una tirada con la siguiente, y por eso viajan a Langfuse como scores
+del span del capítulo aunque valgan lo mismo que ayer.
+
+| Métrica | Dónde se calcula | Rango | Definición |
+|---|---|---|---|
+| `diversidad` | `repeticion.py` | 0..1, **más alto mejor** | N-gramas distintos del capítulo dividido entre el número de posiciones de n-grama. Un 1.0 significa que ningún n-grama se repite dentro del propio capítulo. |
+| `monotonia` | `repeticion.py` | 0..1, **más alto peor** | Media aritmética de sus tres componentes. |
+| `monotonia_apertura` | `repeticion.py` | 0..1 | Capítulos anteriores que abren con el mismo tipo (12.4), sobre el total de anteriores. |
+| `monotonia_muletillas` | `repeticion.py` | 0..1 | `muletilla_max.por_mil` dividido entre `max_muletilla_por_mil`, recortado a 1.0. |
+| `monotonia_reciclaje` | `repeticion.py` | 0..1 | Frases recicladas (12.2) entre líneas del capítulo, recortado a 1.0. |
+| `cobertura_beats` | `continuidad.py` | 0..1 | Marcadores de beat presentes sobre marcadores exigidos por la escaleta. |
+
+`cobertura_beats` **no sustituye** a la comprobación `beats_cubiertos`, que
+sigue siendo booleana y bloqueante: un solo marcador ausente tumba el capítulo
+aunque la cobertura sea 0.9. La fracción solo sirve para ver la tendencia.
+
+Los denominadores pueden ser cero en un capítulo vacío o en el primero de la
+novela. En ese caso `diversidad` vale 0.0, `monotonia_apertura` vale 0.0 y
+`cobertura_beats` vale 1.0, que es lo que corresponde a "no hay nada que
+incumplir".
+
 ---
 
 ## 13. El flujo completo de generación de una novela
@@ -2785,23 +2811,34 @@ contador de intentos del capítulo en curso, que vuelve a empezar en 1.
 
 ### 14.1 Qué se traza y qué no
 
-**Aviso importante, para que no te lleves un chasco después.** Claude Code es el
-orquestador: no hay ninguna llamada a una API de modelo en este sistema. Por
-tanto **no existen tokens, ni coste, ni latencia de generación que instrumentar**.
-Ninguna traza de este proyecto va a decirte cuánto ha costado escribir un
-capítulo, porque el sistema no tiene forma de saberlo.
+**Corrección respecto a la v1 de este documento.** La v1 afirmaba que no había
+tokens ni coste que instrumentar, porque ningún script llama a una API de
+modelo. Lo primero sigue siendo cierto: no hay ninguna llamada a una API en
+`scripts/`. Lo segundo era falso. Claude Code invoca a los subagentes con la
+herramienta Task y **deja el desglose completo en sus propios transcripts**, en
+`~/.claude/projects/<proyecto>/<sesión>/subagents/`: un `.meta.json` con el
+`agentType` (el rol: escritor, continuista, estilista…) y un `.jsonl` con el
+modelo y los cuatro contadores de token de cada llamada.
 
-Lo que sí se traza, y es lo que importa para saber si el sistema funciona:
+Eso convierte en instrumentable lo que se daba por perdido. Lo que sigue sin
+existir es `total_cost_usd`: los transcripts no lo guardan. Por eso el sistema
+**no calcula el coste**; envía modelo y tokens y deja que Langfuse aplique su
+tarifa. Ver 14.6.
+
+Lo que se traza:
 
 - Qué fases se han ejecutado y cuándo.
 - Cuántos borradores, reescrituras y parches ha hecho falta por capítulo.
 - Qué ha devuelto cada validación: métricas y recuento de incidencias por severidad.
 - Qué capítulos han escalado al autor.
 - Qué commits se han hecho.
+- Qué invocaciones a modelo ha habido, con su rol, su modelo y su desglose de
+  tokens: entrada, salida, creación de caché y lectura de caché.
 
 Eso responde a las preguntas útiles: ¿qué capítulo se atasca?, ¿qué validación
 salta más?, ¿el solape de n-gramas sube conforme avanza la novela?, ¿bajar el
-umbral de repetición dispara las reescrituras?
+umbral de repetición dispara las reescrituras?, ¿qué parte del gasto es prosa
+nueva y qué parte es contexto recargado?
 
 ### 14.2 Esquema de cada línea
 
@@ -2812,7 +2849,7 @@ umbral de repetición dispara las reescrituras?
 |---|---|---|---|
 | `ts` | string | Sí | Marca de tiempo ISO-8601 en UTC con `Z`: `2026-09-17T12:04:11.482Z` |
 | `tirada` | string | Sí | Identificador de la ejecución completa: `AAAAMMDD-HHMM` |
-| `evento` | string | Sí | Uno de los 10 tipos de la tabla 14.3 |
+| `evento` | string | Sí | Uno de los 11 tipos de la tabla 14.3 |
 | `fase` | string\|null | No | `canon`, `escaleta`, `redaccion`, `revision`, `entrega` |
 | `capitulo` | int\|null | No | Número de capítulo |
 | `intento` | int\|null | No | Número de intento dentro del capítulo, empezando en 1 |
@@ -2832,7 +2869,7 @@ Ejemplo de fichero real:
 {"ts":"2026-09-17T12:16:15.220Z","tirada":"20260917-1204","evento":"commit","fase":"redaccion","capitulo":2,"intento":null,"datos":{"sha":"a1f3c02","mensaje":"feat(cap-02): El coste declarado"},"esquema":1}
 ```
 
-### 14.3 Los diez tipos de evento
+### 14.3 Los once tipos de evento
 
 | `evento` | Cuándo | `datos` contiene |
 |---|---|---|
@@ -2846,63 +2883,122 @@ Ejemplo de fichero real:
 | `capitulo_fin` | Al cerrar un capítulo | `{"hechos_nuevos":N,"hilos_abiertos":N}` |
 | `escalado` | Al agotar los intentos | `{"motivo":"...","incidencias":[...]}` |
 | `commit` | Al hacer commit | `{"sha":"...","mensaje":"..."}` |
+| `invocacion` | Al terminar una llamada a modelo | `{"rol":"escritor","model":"...","session_id":"...","usage":{...}}`. Ver 14.6 |
 
-### 14.4 Cómo se conectará Langfuse
+### 14.4 Cómo está conectado Langfuse
 
 **Correspondencia de conceptos:**
 
 | Concepto de este sistema | Concepto de Langfuse | Cómo se deriva |
 |---|---|---|
-| Una tirada de novela | **Trace** | `trace_id` = campo `tirada` |
+| Una tirada de novela | **Trace** | `id` = `nov-<proyecto>-<tirada>`; `sessionId` = el proyecto, para agrupar tiradas de la misma premisa |
 | Una fase | **Span** hijo del trace | Del par `fase_inicio` / `fase_fin` con la misma `fase` |
 | Un capítulo | **Span** hijo de la fase `redaccion` | Del par `capitulo_inicio` / `capitulo_fin` con el mismo `capitulo` |
 | Un intento (borrador, reescritura, parche) | **Span** hijo del capítulo | Cada evento `borrador`/`reescritura`/`parche` con su `intento` |
+| Una llamada a modelo | **Generation** hija del intento | Evento `invocacion`. Nombre = rol del subagente |
 | Una validación | **Event** dentro del span del intento | Evento `validacion` |
-| Cada métrica de validación | **Score** numérico del span del capítulo | `datos.metricas.*`: `solape`, `medido`, `frases_recicladas` |
+| Cada métrica de validación | **Score** numérico del span del capítulo | Todo `datos.metricas.*`, dispare o no incidencia |
 | Recuento por severidad | **Score** numérico | `datos.resumen.bloqueante`, `.mayor`, `.menor` |
-| Número de intentos de un capítulo | **Score** numérico | El `intento` máximo del `capitulo_fin` |
-| Un escalado | **Score** booleano y etiqueta en el span | Presencia de un evento `escalado` |
-
-No hay `generation` de Langfuse en ningún sitio, porque no hay llamadas a modelo.
-Los spans son de tipo span, no de tipo generation. Si más adelante una parte del
-sistema sí llamara a una API, ese sería el único sitio donde aparecería una
-`generation`.
+| Número de intentos de un capítulo | **Score** numérico | El `intento` del `capitulo_fin` |
+| Un escalado | **Score** numérico y `level: ERROR` en el span | Presencia de un evento `escalado` |
 
 **Dónde se toca el código.** En un solo sitio: la función `registrar()` de
-`scripts/eventos.py`. Al final de esa función, después de escribir la línea en
-el fichero, se añade el envío. Nada más cambia: ninguna skill, ningún subagente,
-ningún otro script. Esa es toda la razón por la que existe la regla de que nadie
+`scripts/eventos.py`, que llama a `observabilidad.exportar(ev)` después de
+escribir la línea en disco. Ninguna skill, ningún subagente y ningún otro
+script participan. Esa es toda la razón por la que existe la regla de que nadie
 escribe `events.jsonl` directamente.
-
-Forma prevista de la ampliación:
 
 ```python
 def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dict:
-    ev = _construir(evento, fase, capitulo, intento, datos)
-    _escribir_linea(ev)          # v1: esto es todo
-    # _exportar(ev)              # v2: aquí, y solo aquí, entra Langfuse
+    cfg = nucleo.cargar_config()
+    ev = _construir(cfg, evento, fase, capitulo, intento, datos)
+    _escribir_linea(cfg, ev)          # fuente de verdad: siempre, y primero
+    observabilidad.exportar(ev)       # destino adicional: nunca obligatorio
     return ev
 ```
 
-`_exportar(ev)` no existe en la v1. Cuando exista, leerá su configuración de una
-clave nueva `eventos.langfuse` en `config.json`, y si esa clave no está, no hará
-nada. Ninguna dependencia nueva hoy.
+**Por qué los identificadores son deterministas.** Cada evento del pipeline es
+una invocación separada de `python scripts/eventos.py`: un proceso nuevo, sin
+memoria del anterior. Para que los spans aniden, el id de cada uno se deriva de
+sus campos (`<traza>--cap-02--int-3`) en vez de guardarse en memoria. La API de
+ingesta hace *upsert* por id, así que el orden de llegada da igual y
+reejecutar el envío actualiza en lugar de duplicar.
 
-**Reconstrucción retroactiva.** Como `events.jsonl` guarda la historia completa,
-el día que llegue Langfuse se pueden subir las tiradas ya ejecutadas leyendo el
-fichero de arriba abajo. No hay que volver a generar nada.
+**Garantías, en orden de importancia:**
 
-### 14.5 Dónde encajaría un servidor MCP
+1. `events.jsonl` se escribe **primero y siempre**. Langfuse nunca lo sustituye
+   ni lo desactiva.
+2. `exportar()` no lanza excepciones jamás. Sin red, con las claves mal o con
+   el servidor caído, devuelve `False`, anota el fallo en `novela/langfuse.log`
+   y la generación sigue. El timeout es de 8 segundos.
+3. Las credenciales salen **solo** de variables de entorno y no se escriben en
+   ningún sitio. El log registra el tipo de error y, si es HTTP, el código;
+   nunca la URL, ni las cabeceras, ni el cuerpo.
+4. El vaciado va en un `atexit`: sin él se perderían las últimas trazas, porque
+   el proceso de un evento dura milisegundos.
+
+**Configuración**, en `config.json`:
+
+```json
+"observabilidad": {
+  "langfuse": { "activo": null, "enviar_texto": true }
+}
+```
+
+`activo: null` significa "enciéndete si están las tres variables de entorno".
+`enviar_texto: false` manda métricas y metadatos pero ningún texto de prosa ni
+de prompt.
+
+**Sin dependencias.** El transporte es la API de ingesta por HTTP con `urllib`.
+`requirements-opcional.txt` existe para quien quiera el SDK oficial, y el
+sistema no lo usa.
+
+### 14.5 El evento `invocacion` y el coste
+
+Es el único evento que produce una `generation`, y el único que el pipeline no
+genera hoy por sí mismo: lo produce `retroalimentar.py` leyendo los transcripts
+de Claude Code. El día que exista un envoltorio que invoque al modelo y
+devuelva su JSON, ese envoltorio solo tiene que llamar a `eventos.registrar()`
+con este evento y la traza se completa sola.
+
+Forma de `datos`:
+
+```json
+{
+  "rol": "escritor",
+  "model": "claude-opus-5",
+  "session_id": "feb6c0bb-5078-424c-98d0-6331eed39fa9",
+  "id_generacion": "req_011Cf9xir3Dn9s4VkioR7HfH",
+  "usage": {
+    "input_tokens": 2,
+    "output_tokens": 147,
+    "cache_creation_input_tokens": 8868,
+    "cache_read_input_tokens": 31764
+  },
+  "total_cost_usd": null
+}
+```
+
+Los cuatro contadores viajan **separados** a `usageDetails`. Es lo que permite
+distinguir el trabajo real del contexto que se recarga: en una tirada normal
+los tokens de lectura de caché son mayoría abrumadora, porque son el canon y el
+estado releídos una y otra vez.
+
+**El coste no se calcula aquí.** No hay tabla de tarifas en el repositorio. Se
+envían el modelo y el desglose, y Langfuse aplica su propia tarifa, que
+distingue caché barata de tokens nuevos. Si `total_cost_usd` viene informado,
+se manda como `costDetails.total` y manda sobre el cálculo.
+
+### 14.6 Dónde encajaría un servidor MCP
 
 **Hoy no se crea `.mcp.json`.** El sistema no depende de ningún servidor MCP y
 funciona entero sin uno. Pero el diseño deja tres puertas abiertas:
 
-1. **Langfuse por MCP.** El día que Langfuse ofrezca un servidor MCP, se crea un
-   `.mcp.json` en la raíz declarándolo, y `scripts/eventos.py` **no cambia**: el
-   envío lo haría Claude Code llamando a la herramienta MCP desde la skill
-   `bitacora`, en el mismo punto donde hoy llama al script. Alternativa igual de
-   válida: dejar el script como única puerta y que él haga el envío. Las dos
-   funcionan porque el punto de registro es único.
+1. **Langfuse por MCP.** De las dos alternativas que contemplaba la v1 se ha
+   tomado la segunda: el script es la única puerta y él hace el envío, sin
+   `.mcp.json`. Si algún día conviene pasar al servidor MCP, el cambio sigue
+   siendo local, porque el punto de registro es único: bastaría sustituir la
+   llamada a `observabilidad.exportar()` dentro de `registrar()`.
 2. **Consulta de métricas.** Un servidor MCP de Langfuse permitiría que el
    comando `/estado` mostrara métricas históricas además del estado en disco.
    Sería un párrafo más en `.claude/commands/estado.md`.
@@ -3000,8 +3096,8 @@ git push -u origin main
 
 ## 16. Inventario cerrado de entregables
 
-27 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
-hay 29, algo se ha inventado; si hay 27, algo falta.
+31 ficheros. Claude Code crea **exactamente estos** y ninguno más. Si al terminar
+hay 33, algo se ha inventado; si hay 29, algo falta.
 
 ### 16.1 Raíz
 
@@ -3011,7 +3107,8 @@ hay 29, algo se ha inventado; si hay 27, algo falta.
 | 2 | `README.md` | Contenido literal de la sección 5.3. Menciona los 4 comandos |
 | 3 | `CLAUDE.md` | Contenido literal de la sección 5.2. 8 invariantes y 6 prohibiciones |
 | 4 | `config.json` | JSON válido con el contenido literal de la sección 4.1. `capitulos: 3`, `unidad: "lineas"`, `objetivo: 4` |
-| 5 | `.gitignore` | Contenido literal de la sección 5.1. **No** ignora `novela/` |
+| 5 | `.gitignore` | Sección 5.1, más `novela/langfuse.log`. **No** ignora `novela/` |
+| 29 | `requirements-opcional.txt` | Declara `langfuse` como dependencia **opcional**. El núcleo no la necesita: el exportador usa `urllib`. No se instala sola |
 
 ### 16.2 Subagentes (`.claude/agents/`)
 
@@ -3058,11 +3155,18 @@ extensión. Ninguno tiene permiso de escritura sobre `config.json`. Solo
 | 25 | `informes.py` | ÚNICA puerta de escritura de `novela/informes/`. `--capitulo`, `--todos` y `--global`. Guarda las métricas SIEMPRE, haya incidencias o no. Ver sección 6.7 |
 | 26 | `ensamblar.py` | Produce `manuscrito.md`. No escribe nada si falta algún capítulo |
 | 27 | `verificar.py` | Las 11 comprobaciones de la sección 10.8. Salida legible, no JSON |
+| 30 | `observabilidad.py` | Exportador a Langfuse (sección 14.4). Único módulo que lee variables de entorno y habla por red. No lanza excepciones jamás. `--estado` diagnostica sin mostrar valores |
+| 31 | `retroalimentar.py` | Sube tiradas ya ejecutadas leyendo `events.jsonl`, los informes y los transcripts de Claude Code. `--simular` no envía nada. No escribe en `events.jsonl` |
 
 Criterio común a los scripts: `python scripts/<nombre>.py --help` funciona; no
 aparecen en ellos las cadenas `requests`, `httpx`, `anthropic`, `openai`,
-`API_KEY`, `os.environ` ni `pip install`; todos abren ficheros con
-`encoding="utf-8"`.
+`API_KEY` ni `pip install`; todos abren ficheros con `encoding="utf-8"`.
+
+**Única excepción:** `observabilidad.py` puede usar `os.environ`, porque las
+credenciales de Langfuse solo pueden venir de ahí. `verificar.py` lo recoge en
+su lista `EXENCIONES` y le sigue aplicando todos los demás patrones: si alguna
+vez contiene una clave literal o una dependencia externa, la comprobación 9
+salta igual. Ningún otro script puede leer el entorno.
 
 ### 16.6 Estado inicial (`novela/`)
 
@@ -3082,7 +3186,14 @@ los genera el sistema al ejecutarse.
 `.venv/`, `package.json`, y cualquier fichero que Claude Code considere "útil"
 y no esté en las tablas 16.1 a 16.6.
 
-**Recuento:** 5 + 7 + 3 + 4 + 8 + 1 = **28**.
+`requirements-opcional.txt` **sí** existe y no contradice la regla: lo prohibido
+es `requirements.txt`, que implicaría dependencias obligatorias. Las de este
+fichero no se instalan nunca solas y el sistema funciona entero sin ellas.
+
+`novela/langfuse.log` lo crea el sistema al ejecutarse si algún envío falla, y
+está ignorado por git: es diagnóstico, no fuente de verdad.
+
+**Recuento:** 6 + 7 + 3 + 4 + 10 + 1 = **31**.
 
 ---
 
