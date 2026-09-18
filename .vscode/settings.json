@@ -13,5 +13,10 @@
   // El interprete del proyecto es el del entorno virtual, que es donde estan
   // fastapi y uvicorn, las dos unicas dependencias. Sin esto el editor tambien
   // marcaba "from fastapi import ..." como no resuelto.
-  "python.defaultInterpreterPath": ".venv/Scripts/python.exe"
+  //
+  // La ruta va con ${workspaceFolder} y no relativa: una ruta relativa se
+  // resuelve contra el directorio de trabajo del editor, que no siempre es la
+  // raiz del proyecto, y entonces el interprete no se encuentra y Pylance cae
+  // al Python del sistema, donde no hay fastapi.
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe"
 }
