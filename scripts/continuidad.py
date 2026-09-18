@@ -210,8 +210,12 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
     comprobaciones.append({"id": "pov_presente", "ok": pov_ok or not pov})
 
     # 6. Los hilos que el plan manda cerrar estan abiertos en el estado.
+    # Un hilo es cerrable si aun consta abierto, o si ya lo cerro ESTE mismo
+    # capitulo: al revalidar un capitulo ya archivado, el archivista lo ha
+    # dejado en 'cerrado' y sin esta segunda condicion la comprobacion se
+    # quejaria siempre de un cierre que es justamente el correcto.
     abiertos = {h.get("id") for h in estado.get("hilos", [])
-                if h.get("estado") == "abierto"}
+                if h.get("estado") == "abierto" or h.get("cerrado_en") == n}
     no_cerrables = []
     for hilo in plan.get("cierra_hilos", []):
         if hilo not in abiertos:

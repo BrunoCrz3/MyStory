@@ -78,11 +78,18 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
         })
 
     # 2. Frases ya usadas, buscadas como subcadena normalizada.
+    #
+    # `frases_usadas` es una lista plana sin capitulo de origen (SPEC 6.3), asi
+    # que al revalidar un capitulo YA ARCHIVADO sus propias frases casarian
+    # contra si mismo. Reciclar es repetir algo de un capitulo ANTERIOR, de modo
+    # que la frase solo cuenta si ademas aparece en el texto de alguno de ellos.
+    # No hace falta tocar el esquema del estado: los capitulos estan en disco.
     normalizado = " ".join(tokens)
+    texto_anterior = " ".join(" ".join(_tokens(c)) for c in anteriores)
     recicladas = []
     for frase in estado.get("frases_usadas", []):
         clave = nucleo.normalizar(frase)
-        if clave and clave in normalizado:
+        if clave and clave in normalizado and clave in texto_anterior:
             recicladas.append(frase)
             ancla = next((ln for ln in nucleo.lineas_capitulo(n)
                           if clave in nucleo.normalizar(ln)), "")
