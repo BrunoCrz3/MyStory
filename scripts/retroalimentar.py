@@ -21,8 +21,9 @@ total_cost_usd del evento manda sobre el calculo.
 
 Este script NO escribe en novela/events.jsonl. Los transcripts son una fuente
 externa, y el registro local debe seguir contando solo lo que hizo el pipeline.
-Reejecutarlo es inocuo: los identificadores son deterministas y la ingesta de
-Langfuse hace upsert.
+Reejecutarlo es inocuo, pero no porque Langfuse deduplique -no lo hace-, sino
+porque los identificadores son deterministas y el exportador lleva el registro
+de los span ids que ya viajaron.
 
 Python 3.12, solo biblioteca estandar.
 """
@@ -33,6 +34,7 @@ import pathlib
 import re
 from collections import Counter
 
+import eventos as eventos_mod
 import nucleo
 import observabilidad as ob
 
@@ -142,12 +144,20 @@ def _invocaciones_de(fichero: pathlib.Path, rol: str, descripcion: str,
     return _colapsar(salida)
 
 
-def leer_invocaciones(carpeta: pathlib.Path) -> list:
+def leer_invocaciones(carpeta: pathlib.Path,
+                      solo_primer_plano: bool = False) -> list:
     """Todas las llamadas al modelo de todos los subagentes del proyecto.
 
     El rol sale de <agente>.meta.json, que es donde Claude Code guarda el
     agentType: escritor, continuista, estilista, archivista, arquitecto,
     escaletista o revisor-global.
+
+    Con solo_primer_plano=True se descartan los subagentes en segundo plano.
+    Es lo que pide el envio en vivo: uno en primer plano ha terminado por
+    definicion cuando el orquestador recupera el control y vuelve a ejecutar
+    eventos.py, mientras que uno en segundo plano puede seguir escribiendo en
+    su transcript. Y un span de OTLP no se corrige despues de enviarlo: mas
+    vale no mandar una llamada que todavia puede crecer.
     """
     if carpeta is None:
         return []
@@ -156,6 +166,8 @@ def leer_invocaciones(carpeta: pathlib.Path) -> list:
         try:
             datos = json.loads(meta.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
+            continue
+        if solo_primer_plano and datos.get("requestShape") != "foreground":
             continue
         transcript = meta.with_name(meta.name.replace(".meta.json", ".jsonl"))
         if not transcript.exists():
@@ -247,13 +259,19 @@ def _intento_real(eventos: list, capitulo, marca: str, vigente):
          if e.get("evento") in ob.EVENTOS_DE_INTENTO and (e.get("ts") or "") > marca),
         key=lambda e: e.get("ts") or "")
 
-    if vigente is None:
+    # El intento vigente puede no ser de ESTE capitulo: _situar() cambia el
+    # capitulo cuando la descripcion del subagente lo nombra, pero conserva el
+    # intento del contexto temporal, que era el de otro capitulo. Y en vivo
+    # puede no haberse abierto todavia ninguno. En ambos casos la invocacion
+    # es del proximo intento que se abra, no de uno que no existe.
+    abiertos = [(e.get("ts") or "") for e in del_capitulo
+                if e.get("evento") in ob.EVENTOS_DE_INTENTO
+                and e.get("intento") == vigente
+                and (e.get("ts") or "") <= marca]
+    if vigente is None or not abiertos:
         return posteriores[0].get("intento") if posteriores else None
 
-    abierto = max((e.get("ts") or "") for e in del_capitulo
-                  if e.get("evento") in ob.EVENTOS_DE_INTENTO
-                  and e.get("intento") == vigente
-                  and (e.get("ts") or "") <= marca)
+    abierto = max(abiertos)
     ya_validado = any(e.get("evento") == "validacion"
                       and e.get("intento") == vigente
                       and abierto <= (e.get("ts") or "") <= marca
@@ -401,6 +419,7 @@ def main():
     args = parser.parse_args()
 
     cfg = nucleo.cargar_config()
+    vigente = eventos_mod.tirada_vigente(cfg)
     if args.capitulos:
         ob.usar_capitulos(args.capitulos)
     if args.eventos:
@@ -437,10 +456,22 @@ def main():
     spans, scores = [], []
     for tirada in sorted({e.get("tirada") for e in completos if e.get("tirada")}):
         de_esta = [e for e in completos if e.get("tirada") == tirada]
-        spans.extend(ob.construir_spans(cfg, de_esta, texto_ok))
+        # Una tirada que ya no es la vigente esta acabada aunque le falte el
+        # fase_fin de entrega: se cierran sus tramos abiertos para que la
+        # traza no quede sin raiz. La vigente no se toca, que sigue viva.
+        spans.extend(ob.construir_spans(cfg, de_esta, texto_ok,
+                                        cerrar=tirada != vigente))
         scores.extend(ob.construir_scores(cfg, de_esta))
 
+    comprobado = None
     if not args.reenviar_todo:
+        # Antes de filtrar, se pregunta al panel que tiene ya. El registro
+        # local es el primer filtro, pero se pierde con un clon nuevo, y un
+        # reenvio no corrige la observacion anterior: la duplica.
+        if not args.simular:      # simular no toca la red ni el registro
+            comprobado = ob.sembrar_enviados(
+                {ob.id_traza(cfg, e.get("tirada"))
+                 for e in completos if e.get("tirada")})
         antes = len(spans)
         spans = ob.nuevos(spans)
         omitidos = antes - len(spans)
@@ -457,6 +488,15 @@ def main():
         "trazas": sorted({ob.clave_traza(cfg, e.get("tirada"))
                           for e in completos if e.get("tirada")}),
     })
+    if comprobado is False:
+        informe["enviado"] = False
+        informe["error"] = (
+            "no se ha podido comprobar que hay ya en Langfuse, y reenviar un "
+            "span duplica la observacion en vez de corregirla. Reintenta, o "
+            "usa --reenviar-todo si de verdad quieres mandarlo igual")
+        nucleo.salir(informe, 3)
+    if comprobado:
+        informe["comprobado_contra_langfuse"] = True
     if aviso:
         informe["aviso"] = aviso
 

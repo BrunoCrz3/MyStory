@@ -42,23 +42,45 @@ documentación señala para instrumentación propia como esta.
 
 ## Cómo se enciende
 
-Tres variables de entorno del usuario en Windows:
+Dos variables de entorno del usuario en Windows, y una tercera opcional:
 
-| Variable | Qué es |
-|---|---|
-| `LANGFUSE_PUBLIC_KEY` | Clave pública del proyecto en Langfuse |
-| `LANGFUSE_SECRET_KEY` | Clave secreta del proyecto |
-| `LANGFUSE_BASE_URL` | URL de tu instancia, por ejemplo la de la nube europea |
+| Variable | Qué es | ¿Obligatoria? |
+|---|---|---|
+| `LANGFUSE_PUBLIC_KEY` | Clave pública del proyecto en Langfuse | Sí |
+| `LANGFUSE_SECRET_KEY` | Clave secreta del proyecto | Sí |
+| `LANGFUSE_BASE_URL` | URL de tu instancia | No: por defecto `https://us.cloud.langfuse.com` |
+
+**Solo las claves apagan la exportación.** Que falte la URL no la apaga nunca:
+se usa la nube de EE. UU., que es donde vive el proyecto. Esto no es un detalle
+menor: antes, una URL ausente dejaba la observabilidad muerta en silencio y no
+te enterabas hasta el final de la novela.
 
 No hay `.env` y no hay claves en ningún fichero del repositorio. Para ver si
-está listo, sin que se muestre ningún valor:
+está listo, sin que se muestre ningún valor de clave:
 
 ```powershell
-python scripts/observabilidad.py --estado
+python scripts/observabilidad.py --estado   # el detalle, en JSON
+python scripts/observabilidad.py --linea    # una linea legible
 ```
 
-Dice qué variables faltan **por su nombre**. Si falta alguna, la integración
-queda apagada sola y no se intenta ningún envío.
+Dice qué claves faltan **por su nombre**, nunca su valor.
+
+Y no hace falta que te acuerdes de mirar: **al arrancar cada generación** —en
+cada `fase_inicio` y en cada `capitulo_inicio`— el pipeline escribe por
+`stderr` una línea como esta:
+
+```
+[langfuse] activo -> us.cloud.langfuse.com (por defecto), entorno 'default', texto si
+```
+
+o, si no se está trazando:
+
+```
+[langfuse] INACTIVO: falta LANGFUSE_SECRET_KEY en el entorno. No se exporta nada; events.jsonl sigue registrandolo todo.
+```
+
+Va por `stderr` porque la salida normal de los scripts es JSON y tiene quien la
+parsee.
 
 En `config.json`:
 

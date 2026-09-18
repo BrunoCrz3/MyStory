@@ -35,10 +35,14 @@ eres el orquestador. No hay ningún servicio de modelo externo.
 - No escribas código Python que llame a un modelo de lenguaje.
 - No leas variables de entorno **salvo en `scripts/observabilidad.py`**, que es
   el único módulo que habla con Langfuse y el único que puede leer
-  `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` y `LANGFUSE_BASE_URL`. No las
-  imprimas nunca, ni completas ni parciales, ni en un error ni en un
-  diagnóstico. Si falta alguna, di cuál por su nombre. Ningún otro script lee
-  el entorno, y no hay claves en el código ni en la configuración.
+  `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY` y `LANGFUSE_BASE_URL`. **Las dos
+  claves no se imprimen nunca**, ni completas ni parciales, ni en un error ni
+  en un diagnóstico: si falta alguna, di cuál por su nombre y nada más. El
+  **host** de destino sí se muestra, a propósito, en la línea de arranque: no
+  es un secreto, y saber contra qué servidor se traza es media diagnosis.
+  `LANGFUSE_BASE_URL` es opcional y su ausencia nunca apaga la exportación:
+  hay valor por defecto en el código. Ningún otro script lee el entorno, y no
+  hay claves en el código ni en la configuración.
 - No uses `make`, `rm -rf`, `test -f`, ni rutas tipo `.venv/bin`. Windows + PowerShell.
 - No reescribas `config.json`.
 

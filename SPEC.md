@@ -2913,7 +2913,7 @@ razones apuntaban a OTLP.
 | Una llamada al modelo | `generation` hija del `agent` | Evento `invocacion` |
 | Una validación | **`evaluator`** | Evento `validacion` |
 | Un commit | `event` colgando de la raíz | Evento `commit` |
-| Cada métrica de validación | **Score** del span del capítulo | Todo `datos.metricas.*`, dispare o no incidencia |
+| Cada métrica de validación | **Score** del span del capítulo | Todo `datos.metricas.*`, dispare o no incidencia. El `timestamp` del score es el del evento que lo produjo, nunca el reloj del envío: un score se identifica por `id` + `name` + **fecha**, así que con el reloj el mismo score reenviado al día siguiente entraría como uno nuevo |
 | Recuento por severidad | Score numérico | `datos.resumen.*` |
 | Intentos, palabras, líneas | Score numérico | Del `capitulo_fin` |
 | Un escalado | `event` con `level: ERROR` y score | Evento `escalado` |
@@ -2954,16 +2954,43 @@ span, así que con un proceso por evento el árbol no anidaría.
 
 **La ingesta por OTLP no hace upsert.** A diferencia de la API v3, reenviar un
 span con el mismo `spanId` **crea otra observación** en lugar de actualizarla.
-Por eso el exportador lleva un registro local de span ids ya enviados en
-`novela/langfuse-enviados.txt` y filtra con él antes de mandar nada. Sin ese
-filtro, reconstruir el árbol en cada evento multiplicaría cada span por el
-número de eventos de la tirada.
+La documentación de Langfuse lo dice sin rodeos: traza y observación son
+*inmutables*, v4 no deduplica en la lectura, y reingerir el mismo id duplica el
+registro, infla las métricas de coste y descuadra los paneles. Solo los
+**scores** se pueden sobrescribir, y únicamente si coinciden `id`, `name` y la
+**fecha** del `timestamp`.
 
-**Por qué se reconstruye el árbol entero en cada envío.** Un span de OTLP viaja
-completo, con su inicio y su fin, y no se actualiza después. Como el inicio de
-una fase y su fin ocurren en procesos distintos, el exportador relee el
-histórico y manda el árbol completo. Con decenas de eventos es gratis, y a
-cambio la traza queda coherente aunque se haya perdido un envío anterior.
+De ahí las tres reglas que gobiernan el envío:
+
+1. **Solo viaja lo que ya ha terminado.** Un tramo abierto —una fase empezada,
+   un capítulo en curso, un intento sin validar— no se manda todavía: se manda
+   en el envío del evento que lo cierra, que es cuando se conoce su duración
+   real. Esto es lo que hace que el panel siga la novela **en vivo**, capítulo
+   a capítulo, en lugar de llenarse de spans de duración cero que después ya no
+   se podrían corregir. El span raíz es el último en salir, con el `fase_fin`
+   de `entrega`.
+2. **Se reconstruye el árbol entero en cada envío** y se filtra por el registro
+   local de span ids ya enviados, `novela/langfuse-enviados.txt`. Como el
+   inicio de una fase y su fin ocurren en procesos distintos, el exportador
+   relee el histórico completo; el filtro evita que cada span se multiplique
+   por el número de eventos de la tirada.
+3. **Si falta el registro local, se le pregunta al panel.** Ese fichero está en
+   `.gitignore` y no viaja con el repositorio, así que se pierde con cualquier
+   clon nuevo; y sin él, todo se reenvía y todo se duplica. Antes de mandar
+   nada, `sembrar_enviados()` consulta
+   `GET /api/public/v2/observations?traceId=…` y apunta como enviado lo que el
+   panel ya tiene. `retroalimentar.py` lo hace siempre y **se niega a enviar**
+   si no ha podido preguntar; el camino en vivo lo hace solo cuando el
+   registro no existe, para no meter una consulta por evento.
+
+**Atributos de traza repetidos en cada span.** En v4 la traza es solo un grupo
+de observaciones: lo que vive únicamente en la raíz no se puede filtrar ni
+agregar desde sus hijos. Y como la raíz es lo último que se cierra, sin esto la
+tirada en curso aparecería sin nombre y sin entorno hasta el final. Por eso
+`trace.name`, `session.id`, `environment` y `trace.metadata.tirada` se copian a
+**todos** los spans. Las `trace.tags`, que se calculan de agregados que cambian
+durante la tirada, se quedan solo en la raíz: repetirlas daría un valor
+distinto en cada span.
 
 **Garantías, en orden de importancia:**
 
@@ -2972,9 +2999,22 @@ cambio la traza queda coherente aunque se haya perdido un envío anterior.
 2. `exportar()` no lanza excepciones jamás. Sin red, con las claves mal o con
    el servidor caído, devuelve `False`, anota el fallo en `novela/langfuse.log`
    y la generación sigue. El timeout es de 8 segundos.
-3. Las credenciales salen **solo** de variables de entorno y no se escriben en
+3. Las **claves** salen solo de variables de entorno y no se escriben en
    ningún sitio. El log registra el tipo de error y, si es HTTP, el código;
-   nunca la URL, ni las cabeceras, ni el cuerpo.
+   nunca la URL, ni las cabeceras, ni el cuerpo. El **host** de destino es la
+   única excepción, y es deliberada: aparece en la línea de arranque, porque
+   sin saber contra qué servidor se traza no se puede diagnosticar nada.
+6. **Faltar la URL no apaga nada.** `LANGFUSE_BASE_URL` es opcional: si no
+   está, se usa `https://us.cloud.langfuse.com`, la región del proyecto. Solo
+   la ausencia de una **clave** desactiva la exportación. La regla anterior
+   —apagarse si faltaba cualquiera de las tres— dejaba la observabilidad muerta
+   en silencio por una variable que el código sabe deducir.
+7. **El estado se anuncia al arrancar**, no al terminar. En `fase_inicio` y en
+   `capitulo_inicio`, `eventos.registrar()` llama a `observabilidad.anunciar()`,
+   que escribe una línea por **stderr** —stdout es JSON y tiene quien lo
+   parsee— diciendo si se está trazando y contra qué host, o qué clave falta,
+   por su nombre y sin su valor. `observabilidad.py --linea` da la misma línea
+   a mano.
 4. El vaciado va en un `atexit`: sin él se perderían las últimas trazas, porque
    el proceso de un evento dura milisegundos.
 5. Los envíos se trocean por **tamaño real del JSON**, no por número de
@@ -2988,7 +3028,7 @@ cambio la traza queda coherente aunque se haya perdido un envío anterior.
 }
 ```
 
-`activo: null` significa "enciéndete si están las tres variables de entorno".
+`activo: null` significa "enciéndete si están las dos claves".
 `enviar_texto: false` manda métricas y metadatos pero ningún texto. `entorno`
 separa las tiradas de prueba de las buenas en el panel.
 
@@ -2999,10 +3039,33 @@ quiera el SDK oficial, y el sistema no lo usa.
 ### 14.5 El evento `invocacion` y el coste
 
 Es el único evento que produce una `generation`, y el único que el pipeline no
-genera hoy por sí mismo: lo produce `retroalimentar.py` leyendo los transcripts
-de Claude Code. El día que exista un envoltorio que invoque al modelo y
-devuelva su JSON, ese envoltorio solo tiene que llamar a `eventos.registrar()`
-con este evento y la traza se completa sola.
+genera por sí mismo: sale de los transcripts de Claude Code, que son el único
+sitio donde existe el desglose de tokens por llamada.
+
+Se cosecha en **dos** momentos, con el mismo código:
+
+- **En vivo**, en cada envío. `observabilidad._generaciones()` lee los
+  transcripts de los subagentes **en primer plano** —los que por definición han
+  terminado cuando el orquestador recupera el control y vuelve a ejecutar
+  `eventos.py`— y los sitúa en el punto del pipeline donde ocurrieron. Sin
+  esto la traza en vivo no tendría ni una sola `generation` y el panel daría
+  coste cero hasta el final de la novela.
+- **A posteriori**, con `retroalimentar.py`, que además recoge lo que quedó
+  después del último evento de la tirada.
+
+Estas invocaciones **no se escriben en `events.jsonl`**: el registro local
+cuenta lo que hizo el pipeline, y los transcripts son una fuente externa. Solo
+viajan a Langfuse.
+
+**Solo cuentan los subagentes.** Las llamadas del propio orquestador no se
+suben. Es una decisión deliberada, y tiene consecuencias: el coste que muestra
+el panel es el del trabajo creativo (arquitecto, escaletista, escritor,
+continuista, estilista, archivista, revisor-global), no el gasto total de la
+tirada, que es bastante mayor.
+
+El día que exista un envoltorio que invoque al modelo y devuelva su JSON, ese
+envoltorio solo tiene que llamar a `eventos.registrar()` con este evento y la
+traza se completa sola.
 
 Forma de `datos`:
 

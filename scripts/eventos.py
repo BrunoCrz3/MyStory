@@ -29,6 +29,11 @@ EVENTOS = [
 
 FASES = ["canon", "escaleta", "redaccion", "revision", "entrega"]
 
+# Eventos que abren trabajo de generacion. Al registrarlos se anuncia por
+# stderr si hay observabilidad y contra que host: es el momento util para
+# enterarse, no cuando la novela ya esta escrita. Ver SPEC 14.4.
+EVENTOS_DE_ARRANQUE = ("fase_inicio", "capitulo_inicio")
+
 # Eventos que pertenecen al bucle de redaccion: si no se pasa --fase, se les
 # asigna esta, tal como muestra el fichero de ejemplo de SPEC 14.2.
 EVENTOS_DE_REDACCION = [
@@ -109,6 +114,8 @@ def registrar(evento, fase=None, capitulo=None, intento=None, datos=None) -> dic
     cfg = nucleo.cargar_config()
     ev = _construir(cfg, evento, fase, capitulo, intento, datos)
     _escribir_linea(cfg, ev)          # fuente de verdad: siempre, y primero
+    if evento in EVENTOS_DE_ARRANQUE:
+        observabilidad.anunciar()     # por stderr: stdout es JSON
     observabilidad.exportar(ev)       # destino adicional: nunca obligatorio
     return ev
 

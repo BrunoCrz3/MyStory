@@ -18,10 +18,17 @@ Reglas que este modulo cumple sin excepcion:
      nunca la sustituye y nunca la desactiva.
   2. Un fallo de Langfuse JAMAS interrumpe la generacion. Todo va envuelto y lo
      que se rompe se anota en novela/langfuse.log y se sigue.
-  3. Las credenciales salen solo de variables de entorno del sistema y NUNCA se
+  3. Las CLAVES salen solo de variables de entorno del sistema y NUNCA se
      escriben en ningun sitio: ni en el log, ni en un error, ni en un
      diagnostico. Si falta alguna se dice cual por su nombre, sin su valor.
-  4. Sin dependencias. Todo con urllib de la biblioteca estandar.
+     El host de destino si se muestra, a proposito: no es un secreto, y sin
+     el no se puede diagnosticar contra que servidor se esta trazando.
+  4. Solo las claves apagan la exportacion. LANGFUSE_BASE_URL es opcional y
+     tiene valor por defecto: una URL ausente no puede dejar la observabilidad
+     muerta en silencio, que es como se pierde una novela entera de trazas.
+  5. El estado se anuncia al arrancar la generacion, no al terminarla:
+     anunciar() escribe una linea por stderr en fase_inicio y capitulo_inicio.
+  6. Sin dependencias. Todo con urllib de la biblioteca estandar.
 
 IDS DETERMINISTAS. Cada evento del pipeline es una invocacion separada de
 `python scripts/eventos.py`: un proceso nuevo, sin memoria del anterior. Para
@@ -29,10 +36,22 @@ que el arbol anide, el id de traza (32 hex) y el de cada span (16 hex) se
 derivan por hash de una clave legible, no de un contador en memoria. Asi el
 mismo capitulo produce el mismo span id desde cualquier proceso.
 
-Un span de OTLP viaja entero, con su inicio y su fin: no hay "update". Por eso
-el arbol se reconstruye completo desde el historico en cada envio, en lugar de
-mandar trozos sueltos. Con decenas de eventos es gratis, y a cambio la traza
-esta siempre completa aunque se haya perdido un envio anterior.
+Un span de OTLP viaja entero, con su inicio y su fin: no hay "update", y
+reenviar un spanId ya ingerido duplica la observacion e infla el coste. De ahi
+las tres reglas que gobiernan el envio:
+
+  - El arbol se reconstruye completo desde el historico en cada envio, no se
+    mandan trozos sueltos. Con decenas de eventos es gratis, y a cambio un
+    envio perdido se recupera solo en el siguiente.
+  - De ese arbol se emite SOLO lo que ya ha terminado. Una fase empezada o un
+    capitulo en curso no viajan hasta que llega su evento de cierre, que es
+    cuando se conoce su duracion. Por eso el panel va contando la novela en
+    vivo, capitulo a capitulo, en vez de llenarse de spans de duracion cero
+    que ya no se podrian corregir.
+  - El registro local de lo enviado, novela/langfuse-enviados.txt, es lo unico
+    que impide reenviar. Como esta en .gitignore y se pierde con cualquier
+    clon nuevo, cuando falta se le pregunta al panel que tiene ya, en vez de
+    mandarlo todo otra vez.
 
 Python 3.12, solo biblioteca estandar.
 """
@@ -44,13 +63,22 @@ import json
 import os
 import pathlib
 import re
+import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
 import nucleo
 
-VARIABLES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_BASE_URL")
+# Lo unico que no se puede inventar son las claves. La URL si: sin ella el
+# destino es el Langfuse de la region de EE. UU., que es donde vive el
+# proyecto. Que faltara la URL apagaba la exportacion entera en silencio, y
+# eso es justo lo que no debe pasar.
+CLAVES = ("LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY")
+VARIABLE_URL = "LANGFUSE_BASE_URL"
+VARIABLES = CLAVES + (VARIABLE_URL,)
+BASE_POR_DEFECTO = "https://us.cloud.langfuse.com"
 
 TIEMPO_MAXIMO = 8          # segundos por envio: no bloquear la generacion
 MAX_LOTE_BYTES = 900_000   # la API rechaza cuerpos por encima de 1 MB
@@ -62,6 +90,7 @@ MAX_TEXTO = 20000          # tope del manuscrito que viaja como salida
 
 RUTA_OTLP = "/api/public/otel/v1/traces"
 RUTA_SCORES = "/api/public/ingestion"
+RUTA_OBSERVACIONES = "/api/public/v2/observations"
 
 EVENTOS_DE_INTENTO = ("borrador", "reescritura", "parche")
 
@@ -79,14 +108,28 @@ _registrado_atexit = False
 # --------------------------------------------------------------------------
 
 def _credenciales() -> dict:
-    """Lee las tres variables de entorno. Devuelve valores y ausencias.
+    """Lee las variables de entorno. Devuelve valores, ausencias y origen.
 
-    El valor nunca sale de esta funcion hacia un log ni hacia stdout: solo se
-    usa para construir la cabecera de autorizacion.
+    Solo faltan las CLAVES: si no hay URL se usa BASE_POR_DEFECTO, asi que
+    nunca es motivo de apagado. El valor de las claves no sale de aqui hacia
+    un log ni hacia stdout: solo se usa para la cabecera de autorizacion.
     """
     valores = {v: (os.environ.get(v) or "").strip() for v in VARIABLES}
-    faltan = [v for v, dato in valores.items() if not dato]
-    return {"valores": valores, "faltan": faltan}
+    del_entorno = bool(valores[VARIABLE_URL])
+    if not del_entorno:
+        valores[VARIABLE_URL] = BASE_POR_DEFECTO
+    return {"valores": valores,
+            "faltan": [v for v in CLAVES if not valores[v]],
+            "url_del_entorno": del_entorno}
+
+
+def _host(cred: dict) -> str:
+    """Solo el host del destino. Se puede mostrar: no es un secreto, y saber
+    contra que servidor se esta trazando es media diagnosis."""
+    try:
+        return urllib.parse.urlsplit(cred["valores"][VARIABLE_URL]).netloc or "?"
+    except ValueError:
+        return "?"
 
 
 def _conf(cfg: dict) -> dict:
@@ -130,13 +173,52 @@ def diagnostico() -> dict:
     return {
         "script": "observabilidad",
         "transporte": "OTLP/HTTP JSON para trazas; score-create para scores",
-        "variables_presentes": [v for v in VARIABLES if v not in cred["faltan"]],
-        "variables_ausentes": cred["faltan"],
+        "host": _host(cred),
+        "url_del_entorno": cred["url_del_entorno"],
+        "claves_presentes": [v for v in CLAVES if v not in cred["faltan"]],
+        "claves_ausentes": cred["faltan"],
         "activo": encendido,
         "enviar_texto": enviar_texto(cfg),
         "entorno": entorno(cfg),
         "detalle": detalle,
     }
+
+
+def linea_estado() -> str:
+    """Una linea que dice si se esta trazando y contra que host.
+
+    Nunca lleva el valor de una clave. Si falta alguna se la nombra, que es
+    lo unico accionable: el autor mira su entorno y la pone.
+    """
+    try:
+        cfg = nucleo.cargar_config()
+        cred = _credenciales()
+    except SystemExit:
+        return "[langfuse] INACTIVO: no se ha podido leer config.json"
+    if cred["faltan"]:
+        return ("[langfuse] INACTIVO: falta " + ", ".join(cred["faltan"])
+                + " en el entorno. No se exporta nada; events.jsonl sigue "
+                  "registrandolo todo.")
+    if not activo(cfg, cred):
+        return ("[langfuse] INACTIVO: observabilidad.langfuse.activo es false "
+                "en config.json. events.jsonl sigue registrandolo todo.")
+    origen = "del entorno" if cred["url_del_entorno"] else "por defecto"
+    return (f"[langfuse] activo -> {_host(cred)} ({origen}), entorno "
+            f"'{entorno(cfg)}', texto "
+            f"{'si' if enviar_texto(cfg) else 'no'}")
+
+
+def anunciar() -> None:
+    """Escupe linea_estado() por stderr. No falla nunca y no toca stdout.
+
+    Va por stderr a proposito: stdout de los scripts es JSON y tiene quien lo
+    parsee. Y va al arrancar la generacion, no al final, porque de nada sirve
+    enterarse de que no se estaba trazando cuando ya no hay nada que trazar.
+    """
+    try:
+        print(linea_estado(), file=sys.stderr)
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------
@@ -478,6 +560,22 @@ def _raiz(cfg, traza, k, eventos, agr, texto_ok):
                  agr["inicio"], agr["fin"], None, atributos)
 
 
+def _comunes(cfg: dict, tirada: str) -> dict:
+    """Atributos de traza que Langfuse v4 quiere repetidos en cada span.
+
+    En v4 la traza es solo un grupo de observaciones: lo que vive unicamente
+    en la raiz no se puede filtrar ni agregar desde sus hijos. Y como la raiz
+    es lo ultimo que se cierra, sin esto la tirada en curso apareceria en el
+    panel sin nombre y sin entorno hasta el final.
+    """
+    return {
+        "langfuse.trace.name": cfg.get("proyecto") or "novela",
+        "langfuse.session.id": _limpio(cfg.get("proyecto") or "novela"),
+        "langfuse.environment": entorno(cfg),
+        "langfuse.trace.metadata.tirada": tirada,
+    }
+
+
 def _agentes(eventos: list) -> dict:
     """Agrupa las invocaciones por ejecucion de subagente.
 
@@ -561,8 +659,21 @@ def _generacion(traza, k, ev, texto_ok) -> dict:
                  datos.get("fin") or ev.get("ts"), padre, atributos)
 
 
-def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
-    """Arbol completo de una tirada, en spans de OTLP."""
+def construir_spans(cfg: dict, eventos: list, texto_ok: bool,
+                    cerrar: bool = False) -> list:
+    """Arbol de una tirada, en spans de OTLP. SOLO lo que ya ha terminado.
+
+    Un span de OTLP viaja entero y Langfuse NO lo actualiza despues: reenviar
+    el mismo spanId duplica la observacion e infla el coste. Por eso un tramo
+    abierto (una fase empezada, un capitulo en curso) no se emite todavia: se
+    emitira en el envio del evento que lo cierre, ya con su duracion real.
+    Eso es lo que hace que el panel siga la tirada en vivo en lugar de
+    llenarse de spans de duracion cero que nunca se podran corregir.
+
+    Con cerrar=True se dan por terminados los tramos abiertos, tomando como
+    fin la ultima marca del historico. Es para subir una tirada pasada, que
+    por definicion ya no va a cerrar sus eventos.
+    """
     if not eventos:
         return []
     tirada = next((e.get("tirada") for e in eventos if e.get("tirada")), None)
@@ -571,33 +682,50 @@ def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
     k = _claves(legible)
     agr = _agregados(eventos)
     tramos = _tramos(eventos)
-    spans = [_raiz(cfg, traza, k, eventos, agr, texto_ok)]
+
+    def cerrado(datos, respaldo=None):
+        """Fin real del tramo, o None si sigue abierto."""
+        if datos.get("fin"):
+            return datos["fin"]
+        return (respaldo or tramos["ultimo"]) if cerrar else None
+
+    # La tirada termina cuando se cierra la fase de entrega: es el mismo
+    # criterio con el que eventos.tirada_vigente() abre la siguiente.
+    acabada = cerrar or any(e.get("evento") == "fase_fin"
+                            and e.get("fase") == "entrega" for e in eventos)
+    spans = [_raiz(cfg, traza, k, eventos, agr, texto_ok)] if acabada else []
 
     for fase, datos in tramos["fases"].items():
+        fin = cerrado(datos)
+        if fin is None:
+            continue
         spans.append(_span(
             traza, k["fase"](fase), NOMBRES_FASE.get(fase, fase), "span",
-            datos.get("inicio") or agr["inicio"],
-            datos.get("fin") or tramos["ultimo"], k["raiz"],
+            datos.get("inicio") or agr["inicio"], fin, k["raiz"],
             {"langfuse.observation.metadata.fase": fase,
              "langfuse.observation.output": _texto(datos.get("salida"))
              if datos.get("salida") else None}))
 
     for cap, datos in tramos["capitulos"].items():
+        fin = cerrado(datos)
+        if fin is None:
+            continue
         spans.append(_span(
             traza, k["cap"](cap), f"capitulo {int(cap):02d}", "span",
-            datos.get("inicio"), datos.get("fin") or tramos["ultimo"],
-            k["fase"]("redaccion"),
+            datos.get("inicio"), fin, k["fase"]("redaccion"),
             {"langfuse.observation.metadata.capitulo": cap,
              "langfuse.observation.metadata.intentos": datos.get("intentos"),
              "langfuse.observation.output": _texto(datos.get("salida"))
              if datos.get("salida") else None}))
 
     for (cap, intento), datos in tramos["intentos"].items():
+        fin = cerrado(datos, datos.get("inicio"))
+        if fin is None:
+            continue
         spans.append(_span(
             traza, k["int"](cap, intento),
             f"intento {intento} ({datos.get('modo', 'borrador')})", "span",
-            datos.get("inicio"), datos.get("fin") or datos.get("inicio"),
-            k["cap"](cap),
+            datos.get("inicio"), fin, k["cap"](cap),
             {"langfuse.observation.metadata.capitulo": cap,
              "langfuse.observation.metadata.intento": intento,
              "langfuse.observation.metadata.modo": datos.get("modo"),
@@ -640,6 +768,11 @@ def construir_spans(cfg: dict, eventos: list, texto_ok: bool) -> list:
                 traza, f"{k['raiz']}--commit-{ev.get('ts')}", "commit", "event",
                 ev.get("ts"), ev.get("ts"), k["raiz"],
                 {"langfuse.observation.output": _texto(datos)}))
+
+    comunes = _atributos(_comunes(cfg, tirada))
+    for span in spans:
+        ya = {a["key"] for a in span["attributes"]}
+        span["attributes"].extend(a for a in comunes if a["key"] not in ya)
     return spans
 
 
@@ -706,7 +839,7 @@ def construir_scores(cfg: dict, eventos: list) -> list:
     ent = entorno(cfg)
     lote = []
 
-    def anadir(observacion, nombre, valor, intento=None):
+    def anadir(observacion, nombre, valor, intento=None, sello=None):
         if isinstance(valor, bool):
             valor, tipo = (1 if valor else 0), "NUMERIC"
         elif isinstance(valor, (int, float)):
@@ -719,9 +852,13 @@ def construir_scores(cfg: dict, eventos: list) -> list:
                   "traceId": traza, "observationId": _id_span(observacion),
                   "name": nombre, "value": valor, "dataType": tipo,
                   "environment": ent}
+        # Un score se identifica por id + nombre + FECHA del sello. Si el
+        # sello fuera el reloj de cada envio, el mismo score reenviado al dia
+        # siguiente entraria como uno nuevo en vez de sobrescribir. Con el
+        # sello del evento que lo produjo, reenviarlo es siempre inocuo.
         lote.append({"id": _hex(f"sc{observacion}{nombre}{intento}", 32),
                      "type": "score-create",
-                     "timestamp": datetime.now(timezone.utc)
+                     "timestamp": sello or datetime.now(timezone.utc)
                      .isoformat(timespec="milliseconds").replace("+00:00", "Z"),
                      "body": cuerpo})
 
@@ -730,24 +867,26 @@ def construir_scores(cfg: dict, eventos: list) -> list:
         if cap is None:
             continue
         datos = ev.get("datos") or {}
+        sello = ev.get("ts")
         if ev.get("evento") == "validacion":
             observacion = k["cap"](cap)
             for nombre, valor in _aplanar(datos.get("metricas")).items():
-                anadir(observacion, nombre, valor, ev.get("intento"))
+                anadir(observacion, nombre, valor, ev.get("intento"), sello)
             for sev in ("bloqueante", "mayor", "menor"):
                 if sev in (datos.get("resumen") or {}):
                     anadir(observacion, f"incidencias_{sev}",
-                           datos["resumen"][sev], ev.get("intento"))
+                           datos["resumen"][sev], ev.get("intento"), sello)
         elif ev.get("evento") == "capitulo_fin":
             observacion = k["cap"](cap)
-            anadir(observacion, "intentos", ev.get("intento") or 1)
+            anadir(observacion, "intentos", ev.get("intento") or 1,
+                   sello=sello)
             lineas = _lineas_utiles(cap)
             if lineas is not None:
                 anadir(observacion, "palabras",
-                       len(nucleo.palabras(" ".join(lineas))))
-                anadir(observacion, "lineas", len(lineas))
+                       len(nucleo.palabras(" ".join(lineas))), sello=sello)
+                anadir(observacion, "lineas", len(lineas), sello=sello)
         elif ev.get("evento") == "escalado":
-            anadir(k["cap"](cap), "escalado", 1)
+            anadir(k["cap"](cap), "escalado", 1, sello=sello)
     return lote
 
 
@@ -755,16 +894,80 @@ def construir_scores(cfg: dict, eventos: list) -> list:
 # Envio
 # --------------------------------------------------------------------------
 
-def _peticion(cred: dict, ruta: str, cuerpo: dict, cabeceras: dict = None):
+def _autorizacion(cred: dict) -> str:
+    """La cabecera Basic. Las claves no salen de aqui hacia ningun otro sitio."""
     valores = cred["valores"]
-    url = valores["LANGFUSE_BASE_URL"].rstrip("/") + ruta
-    datos = json.dumps(cuerpo, ensure_ascii=False, default=str).encode("utf-8")
-    autorizacion = base64.b64encode(
+    return "Basic " + base64.b64encode(
         f"{valores['LANGFUSE_PUBLIC_KEY']}:{valores['LANGFUSE_SECRET_KEY']}"
         .encode("utf-8")).decode("ascii")
+
+
+def _consultar(cred: dict, ruta: str, parametros: dict):
+    """GET a la API publica. Devuelve el JSON, o None si no se pudo preguntar.
+
+    Es la unica lectura que hace este modulo. No participa en el envio: solo
+    sirve para saber que hay ya en el panel antes de mandar nada.
+    """
+    url = (cred["valores"]["LANGFUSE_BASE_URL"].rstrip("/") + ruta + "?"
+           + urllib.parse.urlencode(parametros))
+    peticion = urllib.request.Request(url, method="GET")
+    peticion.add_header("Authorization", _autorizacion(cred))
+    try:
+        with urllib.request.urlopen(peticion, timeout=TIEMPO_MAXIMO) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except SystemExit:
+        return None
+    except Exception as exc:
+        _anotar(f"consulta de lo ya ingerido fallida: {_motivo(exc)}")
+        return None
+
+
+def _ids_ingeridos(cred: dict, trazas) -> set:
+    """Span ids que Langfuse ya tiene de esas trazas, o None si no contesta."""
+    ids = set()
+    for traza in sorted(t for t in trazas if t):
+        cursor = None
+        for _ in range(50):                  # tope: no pagina sin fin
+            consulta = {"traceId": traza, "limit": 1000}
+            if cursor:
+                consulta["cursor"] = cursor
+            datos = _consultar(cred, RUTA_OBSERVACIONES, consulta)
+            if datos is None:
+                return None
+            filas = datos.get("data") or []
+            ids.update(f.get("id") for f in filas if f.get("id"))
+            cursor = (datos.get("meta") or {}).get("cursor")
+            if not cursor or not filas:
+                break
+    return ids
+
+
+def sembrar_enviados(trazas) -> bool:
+    """Apunta como ya enviados los spans que el panel tiene de esas trazas.
+
+    novela/langfuse-enviados.txt es lo unico que impide reenviar un span, y
+    Langfuse NO deduplica: cada reenvio es otra observacion, y el coste del
+    panel sube con ella. Pero ese fichero esta en .gitignore y no viaja con el
+    repositorio, asi que se pierde con cualquier clon nuevo. Preguntar al
+    panel lo reconstruye. Devuelve False si no se ha podido preguntar.
+    """
+    cfg = nucleo.cargar_config()
+    cred = _credenciales()
+    if not activo(cfg, cred):
+        return False
+    ids = _ids_ingeridos(cred, trazas)
+    if ids is None:
+        return False
+    _marcar_enviados(ids)
+    return True
+
+
+def _peticion(cred: dict, ruta: str, cuerpo: dict, cabeceras: dict = None):
+    url = cred["valores"]["LANGFUSE_BASE_URL"].rstrip("/") + ruta
+    datos = json.dumps(cuerpo, ensure_ascii=False, default=str).encode("utf-8")
     peticion = urllib.request.Request(url, data=datos, method="POST")
     peticion.add_header("Content-Type", "application/json")
-    peticion.add_header("Authorization", "Basic " + autorizacion)
+    peticion.add_header("Authorization", _autorizacion(cred))
     for clave, valor in (cabeceras or {}).items():
         peticion.add_header(clave, valor)
     with urllib.request.urlopen(peticion, timeout=TIEMPO_MAXIMO) as respuesta:
@@ -814,6 +1017,13 @@ def flush() -> bool:
         cred = _credenciales()
         if not activo(cfg, cred):
             return False
+        if spans and not (nucleo.raiz() / RUTA_ENVIADOS).exists():
+            # Sin registro local no se sabe que viajo ya. Se pregunta al panel
+            # una vez y se vuelve a filtrar: reenviar no corrige nada, duplica.
+            ids = _ids_ingeridos(cred, {s.get("traceId") for s in spans})
+            if ids:
+                _marcar_enviados(ids)
+                spans = nuevos(spans)
         ok = True
         for tanda in trocear(spans):
             if _peticion(cred, RUTA_OTLP, _envoltorio(cfg, tanda),
@@ -846,11 +1056,37 @@ def encolar(spans: list = None, scores: list = None) -> None:
         _registrado_atexit = True
 
 
+def _generaciones(eventos: list) -> list:
+    """Las llamadas de los subagentes que ya han terminado, como eventos
+    'invocacion' del esquema.
+
+    Los transcripts de Claude Code son el UNICO sitio donde existe el
+    desglose de tokens de cada llamada. Sin esto la traza en vivo no tendria
+    ni una sola 'generation' y el panel daria coste cero hasta que alguien
+    ejecutara retroalimentar.py al terminar la novela.
+
+    Estas invocaciones NO se escriben en events.jsonl: el registro local
+    cuenta lo que hizo el pipeline, y los transcripts son una fuente externa.
+    Solo viajan a Langfuse. Ver SPEC 14.5.
+    """
+    try:
+        import retroalimentar
+    except ImportError:
+        return []
+    carpeta = retroalimentar.carpeta_transcripts()
+    if carpeta is None:
+        return []
+    return retroalimentar.eventos_de_invocacion(
+        eventos, retroalimentar.leer_invocaciones(carpeta,
+                                                  solo_primer_plano=True))
+
+
 def exportar(ev: dict) -> bool:
     """Punto de entrada que llama eventos.registrar(). No lanza nunca.
 
-    Reconstruye el arbol entero de la tirada porque un span de OTLP viaja
-    completo y no se actualiza despues. Devuelve True si quedo encolado.
+    Reconstruye el arbol entero de la tirada y emite lo que este evento haya
+    cerrado: un span de OTLP viaja completo y no se actualiza despues.
+    Devuelve True si quedo encolado.
     """
     try:
         cfg = nucleo.cargar_config()
@@ -860,10 +1096,12 @@ def exportar(ev: dict) -> bool:
         eventos = leer_eventos(cfg, ev.get("tirada"))
         if not any(e.get("ts") == ev.get("ts") for e in eventos):
             eventos.append(ev)
+        completos = sorted(eventos + _generaciones(eventos),
+                           key=lambda e: e.get("ts") or "")
         # Solo lo que no haya viajado ya: sin este filtro, reconstruir el
         # arbol en cada evento multiplicaria cada span por el numero de
         # eventos de la tirada.
-        encolar(nuevos(construir_spans(cfg, eventos, enviar_texto(cfg))),
+        encolar(nuevos(construir_spans(cfg, completos, enviar_texto(cfg))),
                 construir_scores(cfg, eventos))
         return True
     except SystemExit:
@@ -883,7 +1121,13 @@ def main():
     parser.add_argument("--estado", action="store_true",
                         help="Dice si la integracion esta activa y que variables "
                              "de entorno faltan, por su nombre y sin su valor.")
-    parser.parse_args()
+    parser.add_argument("--linea", action="store_true",
+                        help="Lo mismo en una sola linea legible, la que se "
+                             "imprime al arrancar cada generacion.")
+    args = parser.parse_args()
+    if args.linea:
+        print(linea_estado())
+        raise SystemExit(0)
     nucleo.salir(diagnostico(), 0)
 
 

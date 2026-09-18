@@ -34,14 +34,26 @@ El identificador de tirada y la marca de tiempo los pone el script. Tú no los p
 
 ### Qué NO se registra a mano
 
-Los tokens y el modelo **no** se anotan durante la tirada: ningún script llama
-a una API, así que el orquestador no los ve. Existen, pero en los transcripts
-de Claude Code, y se recuperan después con:
+Los tokens y el modelo **no** se anotan a mano, y tampoco se escriben en
+`events.jsonl`: ningún script llama a una API, así que el orquestador no los
+ve. Existen en los transcripts de Claude Code, y el exportador los lee solo.
+
+Cada vez que registras un evento, el exportador cosecha las llamadas de los
+subagentes que ya han terminado y las manda a Langfuse con el evento. Es decir:
+**el coste aparece en el panel durante la tirada, no al final.** No tienes que
+hacer nada para que ocurra.
+
+`retroalimentar.py` sigue existiendo para subir una tirada vieja, o para
+recoger lo que quedó después del último evento:
 
 ```powershell
 python scripts/retroalimentar.py --simular   # enseña qué subiría, sin subir
 python scripts/retroalimentar.py             # lo sube a Langfuse
 ```
+
+Es inocuo repetirlo: antes de enviar pregunta al panel qué tiene ya y omite lo
+que sobra. Lo que **no** debes usar es `--reenviar-todo`, que se salta esa
+comprobación y duplica en el panel todo lo que ya estuviera, inflando el coste.
 
 Tampoco se anota el coste: no hay tabla de tarifas en el repositorio. Se envían
 modelo y tokens, y Langfuse aplica la suya. Ver SPEC.md secciones 14.4 y 14.5.
