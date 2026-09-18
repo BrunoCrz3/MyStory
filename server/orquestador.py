@@ -566,14 +566,7 @@ def _validar(n, cfg, sesiones, intento, avisar):
     informe = informes.informe_capitulo(n, cfg, estado, continuista, intento)
     informes.guardar(informe, f"capitulo_{n:02d}.json")
     eventos.registrar("validacion", capitulo=n, intento=intento,
-                      datos={"metricas": {
-                                 "unidad": informe["metricas"]["longitud"].get("unidad"),
-                                 "medido": informe["metricas"]["longitud"].get("medido"),
-                                 "objetivo": informe["metricas"]["longitud"].get("objetivo"),
-                                 "en_norma": informe["metricas"]["longitud"].get("en_norma"),
-                                 **{k: v for k, v in informe["metricas"]["repeticion"].items()
-                                    if k in ("solape", "frases_recicladas",
-                                             "tipo_apertura")}},
+                      datos={"metricas": informes.metricas_planas(informe),
                              "resumen": informe["resumen"]})
     return informe
 

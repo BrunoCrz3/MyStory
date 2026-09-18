@@ -182,6 +182,27 @@ def informe_global(cfg: dict, estado: dict, revisor: dict = None) -> dict:
     }
 
 
+def metricas_planas(informe: dict) -> dict:
+    """Las metricas de un informe, en un solo diccionario.
+
+    Es lo que viaja en el evento `validacion` y de ahi a los scores de
+    Langfuse. Existe porque los dos caminos la construian por su cuenta y no
+    construian lo mismo: el orquestador escogia a mano siete claves -y dejaba
+    fuera monotonia y diversidad, que la seccion 12.8 del SPEC promete que
+    viajan siempre- mientras que retroalimentar.py mandaba el bloque entero.
+    La consecuencia era que una tirada en vivo y la misma tirada resubida a
+    posteriori daban paneles distintos.
+    """
+    metricas = dict(informe["metricas"].get("repeticion") or {})
+    longitud = informe["metricas"].get("longitud") or {}
+    metricas.update({k: v for k, v in longitud.items()
+                     if k in ("unidad", "medido", "objetivo", "en_norma")})
+    continuidad = dict(informe["metricas"].get("continuidad") or {})
+    continuidad.pop("comprobaciones", None)     # es una lista, no una metrica
+    metricas.update(continuidad)
+    return metricas
+
+
 def guardar(payload: dict, nombre: str) -> Path:
     destino = carpeta() / nombre
     destino.write_text(

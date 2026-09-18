@@ -35,6 +35,7 @@ import re
 from collections import Counter
 
 import eventos as eventos_mod
+import informes
 import nucleo
 import observabilidad as ob
 
@@ -335,11 +336,7 @@ def eventos_de_metricas(cfg: dict, eventos: list) -> list:
             informe = informes.informe_capitulo(capitulo, cfg, estado)
         except (SystemExit, OSError, KeyError, ValueError):
             continue
-        metricas = dict(informe["metricas"].get("repeticion") or {})
-        metricas.update(informe["metricas"].get("longitud") or {})
-        continuidad = dict(informe["metricas"].get("continuidad") or {})
-        continuidad.pop("comprobaciones", None)
-        metricas.update(continuidad)
+        metricas = informes.metricas_planas(informe)
         salida.append({
             "ts": sello, "tirada": tirada, "evento": "validacion",
             "fase": "redaccion", "capitulo": capitulo,

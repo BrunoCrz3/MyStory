@@ -789,17 +789,33 @@ def _lineas_utiles(capitulo) -> list:
         / f"capitulo-{int(capitulo):02d}.md")
 
 
+# Sufijos que no aportan nada al nombre del score: 'monotonia_componentes'
+# aplanado da 'monotonia_componentes_apertura', y lo util es 'monotonia_apertura'.
+_SUFIJOS_REDUNDANTES = ("_componentes", "_max")
+
+
 def _aplanar(metricas: dict) -> dict:
+    """Metricas anidadas -> un nivel, que es lo que acepta un score.
+
+    Antes conocia por su nombre las dos metricas anidadas que habia y dejaba
+    caer en silencio cualquier otra. Al anadir monotonia_sintactica sus tres
+    componentes se perdian sin que nadie se enterase. Ahora aplana lo que
+    venga: una metrica nueva llega al panel sin tocar esta funcion.
+    """
     plano = {}
     for clave, valor in (metricas or {}).items():
-        if clave == "monotonia_componentes" and isinstance(valor, dict):
-            for sub, subvalor in valor.items():
-                plano[f"monotonia_{sub}"] = subvalor
-        elif clave == "muletilla_max" and isinstance(valor, dict):
-            if valor.get("por_mil") is not None:
-                plano["muletilla_por_mil"] = valor["por_mil"]
-        else:
+        if not isinstance(valor, dict):
             plano[clave] = valor
+            continue
+        prefijo = clave
+        for sufijo in _SUFIJOS_REDUNDANTES:
+            if prefijo.endswith(sufijo):
+                prefijo = prefijo[: -len(sufijo)]
+                break
+        for sub, subvalor in valor.items():
+            if isinstance(subvalor, dict):
+                continue            # dos niveles no: un score es un numero
+            plano[f"{prefijo}_{sub}"] = subvalor
     return plano
 
 
