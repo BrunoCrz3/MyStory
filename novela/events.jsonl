@@ -1,0 +1,2 @@
+{"ts": "2026-09-18T00:56:54.434Z", "tirada": "20260918-0056", "evento": "fase_inicio", "fase": "canon", "capitulo": null, "intento": null, "datos": {}, "esquema": 1}
+{"ts": "2026-09-18T01:01:57.872Z", "tirada": "20260918-0056", "evento": "fase_fin", "fase": "canon", "capitulo": null, "intento": null, "datos": {"personajes": 3}, "esquema": 1}

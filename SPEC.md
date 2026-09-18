@@ -87,7 +87,7 @@ git remote add origin <https://github.com/BrunoCrz3/MyStory1>
 Abre Claude Code en `C:\Users\student\Documents\MyStory1` y pega esto tal cual:
 
 ```
-Lee SPEC.md completo antes de escribir nada.
+Lee SPEC.md completo antes de escribir nada.1
 
 Construye el proyecto exactamente como lo describe: crea los 27 ficheros del
 inventario de la seccion 16, con el contenido literal que el SPEC indica donde
