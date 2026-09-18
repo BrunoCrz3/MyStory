@@ -157,6 +157,24 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
                             f"capitulo {c}: '{' '.join(ultimas)}'"),
             })
 
+    # 6. Monotonia y diversidad. Estas dos no disparan incidencias: son
+    # metricas de serie, pensadas para comparar tiradas entre si en Langfuse.
+    # Ver SPEC seccion 12.6.
+    #
+    #   diversidad  0..1, mas alto es mejor: n-gramas distintos sobre posiciones.
+    #   monotonia   0..1, mas alto es PEOR: media de los tres componentes.
+    posiciones = max(len(tokens) - tam_ngrama + 1, 0)
+    diversidad = round(len(propios) / posiciones, 4) if posiciones else 0.0
+
+    mono_apertura = round(len(previas) / len(anteriores), 4) if anteriores else 0.0
+    por_mil_max = (muletilla_max or {}).get("por_mil") or 0.0
+    mono_muletillas = (round(min(1.0, por_mil_max / umbral_muletilla), 4)
+                       if umbral_muletilla else 0.0)
+    lineas_cap = len(nucleo.lineas_capitulo(n))
+    mono_reciclaje = (round(min(1.0, len(recicladas) / lineas_cap), 4)
+                      if lineas_cap else 0.0)
+    monotonia = round((mono_apertura + mono_muletillas + mono_reciclaje) / 3, 4)
+
     resumen = {
         "bloqueante": 0,
         "mayor": sum(1 for i in incidencias if i["severidad"] == "mayor"),
@@ -174,6 +192,13 @@ def analizar(n: int, cfg: dict, estado: dict) -> dict:
             "frases_recicladas": len(recicladas),
             "muletilla_max": muletilla_max,
             "tipo_apertura": tipo,
+            "diversidad": diversidad,
+            "monotonia": monotonia,
+            "monotonia_componentes": {
+                "apertura": mono_apertura,
+                "muletillas": mono_muletillas,
+                "reciclaje": mono_reciclaje,
+            },
         },
         "incidencias": incidencias,
         "resumen": resumen,

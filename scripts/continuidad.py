@@ -123,8 +123,10 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
 
     # 1. Todos los marcadores de todos los beats aparecen literalmente.
     faltan = []
+    marcadores_totales = 0
     for beat in plan.get("beats", []):
         for marcador in beat.get("marcadores", []):
+            marcadores_totales += 1
             if nucleo.normalizar(marcador) not in texto:
                 faltan.append((beat.get("id", "?"), marcador))
                 incidencias.append({
@@ -132,6 +134,11 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
                     "detalle": (f"El beat {beat.get('id', '?')} exige el marcador "
                                 f"'{marcador}' y no aparece en el texto."),
                 })
+    # Fraccion de marcadores presentes, 0..1. La comprobacion sigue siendo
+    # booleana (un solo marcador ausente ya es bloqueante), pero la fraccion se
+    # guarda como metrica para poder comparar tiradas. Ver SPEC seccion 12.6.
+    cobertura_beats = (round((marcadores_totales - len(faltan)) / marcadores_totales, 4)
+                       if marcadores_totales else 1.0)
     comprobaciones.append({
         "id": "beats_cubiertos", "ok": not faltan,
         **({"detalle": f"falta el marcador '{faltan[0][1]}' del beat {faltan[0][0]}"}
@@ -252,6 +259,8 @@ def modo_capitulo(n: int, cfg: dict) -> dict:
     return {
         "script": "continuidad", "modo": "capitulo", "capitulo": n,
         "comprobaciones": comprobaciones, "incidencias": incidencias,
+        "metricas": {"cobertura_beats": cobertura_beats,
+                     "marcadores_totales": marcadores_totales},
         "resumen": _resumen(incidencias),
     }
 

@@ -34,3 +34,4 @@
 {"ts": "2026-09-18T15:18:21.331Z", "tirada": "20260918-0056", "evento": "fase_inicio", "fase": "entrega", "capitulo": null, "intento": null, "datos": {}, "esquema": 1}
 {"ts": "2026-09-18T15:18:43.462Z", "tirada": "20260918-0056", "evento": "fase_fin", "fase": "entrega", "capitulo": null, "intento": null, "datos": {"capitulos": 3, "unidad": "lineas", "total": 12}, "esquema": 1}
 {"ts": "2026-09-18T15:18:43.750Z", "tirada": "20260918-1518", "evento": "commit", "fase": null, "capitulo": null, "intento": null, "datos": {"sha": "1071f8f", "mensaje": "feat(entrega): manuscrito.md"}, "esquema": 1}
+{"ts": "2026-09-18T16:06:24.982Z", "tirada": "20260918-1518", "evento": "commit", "fase": null, "capitulo": null, "intento": null, "datos": {"sha": "b0f5616", "mensaje": "chore(gitignore): ignorar ficheros .env"}, "esquema": 1}
