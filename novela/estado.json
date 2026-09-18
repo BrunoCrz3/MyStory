@@ -1,6 +1,6 @@
 {
   "tirada": "20260918-0056",
-  "capitulos_escritos": 2,
+  "capitulos_escritos": 3,
   "hechos": [
     {
       "id": "H001",
@@ -105,6 +105,62 @@
       "valor": "cuatro años de acreditación, dos recuerdos tachados y ni una línea más",
       "tipo": "objeto",
       "cita": "cuatro años de acreditación, dos recuerdos tachados y ni una línea más en todo el cuaderno de la lectora"
+    },
+    {
+      "id": "H014",
+      "capitulo": 3,
+      "clave": "lecturas:Nadia Olvera",
+      "valor": "ha gastado las tres lecturas de su vida; no le queda ninguna",
+      "tipo": "estado_personaje",
+      "cita": "gastó así, ante la inspectora, la tercera y última que le quedaba, los cuatro minutos enteros con la palma apoyada, sin pedir ninguna versión nueva"
+    },
+    {
+      "id": "H015",
+      "capitulo": 3,
+      "clave": "orden-conservar:version-conservada",
+      "valor": "la orden conservar se ejecuta sobre la transcripción del enfriamiento de ayer, la que nombra a Nadia como causa del final",
+      "tipo": "mundo",
+      "cita": "«La de ayer, la que me nombra a mí, ésa: conservar», dijo Nadia"
+    },
+    {
+      "id": "H016",
+      "capitulo": 3,
+      "clave": "resto:legibilidad",
+      "valor": "todas las demás versiones se apagan y quedan ilegibles para siempre; solo la conservada se deja leer",
+      "tipo": "mundo",
+      "cita": "de cuantas se habían escrito allí desde que hubo lectores acreditados era la única que aún se dejaba leer; lo demás Halima lo vio apagarse de arriba abajo"
+    },
+    {
+      "id": "H017",
+      "capitulo": 3,
+      "clave": "cotejo:absolucion",
+      "valor": "el Cotejo no absuelve: no existe versión sin causa, solo una que alguien sostiene con su nombre delante",
+      "tipo": "mundo",
+      "cita": "el Cotejo no absolvía a nadie, no había versión sin causa, solo una que alguien se avenía a sostener con su nombre delante"
+    },
+    {
+      "id": "H018",
+      "capitulo": 3,
+      "clave": "acta-cierre:firma-Halima Vreede",
+      "valor": "Halima firma en el renglón mismo de la orden, debajo de la lectora, y no en el margen de los fedatarios: su firma pasa a ser parte de la decisión",
+      "tipo": "objeto",
+      "cita": "Al pie del acta, Halima escribió el suyo y, en vez de dejarlo en el margen de los fedatarios, lo bajó hasta el renglón mismo de la orden, debajo del de la lectora"
+    },
+    {
+      "id": "H019",
+      "capitulo": 3,
+      "clave": "cobro-lectura-3:recuerdo",
+      "valor": "el archivo se lleva la conversación de ayer con Teodoro y el nombre que él le había devuelto entonces; es una pérdida distinta de la de H006 (la tarde en que lo conoció) y de H007 (su nombre en el capítulo 1)",
+      "tipo": "estado_personaje",
+      "cita": "se volvió hacia el custodio como quien va a decir un nombre que tenía en la boca desde ayer, y se detuvo a medio gesto, buscando dos veces algo que no le vino"
+    },
+    {
+      "id": "H020",
+      "capitulo": 3,
+      "clave": "salida-sala:Nadia Olvera-Teodoro Bassi",
+      "valor": "Nadia sale de la sala sin reconocer a Teodoro y pregunta por él como por un desconocido",
+      "tipo": "relacion",
+      "cita": "la oyó preguntar desde la puerta: «¿Y ese señor, quién es?»"
     }
   ],
   "hilos": [
@@ -112,15 +168,15 @@
       "id": "T01",
       "titulo": "La versión donde el final no lo causa Nadia",
       "abierto_en": 1,
-      "cerrado_en": null,
-      "estado": "abierto"
+      "cerrado_en": 3,
+      "estado": "cerrado"
     },
     {
       "id": "T02",
       "titulo": "El cobro: lo que Nadia recuerda de Teodoro",
       "abierto_en": 1,
-      "cerrado_en": null,
-      "estado": "abierto"
+      "cerrado_en": 3,
+      "estado": "cerrado"
     }
   ],
   "entidades": [
@@ -158,6 +214,16 @@
         "la inspectora"
       ],
       "primera_aparicion": 1
+    },
+    {
+      "nombre": "Cotejo",
+      "tipo": "objeto",
+      "alias": [
+        "el Cotejo",
+        "Cotejo",
+        "el archivo"
+      ],
+      "primera_aparicion": 3
     }
   ],
   "resumenes": [
@@ -172,6 +238,12 @@
       "dia": 1,
       "resumen": "Teodoro entrega el cuaderno de cobros y Halima lo incorpora al acta de cierre: el registro pasa a ser documento del organismo, aunque ninguna de las lecturas ya acreditadas queda anulada. La inspectora fija el cierre del depósito para el final del único enfriamiento que aún consiente, el de mañana, y le advierte que en el acta debe constar cuanto haya presenciado dentro de la sala. Al completar el renglón del día, Teodoro anota lo que el archivo se ha llevado y calla que Nadia ya no lo reconoce. Por primera vez el custodio decide qué no escribir, y esa línea no llega a ningún papel del organismo.",
       "ultimas_lineas": "Fijó el cierre para el final del único enfriamiento que aún consentía, el de mañana, y le advirtió que en el acta debía constar cuanto él hubiera presenciado dentro de la sala; a tres pasos de los dos, Nadia le preguntaba al custodio, de usted, si le daría tiempo a usar la que le quedaba.\nHalima le devolvió el cuaderno para que completara el renglón del día, y él añadió, junto al nombre escrito desde el enfriamiento anterior, las lecturas gastadas, el estado de la lámpara, el goteo de la pared norte: el apunte consignaba lo que el archivo se había llevado, no que ella hubiera dejado de reconocerlo; con el usted todavía en el oído, Teodoro paró la pluma sobre el blanco que venía después y lo entregó así, pensando que mientras esa línea no llegara a ningún papel del organismo no quedaría constancia de quién había dejado de ser él para ella."
+    },
+    {
+      "capitulo": 3,
+      "dia": 2,
+      "resumen": "Nadia gasta su tercera y última lectura sin pedir ninguna versión nueva: ordena conservar sobre la transcripción del enfriamiento de ayer, la que la nombra a ella como causa del final, y todas las demás se apagan y quedan ilegibles para siempre. Halima ve que el Cotejo no absuelve a nadie y firma el acta en el renglón mismo de la orden, debajo de la lectora, en vez de en el margen de los fedatarios. El cobro de esta lectura se lleva la conversación de ayer y el nombre que Teodoro le había devuelto. Nadia sale de la sala preguntando quién es el custodio.",
+      "ultimas_lineas": "Al pie del acta, Halima escribió el suyo y, en vez de dejarlo en el margen de los fedatarios, lo bajó hasta el renglón mismo de la orden, debajo del de la lectora, porque lo que seguía en pie ya no se sostenía solo con la mano que lo había elegido.\nNadia despegó la palma, se volvió hacia el custodio como quien va a decir un nombre que tenía en la boca desde ayer, y se detuvo a medio gesto, buscando dos veces algo que no le vino; Halima, que acababa de devolverle el cuaderno a Teodoro para el último apunte, la oyó preguntar desde la puerta: «¿Y ese señor, quién es?»."
     }
   ],
   "frases_usadas": [
@@ -182,7 +254,12 @@
     "con la pluma atravesada encima",
     "Teodoro paró la pluma sobre el blanco que venía después",
     "con el usted todavía en el oído",
-    "quién había dejado de ser él para ella"
+    "quién había dejado de ser él para ella",
+    "no había versión sin causa",
+    "alguien se avenía a sostener con su nombre delante",
+    "Halima lo vio apagarse de arriba abajo",
+    "un nombre que tenía en la boca desde ayer",
+    "lo bajó hasta el renglón mismo de la orden"
   ],
   "aperturas": [
     {
@@ -194,6 +271,11 @@
       "capitulo": 2,
       "tipo": "accion",
       "primeras_palabras": "Teodoro cruzó la sala sin que"
+    },
+    {
+      "capitulo": 3,
+      "tipo": "dialogo",
+      "primeras_palabras": "«La de ayer, la que me"
     }
   ],
   "cierres": [
@@ -206,6 +288,11 @@
       "capitulo": 2,
       "tipo": "reflexion_interior",
       "ultimas_palabras": "dejado de ser él para ella"
+    },
+    {
+      "capitulo": 3,
+      "tipo": "dialogo",
+      "ultimas_palabras": "puerta: «¿Y ese señor, quién es?»"
     }
   ]
 }

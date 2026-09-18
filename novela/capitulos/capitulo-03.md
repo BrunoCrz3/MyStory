@@ -1,0 +1,6 @@
+# Capítulo 03 — Conservar
+
+«La de ayer, la que me nombra a mí, ésa: conservar», dijo Nadia, y gastó así, ante la inspectora, la tercera y última que le quedaba, los cuatro minutos enteros con la palma apoyada, sin pedir ninguna versión nueva.
+En la lámina aguantaba la transcripción del enfriamiento de ayer, aquella en que el final salía de la mano de la lectora, y de cuantas se habían escrito allí desde que hubo lectores acreditados era la única que aún se dejaba leer; lo demás Halima lo vio apagarse de arriba abajo: el Cotejo no absolvía a nadie, no había versión sin causa, solo una que alguien se avenía a sostener con su nombre delante.
+Al pie del acta, Halima escribió el suyo y, en vez de dejarlo en el margen de los fedatarios, lo bajó hasta el renglón mismo de la orden, debajo del de la lectora, porque lo que seguía en pie ya no se sostenía solo con la mano que lo había elegido.
+Nadia despegó la palma, se volvió hacia el custodio como quien va a decir un nombre que tenía en la boca desde ayer, y se detuvo a medio gesto, buscando dos veces algo que no le vino; Halima, que acababa de devolverle el cuaderno a Teodoro para el último apunte, la oyó preguntar desde la puerta: «¿Y ese señor, quién es?».
