@@ -126,10 +126,11 @@ salir del proceso.
 
 ### Embeddings y reindexado
 
-Modelo **multilingüe y local**: `bge-m3`, con `multilingual-e5-large` como alternativa
-aprobada. Local porque el corpus es la novela inédita del autor y no tiene por qué salir
-de la máquina; multilingüe porque el vocabulario del mundo —términos canónicos,
-neologismos del novum— no se parece al de ningún corpus de entrenamiento general.
+Modelo **multilingüe y local**; cuál, con qué versión y con qué dimensión se declara en
+`config/thresholds.yaml`, bajo `embeddings`. Local porque el corpus es la novela inédita
+del autor y no tiene por qué salir de la máquina; multilingüe porque el vocabulario del
+mundo —términos canónicos, neologismos del novum— no se parece al de ningún corpus de
+entrenamiento general.
 
 **Cada fila de embedding guarda con qué se generó**: `embedding_model` y
 `embedding_version`. No es metadato decorativo. Vectores de modelos distintos no son

@@ -50,8 +50,9 @@ contexto:
 # Aquí solo viven los valores: mientras no haya histórico suficiente, `umbral` sigue en
 # null y no dispara nada; su ausencia no impide arrancar.
 
+# Que la medida se registre por escena no es configurable: es RF-PROC-08.
+
 deriva:
-  registrar_por_escena: true
   medida: null    # la definición de la medida sigue abierta en la ontología
   umbral: null    # se calibra con el histórico que v1 acumula
 
@@ -93,15 +94,14 @@ calidad:
 # ---------------------------------------------------------------------------
 # Recuperación y embeddings
 # ---------------------------------------------------------------------------
-# Modelo multilingüe local. Cada fila de embedding guarda el modelo y la versión con que
-# se generó: un cambio en cualquiera de los dos obliga a reindexar, y el sistema debe
-# detectar la discrepancia al arrancar en vez de mezclar vectores incomparables.
+# Modelo multilingüe local. El porqué está en architecture.md § Embeddings y reindexado;
+# aquí solo el valor con el que arranca el sistema. Que un cambio de modelo o de versión
+# obligue a reindexar no es configurable: es una regla, no un ajuste.
 
 embeddings:
   modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
   version: null           # versión concreta del modelo; se fija al elegir el artefacto
   dimension: null         # debe coincidir con la declarada en la tabla vec0
-  reindexado_obligatorio_si_cambia: true
 
 recuperacion:
   max_fragmentos: null    # tope antes de ordenar por similitud
