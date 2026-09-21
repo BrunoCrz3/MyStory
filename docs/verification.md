@@ -74,7 +74,7 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Las llamadas al modelo son asíncronas y llevan timeout explícito | `AGENTS.md` § Backend | Análisis estático | A | CI |
 | Los errores de dominio se mapean a HTTP en un handler central | `AGENTS.md` § Backend | Pruebas unitarias | T | `tests/commons/` |
 | El stack cerrado no admite dependencias vetadas (Postgres, Redis, Celery, ORM…) | `AGENTS.md` § Requisitos técnicos, regla 6 | Análisis estático sobre el lockfile | A | lista de bloqueo en CI |
-| Las 21 preguntas de competencia se responden con el esquema vigente | `definitions.md` § Preguntas de competencia | Pruebas de integración, una consulta por pregunta | T | `tests/competencia/` |
+| Las 21 preguntas de competencia se responden con el esquema vigente, salvo las que el alcance vigente deje fuera | `definitions.md` § Preguntas de competencia; spec 001 § Criterios de aceptación | Pruebas de integración, una consulta por pregunta | T | `tests/competencia/` |
 | La suite de `canon/` y `context/` detecta de verdad los fallos que dice cubrir | `AGENTS.md` regla 7 | Pruebas de mutación | T | CI nocturno |
 | `registrar-generacion` corre en toda llamada al modelo, sin excepción | `architecture.md` § Skills | Análisis estático + observabilidad | A | CI, trazas |
 

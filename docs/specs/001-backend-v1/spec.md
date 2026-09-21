@@ -219,7 +219,7 @@ Superficie mínima por feature:
 | RNF-01 | Ningún contexto ensamblado supera `contexto.total` de `config/thresholds.yaml`, **nunca** | T (propiedades) |
 | RNF-02 | Toda escritura al canon ocurre en transacción; `WAL` activado | A, I |
 | RNF-03 | Migraciones numeradas, aplicadas en orden y **nunca editadas** tras commitear; el hash de lo aplicado se comprueba | I, T |
-| RNF-04 | Las 21 preguntas de competencia se responden con el esquema vigente, una consulta por pregunta | T |
+| RNF-04 | Las 21 preguntas de competencia se responden con el esquema vigente, una consulta por pregunta, salvo las tres salvedades del criterio 1 de §8 | T |
 | RNF-05 | Toda versión es reproducible desde su registro de generación, salvo cambio del modelo por el proveedor | D |
 | RNF-06 | La trayectoria de cada agente es consultable a posteriori | I |
 | RNF-07 | Los nombres de las clases del código coinciden con los de la ontología, sin excepciones | A |
@@ -274,8 +274,14 @@ no puede resolver por su cuenta: `Rota` en `Promesa narrativa` y `Refutado` en
 v1 se da por terminada cuando:
 
 1. Las **21 preguntas de competencia** de `definitions.md` se responden con una consulta
-   contra el esquema vigente, con la salvedad de la pregunta 4 (retcon), que v1 responde
-   sin aplicar la invalidación.
+   contra el esquema vigente, con tres salvedades que salen del corte de §1.3:
+   - **4** (¿qué escenas quedan invalidadas por un retcon?): se responde, pero v1 no
+     aplica la invalidación.
+   - **19** (¿cuánta deriva hay y toca replanificar?): v1 responde la medida acumulada
+     (RF-PROC-08); el «toca replanificar» no tiene respuesta mientras `deriva.umbral`
+     siga en `null` y `replanning/` esté fuera.
+   - **21** (¿qué escenas quedan obsoletas tras la última replanificación?): sin bucle
+     largo no hay replanificación que consultar. Queda fuera de v1 entera.
 2. Un ciclo completo funciona de punta a punta: brief → contexto ensamblado dentro de
    presupuesto → borrador → crítica → verificación → aceptación del autor → consolidación
    → hallazgos `provisional`.
