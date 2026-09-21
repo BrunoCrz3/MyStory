@@ -78,14 +78,10 @@ compresión, no una ventana mayor.
 
 ## Jerarquía de compresión
 
-Lo lejano entra comprimido y lo cercano literal:
-
-```
-Resumen de acto      ~200 tokens
-Resumen de capítulo  ~500 tokens
-Resumen de escena    ~100 tokens
-Escena literal      ~2000 tokens
-```
+Lo lejano entra comprimido y lo cercano literal, en cuatro niveles: resumen de acto,
+resumen de capítulo, resumen de escena y escena literal. Los tamaños orientativos de cada
+nivel están en `docs/domain-knowledge.md` § Ensamblado del contexto, y son lo único de
+este reparto que no vive en `config/thresholds.yaml`.
 
 Comprimir es bajar de resolución, no recortar por la mitad. Ante una capa que desborda,
 sustituye elementos literales por su resumen del nivel superior antes de eliminar nada:
