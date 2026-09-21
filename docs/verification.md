@@ -48,7 +48,7 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | El texto de obra y de canon entra en el prompt marcado como datos, nunca en la posición de las instrucciones | `architecture.md` § Resistencia a inyección; RF-CTX-11 | Pruebas unitarias + análisis estático | T, A | `context/` |
 | Todo contrato entre capas es un modelo Pydantic; no cruzan `dict` sueltos | `AGENTS.md` § Backend | Comprobación de tipos + análisis estático | A | comprobador de tipos, `ruff` |
 | El frontend no contiene `any` | `AGENTS.md` § Frontend | Comprobación de tipos | A | `npm run typecheck` |
-| El cliente tipado de `src/api/` no diverge del OpenAPI de FastAPI | `AGENTS.md` § Frontend | Pruebas de contrato | T | paso de CI que regenera y compara |
+| El cliente tipado de `frontend/src/shared/api/` no diverge del OpenAPI de FastAPI | `AGENTS.md` § Frontend | Pruebas de contrato | T | paso de CI que regenera y compara |
 | Las escrituras al canon son idempotentes por `scene_id` + `version` | `AGENTS.md` § Backend; `architecture.md` § Reglas de ejecución | Pruebas basadas en propiedades | T | `tests/canon/` |
 | Toda escritura al canon ocurre dentro de una transacción | `AGENTS.md` § Base de datos | Análisis estático | A | `canon/` |
 | `WAL` está activado en la conexión | `AGENTS.md` § Base de datos | Inspección | I | `db/` |
