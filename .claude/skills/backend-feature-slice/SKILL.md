@@ -15,18 +15,21 @@ impide.
 
 ## Las siete features
 
-Cinco salen de las capas de la ontología, dos del modo híbrido. Cada clase del dominio
-tiene una dueña y solo una.
+Cinco salen de las capas de la ontología, dos del modo híbrido:
 
-| Feature | Capa | Es dueña de |
-| --- | --- | --- |
-| `novel/` | 1 — Obra | Obra, Parte, Capítulo, Escena, Personaje, Lugar, Novum, Regla del mundo |
-| `canon/` | 2 — Canon | Hecho canónico, Snapshot, Estado epistémico, Promesa, Contradicción, Retcon |
-| `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto |
-| `quality/` | 4 — Calidad | Dimensiones, Informe de crítica, Defecto |
-| `process/` | 5 — Proceso | Brief de escena, Borrador, Versión, Registro de generación |
-| `findings/` | híbrido | Hallazgo, Extracción, adopción |
-| `replanning/` | híbrido | Deriva, Replanificación rodante, propagación del retcon |
+| Feature | Capa |
+| --- | --- |
+| `novel/` | 1 — Obra |
+| `canon/` | 2 — Canon |
+| `context/` | 3 — Contexto |
+| `quality/` | 4 — Calidad |
+| `process/` | 5 — Proceso |
+| `findings/` | híbrido |
+| `replanning/` | híbrido |
+
+**Cada clase del dominio tiene una dueña y solo una, y quién es está en
+`docs/architecture.md` § Anatomía de una feature.** No la adivines por la capa ni la
+copies aquí: esa tabla es la lista completa y se actualiza en un solo sitio.
 
 Si una clase nueva no encaja en ninguna, el problema casi nunca es que falte una feature:
 es que la clase no está en `docs/definitions.md`. Abre una pregunta al autor antes de

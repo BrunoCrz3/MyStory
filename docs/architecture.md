@@ -102,13 +102,22 @@ canon/
 
 | Feature | Capa | Es dueña de |
 | --- | --- | --- |
-| `novel/` | 1 — Obra | Obra, Parte, Capítulo, Escena, Personaje, Lugar, Novum, Regla del mundo |
-| `canon/` | 2 — Canon | Hecho canónico, Snapshot, Estado epistémico, Promesa, Contradicción, Retcon |
-| `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto |
-| `quality/` | 4 — Calidad | Dimensiones, Informe de crítica, Defecto |
-| `process/` | 5 — Proceso | Brief de escena, Borrador, Versión, Registro de generación |
+| `novel/` | 1 — Obra | Obra, Parte / Acto, Capítulo, Escena, Beat, Evento, Personaje, Voz, Arco, Hilo de trama, Lugar, Facción, Artefacto, Novum, Regla del mundo, Término canónico, Tema, Motivo, Voz narrativa |
+| `canon/` | 2 — Canon | Hecho canónico, Estatus de hecho, Snapshot de mundo, Estado epistémico, Ironía dramática, Promesa narrativa, Estado de promesa, Revelación, Contradicción, Retcon |
+| `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto, jerarquía de compresión |
+| `quality/` | 4 — Calidad | Dimensión de calidad, Informe de crítica, Defecto |
+| `process/` | 5 — Proceso | Esquema, Brief de escena, Restricción de destino, Borrador, Versión, Registro de generación |
 | `findings/` | híbrido | Hallazgo, Extracción, adopción |
 | `replanning/` | híbrido | Deriva, Replanificación rodante, propagación del retcon |
+
+La tabla es exhaustiva sobre las clases de `definitions.md`: si una clase de la ontología
+no aparece aquí, es un hueco de este documento, no una clase sin dueña.
+
+**Tres excepciones que no son tablas de nadie.** `Biblia de la obra` es la vista
+consolidada de `novel/` y `canon/` que alimenta la capa Invariante; las tres memorias
+—episódica, semántica, procedural— son la lectura por tipo de lo que ya está en
+`data/novel.db` (ver «Memoria»); y `Ventana efectiva` es una propiedad medida del modelo,
+no un dato que se persista. Ninguna de las tres lleva `models.py`.
 
 **Qué entra en `commons/`.** Solo infraestructura que usan dos o más features: conexión
 y migraciones de SQLite, cliente del modelo con su timeout, contador de tokens,
