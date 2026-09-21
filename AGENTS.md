@@ -374,6 +374,11 @@ Erratas, formateo, renombrados sin cambio de comportamiento y arreglo de un bug 
 prueba previa que lo reproduce. La excepción se nombra en el mensaje del commit. Todo lo
 demás —comportamiento, esquema, contrato de API u ontología— pasa por las tres puertas.
 
+**La documentación de `docs/` y los valores de `config/` son el paso 1, no el paso 4.** Se
+cambian sin spec, porque son la entrada del ciclo: la puerta que exige plan aprobado
+gobierna el código, no lo que lo especifica. Una spec puede, por tanto, fijar un umbral en
+`config/thresholds.yaml` antes de estar aprobada; lo que no puede es implementarlo.
+
 ## Reglas para todos los agentes
 
 1. Lee antes de escribir: contexto semilla (`docs/`), luego código. Los nombres de clases
