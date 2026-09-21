@@ -32,10 +32,11 @@ Las siete capas más el margen suman exactamente `contexto.total`. Que sumen es 
 propiedad que se verifica, no una coincidencia: mantén el total como una constante única y
 deriva las partes, en vez de repartir números sueltos por el código.
 
-`docs/definitions.md` Capa 3 da estos mismos presupuestos en porcentaje y son orientativos;
-el reparto operativo es el de `config/thresholds.yaml`. Hay un desajuste
-abierto en la capa Estructural (4 % real frente al 5 % declarado), anotado en
-`docs/verification.md`. No lo resuelvas por tu cuenta.
+`docs/definitions.md` Capa 3 da estos mismos presupuestos en porcentaje y son orientativos.
+**Manda el valor en tokens de `config/thresholds.yaml`**, decidido en
+`docs/specs/001-backend-v1/spec.md` §9.4. Donde los dos no cuadran —la capa Estructural,
+4 % real frente al 5 % declarado— gana el fichero; retirar los porcentajes de la Capa 3
+está pendiente de reexportar la ontología, no de decidirse.
 
 ## Las dos reglas que no se tocan
 

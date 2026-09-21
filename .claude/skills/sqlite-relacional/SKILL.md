@@ -71,9 +71,11 @@ comprobación de *transiciones* válidas no es del esquema sino del `service.py`
 feature dueña — SQLite no las expresa, y meterlas en triggers las esconde del sitio donde
 se leen las reglas.
 
-Dos ciclos tienen estados sin salida declarada (`Rota` en Promesa, `Refutado` en Hecho
-canónico). Están anotados como preguntas abiertas en `docs/verification.md`: no los
-resuelvas por tu cuenta en el esquema.
+Dos estados salen sin arista de salida en los diagramas: `Rota` en Promesa y `Refutado` en
+Hecho canónico. **Son terminales por diseño**, decidido en
+`docs/specs/001-backend-v1/spec.md` §9.3 y RF-CANON-10: ninguno se revive, y si la trama
+vuelve sobre ello se crea una entidad nueva que referencia a la anterior. Falta dibujar la
+arista a `[*]` al reexportar la ontología; el esquema no espera a eso.
 
 ## Frontera con `sqlite-vec`
 
