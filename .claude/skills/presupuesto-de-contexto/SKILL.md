@@ -13,23 +13,27 @@ vacío de estado del mundo.
 
 ## El reparto
 
-| Capa | Tokens | Origen |
-| --- | --- | --- |
-| Invariante | 6 000 | Premisa, guía de estilo, glosario canónico |
-| Estructural | 4 000 | Brief de escena y restricción de destino |
-| Estado | 18 000 | Snapshot derivado en t, nunca texto bruto |
-| Local | 30 000 | Últimas escenas literales |
-| Recuperado | 25 000 | `sqlite-vec`, filtrado por entidades del brief |
-| Estilo | 8 000 | Muestras de voz de los personajes presentes |
-| Anticontexto | 5 000 | Repeticiones, clichés vetados, revelaciones prohibidas |
-| Margen | 4 000 | Reserva para la respuesta y el desbordamiento |
+**Las cifras no están aquí.** El presupuesto de cada capa vive en
+`config/thresholds.yaml`, bajo `contexto.capas`, y es la fuente única. Léelo antes de
+ensamblar: no copies sus valores a un documento ni los escribas sueltos en el código.
 
-Las siete capas más el margen suman exactamente 100 000. Que sumen es una propiedad que se
-verifica, no una coincidencia: mantén el total como una constante única y deriva las
-partes, en vez de repartir números sueltos por el código.
+| Capa | Origen |
+| --- | --- |
+| Invariante | Premisa, guía de estilo, glosario canónico |
+| Estructural | Brief de escena y restricción de destino |
+| Estado | Snapshot derivado en t, nunca texto bruto |
+| Local | Últimas escenas literales |
+| Recuperado | `sqlite-vec`, filtrado por entidades del brief |
+| Estilo | Muestras de voz de los personajes presentes |
+| Anticontexto | Repeticiones, clichés vetados, revelaciones prohibidas |
+| Margen | Reserva para la respuesta y el desbordamiento |
+
+Las siete capas más el margen suman exactamente `contexto.total`. Que sumen es una
+propiedad que se verifica, no una coincidencia: mantén el total como una constante única y
+deriva las partes, en vez de repartir números sueltos por el código.
 
 `docs/definitions.md` Capa 3 da estos mismos presupuestos en porcentaje y son orientativos;
-el reparto operativo es el de esta tabla, que viene de `AGENTS.md`. Hay un desajuste
+el reparto operativo es el de `config/thresholds.yaml`. Hay un desajuste
 abierto en la capa Estructural (4 % real frente al 5 % declarado), anotado en
 `docs/verification.md`. No lo resuelvas por tu cuenta.
 
@@ -58,7 +62,7 @@ compresión, no una ventana mayor.
 - **Estructural.** El brief es mínimo por diseño: estado de entrada más restricción de
   destino. No se planifican beats — la escena descubre *cómo*, no *hacia dónde*.
 - **Estado.** Snapshot derivado en t, **nunca** el texto anterior. Es la diferencia entre
-  18 000 tokens de estado del mundo y 18 000 tokens de prosa de la que el modelo tiene que
+  gastar la capa en estado del mundo o gastarla en prosa de la que el modelo tiene que
   inferirlo. Lo segundo desperdicia la capa y además se equivoca.
 - **Local.** Las últimas escenas literales, para continuidad de prosa. Es la única capa
   donde el texto crudo está justificado: la voz se contagia de lo literal, no de un resumen.
