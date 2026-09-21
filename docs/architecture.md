@@ -343,11 +343,18 @@ falta, el informe de crítica, y de ahí sale el siguiente paso.
 | `en borrador` | — | `critico` |
 | `en revisión` | sin defectos sobre umbral | `verificador` |
 | `en revisión` | defecto local | `editor` |
-| `en revisión` | defecto sistémico | `replanificador` |
+| `en revisión` | defecto sistémico | la escena vuelve a `planificada` |
 | `aceptada` | — | `extractor` |
 | `obsoleta` | — | vuelve a `planificada` |
 
 Solo el autor humano mueve una escena a `aceptada`. El orquestador nunca salta ese paso.
+
+**El defecto sistémico devuelve la escena a `planificada`**, que es lo que dibuja la
+máquina de estados de `domain-knowledge.md`. Quién replanifica depende del alcance: con
+`replanning/` fuera de v1 (spec 001 §1.3) el orquestador escala al autor, que replanifica
+a mano y reencarga la escena; cuando entre el bucle largo, ese hueco lo ocupa el
+`replanificador`. En los dos casos el estado al que vuelve la escena es el mismo, así que
+insertar el agente después no cambia la máquina.
 
 ### Cola de trabajos
 
@@ -587,8 +594,10 @@ no escritas y propaga el retcon a las afectadas.
 ### Ruta de un defecto
 
 Un *defecto local* se corrige reescribiendo en sitio y revalidando la escena. Un
-*defecto sistémico* invalida la planificación: vuelve al bucle largo y genera briefs
-nuevos. Clasificarlo bien es lo que evita parchear síntomas de un problema estructural.
+*defecto sistémico* invalida la planificación: la escena vuelve a `planificada` y se
+generan briefs nuevos —por el bucle largo cuando exista, por el autor mientras
+`replanning/` esté fuera—. Clasificarlo bien es lo que evita parchear síntomas de un
+problema estructural.
 
 ### Reglas de ejecución
 
