@@ -56,16 +56,16 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Las cardinalidades de «Relaciones del dominio» están en el esquema | `definitions.md` § Relaciones del dominio | Restricciones de esquema + inspección de la migración | I | `db/migrations/` |
 | `Escena→Snapshot`, `Brief→Escena` e `Informe→Borrador` son 1:1 | `definitions.md` § Relaciones del dominio | Pruebas unitarias sobre restricciones `unique` | T | `tests/db/` |
 | `Evento` ↔ `Escena` es N:M y tiene tabla puente | `definitions.md` § Fábula y discurso; `domain-knowledge.md` § Fábula y discurso | Inspección | I | `db/migrations/` |
-| Los nombres de `domain/` coinciden con los de la ontología, sin excepciones | `AGENTS.md` regla 1 | Análisis estático | A | comprobador propio en CI |
+| Los nombres de las clases del código coinciden con los de la ontología, sin excepciones | `AGENTS.md` regla 1 | Análisis estático | A | comprobador propio en CI, sobre los `models.py` de cada feature |
 | La lógica de dominio no vive en los routers | `AGENTS.md` § Backend | Análisis estático de importaciones | A | CI |
 | El frontend no decide nada del canon | `AGENTS.md` § Frontend; `architecture.md` § Sistema | Análisis estático | A | CI |
 | Solo `canon/` escribe en el canon; ningún agente lo hace directamente | `architecture.md` § Agentes | Análisis estático de importaciones | A | CI |
 | Un borrador rechazado no deja rastro en el canon | `definitions.md` Capa 2 § Regla de actualización | Pruebas basadas en propiedades | T | `tests/canon/` |
-| Solo la transición a `aceptada` escribe en el canon | `definitions.md` Capa 5; `domain-knowledge.md` § Ciclo de producción | Model checking | A | `domain/`, `canon/` |
-| La máquina de estados de `Escena` no admite transiciones fuera del diagrama | `domain-knowledge.md` § Ciclo de producción | Model checking | A | `domain/` |
-| Ídem para el ciclo de vida de `Hecho canónico` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `domain/` |
-| Ídem para el ciclo de vida de `Promesa narrativa` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `domain/` |
-| Ídem para el ciclo de vida de `Hallazgo` | `domain-knowledge.md` § Modo híbrido | Model checking | A | `domain/` |
+| Solo la transición a `aceptada` escribe en el canon | `definitions.md` Capa 5; `domain-knowledge.md` § Ciclo de producción | Model checking | A | `novel/`, `canon/` |
+| La máquina de estados de `Escena` no admite transiciones fuera del diagrama | `domain-knowledge.md` § Ciclo de producción | Model checking | A | `novel/` |
+| Ídem para el ciclo de vida de `Hecho canónico` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `canon/` |
+| Ídem para el ciclo de vida de `Promesa narrativa` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `canon/` |
+| Ídem para el ciclo de vida de `Hallazgo` | `domain-knowledge.md` § Modo híbrido | Model checking | A | `findings/` |
 | El retcon marca `obsoleta` solo a las escenas afectadas, sin tocar el resto | `AGENTS.md` § Modelo de autoría | Pruebas basadas en propiedades | T | `replanning/propagar-retcon` |
 | Las llamadas al modelo son asíncronas y llevan timeout explícito | `AGENTS.md` § Backend | Análisis estático | A | CI |
 | Los errores de dominio se mapean a HTTP en un handler central | `AGENTS.md` § Backend | Pruebas unitarias | T | `tests/api/` |
@@ -103,11 +103,11 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Un hallazgo entra como `provisional` y solo el autor lo convierte en canon | `AGENTS.md` § Modelo de autoría | Guardarraíles + análisis estático | A | `findings/extraer-hallazgos` |
 | La replanificación nunca se dispara en mitad de una escena | `AGENTS.md` § Modelo de autoría | Guardarraíles + model checking | A | `replanning/detectar-deriva` |
 | La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; `domain-knowledge.md` § Modo híbrido | Evals + pruebas unitarias | T | `replanning/detectar-deriva` |
-| Una versión buena se puede reproducir con su registro de generación | `definitions.md` Capa 5 § Trazabilidad | Observabilidad + demostración | D | `domain/registrar-generacion` |
+| Una versión buena se puede reproducir con su registro de generación | `definitions.md` Capa 5 § Trazabilidad | Observabilidad + demostración | D | `process/registrar-generacion` |
 | Ningún agente inventa un hecho del mundo ni una clase del dominio | `AGENTS.md` regla 4 | Red-teaming + verificación multiagente | D | campaña periódica |
 | Un cambio en los prompts o en el ensamblador no degrada la obra en curso | `architecture.md` § Sistema | Despliegue progresivo sobre un subconjunto de escenas + evals | D | proceso de release |
 | El código y los prompts pasan por el mismo pipeline que el trabajo humano | `AGENTS.md` § Comandos | Integración en CI/CD | T | CI |
-| La trayectoria de cada agente es visible y consultable a posteriori | `architecture.md` § Skills | Observabilidad / trazas en ejecución | I | `domain/registrar-generacion` |
+| La trayectoria de cada agente es visible y consultable a posteriori | `architecture.md` § Skills | Observabilidad / trazas en ejecución | I | `process/registrar-generacion` |
 | Un defecto se clasifica correctamente como local o sistémico | `definitions.md` Capa 4 § Clasificación del defecto | Evals sobre dataset etiquetado | T | `quality/medir-calidad` |
 | El resultado satisface el gusto del autor | `definitions.md` Capa 5 § Roles | — | U | — |
 | La ventana efectiva cubre las siete capas del contexto ensamblado | `definitions.md` Capa 3 § Ventana efectiva | Evals de recuperación por capa | D | `context/` |
