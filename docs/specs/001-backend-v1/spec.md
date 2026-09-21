@@ -90,8 +90,8 @@ entre sí. El cliente es el frontend, que no decide nada del canon.
 
 Las de «Requisitos técnicos» de `AGENTS.md`, que no se renegocian: FastAPI sobre Python
 3.12, SQLite con `sqlite-vec` como única persistencia, la ventana de contexto declarada en
-`config/thresholds.yaml` y modo de autoría híbrido. Quedan excluidos Postgres, pgvector, Pinecone, Chroma, Redis, Celery y
-cualquier ORM que oculte el SQL.
+`config/thresholds.yaml` y modo de autoría híbrido. Quedan excluidos Postgres, pgvector,
+Pinecone, Chroma, Redis, Celery y cualquier ORM que oculte el SQL.
 
 Y la de alcance, igual de cerrada: **un solo autor y una sola obra por instancia**, sin
 multiusuario, sin multiobra y sin autenticación en v1. Una segunda novela es otra
