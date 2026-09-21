@@ -512,8 +512,8 @@ cuántas peticiones caben **a la vez**.
 
 ### Presupuesto por petición
 
-El reparto entre las ocho capas vive en `config/thresholds.yaml`, **fuente única de todos
-los números del sistema**. `AGENTS.md` describe las capas y la política; las cifras se
+El reparto entre las siete capas más el margen vive en `config/thresholds.yaml`, **fuente
+única de todos los números del sistema**. `AGENTS.md` describe las capas y la política; las cifras se
 leen del fichero y no se copian a ningún documento ni se escriben sueltas en el código.
 La skill `presupuesto-de-contexto` lleva la política al agente que ensambla.
 
