@@ -19,6 +19,42 @@ requisitos técnicos cerrados están en `AGENTS.md`; todas las cifras, en
 | Qué tecnología y qué capas de contexto hay | `AGENTS.md` |
 | **Cualquier número**: presupuesto por capa, umbrales de calidad y deriva | `config/thresholds.yaml` |
 
+### Qué sección responde a qué
+
+| Necesitas | Documento | Sección |
+| --- | --- | --- |
+| Convenciones de notación y capas del modelo | Definiciones | Convenciones del modelo |
+| Reglas del modo híbrido y sus clases | Definiciones | Modo de autoría: híbrido |
+| Estructura de la obra y entidades narrativas | Definiciones | Capa 1 — Obra |
+| Hechos, snapshots, promesas, retcon | Definiciones | Capa 2 — Canon y estado |
+| Memorias, capas y presupuesto de contexto | Definiciones | Capa 3 — Contexto y memoria |
+| Dimensiones de calidad y sus umbrales | Definiciones | Capa 4 — Calidad |
+| Roles, artefactos y estados del ciclo | Definiciones | Capa 5 — Proceso |
+| Esquema relacional y cardinalidades | Definiciones | Relaciones del dominio |
+| Criterios de aceptación del modelo de datos | Definiciones | Preguntas de competencia |
+| Visión general de las cinco capas | Dominio | Mapa de capas |
+| Frontera planificado/descubrimiento y los dos bucles | Dominio | Modo híbrido |
+| Jerarquía de contención y taxonomías | Dominio | Árbol estructural, Árbol de entidades |
+| Aristas del grafo de entidades | Dominio | Grafo de entidades |
+| Relación fábula ↔ discurso | Dominio | Fábula y discurso |
+| Máquinas de estado de hecho, promesa y hallazgo | Dominio | Modelo de canon, Modo híbrido |
+| Flujo de ensamblado del contexto | Dominio | Ensamblado del contexto |
+| Ruta de un defecto y ciclo de producción | Dominio | Árbol de calidad, Ciclo de producción |
+
+### Cómo usarlo
+
+1. Las clases de dominio se nombran **igual** que en Definiciones, viva en la feature que
+   viva cada una. Un nombre nuevo en el código sin entrada en la ontología es un error,
+   no una mejora.
+2. Las tablas y sus claves foráneas siguen la tabla «Relaciones del dominio», incluidas
+   las cardinalidades.
+3. Las máquinas de estado del documento de dominio se implementan tal cual: mismos
+   estados, mismas transiciones. Ninguna transición extra sin actualizar antes el diagrama.
+4. La lista de capas del contexto sale de «Capa 3»; su presupuesto, de
+   `config/thresholds.yaml`. Los porcentajes de la Capa 3 son orientativos y no mandan.
+5. Antes de cerrar una tarea de dominio, comprueba que las preguntas de competencia
+   afectadas siguen respondiéndose.
+
 ---
 
 ## Sistema
@@ -626,6 +662,69 @@ problema estructural.
 - La escritura al canon va siempre en transacción y es idempotente por
   `scene_id` + `version`.
 - Un hallazgo entra como `provisional` y solo el autor lo convierte en canon.
+
+---
+
+## Ciclo de cambio del repositorio
+
+El detalle de cada paso de las tres puertas que fija `AGENTS.md` § Ciclo de cambio. Ahí
+está el diagrama, el frontmatter y qué queda fuera de la cadena; aquí, qué contiene cada
+artefacto. **No confundir con el ciclo de producción de la novela**, que es la sección
+«Proceso» de más arriba: aquel genera escenas, este genera código.
+
+### 1. Actualizar la documentación de `docs/`
+
+Los documentos de `docs/` —no `docs/specs/`, que es el paso siguiente—. Es la entrada
+del ciclo y lo único que no necesita spec.
+
+- `definitions.md` y `domain-knowledge.md` **no se editan aquí**: se cambian en el
+  documento vivo y se reexportan (`AGENTS.md` § Canonicidad y sincronía). Un cambio de
+  ontología empieza ahí, no en una spec.
+- `architecture.md` sí se edita en el repositorio. Si un cambio toca la arquitectura, se
+  actualiza **antes** de escribir la spec que se apoya en ella.
+- Si al terminar un cambio la documentación queda desfasada, se corrige en el mismo
+  commit. Documentación que miente es peor que no tenerla.
+
+### 2. Crear o actualizar una spec (`docs/specs/`)
+
+Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa.
+
+**Pregunta antes de escribirla.** Una spec no se adivina: es el punto del ciclo donde el
+agente interroga al autor hasta que no queda ambigüedad. Como mínimo hay que dejar
+resuelto qué comportamiento observable se espera, qué criterios de aceptación la dan por
+cumplida, qué queda explícitamente fuera, y qué toca de ontología, esquema o contrato de
+API. Si algo sigue abierto, la spec no está lista: no se pasa a plan con huecos.
+
+Contenido mínimo: problema, comportamiento esperado, criterios de aceptación
+verificables, fuera de alcance, impacto en ontología, esquema y API, y las preguntas de
+competencia afectadas.
+
+Actualizar una spec existente sigue el mismo camino: vuelve a `borrador` y necesita
+aprobación otra vez antes de que su plan valga.
+
+### 3. Plan de implementación
+
+`docs/specs/NNN-slug/plan.md`, junto a su spec.
+
+- **No se crea un plan si la spec no está `aprobada`.** Se comprueba leyendo su
+  frontmatter, no de memoria.
+- Contenido: pasos ordenados, features y ficheros que se tocan, migraciones necesarias,
+  **la lista de pruebas que se van a escribir** y en qué orden, riesgos y criterio de
+  terminado.
+- Un plan que no se puede probar no es un plan: si no sabes qué prueba falla primero,
+  falta diseño.
+
+### 4. Crear o modificar código
+
+- **No se escribe código si el plan no está `aprobado`.** Sin plan aprobado el agente se
+  detiene y lo dice; no «adelanta» implementación.
+- **TDD, sin excepciones**: la prueba primero, se comprueba que falla por la razón
+  correcta, luego el código mínimo que la pasa, luego refactor. Escribir la prueba
+  después no es TDD, es cobertura.
+- Al cerrar: si el comportamiento resultó distinto del aprobado, se actualiza la spec y
+  vuelve a aprobación; si cambió la estructura, se actualiza este documento. La spec
+  describe lo que el código hace, no lo que se pensaba hacer.
+- El commit que cierra un plan nombra su carpeta: `docs/specs/NNN-slug/`.
 
 ---
 
