@@ -15,8 +15,8 @@ cerrado y vive en `.claude/skills/plan-de-verificacion/references/metodologias.m
 
 | Nivel | Filas | T | A | I | D | U |
 | --- | --- | --- | --- | --- | --- | --- |
-| Artefacto | 34 | 13 | 18 | 5 | 0 | 0 |
-| Proceso | 30 | 18 | 3 | 1 | 6 | 2 |
+| Artefacto | 35 | 14 | 19 | 5 | 0 | 0 |
+| Proceso | 31 | 19 | 3 | 1 | 6 | 2 |
 
 Una fila puede llevar dos letras cuando la prueba y el análisis son complementarios, de
 ahí que las columnas sumen más que las filas.
@@ -45,6 +45,7 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Los siete presupuestos más el margen suman exactamente `contexto.total` | `config/thresholds.yaml` | Análisis | A | constante única, no números sueltos |
 | El contexto tiene exactamente siete capas, con las fuentes del diagrama | `domain-knowledge.md` § Ensamblado del contexto | Inspección | I | `context/` |
 | La recuperación filtra por entidades del brief **antes** de ordenar por similitud | `AGENTS.md` § Base de datos; `definitions.md` Capa 3 | Pruebas unitarias + análisis estático | T, A | `context/recuperar-fragmentos` |
+| El texto de obra y de canon entra en el prompt marcado como datos, nunca en la posición de las instrucciones | `architecture.md` § Resistencia a inyección; RF-CTX-11 | Pruebas unitarias + análisis estático | T, A | `context/` |
 | Todo contrato entre capas es un modelo Pydantic; no cruzan `dict` sueltos | `AGENTS.md` § Backend | Comprobación de tipos + análisis estático | A | comprobador de tipos, `ruff` |
 | El frontend no contiene `any` | `AGENTS.md` § Frontend | Comprobación de tipos | A | `npm run typecheck` |
 | El cliente tipado de `src/api/` no diverge del OpenAPI de FastAPI | `AGENTS.md` § Frontend | Pruebas de contrato | T | paso de CI que regenera y compara |
@@ -98,6 +99,7 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Originalidad: distancia respecto a la prosa genérica del modelo | `definitions.md` Capa 4 § Regresión a la media | Evals contra línea base generada sin guía | T | `quality/` |
 | Cumplimiento del brief: la escena hizo lo que se le encargó | `definitions.md` Capa 4 | Evals con cotejo punto por punto | T | `quality/` |
 | El autor humano es el único que acepta una escena y adopta un hallazgo | `architecture.md` § Agentes | Revisión humana en el bucle + guardarraíles | A | `api/`, CI |
+| Ningún agente ejecuta instrucciones halladas en texto narrativo | `architecture.md` § Resistencia a inyección; RF-PROC-10 | Red-teaming | T | campaña periódica |
 | Un hallazgo entra como `provisional` y solo el autor lo convierte en canon | `AGENTS.md` § Modelo de autoría | Guardarraíles + análisis estático | A | `canon/extraer-hallazgos` |
 | La replanificación nunca se dispara en mitad de una escena | `AGENTS.md` § Modelo de autoría | Guardarraíles + model checking | A | `canon/detectar-deriva` |
 | La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; `domain-knowledge.md` § Modo híbrido | Evals + pruebas unitarias | T | `canon/detectar-deriva` |
@@ -147,33 +149,31 @@ proxy que conviene no confundir con la afirmación que representa.
 
 ## Preguntas abiertas al autor
 
-Sin respuesta a estas, hay filas del plan que no se pueden ejecutar.
+Sin respuesta a estas, hay filas del plan que no se pueden ejecutar. Se conserva la
+numeración original de la primera redacción: las resueltas están en la tabla de abajo.
 
 1. **La medida de deriva no está definida.** `definitions.md` le da a `Deriva` el
    atributo `medida` sin decir cuál es. Hasta que exista, la fila «la deriva sobre
    umbral dispara replanificación» no tiene criterio de aprobado.
-2. **`config/thresholds.yaml` se cita en `AGENTS.md` y en `architecture.md`, pero no
-   existe en el repositorio.** Todas las filas de calidad dependen de él para tener
-   umbral; sin fichero son métricas sin criterio.
-3. **Los presupuestos de contexto están declarados dos veces y no coinciden.**
-   `definitions.md` Capa 3 los da en porcentaje y `AGENTS.md` en tokens. La capa
-   Estructural es el único desajuste: 4 000 / 100 000 = 4 %, frente al 5 % declarado.
-   ¿Cuál manda? Mientras no se decida, la fila «los presupuestos suman 100 000» se
-   verifica contra una tabla y contradice la otra.
-4. **La máquina de estados de `Promesa narrativa` deja `Rota` sin salida.** `Pagada` y
-   `Subvertida` van a `[*]`; `Rota` no. El model checking la marcará como estado
-   sumidero. ¿Es terminal y falta la arista en el diagrama, o desde `Rota` se vuelve a
-   `Pendiente` tras un retcon?
-5. **Mismo problema en `Hecho canónico` con `Refutado`.** `Descartado` cierra,
-   `Refutado` no. Si es terminal, hay que dibujarlo; si un retcon puede resucitarlo,
-   falta la transición.
 6. **«Clasificación ciega de diálogo»: ¿quién clasifica?** Si es un clasificador con
    dataset, la distintividad de voz es `T`. Si es una persona, es `D`. La letra de esa
    fila depende de la respuesta.
-7. **No hay criterio declarado frente a instrucciones inyectadas** en el texto del autor
-   o en los fragmentos que devuelve `vec0`. La ontología no modela esa amenaza, así que
-   no hay afirmación que verificar. Si el sistema debe resistirla, es una regla nueva en
-   el contexto semilla antes que una fila en este plan.
 8. **¿Se ejecutará alguna vez contenido generado por el modelo?** Hoy no, y por eso la
    ejecución en sandbox no aparece en el plan. Conviene que la respuesta quede escrita:
    es el tipo de decisión que cambia en silencio.
+
+### Ya resueltas
+
+No se borran: las skills y las specs las citan, y sin la decisión al lado vuelven a
+leerse como abiertas.
+
+| # | Pregunta | Decisión | Dónde vive |
+| --- | --- | --- | --- |
+| 2 | `config/thresholds.yaml` no existía en el repositorio | **Creado.** Fuente única de cifras y umbrales | `config/thresholds.yaml`; spec 001 §9.1, RNF-14 |
+| 3 | Los presupuestos de contexto están declarados dos veces y no coinciden | **Manda el valor en tokens del fichero**, no el porcentaje de la Capa 3. La capa Estructural queda en 4 % real frente al 5 % declarado hasta reexportar la ontología | spec 001 §9.4, RF-CTX-02; `architecture.md` § Pendiente de llevar a la ontología |
+| 4 | `Rota` sin arista de salida en `Promesa narrativa` | **Terminal por diseño.** No se revive | spec 001 §9.3, RF-CANON-10 |
+| 5 | `Refutado` sin arista de salida en `Hecho canónico` | **Terminal por diseño.** No se revive | spec 001 §9.3, RF-CANON-10 |
+| 7 | No había criterio frente a instrucciones inyectadas | **Tres reglas**: el texto entra marcado como datos, ningún agente ejecuta instrucciones halladas en él, y ningún hallazgo se adopta sin el autor | `architecture.md` § Resistencia a inyección; RF-CTX-11, RF-PROC-10, RF-FIND-05 |
+
+Las dos primeras reglas de la 7 tienen fila propia en las tablas de arriba; la tercera ya
+la cubría «un hallazgo entra como `provisional`».
