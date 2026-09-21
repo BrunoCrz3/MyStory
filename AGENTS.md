@@ -89,10 +89,12 @@ docs/
   definitions.md        # contexto semilla: ontología del dominio
   domain-knowledge.md   # contexto semilla: diagramas Mermaid
   architecture.md       # sistema, agentes y skills, proceso
-specs/
-  NNN-slug/
-    spec.md             # qué se quiere y cómo se acepta; necesita aprobación
-    plan.md             # cómo se implementa y qué pruebas van primero
+  verification.md       # qué se verifica y con qué método
+  specs/
+    NNN-slug/
+      spec.md           # qué se quiere y cómo se acepta; necesita aprobación
+      plan.md           # cómo se implementa y qué pruebas van primero
+config/thresholds.yaml  # fuente única de cifras y umbrales
 data/novel.db       # base de datos (no versionada)
 .claude/skills/     # skills de agente (ver docs/architecture.md)
 ```
@@ -221,7 +223,7 @@ no tiene documento vivo asociado.
 | Reparto de las siete capas de contexto | `.claude/skills/presupuesto-de-contexto/` |
 | Todos los números: presupuesto por capa, umbrales de calidad y de deriva | `config/thresholds.yaml` |
 | Contrato de la API | `http://localhost:8000/openapi.json` |
-| Specs y planes de implementación | `specs/NNN-slug/` |
+| Specs y planes de implementación | `docs/specs/NNN-slug/` |
 | Obra, partes, capítulos, escenas, personajes | `backend/app/novel/` |
 | Consolidación, snapshots, promesas, retcon | `backend/app/canon/` |
 | Ensamblado de contexto y presupuesto | `backend/app/context/` |
@@ -284,8 +286,8 @@ novela (Capa 5 de la ontología, feature `process/`): aquel genera escenas, este
 código.
 
 ```
-docs/  →  specs/NNN/spec.md  →  specs/NNN/plan.md  →  código  →  docs y spec al día
-          [aprobada]            [aprobado]            [TDD]
+docs/*.md  →  docs/specs/NNN/spec.md  →  docs/specs/NNN/plan.md  →  código  →  al día
+              [aprobada]                 [aprobado]                  [TDD]
 ```
 
 Cada corchete es una **puerta**, no una recomendación: sin el artefacto anterior
@@ -302,9 +304,10 @@ fecha: <AAAA-MM-DD>
 ---
 ```
 
-### 1. Actualizar `docs/`
+### 1. Actualizar la documentación de `docs/`
 
-Es la entrada del ciclo y lo único que no necesita spec.
+Los documentos de `docs/` —no `docs/specs/`, que es el paso siguiente—. Es la entrada
+del ciclo y lo único que no necesita spec.
 
 - `definitions.md` y `domain-knowledge.md` **no se editan aquí**: se cambian en el
   documento vivo y se reexportan (ver «Canonicidad y sincronía»). Un cambio de ontología
@@ -314,9 +317,9 @@ Es la entrada del ciclo y lo único que no necesita spec.
 - Si al terminar un cambio la documentación queda desfasada, se corrige en el mismo
   commit. Documentación que miente es peor que no tenerla.
 
-### 2. Crear o actualizar una spec (`specs/`)
+### 2. Crear o actualizar una spec (`docs/specs/`)
 
-Una carpeta por cambio: `specs/NNN-slug/spec.md`, numeración correlativa.
+Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa.
 
 **Pregunta antes de escribirla.** Una spec no se adivina: es el punto del ciclo donde el
 agente interroga al autor hasta que no queda ambigüedad. Como mínimo hay que dejar
@@ -333,7 +336,7 @@ aprobación otra vez antes de que su plan valga.
 
 ### 3. Plan de implementación
 
-`specs/NNN-slug/plan.md`, junto a su spec.
+`docs/specs/NNN-slug/plan.md`, junto a su spec.
 
 - **No se crea un plan si la spec no está `aprobada`.** Se comprueba leyendo su
   frontmatter, no de memoria.
@@ -353,7 +356,7 @@ aprobación otra vez antes de que su plan valga.
 - Al cerrar: si el comportamiento resultó distinto del aprobado, se actualiza la spec y
   vuelve a aprobación; si cambió la estructura, se actualiza `architecture.md`. La spec
   describe lo que el código hace, no lo que se pensaba hacer.
-- El commit que cierra un plan nombra su carpeta: `specs/NNN-slug/`.
+- El commit que cierra un plan nombra su carpeta: `docs/specs/NNN-slug/`.
 
 ### Qué queda fuera de la cadena
 
