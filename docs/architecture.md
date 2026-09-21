@@ -438,17 +438,21 @@ contamine el estado del mundo.
 | Dónde vive | En el trabajo de una escena | `data/novel.db` |
 | Qué contiene | Borrador, informes de crítica, iteraciones, contexto ensamblado | Memoria episódica, semántica y procedural |
 | Cuánto dura | Hasta consolidar o descartar | Permanente |
-| Quién escribe | Los agentes del bucle corto | Solo `canon/`, al consolidar |
+| Quién escribe | Los agentes del bucle corto | Al consolidar: `canon/` el canon, `findings/` los hallazgos que salen de ahí |
 
 La memoria de largo plazo es la de la Capa 3 de `definitions.md`, sin cambios: la
 **episódica** son las escenas aceptadas en su forma literal, la **semántica** son los
 hechos canónicos, los snapshots y las reglas derivadas, y la **procedural** son la guía
 de estilo, las convenciones y las muestras de voz.
 
-**Punto único de promoción.** Lo de corto plazo pasa a largo en **la consolidación, y
-solo ahí**, vía `extractor`. Ningún otro camino escribe en memoria larga. Un borrador
-rechazado se descarta entero: no deja hechos, ni promesas, ni muestras de voz. Si hubiera
-un segundo punto de promoción, cada iteración fallida dejaría sedimento y el canon
+**Punto único de promoción.** Lo de corto plazo pasa a largo **al consolidar, y solo
+ahí**. Ese punto tiene dos escrituras, no dos puntos: `canon/` escribe el canon dentro de
+la transacción, y acto seguido el `extractor` lee la escena ya aceptada y deja sus
+hallazgos en `findings/`. Sin consolidación no hay extracción, y los hallazgos **no son
+canon** hasta que el autor los adopta: hasta entonces son memoria larga en estado
+`provisional`, no verdad de la novela. Ningún otro camino escribe en memoria larga. Un
+borrador rechazado se descarta entero: no deja hechos, ni promesas, ni muestras de voz. Si
+hubiera un segundo punto de promoción, cada iteración fallida dejaría sedimento y el canon
 acabaría siendo el registro de lo que el sistema intentó, no de lo que la novela dice.
 
 ### Olvido del anticontexto

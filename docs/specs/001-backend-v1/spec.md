@@ -182,7 +182,7 @@ RNF-09, RNF-11, RNF-12 y RNF-13.
 | RF-FIND-01 | Tras consolidar, `Extracción` propone `Hallazgo`: hechos, promesas, motivos no previstos | T |
 | RF-FIND-02 | Todo hallazgo entra como `provisional`. **Solo el autor lo adopta o lo descarta** | A |
 | RF-FIND-03 | Implementar el ciclo de vida del hallazgo del diagrama, incluido `Conflictivo` | A (model checking) |
-| RF-FIND-04 | La extracción es **el único punto de promoción** de memoria de corto a largo plazo | A |
+| RF-FIND-04 | La consolidación es **el único punto de promoción** de memoria de corto a largo plazo; la extracción ocurre dentro de ese punto y ningún otro camino escribe en memoria larga. Un hallazgo `provisional` es memoria larga, no canon | A |
 | RF-FIND-05 | Ningún hallazgo llega al canon sin adopción explícita del autor, **incluido el que provenga de texto con instrucciones inyectadas**. Es el último cortafuegos | T, A |
 
 ---
