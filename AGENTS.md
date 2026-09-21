@@ -70,7 +70,8 @@ Un ensamblado que no cabe falla en voz alta; no se trunca en silencio.
 ## Layout del repositorio
 
 ```
-backend/
+AGENTS.md           # esta guía; CLAUDE.md no contiene más que su import
+backend/            # ▸ previsto
   app/
     main.py         # monta los routers de cada feature
     novel/          # Capa 1: obra, partes, capítulos, escenas, personajes, lugares
@@ -81,7 +82,7 @@ backend/
     findings/       # modo híbrido: extracción y adopción de hallazgos
     replanning/     # modo híbrido: deriva y replanificación rodante
     commons/        # db y migraciones, cliente del modelo, errores, tokens
-frontend/
+frontend/           # ▸ previsto
   src/                # Feature-Sliced Design v2.1, empezando por el mínimo
     app/              # arranque, providers, router
     pages/            # editor de escena, mapa de canon, panel de calidad
@@ -96,9 +97,14 @@ docs/
       spec.md           # qué se quiere y cómo se acepta; necesita aprobación
       plan.md           # cómo se implementa y qué pruebas van primero
 config/thresholds.yaml  # fuente única de cifras y umbrales
-data/novel.db       # base de datos (no versionada)
+data/novel.db       # ▸ previsto; base de datos, no versionada
 .claude/skills/     # skills de agente (ver docs/architecture.md)
+skills-lock.json    # origen y hash de las skills instaladas
 ```
+
+**▸ previsto** es lo que este layout reserva y todavía no existe: no hay código hasta que
+su plan esté aprobado (ver «Ciclo de cambio»). Las rutas de «Otras rutas» que apunten ahí
+son destino, no ubicación actual.
 
 ## Base de datos
 
