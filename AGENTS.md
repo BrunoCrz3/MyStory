@@ -288,8 +288,8 @@ novela (Capa 5 de la ontología, feature `process/`): aquel genera escenas, este
 código.
 
 ```
-docs/*.md  →  docs/specs/NNN/spec.md  →  docs/specs/NNN/plan.md  →  código  →  al día
-              [aprobada]                 [aprobado]                  [TDD]
+docs/*.md  →  docs/specs/NNN-slug/spec.md  →  docs/specs/NNN-slug/plan.md  →  código
+              [aprobada]                      [aprobado]                      [TDD]
 ```
 
 Cada corchete es una **puerta**, no una recomendación: sin el artefacto anterior
