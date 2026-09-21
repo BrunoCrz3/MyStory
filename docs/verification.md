@@ -66,7 +66,7 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Ídem para el ciclo de vida de `Hecho canónico` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `domain/` |
 | Ídem para el ciclo de vida de `Promesa narrativa` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `domain/` |
 | Ídem para el ciclo de vida de `Hallazgo` | `domain-knowledge.md` § Modo híbrido | Model checking | A | `domain/` |
-| El retcon marca `obsoleta` solo a las escenas afectadas, sin tocar el resto | `AGENTS.md` § Modelo de autoría | Pruebas basadas en propiedades | T | `canon/propagar-retcon` |
+| El retcon marca `obsoleta` solo a las escenas afectadas, sin tocar el resto | `AGENTS.md` § Modelo de autoría | Pruebas basadas en propiedades | T | `replanning/propagar-retcon` |
 | Las llamadas al modelo son asíncronas y llevan timeout explícito | `AGENTS.md` § Backend | Análisis estático | A | CI |
 | Los errores de dominio se mapean a HTTP en un handler central | `AGENTS.md` § Backend | Pruebas unitarias | T | `tests/api/` |
 | El stack cerrado no admite dependencias vetadas (Postgres, Redis, Celery, ORM…) | `AGENTS.md` § Requisitos técnicos, regla 6 | Análisis estático sobre el lockfile | A | lista de bloqueo en CI |
@@ -100,9 +100,9 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Cumplimiento del brief: la escena hizo lo que se le encargó | `definitions.md` Capa 4 | Evals con cotejo punto por punto | T | `quality/` |
 | El autor humano es el único que acepta una escena y adopta un hallazgo | `architecture.md` § Agentes | Revisión humana en el bucle + guardarraíles | A | `api/`, CI |
 | Ningún agente ejecuta instrucciones halladas en texto narrativo | `architecture.md` § Resistencia a inyección; RF-PROC-10 | Red-teaming | T | campaña periódica |
-| Un hallazgo entra como `provisional` y solo el autor lo convierte en canon | `AGENTS.md` § Modelo de autoría | Guardarraíles + análisis estático | A | `canon/extraer-hallazgos` |
-| La replanificación nunca se dispara en mitad de una escena | `AGENTS.md` § Modelo de autoría | Guardarraíles + model checking | A | `canon/detectar-deriva` |
-| La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; `domain-knowledge.md` § Modo híbrido | Evals + pruebas unitarias | T | `canon/detectar-deriva` |
+| Un hallazgo entra como `provisional` y solo el autor lo convierte en canon | `AGENTS.md` § Modelo de autoría | Guardarraíles + análisis estático | A | `findings/extraer-hallazgos` |
+| La replanificación nunca se dispara en mitad de una escena | `AGENTS.md` § Modelo de autoría | Guardarraíles + model checking | A | `replanning/detectar-deriva` |
+| La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; `domain-knowledge.md` § Modo híbrido | Evals + pruebas unitarias | T | `replanning/detectar-deriva` |
 | Una versión buena se puede reproducir con su registro de generación | `definitions.md` Capa 5 § Trazabilidad | Observabilidad + demostración | D | `domain/registrar-generacion` |
 | Ningún agente inventa un hecho del mundo ni una clase del dominio | `AGENTS.md` regla 4 | Red-teaming + verificación multiagente | D | campaña periódica |
 | Un cambio en los prompts o en el ensamblador no degrada la obra en curso | `architecture.md` § Sistema | Despliegue progresivo sobre un subconjunto de escenas + evals | D | proceso de release |
