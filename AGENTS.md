@@ -204,8 +204,9 @@ no tiene documento vivo asociado.
    las cardinalidades.
 3. Las máquinas de estado del documento de dominio se implementan tal cual: mismos
    estados, mismas transiciones. Ninguna transición extra sin actualizar antes el diagrama.
-4. Las capas y porcentajes de contexto salen de «Capa 3»; el reparto en tokens está en
-   «Presupuesto de contexto», más arriba.
+4. La lista de capas del contexto sale de «Capa 3»; su presupuesto, de
+   `config/thresholds.yaml`. Los porcentajes que da la Capa 3 son orientativos y no
+   mandan: donde no cuadren con el fichero, gana el fichero.
 5. Antes de cerrar una tarea de dominio, comprueba que las preguntas de competencia
    afectadas siguen respondiéndose.
 
