@@ -3,7 +3,9 @@
 Cómo se implementa la ontología: qué piezas corren, qué agente hace cada cosa y en
 qué orden. Es un documento editable en el repositorio, sin documento vivo asociado.
 
-**Frontera con el contexto semilla.** `definitions.md` dice *qué existe* (clases,
+## Frontera con el contexto semilla
+
+`definitions.md` dice *qué existe* (clases,
 atributos, relaciones) y `domain-knowledge.md` *cómo se relaciona* (jerarquías, grafos,
 máquinas de estado). Aquí vive lo que no es ninguna de las dos cosas: el despliegue, los
 agentes concretos que encarnan los roles, sus skills y el orden de ejecución. Los
