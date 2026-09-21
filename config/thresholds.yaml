@@ -46,9 +46,9 @@ contexto:
 # ---------------------------------------------------------------------------
 # Deriva
 # ---------------------------------------------------------------------------
-# v1 NO replanifica: `replanning/` queda fuera. Pero sí registra la medida por escena,
-# porque el umbral no se puede fijar sin histórico. Hasta que haya histórico suficiente,
-# `umbral` sigue en null y no dispara nada; su ausencia no impide arrancar.
+# El alcance de v1 lo fija docs/specs/001-backend-v1/spec.md §1.3, no este fichero.
+# Aquí solo viven los valores: mientras no haya histórico suficiente, `umbral` sigue en
+# null y no dispara nada; su ausencia no impide arrancar.
 
 deriva:
   registrar_por_escena: true
