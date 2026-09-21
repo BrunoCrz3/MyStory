@@ -346,6 +346,12 @@ Los estados son los de la ontología (`planificada`, `en borrador`, `en revisió
 `aceptada`, `obsoleta`); no se añade ninguno. El orquestador lee el estado y, cuando hace
 falta, el informe de crítica, y de ahí sale el siguiente paso.
 
+**Un estado en disputa.** `domain-knowledge.md` dibuja además `Extraida` entre `aceptada`
+y `obsoleta`; `definitions.md` no lo lista. Mientras los dos no digan lo mismo, aquí la
+extracción es el paso que sigue a `aceptada`, no un estado, y la tabla no tiene fila para
+él. Está anotado abajo, en «Pendiente de llevar a la ontología»: no lo resuelvas en el
+esquema.
+
 | Estado de la escena | Condición | Siguiente agente |
 | --- | --- | --- |
 | `planificada` | — | `redactor` |
@@ -629,8 +635,15 @@ Este documento describe mecanismos que **no** tienen entrada en `definitions.md`
 listan aquí como propuestas, no como hechos: mientras no estén en el documento vivo y
 reexportadas, ninguna clase del código puede llamarse así (regla 4 de `AGENTS.md`).
 
+Las tres primeras filas no son propuestas nuestras sino **desacuerdos dentro del propio
+contexto semilla**: los dos documentos de ontología no dicen lo mismo, y hasta que el
+autor decida cuál manda no hay nombre legítimo que llevar al código.
+
 | Propuesta | Qué sería | Dónde entraría | Estado |
 | --- | --- | --- | --- |
+| Estado `Extraida` de `Escena` | `domain-knowledge.md` lo dibuja entre `Aceptada` y `Obsoleta`; `definitions.md` lista cinco estados sin él | `definitions.md` Capa 5 y `domain-knowledge.md` § Ciclo de producción | **Abierto.** Sobra en el diagrama o falta en los otros dos sitios |
+| Valores de `Estatus de hecho` | `definitions.md` lista `implícito`, que no es un estado del diagrama; el diagrama tiene `Descartado`, que no está en la lista | `definitions.md` Capa 2 y `domain-knowledge.md` § Modelo de canon | **Abierto.** El `CHECK` de la columna sale distinto según cuál se lea |
+| Nombre del estado inicial de `Hallazgo` | El diagrama lo llama `Propuesto`; `definitions.md`, `AGENTS.md`, este documento y la spec lo llaman `provisional`, palabra que además ya es un `Estatus de hecho` | `domain-knowledge.md` § Modo híbrido, o los cuatro documentos que dicen `provisional` | **Abierto.** La regla 1 obliga a usar el nombre de la ontología, y hay dos |
 | Transición a estado final de `Refutado` | `Hecho canónico`: `Refutado` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Decidido, pendiente de exportar** |
 | Transición a estado final de `Rota` | `Promesa narrativa`: `Rota` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Decidido, pendiente de exportar** |
 | Retirar las cifras de presupuesto | La Capa 3 da porcentajes por capa; los números pasan a `config/thresholds.yaml` | `definitions.md` Capa 3 | **Decidido, pendiente de exportar** |
