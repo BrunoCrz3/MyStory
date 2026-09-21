@@ -1,0 +1,107 @@
+# Fuente única de números del sistema.
+#
+# Los documentos (AGENTS.md, docs/) describen las capas, las dimensiones y la política
+# de degradación. Las cifras viven aquí y solo aquí: si un número aparece a la vez en un
+# documento y en este fichero, el documento está mal.
+#
+# Un valor `null` no es un olvido: es un umbral que no se puede fijar sin histórico.
+# Se calibra midiendo, no estimando. Mientras esté en null, el arranque falla en voz alta
+# al pedirlo (RF-QUA-05), salvo donde se diga lo contrario.
+
+version: 1
+
+# ---------------------------------------------------------------------------
+# Presupuesto de contexto
+# ---------------------------------------------------------------------------
+# Límite duro de la ventana. Ningún prompt puede superarlo (AGENTS.md, decisión cerrada).
+# El reparto por capa debe sumar exactamente este total: es la constante única de
+# RF-CTX-02, y la comprobación de la suma se hace contra este fichero.
+
+contexto:
+  total: 100000
+
+  # Las siete capas más el margen. Orden de la tabla, no de degradación.
+  capas:
+    invariante: 6000       # Premisa, guía de estilo, glosario canónico
+    estructural: 4000      # Brief de escena y restricción de destino
+    estado: 18000          # Snapshot derivado en t, nunca texto bruto
+    local: 30000           # Últimas escenas literales
+    recuperado: 25000      # sqlite-vec, filtrado por entidades del brief
+    estilo: 8000           # Muestras de voz de los personajes presentes
+    anticontexto: 5000     # Repeticiones, clichés vetados, revelaciones prohibidas
+    margen: 4000           # Reserva para la respuesta y el desbordamiento
+
+  # Orden en que se comprime cuando el ensamblado no cabe. Se para en cuanto quepa.
+  # `invariante` y la restricción de destino (dentro de `estructural`) no aparecen
+  # aquí a propósito: no se degradan nunca.
+  degradacion:
+    - recuperado
+    - estilo
+    - local
+    - estado
+
+  # Ventana deslizante del anticontexto, en escenas. Cuánto se recuerda antes de olvidar.
+  anticontexto_ventana_escenas: null   # pendiente de calibrar
+
+# ---------------------------------------------------------------------------
+# Deriva
+# ---------------------------------------------------------------------------
+# v1 NO replanifica: `replanning/` queda fuera. Pero sí registra la medida por escena,
+# porque el umbral no se puede fijar sin histórico. Hasta que haya histórico suficiente,
+# `umbral` sigue en null y no dispara nada; su ausencia no impide arrancar.
+
+deriva:
+  registrar_por_escena: true
+  medida: null    # la definición de la medida sigue abierta en la ontología
+  umbral: null    # se calibra con el histórico que v1 acumula
+
+# ---------------------------------------------------------------------------
+# Orquestación
+# ---------------------------------------------------------------------------
+
+orquestacion:
+  max_iteraciones_revision: null   # corta-circuitos por escena; al alcanzarlo, escala al autor
+  max_intentos_trabajo: null       # reintentos ante fallo de infraestructura
+  backoff:
+    base_segundos: null
+    factor: null
+    jitter: true
+
+# ---------------------------------------------------------------------------
+# Calidad
+# ---------------------------------------------------------------------------
+# Una dimensión sin umbral es una opinión, no una métrica (definitions.md, Capa 4).
+# Solo se listan las dimensiones clasificadas `T` en docs/verification.md: son las que
+# v1 puntúa. Las `D` y `U` quedan fuera de v1 y por eso no tienen entrada aquí.
+
+calidad:
+  consistencia_factica: null
+  consistencia_temporal: null
+  consistencia_espacial: null
+  consistencia_epistemica: null
+  plausibilidad_especulativa: null
+  distintividad_de_voz: null
+  calidad_de_prosa: null
+  mostrar_vs_contar: null
+  integridad_de_pov: null
+  causalidad: null
+  ritmo: null
+  carga_expositiva: null
+  originalidad: null
+  cumplimiento_del_brief: null
+
+# ---------------------------------------------------------------------------
+# Recuperación y embeddings
+# ---------------------------------------------------------------------------
+# Modelo multilingüe local. Cada fila de embedding guarda el modelo y la versión con que
+# se generó: un cambio en cualquiera de los dos obliga a reindexar, y el sistema debe
+# detectar la discrepancia al arrancar en vez de mezclar vectores incomparables.
+
+embeddings:
+  modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
+  version: null           # versión concreta del modelo; se fija al elegir el artefacto
+  dimension: null         # debe coincidir con la declarada en la tabla vec0
+  reindexado_obligatorio_si_cambia: true
+
+recuperacion:
+  max_fragmentos: null    # tope antes de ordenar por similitud
