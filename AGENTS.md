@@ -133,8 +133,10 @@ data/novel.db       # base de datos (no versionada)
 - Estructura por **Feature-Sliced Design v2.1**: importaciones solo hacia capas inferiores
   (`app → pages → widgets → features → entities → shared`) y cada slice se consume por su
   `index.ts`. Empezamos con `app/`, `pages/` y `shared/`; `features/` y `entities/` se
-  crean al extraer, no por adelantado. `widgets/` está desaconsejada. Carga la skill
-  `feature-sliced-design` antes de decidir dónde va un archivo.
+  crean al extraer, no por adelantado. **`widgets/` no se usa**: FSD la desaconseja y aquí
+  además está descartada (`docs/architecture.md` § Precedencia); sigue en la cadena porque
+  es la de FSD, no la nuestra. Carga la skill `feature-sliced-design` antes de decidir
+  dónde va un archivo.
 - El cliente tipado vive en `shared/api/` y se genera o se mantiene contra el OpenAPI de
   FastAPI: los tipos no se escriben a mano dos veces.
 - Sin lógica de dominio en el frontend: el canon se decide en el backend.
