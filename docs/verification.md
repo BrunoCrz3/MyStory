@@ -48,21 +48,21 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Si una capa desborda se comprime esa capa, sin robar presupuesto a otra | `AGENTS.md` § Presupuesto | Pruebas basadas en propiedades | T | `context/` |
 | Los siete presupuestos más el margen suman exactamente `contexto.total` | `config/thresholds.yaml` | Análisis | A | constante única, no números sueltos |
 | El contexto tiene exactamente siete capas, con las fuentes del diagrama | `domain-knowledge.md` § Ensamblado del contexto | Inspección | I | `context/` |
-| La recuperación filtra por entidades del brief **antes** de ordenar por similitud | `AGENTS.md` § Base de datos; `definitions.md` Capa 3 | Pruebas unitarias + análisis estático | T, A | `context/recuperar-fragmentos` |
+| La recuperación filtra por entidades del brief **antes** de ordenar por similitud | `AGENTS.md` § Persistencia, backend y frontend; `definitions.md` Capa 3 | Pruebas unitarias + análisis estático | T, A | `context/recuperar-fragmentos` |
 | El texto de obra y de canon entra en el prompt marcado como datos, nunca en la posición de las instrucciones | `architecture.md` § Resistencia a inyección; RF-CTX-11 | Pruebas unitarias + análisis estático | T, A | `context/` |
-| Todo contrato entre capas es un modelo Pydantic; no cruzan `dict` sueltos | `AGENTS.md` § Backend | Comprobación de tipos + análisis estático | A | comprobador de tipos, `ruff` |
-| El frontend no contiene `any` | `AGENTS.md` § Frontend | Comprobación de tipos | A | `npm run typecheck` |
-| El cliente tipado de `frontend/src/shared/api/` no diverge del OpenAPI de FastAPI | `AGENTS.md` § Frontend | Pruebas de contrato | T | paso de CI que regenera y compara |
-| Las escrituras al canon son idempotentes por `scene_id` + `version` | `AGENTS.md` § Backend; `architecture.md` § Reglas de ejecución | Pruebas basadas en propiedades | T | `tests/canon/` |
-| Toda escritura al canon ocurre dentro de una transacción | `AGENTS.md` § Base de datos | Análisis estático | A | `canon/` |
-| `WAL` está activado en la conexión | `AGENTS.md` § Base de datos | Inspección | I | `commons/db/` |
-| Las migraciones están numeradas, se aplican en orden y no se editan tras commitear | `AGENTS.md` § Base de datos, regla 5 | Inspección + pruebas unitarias sobre el hash aplicado | I, T | `commons/db/migrations/`, CI |
+| Todo contrato entre capas es un modelo Pydantic; no cruzan `dict` sueltos | `AGENTS.md` § Persistencia, backend y frontend | Comprobación de tipos + análisis estático | A | comprobador de tipos, `ruff` |
+| El frontend no contiene `any` | `AGENTS.md` § Persistencia, backend y frontend | Comprobación de tipos | A | `npm run typecheck` |
+| El cliente tipado de `frontend/src/shared/api/` no diverge del OpenAPI de FastAPI | `AGENTS.md` § Persistencia, backend y frontend | Pruebas de contrato | T | paso de CI que regenera y compara |
+| Las escrituras al canon son idempotentes por `scene_id` + `version` | `AGENTS.md` § Persistencia, backend y frontend; `architecture.md` § Reglas de ejecución | Pruebas basadas en propiedades | T | `tests/canon/` |
+| Toda escritura al canon ocurre dentro de una transacción | `AGENTS.md` § Persistencia, backend y frontend | Análisis estático | A | `canon/` |
+| `WAL` está activado en la conexión | `AGENTS.md` § Persistencia, backend y frontend | Inspección | I | `commons/db/` |
+| Las migraciones están numeradas, se aplican en orden y no se editan tras commitear | `AGENTS.md` § Persistencia, backend y frontend; regla 5 | Inspección + pruebas unitarias sobre el hash aplicado | I, T | `commons/db/migrations/`, CI |
 | Las cardinalidades de «Relaciones del dominio» están en el esquema | `definitions.md` § Relaciones del dominio | Restricciones de esquema + inspección de la migración | I | `commons/db/migrations/` |
 | `Escena→Snapshot`, `Brief→Escena` e `Informe→Borrador` son 1:1 | `definitions.md` § Relaciones del dominio | Pruebas unitarias sobre restricciones `unique` | T | `tests/commons/db/` |
 | `Evento` ↔ `Escena` es N:M y tiene tabla puente | `definitions.md` § Fábula y discurso; `domain-knowledge.md` § Fábula y discurso | Inspección | I | `commons/db/migrations/` |
 | Los nombres de las clases del código coinciden con los de la ontología, sin excepciones | `AGENTS.md` regla 1 | Análisis estático | A | comprobador propio en CI, sobre los `models.py` de cada feature |
-| La lógica de dominio no vive en los routers | `AGENTS.md` § Backend | Análisis estático de importaciones | A | CI |
-| El frontend no decide nada del canon | `AGENTS.md` § Frontend; `architecture.md` § Sistema | Análisis estático | A | CI |
+| La lógica de dominio no vive en los routers | `AGENTS.md` § Persistencia, backend y frontend | Análisis estático de importaciones | A | CI |
+| El frontend no decide nada del canon | `AGENTS.md` § Persistencia, backend y frontend; `architecture.md` § Sistema | Análisis estático | A | CI |
 | Solo `canon/` escribe en el canon; ningún agente lo hace directamente | `architecture.md` § Agentes | Análisis estático de importaciones | A | CI |
 | Un borrador rechazado no deja rastro en el canon | `definitions.md` Capa 2 § Regla de actualización | Pruebas basadas en propiedades | T | `tests/canon/` |
 | Solo la transición a `aceptada` escribe en el canon | `definitions.md` Capa 5; `domain-knowledge.md` § Ciclo de producción | Model checking | A | `novel/`, `canon/` |
@@ -71,8 +71,8 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 | Ídem para el ciclo de vida de `Promesa narrativa` | `domain-knowledge.md` § Modelo de canon | Model checking | A | `canon/` |
 | Ídem para el ciclo de vida de `Hallazgo` | `domain-knowledge.md` § Modo híbrido | Model checking | A | `findings/` |
 | El retcon marca `obsoleta` solo a las escenas afectadas, sin tocar el resto | `AGENTS.md` § Modelo de autoría | Pruebas basadas en propiedades | T | `replanning/propagar-retcon` |
-| Las llamadas al modelo son asíncronas y llevan timeout explícito | `AGENTS.md` § Backend | Análisis estático | A | CI |
-| Los errores de dominio se mapean a HTTP en un handler central | `AGENTS.md` § Backend | Pruebas unitarias | T | `tests/commons/` |
+| Las llamadas al modelo son asíncronas y llevan timeout explícito | `AGENTS.md` § Persistencia, backend y frontend | Análisis estático | A | CI |
+| Los errores de dominio se mapean a HTTP en un handler central | `AGENTS.md` § Persistencia, backend y frontend | Pruebas unitarias | T | `tests/commons/` |
 | El stack cerrado no admite dependencias vetadas (Postgres, Redis, Celery, ORM…) | `AGENTS.md` § Requisitos técnicos, regla 6 | Análisis estático sobre el lockfile | A | lista de bloqueo en CI |
 | Las 21 preguntas de competencia se responden con el esquema vigente, salvo las que el alcance vigente deje fuera | `definitions.md` § Preguntas de competencia; spec 001 § Criterios de aceptación | Pruebas de integración, una consulta por pregunta | T | `tests/competencia/` |
 | La suite de `canon/` y `context/` detecta de verdad los fallos que dice cubrir | `AGENTS.md` regla 7 | Pruebas de mutación | T | CI nocturno |

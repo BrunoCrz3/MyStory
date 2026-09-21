@@ -319,7 +319,7 @@ contexto semilla, manda el repositorio. Dos casos concretos que ya sabemos que c
 | `feature-sliced-design` | [`feature-sliced/skills`](https://github.com/feature-sliced/skills) | Reinstalar con el comando de abajo |
 | `sqlite-vec` | Vendorizada desde `existential-birds/beagle` | A mano, contra la documentación oficial |
 | `backend-feature-slice` | Escrita en este repositorio | Se edita aquí, junto con «Anatomía de una feature» |
-| `sqlite-relacional` | Escrita en este repositorio | Se edita aquí, junto con «Base de datos» de `AGENTS.md` |
+| `sqlite-relacional` | Escrita en este repositorio | Se edita aquí, junto con «Persistencia, backend y frontend» de `AGENTS.md` |
 | `presupuesto-de-contexto` | Escrita en este repositorio | Se edita aquí; los números salen de `config/thresholds.yaml` |
 | `plan-de-verificacion` | Escrita en este repositorio | Se edita aquí |
 
