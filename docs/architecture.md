@@ -300,7 +300,7 @@ npx skills add https://github.com/feature-sliced/skills --skill feature-sliced-d
 El flag `--copy` es deliberado: por defecto la CLI deja un symlink desde `.claude/skills/`
 hacia `.agents/skills/`, y con `core.symlinks=false` en Windows Git lo commitea como un
 fichero de texto con una ruta dentro. Con `--copy` lo que se versiona es el directorio
-real. `skills-lock.json` guarda el commit y el hash de lo instalado.
+real. `skills-lock.json` guarda el origen y el hash de lo instalado.
 
 **No uses `npx skills update`**: ignora el modo de instalación, borra el directorio y lo
 deja otra vez como symlink. Para actualizar, repite el `add --copy` de arriba y revisa el
