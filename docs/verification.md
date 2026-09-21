@@ -38,11 +38,11 @@ se corre. Si eso cambiara, la metodología entraría de inmediato y con priorida
 
 | Afirmación | Origen | Metodología | T/A/I/D/U | Dónde vive |
 | --- | --- | --- | --- | --- |
-| Ningún contexto ensamblado supera los 100 000 tokens | `AGENTS.md` § Presupuesto de contexto | Pruebas basadas en propiedades | T | `context/`, `tests/context/` |
+| Ningún contexto ensamblado supera el total de `config/thresholds.yaml` | `AGENTS.md` § Presupuesto de contexto; `config/thresholds.yaml` | Pruebas basadas en propiedades | T | `context/`, `tests/context/` |
 | El total se cuenta **antes** de llamar al modelo, no después | `AGENTS.md` § Presupuesto; `architecture.md` § Reglas de ejecución | Análisis estático / SAST | A | regla propia en CI |
 | Un ensamblado que no cabe lanza error; nunca trunca en silencio | `AGENTS.md` regla 3 | Pruebas unitarias | T | `tests/context/` |
 | Si una capa desborda se comprime esa capa, sin robar presupuesto a otra | `AGENTS.md` § Presupuesto | Pruebas basadas en propiedades | T | `context/` |
-| Los siete presupuestos más el margen suman exactamente 100 000 | `AGENTS.md` § Presupuesto | Análisis | A | constante única, no números sueltos |
+| Los siete presupuestos más el margen suman exactamente `contexto.total` | `config/thresholds.yaml` | Análisis | A | constante única, no números sueltos |
 | El contexto tiene exactamente siete capas, con las fuentes del diagrama | `domain-knowledge.md` § Ensamblado del contexto | Inspección | I | `context/` |
 | La recuperación filtra por entidades del brief **antes** de ordenar por similitud | `AGENTS.md` § Base de datos; `definitions.md` Capa 3 | Pruebas unitarias + análisis estático | T, A | `context/recuperar-fragmentos` |
 | Todo contrato entre capas es un modelo Pydantic; no cruzan `dict` sueltos | `AGENTS.md` § Backend | Comprobación de tipos + análisis estático | A | comprobador de tipos, `ruff` |

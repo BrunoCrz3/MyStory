@@ -12,7 +12,8 @@ que no contiene nada más; Codex, Cursor, Copilot y Aider la leen de forma nativ
 > **Estas decisiones ya están tomadas y no se renegocian dentro de una tarea:
 > FastAPI para el backend, organizado por features con una carpeta `commons/`
 > para lo compartido; React con TypeScript para el frontend; SQLite con
-> `sqlite-vec` como única persistencia; ventana de contexto de 100 000 tokens;
+> `sqlite-vec` como única persistencia; la ventana de contexto que declara
+> `config/thresholds.yaml`;
 > y modo de autoría híbrido (estructura planificada por actos, escena
 > descubierta). Si una tarea parece exigir cambiarlas, detente y pregunta:
 > no propongas alternativas ni introduzcas dependencias equivalentes.**
@@ -28,7 +29,7 @@ requerirlo, detente y pregunta.
 | Backend | FastAPI (Python 3.12) | API asíncrona, Pydantic v2 para todo contrato de datos |
 | Frontend | React 18 + TypeScript | Vite como bundler, sin framework de servidor |
 | Persistencia | SQLite + `sqlite-vec` | Un único fichero `data/novel.db`, embeddings en la misma base |
-| Modelo | Ventana de 100 000 tokens | Límite duro: ningún prompt puede superarlo |
+| Modelo | Ventana declarada en `config/thresholds.yaml` (`contexto.total`) | Límite duro: ningún prompt puede superarlo |
 
 Lo que esto excluye explícitamente: Postgres, pgvector, Pinecone, Chroma, Django,
 Flask, Next.js, Vue, Redis, Celery y cualquier ORM que oculte el SQL.
@@ -270,7 +271,7 @@ procedencia) está en `docs/architecture.md`.
 - `sqlite-vec` — crear o cambiar una tabla `vec0`, escribir una consulta KNN, serializar
   embeddings, elegir métrica de distancia o clave de partición.
 - `presupuesto-de-contexto` — ensamblar un prompt, tocar el contador de tokens, decidir
-  qué se comprime cuando algo no cabe en 100 000.
+  qué se comprime cuando algo no cabe en la ventana.
 - `plan-de-verificacion` — construir o revisar el plan de verificación del proyecto.
 
 Cárgala **antes** de escribir, no para justificar lo ya escrito. Una skill no sustituye al
@@ -370,8 +371,8 @@ demás —comportamiento, esquema, contrato de API u ontología— pasa por las 
    y estados del código son los de la ontología, sin excepciones.
 2. El canon solo cambia al consolidar una escena aceptada. Un borrador rechazado no deja rastro.
 3. Todo prompt al modelo declara su presupuesto de tokens por capa y falla si no cabe en
-   100 000. Si una tarea exige superarlo, el diseño está mal: propón compresión, no una
-   ventana mayor.
+   la ventana de `config/thresholds.yaml`. Si una tarea exige superarla, el diseño está
+   mal: propón compresión, no una ventana mayor.
 4. Nunca inventes un hecho del mundo ni una clase del dominio: si falta, abre una pregunta al autor.
 5. Cambios de esquema de base: migración numerada, nunca edición de una ya aplicada.
 6. No introduzcas dependencias nuevas sin justificarlo: el stack está cerrado.

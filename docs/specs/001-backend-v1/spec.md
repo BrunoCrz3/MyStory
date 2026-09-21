@@ -89,8 +89,8 @@ entre sí. El cliente es el frontend, que no decide nada del canon.
 ### 2.3 Restricciones generales
 
 Las de «Requisitos técnicos» de `AGENTS.md`, que no se renegocian: FastAPI sobre Python
-3.12, SQLite con `sqlite-vec` como única persistencia, ventana de 100 000 tokens y modo de
-autoría híbrido. Quedan excluidos Postgres, pgvector, Pinecone, Chroma, Redis, Celery y
+3.12, SQLite con `sqlite-vec` como única persistencia, la ventana de contexto declarada en
+`config/thresholds.yaml` y modo de autoría híbrido. Quedan excluidos Postgres, pgvector, Pinecone, Chroma, Redis, Celery y
 cualquier ORM que oculte el SQL.
 
 Y la de alcance, igual de cerrada: **un solo autor y una sola obra por instancia**, sin
@@ -216,7 +216,7 @@ Superficie mínima por feature:
 
 | Id | Requisito | Verifica |
 | --- | --- | --- |
-| RNF-01 | Ningún contexto ensamblado supera los 100 000 tokens, **nunca** | T (propiedades) |
+| RNF-01 | Ningún contexto ensamblado supera `contexto.total` de `config/thresholds.yaml`, **nunca** | T (propiedades) |
 | RNF-02 | Toda escritura al canon ocurre en transacción; `WAL` activado | A, I |
 | RNF-03 | Migraciones numeradas, aplicadas en orden y **nunca editadas** tras commitear; el hash de lo aplicado se comprueba | I, T |
 | RNF-04 | Las 21 preguntas de competencia se responden con el esquema vigente, una consulta por pregunta | T |
@@ -281,7 +281,8 @@ v1 se da por terminada cuando:
    → hallazgos `provisional`.
 3. Todas las filas de nivel artefacto de `verification.md` que caen dentro del alcance
    están cubiertas por su metodología.
-4. Ningún ensamblado supera 100 000 tokens y ninguno se trunca en silencio.
+4. Ningún ensamblado supera el total declarado en `config/thresholds.yaml` y ninguno se
+   trunca en silencio.
 5. `ruff`, el comprobador de tipos y la suite de pruebas pasan en CI.
 6. La documentación queda al día en el mismo commit.
 

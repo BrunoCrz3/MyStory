@@ -1,11 +1,11 @@
 ---
 name: presupuesto-de-contexto
-description: Reparto de la ventana de 100 000 tokens entre las siete capas del contexto de una escena, con la fuente y el presupuesto de cada una, la regla de contar antes de llamar al modelo y fallar en voz alta, y la jerarquía de compresión. Cárgala antes de ensamblar un prompt, añadir o quitar contenido de una capa, escribir o cambiar el contador de tokens, decidir qué se comprime cuando algo no cabe, meter texto de escenas anteriores en el contexto, o diseñar la recuperación de fragmentos. Úsala también cuando aparezcan las palabras contexto, prompt, ventana, tokens, presupuesto, truncar, comprimir, resumen, snapshot, anticontexto o recuperación, y siempre que una tarea parezca necesitar más de 100 000 tokens — ahí es justo donde más falta hace.
+description: Reparto de la ventana de contexto entre las siete capas del contexto de una escena, con la fuente de cada una, dónde se lee su presupuesto, la regla de contar antes de llamar al modelo y fallar en voz alta, y la jerarquía de compresión. Cárgala antes de ensamblar un prompt, añadir o quitar contenido de una capa, escribir o cambiar el contador de tokens, decidir qué se comprime cuando algo no cabe, meter texto de escenas anteriores en el contexto, o diseñar la recuperación de fragmentos. Úsala también cuando aparezcan las palabras contexto, prompt, ventana, tokens, presupuesto, truncar, comprimir, resumen, snapshot, anticontexto o recuperación, y siempre que una tarea parezca necesitar más contexto del que cabe en la ventana — ahí es justo donde más falta hace.
 ---
 
 # Presupuesto de contexto
 
-La ventana de 100 000 tokens es un límite duro, no un objetivo. El ensamblador reparte ese
+La ventana de contexto es un límite duro, no un objetivo. El ensamblador reparte ese
 total por capas y cada capa responde a una pregunta distinta sobre la escena que se va a
 escribir. El reparto existe porque sin él una sola capa se come la ventana: las escenas
 literales siempre pueden crecer, y el resultado es un prompt lleno de prosa reciente y
@@ -48,8 +48,8 @@ supera el total. Cada capa cubre un riesgo distinto: bajarle tokens al anticonte
 meter más prosa reciente cambia un problema de continuidad por uno de repetición, sin que
 nadie lo haya decidido.
 
-Si una tarea parece exigir más de 100 000 tokens, el diseño está mal. Propón compresión,
-no una ventana mayor.
+Si una tarea parece exigir más ventana de la declarada, el diseño está mal. Propón
+compresión, no una ventana mayor.
 
 ## Qué va en cada capa
 

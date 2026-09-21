@@ -62,7 +62,7 @@ flowchart TD
     PRO -.-> CMN
     FND -.-> CMN
     RPL -.-> CMN
-    CMN --> LLM[Modelo · 100 000 tokens]
+    CMN --> LLM[Modelo · ventana de thresholds.yaml]
   end
   subgraph DB[Persistencia · SQLite + sqlite-vec]
     REL[(Tablas relacionales)]
@@ -215,7 +215,7 @@ documentación que se carga en la ventana de contexto.
 
 | Skill | Qué resuelve | Módulo | La usan |
 | --- | --- | --- | --- |
-| `ensamblar-contexto` | Reparte las siete capas y falla si no cabe en 100 000 | `context/` | redactor, editor |
+| `ensamblar-contexto` | Reparte las siete capas y falla si no cabe en la ventana | `context/` | redactor, editor |
 | `consultar-canon` | Snapshot en t, estado epistémico, promesas abiertas | `canon/` | planificador, redactor, verificador |
 | `recuperar-fragmentos` | Filtro relacional por entidades del brief y después `vec0` | `context/` | ensamblar-contexto |
 | `construir-anticontexto` | Metáforas usadas, ecos, clichés vetados, revelaciones prohibidas | `context/` | ensamblar-contexto |
@@ -244,16 +244,17 @@ versionan con el repositorio: un clon nuevo los tiene sin instalar nada.
 | `feature-sliced-design` | Estructura del frontend, FSD v2.1 | Hay que colocar un archivo, definir la API pública de un slice, resolver un cross-import, decidir si extraer a `features/` o `entities/`, o integrar el router |
 | `sqlite-relacional` | Lado relacional de la persistencia | Se crea o cambia una tabla, se escribe una migración o cualquier SQL, se traduce una cardinalidad o un estado de la ontología al esquema, o se abre una transacción |
 | `sqlite-vec` | Búsqueda vectorial en SQLite | Se crea o cambia una tabla `vec0`, se escribe una consulta KNN, se serializan embeddings, o se elige métrica de distancia, columna de metadatos o clave de partición |
-| `presupuesto-de-contexto` | Reparto de los 100 000 tokens | Se ensambla un prompt, se toca el contador de tokens, se decide qué comprimir cuando algo no cabe, o una tarea parece necesitar más ventana |
+| `presupuesto-de-contexto` | Reparto de la ventana de contexto | Se ensambla un prompt, se toca el contador de tokens, se decide qué comprimir cuando algo no cabe, o una tarea parece necesitar más ventana |
 | `plan-de-verificacion` | Verificación | Se construye o revisa el plan de verificación, o se clasifica una afirmación como T/A/I/D/U |
 
 Las cuatro primeras van en pares y cubren las decisiones donde este proyecto se equivoca
 caro: dónde vive un archivo —en el backend y en el frontend— y cómo se consulta la base
 —por SQL y por vectores—. El par de persistencia es además la referencia operativa de la
 regla «filtro relacional y después similitud» que fija AGENTS.md: `sqlite-relacional` pone
-el filtro, `sqlite-vec` el orden por similitud. `presupuesto-de-contexto` existe porque el
-límite de 100 000 tokens aparece repetido en cuatro documentos y necesitaba un solo sitio
-donde consultarse antes de ensamblar.
+el filtro, `sqlite-vec` el orden por similitud. `presupuesto-de-contexto` existe porque la
+política de reparto y degradación se consultaba en varios documentos y necesitaba un solo
+sitio donde leerse antes de ensamblar; las cifras, como siempre, salen de
+`config/thresholds.yaml`.
 
 ### Precedencia
 
@@ -562,7 +563,7 @@ sequenceDiagram
   participant A as Autor humano
   participant K as canon/
   P->>X: brief + restricción de destino
-  X->>R: contexto ensamblado (≤100 000)
+  X->>R: contexto ensamblado (dentro de la ventana)
   R->>C: borrador
   C->>V: informe de crítica
   V->>A: continuidad verificada
