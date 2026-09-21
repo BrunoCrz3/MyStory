@@ -190,12 +190,12 @@ entrenamiento ni modelos propios derivados. Aquí «fine-tuning» no significa e
 modelo que escribe: significa una escalera de adaptación de cuatro escalones, que se
 suben en orden y donde los tres primeros no tocan pesos de ningún modelo.
 
-| Escalón | Qué es | Para qué agentes | Cuándo |
+| Escalón | Qué es | Para qué agentes o skills | Cuándo |
 | --- | --- | --- | --- |
 | 1. Prompt y few-shot canónico | Instrucciones y ejemplos elegidos a mano, versionados con el repositorio | Todos | Desde el principio; es el único escalón siempre activo |
 | 2. Banco de ejemplos | Pares entrada/salida aceptados, acumulados en `training_samples` *(propuesta)* | Todos | Se recoge **desde el primer día**, aunque no se use todavía |
 | 3. Fine-tune de modelo abierto pequeño | Entrenamiento real, pero solo de tareas estrechas y medibles | `extractor`, `critico`, `verificador` | Cuando el banco tiene volumen y la tarea tiene métrica |
-| 4. Embeddings propios | Vectores entrenados sobre el corpus de la obra, no genéricos | `recuperar-fragmentos` | Cuando la recuperación falle por vocabulario del mundo |
+| 4. Embeddings propios | Vectores entrenados sobre el corpus de la obra, no genéricos | `recuperar-fragmentos`, skill de `context/` | Cuando la recuperación falle por vocabulario del mundo |
 
 El escalón 2 es el que hay que empezar ya aunque no se use: un banco de ejemplos se
 acumula con el tiempo y no se puede reconstruir hacia atrás. Los escalones 3 y 4 solo se
