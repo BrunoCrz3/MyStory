@@ -1,0 +1,17 @@
+# La base es el canon, no un artefacto del repositorio (AGENTS.md, layout).
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Frontend (previsto)
+node_modules/
+dist/
