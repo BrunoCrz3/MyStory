@@ -105,3 +105,38 @@ embeddings:
 
 recuperacion:
   max_fragmentos: null    # tope antes de ordenar por similitud
+
+# ---------------------------------------------------------------------------
+# Continuidad y estructura
+# ---------------------------------------------------------------------------
+# No puntuan una dimension de calidad: cuentan escenas, comparan firmas o miden
+# distancia a una linea base. Salen del catalogo de modos de fallo; cada clave
+# dice que fila de docs/verification.md la lee.
+
+continuidad:
+  escenas_sin_avanzar_arco: null        # P-44
+  escenas_sin_avanzar_hilo: null        # P-44
+  promesas_pendientes_max: null         # P-44
+  similitud_escena_duplicada: null      # P-43, firma dramatica + vecino vec0
+  repeticion_descripcion_entidad: null  # P-09, medida al consolidar
+  deriva_estilo_vs_linea_base: null     # P-49
+  densidad_acto_final: null             # P-14
+
+# ---------------------------------------------------------------------------
+# Higiene de salida
+# ---------------------------------------------------------------------------
+# La puerta de A-47 es booleana salvo en la longitud, que necesita margen.
+
+higiene:
+  desviacion_longitud_escena: null      # A-47, contra Obra.extension objetivo
+
+# ---------------------------------------------------------------------------
+# Medida de los validadores
+# ---------------------------------------------------------------------------
+# Minimos que ha de alcanzar cada validador sobre el corpus de defectos
+# inyectados. Es el umbral que hace que los demas umbrales signifiquen algo:
+# un validador por debajo de esto no aprueba ni suspende, adivina.
+
+validadores:
+  precision_minima: null                # P-50
+  cobertura_minima: null                # P-50

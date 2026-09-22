@@ -5,7 +5,10 @@ que establecen cada una y la letra `T/A/I/D/U` que dice de qué naturaleza es es
 evidencia. Deriva de `definitions.md` (clases, relaciones, preguntas de competencia),
 `domain-knowledge.md` (máquinas de estado y grafos) y `architecture.md` (componentes,
 agentes y orden), más los límites duros de `AGENTS.md` y los requisitos numerados de
-`docs/specs/001-backend-v1/spec.md`.
+`docs/specs/001-backend-v1/spec.md`. Una parte de las filas no nace de leer la ontología
+sino de leer prosa generada: un catálogo de modos de fallo que el autor mantiene y que hoy
+no vive en el repositorio. Su «Origen» sigue apuntando al documento que sostiene la
+afirmación; el catálogo dice por qué la fila existe.
 
 **Qué no es.** No es un plan de pruebas ni una lista de tareas: no dice cuándo se
 escribe cada comprobación, solo cuál corresponde y dónde vivirá. Tampoco fija umbrales
@@ -48,13 +51,13 @@ referenciarla desde «Cubierto por».
 
 | Nivel | Filas | T | A | I | D | U | % programático | Ciegos sin cubrir |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Artefacto | 46 | 23 | 24 | 8 | 0 | 0 | 98 % (89 sí · 9 parcial) | 5 |
-| Proceso | 36 | 22 | 4 | 2 | 6 | 2 | 92 % (31 sí · 61 parcial) | 8 |
+| Artefacto | 51 | 27 | 25 | 9 | 1 | 0 | 98 % (88 sí · 10 parcial) | 5 |
+| Proceso | 51 | 37 | 4 | 2 | 6 | 2 | 94 % (39 sí · 55 parcial) | 8 |
 
 Una fila puede llevar dos letras cuando la prueba y el análisis son complementarios, de
 ahí que las columnas sumen más que las filas. El porcentaje cuenta las filas marcadas
-`sí` o `parcial`; el reparto exacto es 41 `sí`, 4 `parcial` y 1 `no` en artefacto, y 11
-`sí`, 22 `parcial` y 3 `no` en proceso.
+`sí` o `parcial`; el reparto exacto es 45 `sí`, 5 `parcial` y 1 `no` en artefacto, y 20
+`sí`, 28 `parcial` y 3 `no` en proceso.
 
 La forma de la tabla dice dos cosas. La primera, que el nivel artefacto es casi todo
 programático y casi todo `A`: lo que puede fallar ahí es estructural y enumerable, así
@@ -62,6 +65,12 @@ que se establece razonando sobre el código sin ejecutarlo. La segunda, y es la 
 que el nivel proceso concentra los `parcial`, todas las `D`, todas las `U` y la mayoría
 de los puntos ciegos sin cubrir: casi cada fila de calidad tiene una mitad que decide un
 `SELECT` y otra que decide un crítico cuyo acuerdo con el autor nadie ha medido.
+
+**El nivel proceso se volvió más programático, no menos.** Las quince filas que entraron
+con el catálogo de modos de fallo son casi todas consultas contra estado que la ontología
+ya modela —inventario, relaciones, alcance temporal, promesas, arcos—, y suben el reparto
+de `sí` del 31 % al 39 %. Es la consecuencia del principio **cuatro** llevada hasta el
+final: donde el dominio ya guarda el dato, el validador no necesita juicio.
 
 **La ejecución en sandbox no aparece en ninguna fila.** El sistema no ejecuta código ni
 herramientas generadas por el modelo: la salida del redactor es prosa que se guarda, no
@@ -74,22 +83,26 @@ cambiara, la metodología entraría de inmediato y con prioridad alta.
 
 Todo lo que las tablas marcan `NADIE`, ordenado por lo que se rompe si se materializa.
 Es la sección que hay que leer primero: las tablas dicen qué se comprueba, esta dice
-dónde el sistema está descubierto.
+dónde el sistema está descubierto. Tres entradas no llevan fila: nombran un hueco que
+ninguna metodología del catálogo alcanza todavía, y una fila con la columna de validadores
+vacía diría menos que esto.
 
 | # | Punto ciego | Filas | Qué se rompe | Qué validador lo cerraría |
 | --- | --- | --- | --- | --- |
-| 1 | **Ningún umbral está calibrado.** Todo `config/thresholds.yaml` está en `null`, y `A-41` comprueba que falte, no que esté bien puesto | A-41, y de rebote las 14 dimensiones con umbral | Toda la capa de calidad aprueba en vacío: las filas `T` dan por buenos borradores malos y nadie se entera hasta leerlos | **Pruebas de mutación aplicadas al texto**: inyectar defectos conocidos en escenas ya aceptadas y exigir que el crítico los detecte. Un umbral que no separa el original del mutante está mal puesto (§ Soluciones pícaras #12) |
+| 1 | **El canon extraído puede no ser fiel a la escena aceptada.** `A-48` comprueba que los términos del hecho aparecen en el texto, no que el hecho afirme lo que la escena dice | A-48 | Todo el plan verifica contra una verdad que puede haber derivado de la escena que dice representar. Es la raíz de la propagación del error: un detalle perdido al consolidar reaparece como contradicción veinte escenas después, y el culpable ya no está | Ninguno del catálogo alcanza la afirmación fuerte sin un anclaje textual que `Hecho canónico` no tiene (§ Filas pendientes de ontología). Con él, **pruebas basadas en propiedades**: todo hecho cita el fragmento que lo sostiene o no se consolida |
 | 2 | **Nadie mide el acuerdo entre el crítico y el autor.** Todas las filas de evals puntúan contra un criterio que nunca se ha contrastado con quien decide | P-29, P-13, P-06, P-02, P-05 | El sistema converge hacia lo que le gusta al crítico, no al autor, y la convergencia parece calidad porque las métricas suben | **Evals sobre dataset etiquetado por el autor**, midiendo acuerdo. Necesita una clase que hoy no existe: la etiqueta del autor sobre un borrador (§ Filas pendientes de ontología) |
 | 3 | **La deriva no tiene medida ni umbral.** `definitions.md` da a `Deriva` el atributo `medida` sin decir cuál es, y `deriva.umbral` sigue en `null` | P-23 | El esquema deja de describir la obra y nada lo dispara. Es justo el fallo que el modo híbrido existe para evitar | Ninguno sirve antes de definir la medida; cualquiera después. Sigue siendo la primera pregunta abierta al autor |
 | 4 | **Nadie sabe si el modelo atendió a una capa en la escena real.** El canario prueba que puede usarla en una sonda, no que la usara al escribir | P-31, A-04, A-08 | Una escena generada sin el estado que la condiciona: indistinguible de una buena hasta que el verificador encuentra la contradicción, o hasta que no la encuentra | Ninguno del catálogo alcanza la afirmación fuerte. El canario por escena (§ Soluciones pícaras #1) la reduce a este residuo, y el residuo se queda aquí |
 | 5 | **Deriva lenta de personaje.** El contraste con la ficha detecta la contradicción explícita, no al personaje que sigue siendo coherente y ha dejado de ser él | P-06 | La novela pierde a su protagonista sin que falle ninguna fila | **Evals** sobre la trayectoria del arco y no sobre la escena: comparar la ficha con lo que el personaje hace en las últimas N escenas, no en la última |
-| 6 | **Un cambio de prompt no se contrasta con lo ya escrito.** El despliegue progresivo compara escenas nuevas entre sí | P-26 | La escena 101 es buena y no pega con las cien anteriores; la incoherencia se detecta leyendo, no midiendo | **Evals de continuidad de estilo** contra una muestra congelada de escenas aceptadas como línea base |
-| 7 | **El autor puede aprobar sin leer.** Los guardarraíles garantizan que la transición la dispare él, no que la haya leído | P-19, A-46 | `training_samples` se llena de texto que solo pasó umbrales: exactamente el bucle de autoentrenamiento que `architecture.md` prohíbe | **Observabilidad**: registrar ediciones y tiempo de revisión antes de aceptar, y distinguir aceptación leída de aceptación en bloque |
-| 8 | **El frontend puede reimplementar reglas de canon.** El análisis estático mide importaciones, no contenido, y no hay ninguna fila de comportamiento del frontend | A-25, A-14 | Dos verdades sobre el canon: la del backend y la que ve el autor. La divergencia se nota cuando ya hay decisiones tomadas sobre la equivocada | **Pruebas de contrato** extendidas —toda vista deriva de una respuesta del backend y no recalcula— más pruebas de integración de frontend, hoy fuera de alcance |
-| 9 | **Dos instancias sobre el mismo `data/novel.db`.** La serialización la impone el proceso, y nada impide arrancar dos | P-35, P-36 | El escritor único de SQLite deja de ser un no-problema: dos consolidaciones concurrentes sobre el mismo canon | **Guardarraíles**: cerrojo de instancia sobre el fichero al arrancar, con fallo en voz alta |
-| 10 | **La instancia puede exponerse fuera de `127.0.0.1`.** `A-39` comprueba el valor por defecto, no el arranque real | A-39 | Sin autenticación en v1, el canon entero queda accesible en la red | **Guardarraíles**: negarse a escuchar fuera de la interfaz local mientras no haya autenticación |
-| 11 | **Un hecho refutado puede resucitar como hecho nuevo.** `A-33` impide la transición, no la creación de un duplicado sin enlace al anterior | A-33, A-30 | El historial pierde el enlace y el canon deja de explicar por qué algo dejó de ser verdad | **Pruebas basadas en propiedades** sobre proximidad de enunciado: un hecho nuevo muy cercano a uno refutado exige referencia explícita |
-| 12 | **Sentido de la maravilla y gusto del autor.** Sin validador, por razones distintas | P-16, P-30 | Nada mecánico: es el hueco por diseño del sistema. Importa saber que está ahí y no confundirlo con una carencia del plan | Para `P-16`, pasajes etiquetados por el autor lo convertirían en eval. Para `P-30`, nada, y debe seguir así (§ Lo que no se puede verificar) |
+| 6 | **Los defectos que nadie sabe inyectar.** `P-50` mide cada validador contra un corpus de mutaciones, y el corpus lo escribe quien ya sabe qué buscar | P-50 | La medida de precisión y cobertura sale alta y solo dice que el validador ve lo que su autor imaginó. El modo de fallo que a nadie se le ocurrió no baja ninguna métrica | Ninguno se cierra a sí mismo. Lo más cerca: **red-teaming** sobre el propio corpus de mutaciones, con un adversario distinto de quien escribió los validadores |
+| 7 | **Deriva respecto a la premisa.** `Deriva` mide la distancia al **esquema**; la distancia a `Obra.premisa` no la mide nada | — | La novela cumple su esquema acto por acto y ha dejado de ser el libro que se quería escribir. Ninguna fila falla, porque el esquema también derivó | **Evals** contra `Obra.premisa` como línea base. No hay fila porque la afirmación no tiene todavía criterio de aprobado: es la misma pregunta abierta que la medida de deriva, un nivel más arriba |
+| 8 | **El autor puede aprobar sin leer.** Los guardarraíles garantizan que la transición la dispare él, no que la haya leído | P-19, A-46 | `training_samples` se llena de texto que solo pasó umbrales: exactamente el bucle de autoentrenamiento que `architecture.md` prohíbe | **Observabilidad**: registrar ediciones y tiempo de revisión antes de aceptar, y distinguir aceptación leída de aceptación en bloque |
+| 9 | **El frontend puede reimplementar reglas de canon.** El análisis estático mide importaciones, no contenido, y no hay ninguna fila de comportamiento del frontend | A-25, A-14 | Dos verdades sobre el canon: la del backend y la que ve el autor. La divergencia se nota cuando ya hay decisiones tomadas sobre la equivocada | **Pruebas de contrato** extendidas —toda vista deriva de una respuesta del backend y no recalcula— más pruebas de integración de frontend, hoy fuera de alcance |
+| 10 | **Dos instancias sobre el mismo `data/novel.db`.** La serialización la impone el proceso, y nada impide arrancar dos | P-35, P-36 | El escritor único de SQLite deja de ser un no-problema: dos consolidaciones concurrentes sobre el mismo canon | **Guardarraíles**: cerrojo de instancia sobre el fichero al arrancar, con fallo en voz alta |
+| 11 | **La instancia puede exponerse fuera de `127.0.0.1`.** `A-39` comprueba el valor por defecto, no el arranque real | A-39 | Sin autenticación en v1, el canon entero queda accesible en la red | **Guardarraíles**: negarse a escuchar fuera de la interfaz local mientras no haya autenticación |
+| 12 | **Un hecho refutado puede resucitar como hecho nuevo.** `A-33` impide la transición, no la creación de un duplicado sin enlace al anterior | A-33, A-30 | El historial pierde el enlace y el canon deja de explicar por qué algo dejó de ser verdad | **Pruebas basadas en propiedades** sobre proximidad de enunciado: un hecho nuevo muy cercano a uno refutado exige referencia explícita |
+| 13 | **Coincidencias excesivas y metáforas mezcladas.** Dos residuos de familias que por lo demás sí bajan a código | — | Poco, por separado. Juntos son la textura que delata a un modelo cuando todo lo medible ya pasa | Para las coincidencias, `P-45` cubre lo no preparado y el resto no tiene forma reconocible. Para las metáforas, **verificación multiagente** y nada más barato. No hay fila porque ninguna de las dos tiene criterio de aprobado |
+| 14 | **Sentido de la maravilla y gusto del autor.** Sin validador, por razones distintas | P-16, P-30 | Nada mecánico: es el hueco por diseño del sistema. Importa saber que está ahí y no confundirlo con una carencia del plan | Para `P-16`, pasajes etiquetados por el autor lo convertirían en eval. Para `P-30`, nada, y debe seguir así (§ Lo que no se puede verificar) |
 
 ---
 
@@ -137,12 +150,17 @@ dónde el sistema está descubierto.
 | **A-38** · Ninguna tabla lleva `user_id` ni `tenant_id` | `AGENTS.md` § Alcance; RNF-11 | Análisis estático / SAST + inspección | A, I | sí | Detecta el nombre: una columna `autor_id` con la misma intención pasa | P-34 | CI, `commons/db/migrations/` |
 | **A-39** · La instancia escucha en `127.0.0.1` por defecto | `architecture.md` § Dónde escucha; RNF-12 | Inspección + pruebas unitarias | I, T | sí | Comprueba el valor por defecto; no impide que el arranque lo cambie por variable de entorno sin que nadie lo note | NADIE | `main.py`, `tests/` |
 | **A-40** · `config/thresholds.yaml` es la fuente única: ninguna cifra duplicada en documentos ni suelta en el código | RNF-14; `AGENTS.md` § Presupuesto de contexto | Análisis estático / SAST | A | sí | Busca números en el código y en `docs/`; no detecta un umbral escrito con palabras («la mitad del presupuesto local») | A-41 | regla propia en CI |
-| **A-41** · Si falta un umbral que se necesita, el arranque falla en voz alta | RF-QUA-05; `config/thresholds.yaml` | Pruebas unitarias / de integración | T | sí | Cubre el umbral ausente, no el presente y mal calibrado: un valor inventado arranca sin protestar | NADIE | `commons/`, `tests/commons/` |
+| **A-41** · Si falta un umbral que se necesita, el arranque falla en voz alta | RF-QUA-05; `config/thresholds.yaml` | Pruebas unitarias / de integración | T | sí | Cubre el umbral ausente, no el presente y mal calibrado: un valor inventado arranca sin protestar | P-50 | `commons/`, `tests/commons/` |
 | **A-42** · Un cambio de modelo o de versión de embeddings se detecta al arrancar y falla en voz alta | `architecture.md` § Embeddings y reindexado | Pruebas unitarias / de integración + inspección | T, I | sí | Compara lo declarado con lo almacenado: un proveedor que cambie los pesos bajo la misma versión pasa la comprobación y devuelve otros vecinos | § Soluciones pícaras #2 | `commons/db/`, arranque |
 | **A-43** · Las 21 preguntas de competencia se responden con el esquema vigente, salvo las que el alcance deje fuera | `definitions.md` § Preguntas de competencia; spec 001 §8; RNF-04 | Pruebas unitarias / de integración, una consulta por pregunta | T | sí | Responder no es responder bien: una consulta que devuelve filas plausibles con un `JOIN` equivocado pasa igual | A-44 | `tests/competencia/` |
 | **A-44** · La suite de `canon/` y `context/` detecta de verdad los fallos que dice cubrir | `AGENTS.md` regla 7 | Pruebas de mutación | T | sí | Muta el código, no los datos ni los prompts: una suite que no comprueba nada del texto generado sale indemne | § Soluciones pícaras #12 | CI nocturno |
 | **A-45** · `registrar-generacion` corre en toda llamada al modelo, sin excepción | `architecture.md` § Skills; RNF-06 | Análisis estático / SAST + observabilidad | A | sí | Garantiza la fila, no su contenido: un registro con el prompt truncado o el contexto sin serializar cumple igual | P-24 | CI, trazas |
 | **A-46** · Solo entra en `training_samples` texto aceptado **y editado** por el autor | `architecture.md` § Adaptación del modelo; RF-PROC-09 | Análisis estático / SAST + pruebas unitarias | A, T | sí | La traza distingue aceptación humana de automática; no distingue una aceptación humana hecha sin leer | NADIE | `process/`, `tests/process/` · pendiente de ontología |
+| **A-47** · Ningún borrador entra en el ciclo con metatexto del modelo, nota, rechazo, truncamiento a mitad de frase, placeholder sin rellenar, mezcla de idiomas, formato roto o longitud fuera de objetivo | `architecture.md` § Memoria § Punto único de promoción; RF-PROC-02; `config/thresholds.yaml` | Guardarraíles + pruebas basadas en propiedades | T | sí | Reconoce las formas que alguien enumeró: un metatexto escrito como prosa narrativa —un narrador que se dirige al lector— no deja marca léxica | P-09 | `process/`, `tests/process/` |
+| **A-48** · Todo `Hecho canónico` consolidado tiene sus términos y entidades en el texto de la escena que lo establece | `architecture.md` § Memoria; RF-CANON-07, RF-FIND-01 | Pruebas basadas en propiedades + evals | T, D | parcial | Comprueba presencia de términos, no lo que el hecho afirma: uno que invierte el sentido con las mismas palabras pasa | NADIE | `canon/`, `findings/extraer-hallazgos`, `tests/canon/` · pendiente de ontología |
+| **A-49** · Tras cada corrección se re-ejecutan todos los validadores, no solo el que falló | `architecture.md` § Ruta de un defecto; RF-QUA-02 | Análisis estático / SAST + model checking | A | sí | Garantiza que se invoquen todos; no que cada uno reciba el texto corregido en vez de una puntuación en caché del anterior | A-50 | `process/`, CI |
+| **A-50** · Ninguna corrección empeora una dimensión que ya pasaba su umbral | `architecture.md` § Ruta de un defecto; RF-QUA-05 | Pruebas basadas en propiedades sobre el historial de `Versión` | T | sí | Compara puntuaciones, y ninguna está calibrada: dos valores igual de arbitrarios no dicen si la escena empeoró | P-50 | `process/`, `quality/`, `tests/quality/` |
+| **A-51** · Todo `Novum` tiene al menos una `Regla del mundo` con límites declarados, y toda `Parte / Acto` su función dramática y su punto de giro | `definitions.md` Capa 1; `domain-knowledge.md` § Mundo especulativo; RF-NOVEL-01, RF-NOVEL-02 | Inspección + pruebas unitarias / de integración | I, T | sí | Exige que la declaración exista, no que sea la que hacía falta: un límite trivial cumple igual y deja a `P-07` sin nada contra lo que medir | P-07 | `novel/`, `tests/novel/` |
 
 ---
 
@@ -156,15 +174,15 @@ dónde el sistema está descubierto.
 | **P-04** · Consistencia espacial: ubicaciones y desplazamientos posibles | `definitions.md` Capa 4 | Pruebas unitarias / de integración contra el snapshot de posiciones + evals | T | parcial | Sabe dónde estaba el personaje, no cuánto tarda en llegar: sin duraciones declaradas, un desplazamiento imposible es consistente | P-03 | `quality/` |
 | **P-05** · Consistencia epistémica: nadie usa información que aún no tiene | `definitions.md` Capa 4; `domain-knowledge.md` § Anatomía del personaje | Pruebas unitarias / de integración sobre `Estado epistémico` + verificación multiagente | T | parcial | Detecta el uso explícito de un hecho que el POV no conoce; no detecta al personaje que actúa *como si* lo supiera sin nombrarlo | crítico, con el residuo en § Puntos ciegos #2 | `quality/verificar-continuidad` |
 | **P-06** · Consistencia de caracterización: las acciones encajan con deseo, herida y arco | `definitions.md` Capa 4 | Evals contra la ficha de personaje + verificación multiagente | D | parcial | Detecta la contradicción explícita con la ficha; no detecta la deriva lenta del personaje que sigue siendo coherente y ha dejado de ser él | NADIE | `quality/medir-calidad` |
-| **P-07** · Plausibilidad especulativa: el novum no viola sus propias reglas | `definitions.md` Capa 4; `domain-knowledge.md` § Mundo especulativo | Pruebas unitarias / de integración contra `Regla del mundo` + evals | T | parcial | Comprueba las reglas declaradas: una consecuencia en cascada del novum que nadie escribió como regla no se viola nunca | P-25 | `quality/` |
+| **P-07** · Plausibilidad especulativa: el novum no viola sus propias reglas | `definitions.md` Capa 4; `domain-knowledge.md` § Mundo especulativo | Pruebas unitarias / de integración contra `Regla del mundo` + evals | T | parcial | Comprueba las reglas declaradas: una consecuencia en cascada del novum que nadie escribió como regla no se viola nunca. Los plazos de viaje y de curación solo entran aquí si se declaran como `Regla del mundo`; si no, ningún desplazamiento es imposible | A-51, P-25 | `quality/` |
 | **P-08** · Distintividad de voz: se identifica quién habla sin acotaciones | `definitions.md` Capa 4 | Evals con clasificación ciega de diálogo | T | parcial | Quién clasifica sigue abierto: si es una persona, la fila es `D` y no `T` | § Soluciones pícaras #10 | `quality/`, `muestrear-voz` |
-| **P-09** · Calidad de prosa: eco de n-gramas, clichés, palabras-filtro, varianza de frase | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre métricas léxicas | T | sí | Mide repetición y muletillas, no que la frase diga algo: un texto sin ecos ni palabras filtro puede ser plano | P-17 | `quality/` |
+| **P-09** · Calidad de prosa: eco de n-gramas, clichés, palabras-filtro, varianza de frase, tríadas, etiquetas de diálogo recargadas, cierres reflexivos de escena, emoción nombrada tras mostrarla y repetición de la descripción de una misma entidad entre escenas | `definitions.md` Capa 4; `config/thresholds.yaml` | Pruebas basadas en propiedades sobre métricas léxicas y posicionales | T | sí | Mide repetición y muletillas, no que la frase diga algo: un texto sin ecos ni palabras filtro puede ser plano. La repetición entre escenas se mide al consolidar, fuera de la ventana de olvido del anticontexto, y por eso no protege al borrador antes de aceptarlo | P-17 | `quality/` |
 | **P-10** · Mostrar vs. contar: ratio de escena dramatizada frente a resumen | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre el ratio escena/sumario | T | parcial | El ratio se calcula con marcas superficiales: un resumen escrito en presente y con diálogo cuenta como escena | P-13 | `quality/` |
-| **P-11** · Integridad de POV: no hay accesos mentales fuera de la focalización | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre accesos mentales + evals | T | parcial | Detecta el verbo de acceso ajeno («supo que ella temía»); no detecta la fuga por descripción de lo que el POV no puede ver | P-05 | `quality/` |
+| **P-11** · Integridad de POV: no hay accesos mentales fuera de la focalización | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre accesos mentales + evals | T | parcial | Detecta el verbo de acceso ajeno («supo que ella temía»); no detecta la fuga por descripción de lo que el POV no puede ver | P-42, P-05 | `quality/` |
 | **P-12** · Causalidad: la cadena avanza por «por tanto / pero», no por «y entonces» | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre conectores causales + evals | T | parcial | Contar conectores detecta el síntoma, no la ausencia de cadena causal escrita con buenos conectores | § Soluciones pícaras #7 | `quality/` |
 | **P-13** · Curva de tensión: progresa y culmina donde debe | `definitions.md` Capa 4 | Evals con puntuación de tensión por escena | D | parcial | La puntuación depende de un crítico cuyo acuerdo con el autor no está medido | § Soluciones pícaras #6, y el residuo en § Puntos ciegos #2 | `quality/` |
-| **P-14** · Ritmo: alternancia de densidad y respiro | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre longitud y tipo de escena en secuencia | T | sí | Mide la alternancia, no si cae donde la estructura la pide: un patrón regular pasa aunque el respiro llegue en mitad del clímax | P-13 | `quality/` |
-| **P-15** · Carga expositiva: infodumps y densidad de neologismos bajo umbral | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre el ratio de tokens de exposición | T | parcial | Necesita saber qué token es exposición: fuera del glosario canónico la marca es heurística | § Soluciones pícaras #4 | `quality/` |
+| **P-14** · Ritmo: alternancia de densidad y respiro, y densidad del último acto frente al resto | `definitions.md` Capa 4; `config/thresholds.yaml` | Pruebas basadas en propiedades sobre longitud y tipo de escena en secuencia | T | sí | Mide la alternancia, no si cae donde la estructura la pide: un patrón regular pasa aunque el respiro llegue en mitad del clímax | P-13 | `quality/` |
+| **P-15** · Carga expositiva: infodumps y densidad de neologismos bajo umbral, con el ratio separado en narración y en diálogo | `definitions.md` Capa 4 | Pruebas basadas en propiedades sobre el ratio de tokens de exposición | T | parcial | Necesita saber qué token es exposición: fuera del glosario canónico la marca es heurística. Separar el diálogo caza el «como sabes...»; no la exposición repartida en réplicas cortas | § Soluciones pícaras #4 | `quality/` |
 | **P-16** · Sentido de la maravilla: el efecto estético propio del género | `definitions.md` Capa 4 | — | U | no | Sin criterio escrito, nadie sabe qué contaría como fallo: ningún validador puede suspender | NADIE | — |
 | **P-17** · Originalidad: distancia respecto a la prosa genérica del modelo | `definitions.md` Capa 4 § Regresión a la media | Evals contra línea base generada sin guía | T | sí | Mide diferencia, no calidad: un texto puede alejarse de la media del modelo siendo peor | P-30 | `quality/` |
 | **P-18** · Cumplimiento del brief: la escena hizo lo que se le encargó | `definitions.md` Capa 4 | Pruebas unitarias / de integración sobre la restricción de destino + evals | T | parcial | Cubre lo que el brief declara como restricción; lo que pide en prosa («que se note la tensión entre ambos») se queda en el eval | P-19 | `quality/`, `process/` |
@@ -175,7 +193,7 @@ dónde el sistema está descubierto.
 | **P-23** · La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; RF-PROC-08 | Evals + pruebas unitarias / de integración | T | parcial | Sin medida definida y con `deriva.umbral` en `null`, hoy se verifica que se registra algo por escena, no que ese algo mida deriva | NADIE | `replanning/detectar-deriva`; en v1 solo el registro |
 | **P-24** · Una versión buena se puede reproducir con su registro de generación | `definitions.md` Capa 5 § Trazabilidad; RNF-05 | Observabilidad / trazas en ejecución + demostración | D | parcial | Reproduce lo que el sistema controla; el proveedor puede cambiar el modelo bajo el mismo identificador | § Soluciones pícaras #9 | `process/registrar-generacion` |
 | **P-25** · Ningún agente inventa un hecho del mundo ni una clase del dominio | `AGENTS.md` regla 4 | Red-teaming + verificación multiagente | D | parcial | Un nombre propio nuevo se detecta; un hecho inventado sobre una entidad que ya existe («el puerto llevaba años cerrado») no tiene forma reconocible | P-02 | campaña periódica, `findings/` |
-| **P-26** · Un cambio en los prompts o en el ensamblador no degrada la obra en curso | `architecture.md` § Sistema | Despliegue progresivo + evals | D | parcial | Compara escenas nuevas entre sí; no dice nada de su coherencia con las cien escritas con el prompt anterior | NADIE | proceso de release |
+| **P-26** · Un cambio en los prompts o en el ensamblador no degrada la obra en curso | `architecture.md` § Sistema | Despliegue progresivo + evals | D | parcial | Compara escenas nuevas entre sí; no dice nada de su coherencia con las cien escritas con el prompt anterior | P-49 | proceso de release |
 | **P-27** · El código y los prompts pasan por el mismo pipeline que el trabajo humano | `AGENTS.md` § Comandos | Integración en CI/CD | T | sí | El pipeline corre lo que alguien puso en él: un prompt cambiado a mano en producción no pasa por CI | A-45 | CI |
 | **P-28** · La trayectoria de cada agente es visible y consultable a posteriori | `architecture.md` § Skills; RNF-06 | Observabilidad / trazas en ejecución | I | parcial | Que exista la traza no la hace legible: sin una consulta que la reconstruya, nadie la mira hasta que hay un problema | A-45 | `process/registrar-generacion` |
 | **P-29** · Un defecto se clasifica correctamente como local o sistémico | `definitions.md` Capa 4 § Clasificación del defecto | Evals sobre dataset etiquetado | T | no | El dataset lo etiqueta quien construyó el clasificador: sin etiquetas del autor, mide acuerdo consigo mismo | NADIE | `quality/medir-calidad` |
@@ -186,6 +204,21 @@ dónde el sistema está descubierto.
 | **P-34** · No se escribe código sin plan aprobado ni plan sin spec aprobada | `AGENTS.md` § Ciclo de cambio | Inspección + integración en CI/CD sobre el frontmatter | I | parcial | CI comprueba que existe un plan `aprobada`, no que el código commiteado sea el de ese plan | revisión humana en el bucle | CI, `docs/specs/` |
 | **P-35** · Una sola escena en generación a la vez; en paralelo solo los pasos de solo lectura | RNF-09; `architecture.md` § Paralelo y serie | Pruebas basadas en propiedades | T | sí | Cubre un proceso: dos instancias apuntando al mismo `data/novel.db` rompen la serialización sin que nadie lo detecte | NADIE | `process/`, `tests/process/` |
 | **P-36** · Un trabajo no arranca sin presupuesto de tokens en vuelo libre | RNF-10; `architecture.md` § Presupuesto en vuelo | Pruebas basadas en propiedades | T | sí | El pool es un semáforo en memoria: no sobrevive a un reinicio y no sabe de otras instancias | P-35 | `commons/`, `tests/commons/` |
+| **P-37** · Ningún personaje ausente o no vivo en el snapshot en `t` actúa en el borrador | `definitions.md` Capa 2 § Snapshot de mundo; RF-QUA-01 | Pruebas basadas en propiedades contra `Snapshot de mundo` | T | sí | Cruza nombres propios: un personaje muerto al que la escena alude sin nombrarlo —«el hombre del puerto»— no entra en el cruce | § Soluciones pícaras #4 | `quality/verificar-continuidad` |
+| **P-38** · Ningún `Artefacto` cambia de poseedor sin una escena que lo establezca | `definitions.md` § Relaciones del dominio; Capa 2 § Snapshot de mundo; RF-CANON-03 | Pruebas basadas en propiedades | T | sí | Sigue las posesiones declaradas: un objeto que la escena introduce y que nadie registró como `Artefacto` no tiene inventario que romper | § Soluciones pícaras #4 | `canon/`, `tests/canon/` |
+| **P-39** · Todo cambio entre dos snapshots consecutivos está establecido por un `Hecho canónico` de esa escena | `definitions.md` Capa 2; `domain-knowledge.md` § Modelo de canon; RF-CANON-03, RF-CANON-07 | Pruebas basadas en propiedades | T | sí | Exige causa registrada, no causa creíble: un hecho establecido en la misma escena justifica cualquier salto, incluida una relación que da un vuelco sin nada detrás | P-45 | `canon/`, `tests/canon/` |
+| **P-40** · Ninguna escena contiene una `Revelación` por debajo de su escena mínima permitida | `definitions.md` Capa 2 § Revelación; pregunta de competencia 9; RF-CANON-01 | Pruebas unitarias / de integración + evals | T | parcial | Cubre las revelaciones registradas; la que el borrador filtra sin que nadie la hubiera declarado no tiene fila que violar | P-25 | `quality/verificar-continuidad`, `context/` |
+| **P-41** · Ninguna escena satisface la restricción de destino de un brief posterior ni paga una promesa antes de su escena de pago | `AGENTS.md` § Modelo de autoría; `definitions.md` Capa 2 § Promesa narrativa; RF-PROC-01 | Pruebas basadas en propiedades sobre el snapshot de salida | T | sí | Solo ve lo declarado —los tres `tipo` de restricción y la escena de pago—: adelantar algo que el esquema no escribió no es detectable | § Soluciones pícaras #5 | `process/`, `quality/` |
+| **P-42** · El borrador respeta la persona y el tiempo verbal de `Voz narrativa`, y la escena tiene un solo POV | `definitions.md` Capa 1 § Voz narrativa, Capa 4 § Integridad de POV; RF-NOVEL-02 | Pruebas basadas en propiedades sobre marcas morfológicas | T | sí | La persona y el tiempo son deterministas; el cambio de distancia o de focalización dentro del mismo tiempo verbal no deja marca morfológica | P-11 | `quality/`, `tests/quality/` |
+| **P-43** · Ninguna escena repite la firma dramática de otra ya aceptada | `definitions.md` Capa 4 § Causalidad; `domain-knowledge.md` § Grafo de entidades; `config/thresholds.yaml` | Pruebas basadas en propiedades + evals | T | sí | Dos escenas con la misma función y distinta firma —otro hilo, otra promesa— no se parecen para la consulta aunque se lean igual | P-09 | `quality/`, `context/recuperar-fragmentos` |
+| **P-44** · Ningún `Arco`, `Hilo de trama` ni `Promesa narrativa` activo pasa más escenas de las declaradas sin avanzar ni pagarse | `definitions.md` § Relaciones del dominio; preguntas de competencia 6, 7 y 8; `config/thresholds.yaml` | Pruebas unitarias / de integración + pruebas basadas en propiedades | T | sí | Cuenta avances registrados: una escena que mueve el hilo sin que nadie registre la arista lo deja aparentemente parado | A-22 | `quality/`, `canon/`, `tests/quality/` |
+| **P-45** · Toda escena que paga una `Promesa narrativa` tiene una escena de apertura anterior | `definitions.md` Capa 2 § Promesa narrativa; `domain-knowledge.md` § Ciclo de vida de una promesa; RF-CANON-05 | Pruebas basadas en propiedades | T | sí | Exige el setup registrado, no que estuviera sembrado en el texto: una promesa abierta y pagada en escenas contiguas cumple igual | § Soluciones pícaras #6 | `canon/`, `tests/canon/` |
+| **P-46** · Ninguna escena reintroduce una entidad ya presentada ni recapitula hechos ya canónicos antes de `t` | `definitions.md` Capa 3 § Anticontexto, Capa 4 § Carga expositiva; RF-CTX-08 | Pruebas unitarias / de integración + evals | T | parcial | La primera aparición se deriva del POV, del `Lugar` y del glosario: una entidad que no es ninguno de los tres no tiene historial contra el que comparar | § Soluciones pícaras #16 | `quality/`, `context/construir-anticontexto` · pendiente de ontología |
+| **P-47** · Toda escena que narra un `Evento` anterior al punto `t` del discurso lo señaliza | `definitions.md` § Fábula y discurso; `domain-knowledge.md` § Fábula y discurso; RF-NOVEL-03 | Pruebas unitarias / de integración + evals | T | parcial | Detectar la analepsis es una consulta; que la señal sea legible lo decide un crítico. Y todo depende de que la tabla puente se escriba | A-22 | `quality/`, `novel/` |
+| **P-48** · Todo `Hecho canónico` con alcance temporal abierto sigue vigente hasta que otro lo cierre | `definitions.md` Capa 2 § Hecho canónico; RF-CANON-01, RF-CANON-03 | Pruebas basadas en propiedades | T | parcial | Necesita el alcance temporal relleno: un hecho sin alcance declarado no caduca nunca ni contradice a nadie, y una herida desaparece sin violar nada | A-51 | `canon/`, `tests/canon/` |
+| **P-49** · El estilo de un borrador no se aleja de la línea base congelada de escenas aceptadas más de lo declarado | `definitions.md` Capa 4 § Regresión a la media; `architecture.md` § Sistema; `config/thresholds.yaml` | Evals contra muestra congelada | T | parcial | Mide distancia a lo ya escrito: una obra que debe cambiar de registro al entrar en el tercer acto se penaliza igual que una que deriva | P-26 | `quality/`, proceso de release |
+| **P-50** · Cada validador tiene precisión y cobertura medidas sobre un corpus de defectos inyectados | `AGENTS.md` regla 7; § Soluciones pícaras #12; `config/thresholds.yaml` | Pruebas de mutación aplicadas al texto + evals | T | sí | Mide contra los defectos que alguien supo inyectar, que son los mismos que el validador sabe ver | NADIE | `quality/`, CI nocturno |
+| **P-51** · Ningún personaje ignora ni pregunta por un hecho que su `Estado epistémico` ya registra | `definitions.md` Capa 2 § Estado epistémico; `domain-knowledge.md` § Anatomía del personaje; RF-CANON-04 | Pruebas unitarias / de integración + verificación multiagente | T | parcial | Detecta la pregunta explícita por un hecho conocido; no detecta al personaje que simplemente deja de actuar en consecuencia | crítico, con el residuo en § Puntos ciegos #2 | `quality/verificar-continuidad` |
 
 ---
 
@@ -223,19 +256,26 @@ cubrir*: el personaje que actúa como si supiera, sin nombrar nada.
 
 **#4 · Glosario cerrado.** Todo nombre propio o término del mundo que aparezca en el
 borrador y no exista en `Término canónico` ni en las entidades del brief se marca como
-hallazgo candidato. Es un `SELECT` contra una lista cerrada, no un juicio.
+hallazgo candidato. Es un `SELECT` contra una lista cerrada, no un juicio. La lista tiene
+dos caras que conviene usar: `Término canónico` trae ya el atributo `variantes
+prohibidas`, que resuelve el Elena/Helena sin heurística, y el `Anticontexto` admite un
+léxico vetado por nivel tecnológico, que caza el anacronismo sin clase nueva.
 *Ahorra*: la parte del red-teaming de `P-25` dedicada a nombres inventados, y da a `P-15`
 el denominador de neologismos que hoy es heurístico. También mejora `A-34`: una escena
-que menciona el término afectado por un retcon es afectada aunque no nombre el hecho.
-*Sigue sin cubrir*: el hecho inventado sobre una entidad existente.
+que menciona el término afectado por un retcon es afectada aunque no nombre el hecho, y
+da a `P-37` y `P-38` el puente entre el nombre del texto y la fila del snapshot.
+*Sigue sin cubrir*: el hecho inventado sobre una entidad existente, y la entidad a la que
+la escena alude sin nombrarla.
 
 **#5 · Restricción de destino ejecutable.** Los tres `tipo` que `definitions.md` da a
 `Restricción de destino` —estado final, revelación, posición de personaje— son los tres
 comprobables contra el snapshot de salida de la escena: ¿queda el estado declarado?,
 ¿existe la fila de `Revelación`?, ¿está el personaje donde decía? Sin modelo de por medio.
+El mismo cotejo, corrido contra los briefs **posteriores**, detecta lo contrario: una
+escena que ya satisface el destino de la N+k se ha adelantado al plan.
 *Ahorra*: el cotejo punto por punto con crítico de `P-18` y `P-01`. *Baja a `T`* la parte
-declarada de las dos filas. *Sigue sin cubrir*: lo que el brief pide en prosa y el destino
-que el autor no declaró.
+declarada de las dos filas y la de `P-41`. *Sigue sin cubrir*: lo que el brief pide en
+prosa y el destino que el autor no declaró.
 
 **#6 · Tensión por promesas, no por puntuación.** En vez de puntuar la tensión con un
 crítico, se deriva de canon: promesas en estado `Pendiente` por escena, escenas desde el
@@ -289,15 +329,52 @@ aceptadas, se les inyectan defectos conocidos —un hecho contradictorio, una fu
 una repetición— y se exige que el crítico los detecte. Un umbral que no separa el original
 del mutante está mal puesto, y se sabe por código.
 *Ahorra*: la calibración por prueba y error a lo largo de meses de escritura. *No cambia
-ninguna letra*: cierra el punto ciego #1, que es el que hace que todas las demás letras
-signifiquen algo. *Sigue sin cubrir*: los defectos que nadie sabe inyectar, que son los
-mismos que el crítico no sabe ver.
+ninguna letra*: es el mecanismo con el que `P-50` mide cada validador, y el que hace que
+todas las demás letras signifiquen algo. *Sigue sin cubrir*: los defectos que nadie sabe
+inyectar, que son los mismos que el crítico no sabe ver (§ Puntos ciegos #6).
+
+**#13 · Firma dramática de escena.** Cada escena tiene una firma que sale del grafo, no del
+texto: qué `Hilo de trama` avanza, qué `Promesa narrativa` abre o paga y qué `Hecho
+canónico` establece. Dos escenas con la misma firma y alta proximidad en `vec0` son
+candidatas a duplicado o a bucle de obstáculo repetido, por distinta que sea su prosa.
+*Ahorra*: releer la obra entera buscando escenas que ya se habían escrito. *Es `T`* y
+sostiene `P-43`. *Sigue sin cubrir*: la escena que repite función con otra firma —otro
+hilo, otra promesa— y se lee igual.
+
+**#14 · Estado persistente por alcance temporal.** `Hecho canónico` ya trae `alcance
+temporal`: un hecho con alcance abierto es una restricción viva hasta que otro lo cierre.
+De ahí salen sin modelo la herida que no se curó, la posesión que no cambió de manos y la
+relación que nadie rompió; y comparando las tripletas (entidad, atributo, valor) de los
+hechos descriptivos salen los ojos que cambian de color y el atributo de un secundario
+atribuido a otro.
+*Ahorra*: una llamada al crítico por escena sobre continuidad de estado. *Baja a `T`*
+`P-48` y la mitad enumerable de `P-37`, `P-38` y `P-39`. *Sigue sin cubrir*: los hechos sin
+`tipo` ni alcance declarados, que hoy son todos (§ Filas pendientes de ontología).
+
+**#15 · Higiene antes del ciclo.** El borrador pasa una puerta determinista **antes** de
+entrar a la crítica: patrones de metatexto, de nota del modelo y de rechazo; detector de
+idioma; comprobación de que la última frase termina; marcadores de plantilla sin rellenar;
+marcado de markdown en la prosa; y longitud contra `Obra.extensión objetivo`. Ninguna de
+las seis necesita modelo y todas fallan en milisegundos.
+*Ahorra*: que el crítico gaste una llamada en decir que el texto empieza por «Aquí tienes
+la escena», y que ese texto llegue a consolidarse. *Ya es `T`*: el atajo es de coste y
+sobre todo de sitio, porque corre antes del punto único de promoción. Sostiene `A-47`.
+*Sigue sin cubrir*: el metatexto escrito como prosa narrativa.
+
+**#16 · Delta de snapshot justificado.** En vez de preguntar a un crítico si la escena
+justifica lo que cambió, se compara el `Snapshot de mundo` en `t` con el de `t+1` y se
+exige que detrás de cada campo que se movió haya un `Hecho canónico` de esa escena. La
+consulta simétrica da la recapitulación: una escena cuyo arranque reafirma hechos ya
+vigentes en `t` sin establecer ninguno nuevo está recapitulando.
+*Ahorra*: el crítico sobre continuidad de estado y sobre repetición de lo ya contado.
+*Baja a `T`* `P-39` y la mitad medible de `P-46`. *Sigue sin cubrir*: el cambio justificado
+por un hecho que la escena se inventa en el mismo sitio.
 
 ---
 
 ## Lo que no se puede verificar
 
-Dos afirmaciones siguen siendo `U` después de pasar por las soluciones pícaras, y seis más
+Dos afirmaciones siguen siendo `U` después de pasar por las soluciones pícaras, y siete más
 son verificables solo a través de un proxy que conviene no confundir con la afirmación que
 representa.
 
@@ -326,6 +403,10 @@ representa.
 - **Ventana efectiva (`P-31`).** El canario demuestra que la capa llegó y que el modelo
   puede usarla. La afirmación fuerte —«el modelo usó la capa de estado *en esta escena*»—
   no la establece ninguna metodología del catálogo.
+- **Fidelidad del canon extraído (`A-48`).** Que los términos de un hecho aparezcan en la
+  escena prueba que el hecho habla de ella, no que diga lo que ella dice. Es presencia, no
+  significado: el proxy más frágil del documento y el que más se parece a una garantía,
+  porque aprueba siempre (§ Puntos ciegos #1).
 
 ---
 
@@ -343,6 +424,23 @@ sincronía).
 | P-23 | La medida de `Deriva` | Sin criterio de aprobado: se verifica el registro, no la medida |
 | P-29, § Puntos ciegos #2 | La etiqueta del autor sobre un borrador, que sería la verdad de referencia del crítico | No hay dataset contra el que medir acuerdo |
 | § Puntos ciegos #4 | Auditoría de texto sospechoso: no hay clase para un texto bajo sospecha ni estado de cuarentena para un hallazgo (`architecture.md` § Resistencia a inyección) | Las reglas antiinyección son de arquitectura y no se pueden auditar escena a escena |
+| A-48, § Puntos ciegos #1 | El anclaje textual de un `Hecho canónico` a la escena que lo establece: la clase no tiene forma de citar el fragmento que lo sostiene | La fidelidad se comprueba por presencia de términos, no por lo que el hecho afirma |
+| P-37, P-38, P-46, P-48, § Soluciones pícaras #14 | Los valores de `Hecho canónico.tipo`: el atributo existe sin enumerar | No se distingue un hecho descriptivo de uno de suceso, y las tripletas (entidad, atributo, valor) no se pueden derivar |
+| P-46 | La aparición de una entidad en una escena, más allá del POV y del `Lugar` | La primera aparición se deriva de tres fuentes parciales; una entidad que no es ninguna de las tres no tiene historial |
+
+**Modos de fallo que no llegan a fila.** No es que su criterio dependa de la ontología: es
+que sin la clase no hay afirmación que escribir. Se listan aquí para que el hueco no se
+confunda con una omisión del plan.
+
+| Qué falta en la ontología | Qué modo de fallo deja sin verificar |
+| --- | --- |
+| Coste de desplazamiento entre `Lugar`: no hay relación `Lugar`↔`Lugar` | Cronología imposible y tiempos de viaje irreales. Hoy caen en el punto ciego declarado de `P-04` |
+| Posición dentro de la escena: el estado más fino es el `Snapshot de mundo` por escena, y `Beat` solo lleva valor emocional | Posición física imposible dentro de una misma escena |
+| `Convención de género`: `Obra.género` existe, la convención no | Beats y convenciones obligatorias o prohibidas del género, por acto. `A-51` cubre solo el esqueleto estructural |
+| Causante de un `Evento`: la clase lleva participantes, no quién lo provoca | Protagonista pasivo: el ratio entre lo que le pasa y lo que causa no se puede calcular |
+| Gravedad de un `Evento`: `gravedad` es atributo de `Contradicción`, que es otra cosa | Reacción desproporcionada o nula: no hay referencia contra la que medir la reacción |
+| Clima, estación y luz como estado del mundo | Estación y luz inconsistentes. `Escena.momento` sí se puede contrastar con la fecha ficcional |
+| Persistencia de `Beat`, o estado emocional en `Snapshot de mundo` | Reinicio emocional tras eventos graves. Es alcance de spec además de ontología: ningún `RF-NOVEL` extrae beats |
 
 ---
 
