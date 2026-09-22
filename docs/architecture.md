@@ -53,7 +53,8 @@ requisitos técnicos cerrados están en `AGENTS.md`; todas las cifras, en
 3. Las máquinas de estado del documento de dominio se implementan tal cual: mismos
    estados, mismas transiciones. Ninguna transición extra sin actualizar antes el diagrama.
 4. La lista de capas del contexto sale de «Capa 3»; su presupuesto, de
-   `config/thresholds.yaml`. Los porcentajes de la Capa 3 son orientativos y no mandan.
+   `config/thresholds.yaml`. La Capa 3 ya no da cifras: se retiraron al homologar la
+   ontología, y el reparto vive solo en el fichero.
 5. Antes de cerrar una tarea de dominio, comprueba que las preguntas de competencia
    afectadas siguen respondiéndose.
 
@@ -171,6 +172,47 @@ relacional y uno vectorial: la recuperación filtra primero por entidades del br
 (SQL) y solo después ordena por similitud (`vec0`), en la misma transacción y sin
 salir del proceso.
 
+### Anatomía del frontend
+
+El backend se organiza por features y el frontend por **capas de Feature-Sliced Design
+v2.1**; no es incoherencia, es que resuelven problemas distintos. En el backend la unidad
+de cambio es la feature porque cada capa de la ontología tiene su ciclo de vida. En el
+frontend no hay dominio que proteger —el canon se decide en el backend—, y lo que hay que
+impedir es que una pantalla importe de otra.
+
+**Se empieza con tres capas y no más:**
+
+```
+frontend/src/
+  app/       # arranque, providers, router
+  pages/     # editor-de-escena, mapa-de-canon, panel-de-calidad
+  shared/    # ui/, api/ (cliente tipado), lib/
+```
+
+`features/` y `entities/` **se crean al extraer, no por adelantado**: el día que dos
+páginas necesiten lo mismo. `widgets/` no se usa nunca (§ Precedencia). Las importaciones
+van solo hacia capas inferiores y cada slice se consume por su `index.ts`.
+
+| Página | Qué muestra | De qué endpoints vive |
+| --- | --- | --- |
+| `editor-de-escena` | El brief, el contexto ensamblado con su reparto por capa, el borrador y sus versiones. Es donde el autor acepta o pide revisión | `process/`, `context/` |
+| `mapa-de-canon` | Snapshot en t, hechos, estado epistémico, promesas abiertas, contradicciones. Y los hallazgos `propuesto` a la espera de adopción | `canon/`, `findings/` |
+| `panel-de-calidad` | El informe de crítica dimensión a dimensión, con sus defectos clasificados en local o sistémico | `quality/` |
+
+**El cliente tipado no se escribe a mano.** Vive en `shared/api/` y se genera del
+`/openapi.json` de FastAPI: los tipos se escriben una vez, en Pydantic. CI regenera y
+compara, y un cliente que diverja del esquema rompe la build (fila `A-15`).
+
+**El frontend no decide nada del canon.** No recalcula un snapshot, no deriva si un hecho
+contradice a otro, no clasifica un defecto. Si una vista necesita algo que el backend no
+devuelve, falta un endpoint, no un `useMemo`. Es la regla que `A-25` vigila por
+importaciones, con el límite de que el análisis estático mide de dónde importas, no qué
+escribes (§ Puntos ciegos #9 de `verification.md`).
+
+**Estado de servidor con TanStack Query**, no en un store global: lo que se pinta es
+resultado de una consulta al backend, y su caché e invalidación son el problema que
+TanStack ya resuelve. TypeScript estricto y sin `any` (`A-14`).
+
 ### Embeddings y reindexado
 
 Modelo **multilingüe y local**; cuál, con qué versión y con qué dimensión se declara en
@@ -203,16 +245,24 @@ Cada agente encarna uno de los roles de la Capa 5 de `definitions.md`. Los nombr
 rol son ontología y no se inventan; los nombres de agente y de skill son
 implementación y viven aquí.
 
-| Agente | Rol de la ontología | Qué hace | Escribe en |
-| --- | --- | --- | --- |
-| `arquitecto` | Arquitecto | Premisa, mundo, novum, reglas, estructura de actos | Biblia de la obra |
-| `planificador` | Planificador | Convierte la estructura en briefs mínimos con restricción de destino | Esquema, briefs |
-| `redactor` | Redactor | Genera la prosa de la escena a partir del brief y el contexto | Borrador |
-| `critico` | Crítico | Puntúa el borrador contra las dimensiones de calidad | Informe de crítica |
-| `verificador` | Verificador de continuidad | Contrasta la escena contra el canon vigente en t | Contradicción |
-| `editor` | Editor | Aplica correcciones locales y de estilo sin tocar la estructura | Versión |
-| `extractor` | Extractor | Lee la escena aceptada y propone hallazgos | Hallazgos `propuesto` |
-| `replanificador` | Replanificador | Revisa el esquema cuando la deriva supera el umbral | Esquema, escenas `obsoleta` |
+| Agente | Rol de la ontología | Qué hace | Skills del sistema que usa | Escribe en |
+| --- | --- | --- | --- | --- |
+| `arquitecto` | Arquitecto | Premisa, mundo, novum, reglas, estructura de actos | **ninguna** | Biblia de la obra |
+| `planificador` | Planificador | Convierte la estructura en briefs mínimos con restricción de destino | `consultar-canon` | Esquema, briefs |
+| `redactor` | Redactor | Genera la prosa de la escena a partir del brief y el contexto | `ensamblar-contexto`, `consultar-canon` | Borrador |
+| `critico` | Crítico | Puntúa el borrador contra las dimensiones de calidad | `medir-calidad`, `muestrear-voz` | Informe de crítica |
+| `verificador` | Verificador de continuidad | Contrasta la escena contra el canon vigente en t | `verificar-continuidad`, `consultar-canon` | Contradicción |
+| `editor` | Editor | Aplica correcciones locales y de estilo sin tocar la estructura | `ensamblar-contexto` | Versión |
+| `extractor` | Extractor | Lee la escena aceptada y propone hallazgos | `extraer-hallazgos` | Hallazgos `propuesto` |
+| `replanificador` | Replanificador | Revisa el esquema cuando la deriva supera el umbral | `detectar-deriva`, `propagar-retcon` | Esquema, escenas `obsoleta` |
+
+`registrar-generacion` no aparece en la columna porque **la usan los ocho, sin
+excepción**: ponerla en cada fila sería ruido y dejarla fuera de la tabla, un olvido.
+
+**El `arquitecto` no usa ninguna skill del sistema, y es deliberado.** Trabaja con el
+autor sobre la Biblia de la obra antes de que exista una sola escena: no hay canon que
+consultar, ni contexto que ensamblar, ni versión que registrar. El día que necesite una,
+será la señal de que ha dejado de ser el primer paso y se ha metido en el bucle.
 
 **El autor humano no es un agente.** Decide dirección, acepta o rechaza, adopta o
 descarta hallazgos y define el gusto. Ningún modelo ocupa ese puesto: adoptar un
@@ -400,6 +450,13 @@ se retiró del diagrama de `domain-knowledge.md`. La extracción es el paso que 
 
 Solo el autor humano mueve una escena a `aceptada`. El orquestador nunca salta ese paso.
 
+**En fase de medición no hay umbral que superar.** Con `medicion.cerrar_el_paso` en
+`false` (`config/thresholds.yaml`) el crítico puntúa y deja su informe, pero ninguna
+puntuación suspende: la escena pasa a `verificador` siempre, y las rutas de `defecto
+local` y `defecto sistémico` las abre el autor al leer el informe, no el umbral. Es el
+mismo reparto de decisión que ya fija RF-PROC-07 —quien acepta es el autor—, aplicado un
+paso antes. Cuando la fase se cierre, la condición de la tabla vuelve a leerse tal cual.
+
 **El defecto sistémico devuelve la escena a `planificada`**, que es lo que dibuja la
 máquina de estados de `domain-knowledge.md`. Quién replanifica depende del alcance: con
 `replanning/` fuera de v1 (spec 001 §1.3) el orquestador escala al autor, que replanifica
@@ -582,8 +639,8 @@ canon.
 ### Presupuesto en vuelo
 
 Un pool global de tokens concurrentes, con control de admisión: **un trabajo no arranca
-si no hay presupuesto libre**, se queda `Pendiente` y espera. La estimación de un trabajo
-es el tamaño del contexto ensamblado más el máximo de tokens de respuesta.
+si no hay presupuesto libre**, se queda `Pendiente` y espera. Cuánto ocupa cada trabajo y
+en qué orden entran se define más abajo.
 
 **El pool es un semáforo en proceso, no un recurso compartido.** Vive en memoria, dentro
 de la instancia, y no se coordina con nada externo: no hay otras sesiones con las que
@@ -595,6 +652,20 @@ Lo que sí protege es la ráfaga dentro de una escena: los pasos de solo lectura
 vez y, sin control de admisión, un límite de tasa del proveedor se convierte en cascada
 —todos reciben 429 y todos reintentan a la vez—. El pool hace que la espera ocurra antes
 de llamar, que es donde no cuesta dinero.
+
+**Cuánto cabe y cómo se reparte.** El tope vive en `en_vuelo.total` de
+`config/thresholds.yaml`, y **no es la ventana de contexto**: la ventana la fija el
+proveedor y limita una petición; el pool lo fija el autor y limita cuántas caben a la vez.
+Que hoy coincidan en la misma cifra es deliberado y no las ata. La estimación de un
+trabajo es el tamaño de su contexto ensamblado, que ya incluye `contexto.capas.margen`
+como reserva de respuesta; no se suma la respuesta dos veces.
+
+**Admisión FIFO estricta.** Los trabajos entran en orden de llegada y ninguno adelanta a
+otro, aunque quepa. Es más lento en conjunto que dejar colarse a los pequeños, y a cambio
+el `redactor` —que es el que pide la ventana entera— no se queda esperando detrás de una
+fila de críticos y verificadores que nunca deja hueco suficiente. Un trabajo cuya
+estimación supera `en_vuelo.total` **falla en voz alta al encolarse**: esperar un hueco
+que no va a existir nunca no es esperar, es colgarse.
 
 **Backoff exponencial ante límites de tasa**, con jitter para que los reintentos no se
 sincronicen. El trabajo vuelve a la cola con `attempt + 1`; agotados los intentos, escala.

@@ -65,6 +65,23 @@ contexto:
   anticontexto_ventana_escenas: null   # [histórico]
 
 # ---------------------------------------------------------------------------
+# Presupuesto en vuelo
+# ---------------------------------------------------------------------------
+# Cuantos tokens pueden estar en peticiones simultaneas. No es la ventana: la ventana la
+# fija el proveedor y limita UNA peticion; esto lo fija el autor y limita cuantas caben a
+# la vez. Que hoy coincidan en 100000 es deliberado, no los ata: el dia que el proveedor
+# ofrezca mas ventana, la concurrencia no debe subir sola.
+#
+# La estimacion de un trabajo es el tamano de su contexto ensamblado, que ya incluye
+# `contexto.capas.margen` como reserva de respuesta. Admision FIFO estricta: nadie
+# adelanta a nadie, asi que un trabajo grande no se queda esperando detras de los
+# pequenos. Un trabajo cuya estimacion supera `total` falla en voz alta al encolarse; es
+# un error de diseno, no una espera (architecture.md, seccion Presupuesto en vuelo).
+
+en_vuelo:
+  total: 100000   # [decisión] tope de tokens en peticiones simultaneas
+
+# ---------------------------------------------------------------------------
 # Deriva
 # ---------------------------------------------------------------------------
 # El alcance de v1 lo fija docs/specs/001-backend-v1/spec.md §1.3, no este fichero.
