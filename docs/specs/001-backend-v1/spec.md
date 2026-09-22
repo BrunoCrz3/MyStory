@@ -1,7 +1,7 @@
 ---
-estado: en-revision
-aprobada-por:
-fecha: 2026-09-21
+estado: aprobada
+aprobada-por: Bruno Cruz
+fecha: 2026-09-22
 ---
 
 # SRS 1 — Backend, primera versión
@@ -10,13 +10,9 @@ Especificación de requisitos de la primera versión del backend. Documento úni
 alcance, requisitos funcionales y no funcionales, interfaces, modelo de datos y criterios
 de aceptación.
 
-> **Estado: en revisión, no aprobada.** Las ocho preguntas de §9 están respondidas y sus
-> decisiones incorporadas al articulado. Queda **una sola cosa por confirmar: el corte de
-> v1 de §1.3**, que ha crecido: la auditoría de `verification.md` contra el catálogo de
-> modos de fallo añadió diecinueve requisitos, y hay que decidir cuáles entran.
->
-> Según «Ciclo de cambio» de `AGENTS.md`, **no se puede escribir el plan de
-> implementación hasta que esta spec esté `aprobada`**, y quien aprueba es el autor.
+> **Estado: aprobada** el 2026-09-22. Las tres decisiones del corte de §1.3 quedan
+> ratificadas, incluida la tercera: **v1 se entrega en fase de medición**. El plan de
+> implementación vive en `plan.md`, junto a este documento.
 
 ---
 
@@ -372,10 +368,9 @@ para que la trazabilidad no se pierda.
 | 9.7 | Banco de ejemplos | **`training_samples` entra en v1**, append-only y sin lectura | RF-PROC-09 |
 | 9.8 | Instrucciones inyectadas | **Sí, con tres reglas** de marcado, no ejecución y adopción por el autor | RF-CTX-11, RF-PROC-10, RF-FIND-05 |
 
-### Lo único que queda por confirmar
+### El corte de v1, ratificado
 
-**El corte de v1 de §1.3**, y solo eso. La spec permanece en `en-revision` hasta que el
-autor confirme qué entra. Son tres decisiones, no una:
+**El corte de §1.3 queda aprobado el 2026-09-22.** Eran tres decisiones y las tres van:
 
 1. **Dejar fuera `replanning/` y la propagación automática del retcon**, sabiendo que el
    autor replanifica a mano y que v1 solo *consulta* qué escenas quedarían invalidadas.
@@ -385,7 +380,7 @@ autor confirme qué entra. Son tres decisiones, no una:
 3. **Que v1 se entregue en fase de medición**, con `medicion.cerrar_el_paso` en `false`.
    Es la consecuencia de dejar RF-QUA-13 fuera: v1 acumula el corpus con el que después
    se calibran los umbrales, y hasta entonces ninguna puntuación suspende una escena.
-   Si esto no se acepta, RF-QUA-13 tiene que entrar y v1 crece.
+   Cerrar la fase es el primer trabajo de v2, no un pendiente de v1.
 
 ### Cambios de ontología que esta spec deja pendientes
 
