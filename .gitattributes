@@ -1,0 +1,15 @@
+# Finales de linea. Sin esto cada maquina decide por su cuenta segun su
+# core.autocrlf, y el mismo fichero llega con saltos distintos a cada clon.
+#
+# En el repositorio se guarda LF, que ya es lo que habia. En el arbol de trabajo
+# tambien: docs/definitions.md y docs/domain-knowledge.md son exportaciones de
+# documentos vivos que emiten LF, y con CRLF un diff contra un export nuevo sale
+# entero aunque no haya cambiado una sola palabra.
+
+* text=auto eol=lf
+
+# Binarios, por si entran mas adelante.
+*.db  binary
+*.png binary
+*.jpg binary
+*.pdf binary
