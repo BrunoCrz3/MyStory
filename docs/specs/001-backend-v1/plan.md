@@ -1,6 +1,6 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: Bruno Cruz
 fecha: 2026-09-22
 ---
 
@@ -10,8 +10,8 @@ Cómo se construye lo que especifica `spec.md`, aprobada el 2026-09-22. Pasos or
 ficheros que se tocan, migraciones, **la prueba que falla primero en cada paso** y el
 criterio de terminado.
 
-> **Estado: borrador, no aprobado.** Según «Ciclo de cambio» de `AGENTS.md`, **no se
-> escribe código hasta que este plan esté `aprobado`**, y quien aprueba es el autor.
+> **Estado: aprobado** el 2026-09-22 por el autor. La puerta de «Ciclo de cambio» de
+> `AGENTS.md` queda pasada: la implementación arranca por H1 y avanza hito a hito.
 
 ---
 
