@@ -140,12 +140,12 @@ canon/
 
 | Feature | Capa | Es dueña de |
 | --- | --- | --- |
-| `novel/` | 1 — Obra | Obra, Parte / Acto, Capítulo, Escena, Beat, Evento, Personaje, Voz, Arco, Hilo de trama, Lugar, Facción, Artefacto, Novum, Regla del mundo, Término canónico, Tema, Motivo, Voz narrativa |
+| `novel/` | 1 — Obra | Obra, Parte / Acto, Capítulo, Escena, Beat, Evento, Objetivo, Personaje, Voz, Arco, Hilo de trama, Lugar, Facción, Artefacto, Novum, Regla del mundo, Término canónico, Tema, Motivo, Voz narrativa |
 | `canon/` | 2 — Canon | Hecho canónico, Estatus de hecho, Snapshot de mundo, Estado epistémico, Ironía dramática, Promesa narrativa, Estado de promesa, Revelación, Contradicción, Retcon |
 | `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto, jerarquía de compresión |
 | `quality/` | 4 — Calidad | Dimensión de calidad, Informe de crítica, Defecto |
 | `process/` | 5 — Proceso | Esquema, Brief de escena, Restricción de destino, Borrador, Versión, Registro de generación |
-| `findings/` | híbrido | Hallazgo, Extracción, adopción |
+| `findings/` | híbrido | Hallazgo, Estado de hallazgo, Extracción, adopción |
 | `replanning/` | híbrido | Deriva, Replanificación rodante, propagación del retcon |
 
 La tabla es exhaustiva sobre las clases de `definitions.md`: si una clase de la ontología
@@ -211,7 +211,7 @@ implementación y viven aquí.
 | `critico` | Crítico | Puntúa el borrador contra las dimensiones de calidad | Informe de crítica |
 | `verificador` | Verificador de continuidad | Contrasta la escena contra el canon vigente en t | Contradicción |
 | `editor` | Editor | Aplica correcciones locales y de estilo sin tocar la estructura | Versión |
-| `extractor` | Extractor | Lee la escena aceptada y propone hallazgos | Hallazgos `provisional` |
+| `extractor` | Extractor | Lee la escena aceptada y propone hallazgos | Hallazgos `propuesto` |
 | `replanificador` | Replanificador | Revisa el esquema cuando la deriva supera el umbral | Esquema, escenas `obsoleta` |
 
 **El autor humano no es un agente.** Decide dirección, acepta o rechaza, adopta o
@@ -384,11 +384,9 @@ Los estados son los de la ontología (`planificada`, `en borrador`, `en revisió
 `aceptada`, `obsoleta`); no se añade ninguno. El orquestador lee el estado y, cuando hace
 falta, el informe de crítica, y de ahí sale el siguiente paso.
 
-**Un estado en disputa.** `domain-knowledge.md` dibuja además `Extraida` entre `aceptada`
-y `obsoleta`; `definitions.md` no lo lista. Mientras los dos no digan lo mismo, aquí la
-extracción es el paso que sigue a `aceptada`, no un estado, y la tabla no tiene fila para
-él. Está anotado abajo, en «Pendiente de llevar a la ontología»: no lo resuelvas en el
-esquema.
+**Extracción: paso, no estado.** Los dos documentos de ontología ya coinciden: `Extraida`
+se retiró del diagrama de `domain-knowledge.md`. La extracción es el paso que sigue a
+`aceptada`, y por eso la tabla no tiene fila para él.
 
 | Estado de la escena | Condición | Siguiente agente |
 | --- | --- | --- |
@@ -503,7 +501,7 @@ ahí**. Ese punto tiene dos escrituras, no dos puntos: `canon/` escribe el canon
 la transacción, y acto seguido el `extractor` lee la escena ya aceptada y deja sus
 hallazgos en `findings/`. Sin consolidación no hay extracción, y los hallazgos **no son
 canon** hasta que el autor los adopta: hasta entonces son memoria larga en estado
-`provisional`, no verdad de la novela. Ningún otro camino escribe en memoria larga. Un
+`propuesto`, no verdad de la novela. Ningún otro camino escribe en memoria larga. Un
 borrador rechazado se descarta entero: no deja hechos, ni promesas, ni muestras de voz. Si
 hubiera un segundo punto de promoción, cada iteración fallida dejaría sedimento y el canon
 acabaría siendo el registro de lo que el sistema intentó, no de lo que la novela dice.
@@ -536,7 +534,7 @@ propósito—. Tres reglas, y ninguna es opcional:
 | --- | --- |
 | **El texto de obra y de canon entra marcado como datos** | Va delimitado y etiquetado como material narrativo, nunca concatenado en la posición donde el prompt pone sus instrucciones. Ninguna capa del contexto se monta pegando texto a pelo |
 | **Ningún agente ejecuta instrucciones halladas en texto narrativo** | Una orden dentro de una escena es contenido de la novela, no una orden para el sistema. El agente la narra si toca; no la obedece |
-| **Ningún hallazgo se adopta sin el autor** | Aunque un texto lograra colar una afirmación, entra como `provisional` y muere ahí salvo que el autor la adopte |
+| **Ningún hallazgo se adopta sin el autor** | Aunque un texto lograra colar una afirmación, entra como `propuesto` y muere ahí salvo que el autor la adopte |
 
 Las tres se refuerzan: la primera reduce la probabilidad, la segunda contiene el efecto y
 la tercera impide que llegue al canon. La tercera ya era regla del modo híbrido por otras
@@ -663,7 +661,7 @@ problema estructural.
 - Las llamadas al modelo son asíncronas y con timeout explícito.
 - La escritura al canon va siempre en transacción y es idempotente por
   `scene_id` + `version`.
-- Un hallazgo entra como `provisional` y solo el autor lo convierte en canon.
+- Un hallazgo entra como `propuesto` y solo el autor lo convierte en canon.
 
 ---
 
@@ -736,18 +734,18 @@ Este documento describe mecanismos que **no** tienen entrada en `definitions.md`
 listan aquí como propuestas, no como hechos: mientras no estén en el documento vivo y
 reexportadas, ninguna clase del código puede llamarse así (regla 4 de `AGENTS.md`).
 
-Las tres primeras filas no son propuestas nuestras sino **desacuerdos dentro del propio
-contexto semilla**: los dos documentos de ontología no dicen lo mismo, y hasta que el
-autor decida cuál manda no hay nombre legítimo que llevar al código.
+Las tres primeras filas eran **desacuerdos dentro del propio contexto semilla**. El autor
+los cerró el 2026-09-22 y los dos documentos ya dicen lo mismo; se dejan aquí, con su
+resolución, para que el rastro de la decisión no se pierda.
 
 | Propuesta | Qué sería | Dónde entraría | Estado |
 | --- | --- | --- | --- |
-| Estado `Extraida` de `Escena` | `domain-knowledge.md` lo dibuja entre `Aceptada` y `Obsoleta`; `definitions.md` lista cinco estados sin él | `definitions.md` Capa 5 y `domain-knowledge.md` § Ciclo de producción | **Abierto.** Sobra en el diagrama o falta en los otros dos sitios |
-| Valores de `Estatus de hecho` | `definitions.md` lista `implícito`, que no es un estado del diagrama; el diagrama tiene `Descartado`, que no está en la lista | `definitions.md` Capa 2 y `domain-knowledge.md` § Modelo de canon | **Abierto.** El `CHECK` de la columna sale distinto según cuál se lea |
-| Nombre del estado inicial de `Hallazgo` | El diagrama lo llama `Propuesto`; `definitions.md`, `AGENTS.md`, este documento y la spec lo llaman `provisional`, palabra que además ya es un `Estatus de hecho` | `domain-knowledge.md` § Modo híbrido, o los cuatro documentos que dicen `provisional` | **Abierto.** La regla 1 obliga a usar el nombre de la ontología, y hay dos |
-| Transición a estado final de `Refutado` | `Hecho canónico`: `Refutado` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Decidido, pendiente de exportar** |
-| Transición a estado final de `Rota` | `Promesa narrativa`: `Rota` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Decidido, pendiente de exportar** |
-| Retirar las cifras de presupuesto | La Capa 3 da porcentajes por capa; los números pasan a `config/thresholds.yaml` | `definitions.md` Capa 3 | **Decidido, pendiente de exportar** |
+| Estado `Extraida` de `Escena` | `domain-knowledge.md` lo dibuja entre `Aceptada` y `Obsoleta`; `definitions.md` lista cinco estados sin él | `definitions.md` Capa 5 y `domain-knowledge.md` § Ciclo de producción | **Resuelto.** Retirado del diagrama: la extracción es un paso, no un estado |
+| Valores de `Estatus de hecho` | `definitions.md` lista `implícito`, que no es un estado del diagrama; el diagrama tiene `Descartado`, que no está en la lista | `definitions.md` Capa 2 y `domain-knowledge.md` § Modelo de canon | **Resuelto.** Valen los cinco de `definitions.md`: `Descartado` sale del diagrama e `Implícito` entra |
+| Nombre del estado inicial de `Hallazgo` | El diagrama lo llama `Propuesto`; los otros cuatro documentos lo llamaban `provisional`, palabra que además ya es un `Estatus de hecho` | `definitions.md` § Modo de autoría, `AGENTS.md`, este documento y la spec | **Resuelto.** `propuesto` en todas partes; `provisional` queda solo como `Estatus de hecho` |
+| Transición a estado final de `Refutado` | `Hecho canónico`: `Refutado` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Exportado.** Aplicado en el documento vivo y en `docs/` |
+| Transición a estado final de `Rota` | `Promesa narrativa`: `Rota` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Exportado.** Aplicado en el documento vivo y en `docs/` |
+| Retirar las cifras de presupuesto | La Capa 3 da porcentajes por capa; los números pasan a `config/thresholds.yaml` | `definitions.md` Capa 3 | **Exportado.** Aplicado en el documento vivo y en `docs/` |
 | `Muestra de entrenamiento` (tabla `training_samples`) | Par entrada/salida aceptado, con procedencia y forma de aceptación | Capa 5, o capa nueva de adaptación | Abierto. Entra en v1 como tabla; falta decidir si es vocabulario del dominio |
 | Ventana de olvido del anticontexto | Atributo `N escenas` sobre el Anticontexto ya definido | Capa 3, atributo de Anticontexto | Abierto. El **valor** ya vive en `config/thresholds.yaml`; falta si el atributo se nombra en la ontología |
 

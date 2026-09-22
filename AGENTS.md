@@ -181,7 +181,7 @@ operativas para cualquier agente que genere o revise texto:
 - El brief de escena es mínimo: estado de entrada más restricción de destino. No se
   planifican beats.
 - Los hallazgos (hechos, promesas, motivos no previstos) se **extraen** tras aceptar la
-  escena, no se declaran antes. Entran como `provisional` hasta que el autor los adopta.
+  escena, no se declaran antes. Entran como `propuesto` hasta que el autor los adopta.
 - El retcon es operación rutinaria: marca las escenas afectadas como `obsoleta` y encola
   su reescritura; no toca el resto de la obra.
 - La replanificación es periódica, por umbral de deriva o al cerrar capítulo. Nunca en
