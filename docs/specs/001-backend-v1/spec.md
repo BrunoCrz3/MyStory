@@ -102,9 +102,18 @@ RNF-09, RNF-11, RNF-12 y RNF-13.
 
 - El proveedor del modelo expone una API con límites de tasa; v1 los absorbe con backoff.
 - Los embeddings corren **en local**: la máquina del autor debe poder cargar el modelo.
-- `config/thresholds.yaml` existe y es la fuente única de números (RNF-14). Los umbrales
-  que hoy están en `null` se calibran con el histórico que v1 acumula; los que v1
-  necesite antes de eso hacen fallar el arranque en voz alta, no se estiman.
+- `config/thresholds.yaml` existe y es la fuente única de números (RNF-14). No todos los
+  `null` se rellenan igual y el fichero lo marca clave a clave: unos se calibran por
+  mutación de texto sobre escenas ya aceptadas, otros por el histórico de la propia obra,
+  y otros no se miden en absoluto porque son una decisión del autor sobre coste o
+  tolerancia. Ninguno se estima.
+- **v1 arranca en fase de medición.** El arranque en frío es circular: para calibrar hacen
+  falta escenas aceptadas, y para aceptarlas por el ciclo hace falta la capa de calidad.
+  Se rompe por donde la ontología ya lo permite —quien acepta es el autor, no el umbral
+  (RF-PROC-07)—: con `medicion.cerrar_el_paso` en `false` el crítico puntúa y registra sin
+  suspender, y al cabo de unas cuantas escenas hay corpus y distribución con los que
+  calibrar. Es una fase declarada: ponerlo en `true` con umbrales en `null` hace fallar el
+  arranque en voz alta.
 
 ---
 
@@ -158,7 +167,7 @@ RNF-09, RNF-11, RNF-12 y RNF-13.
 | RF-QUA-02 | Puntuar las dimensiones de calidad clasificadas `T` en `verification.md`. Las `D` y `U` quedan fuera de v1 | T |
 | RF-QUA-03 | Emitir `Informe de crítica` con sus `Defecto`, cada uno ligado a la `Dimensión de calidad` que viola | T |
 | RF-QUA-04 | Clasificar cada defecto como **local** o **sistémico** | T |
-| RF-QUA-05 | Comparar cada puntuación con su umbral de `config/thresholds.yaml`. Sin fichero, el arranque falla en voz alta | T |
+| RF-QUA-05 | Comparar cada puntuación con su umbral de `config/thresholds.yaml`. Sin fichero, el arranque falla en voz alta. Un umbral en `null` solo lo hace fallar si se usa para **cerrar el paso**: con `medicion.cerrar_el_paso` en `false` la puntuación se registra en el `Informe de crítica` y decide el autor (RF-PROC-07) | T |
 
 ### 3.5 `process/` — ciclo y trazabilidad
 

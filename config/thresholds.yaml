@@ -4,9 +4,30 @@
 # de degradación. Las cifras viven aquí y solo aquí: si un número aparece a la vez en un
 # documento y en este fichero, el documento está mal.
 #
-# Un valor `null` no es un olvido: es un umbral que no se puede fijar sin histórico.
-# Se calibra midiendo, no estimando. Mientras esté en null, el arranque falla en voz alta
-# al pedirlo (RF-QUA-05), salvo donde se diga lo contrario.
+# Un valor `null` no es un olvido. Pero no todos se rellenan igual, y decir «se calibra
+# midiendo» de todos ellos es falso: hay tres clases, marcadas clave a clave.
+#
+#   [mutación]   Se calibra separando. Se inyectan defectos conocidos en escenas ya
+#                aceptadas y el umbral es el valor que distingue el original del mutante
+#                con la precisión y la cobertura que exige `validadores`. Es el único
+#                mecanismo que da un número justificado en vez de una apuesta.
+#                Ver docs/verification.md § Soluciones pícaras #12 y la fila P-50.
+#
+#   [histórico]  Se calibra observando. No hay mutante posible, así que el umbral es un
+#                percentil de la distribución de la propia obra: dice «esto es raro en
+#                esta obra», no «esto está mal». Por eso RF-PROC-08 registra la medida de
+#                deriva desde v1 aunque `replanning/` quede fuera.
+#
+#   [decisión]   No se mide. Es una preferencia del autor sobre coste, paciencia o
+#                tolerancia al falso positivo, y ninguna medición la responde: medir dice
+#                dónde está el sistema, no dónde debería estar. No espera histórico;
+#                espera que alguien decida.
+#
+#   [bloqueado]  No se puede calibrar todavía porque falta definir qué se mide.
+#
+# Mientras un umbral esté en null, el arranque falla en voz alta al pedirlo **para cerrar
+# el paso** (RF-QUA-05). Medir y registrar sin suspender no es pedirlo: ver «Fase de
+# medición», abajo.
 
 version: 1
 
@@ -41,7 +62,7 @@ contexto:
     - estado
 
   # Ventana deslizante del anticontexto, en escenas. Cuánto se recuerda antes de olvidar.
-  anticontexto_ventana_escenas: null   # pendiente de calibrar
+  anticontexto_ventana_escenas: null   # [histórico]
 
 # ---------------------------------------------------------------------------
 # Deriva
@@ -53,20 +74,39 @@ contexto:
 # Que la medida se registre por escena no es configurable: es RF-PROC-08.
 
 deriva:
-  medida: null    # la definición de la medida sigue abierta en la ontología
-  umbral: null    # se calibra con el histórico que v1 acumula
+  medida: null    # [bloqueado] la definición sigue abierta en la ontología
+  umbral: null    # [bloqueado] pasa a [histórico] en cuanto la medida exista
 
 # ---------------------------------------------------------------------------
 # Orquestación
 # ---------------------------------------------------------------------------
 
 orquestacion:
-  max_iteraciones_revision: null   # corta-circuitos por escena; al alcanzarlo, escala al autor
-  max_intentos_trabajo: null       # reintentos ante fallo de infraestructura
+  max_iteraciones_revision: null   # [decisión] al alcanzarlo, escala al autor
+  max_intentos_trabajo: null       # [decisión] reintentos ante fallo de infraestructura
   backoff:
-    base_segundos: null
-    factor: null
+    base_segundos: null           # [decisión]
+    factor: null                  # [decisión]
     jitter: true
+
+# ---------------------------------------------------------------------------
+# Fase de medición
+# ---------------------------------------------------------------------------
+# El arranque en frío es circular: para calibrar hacen falta escenas aceptadas, para
+# aceptarlas por el ciclo hace falta la capa de calidad, y para que la capa de calidad
+# cierre el paso hacen falta umbrales que todavía no existen.
+#
+# Se rompe por donde la ontología ya lo permite: quien acepta una escena es el autor, no
+# el umbral (RF-PROC-07, fila P-19). Con `cerrar_el_paso` en `false` el crítico puntúa y
+# deja su puntuación en el `Informe de crítica`, pero no suspende. Eso produce las dos
+# cosas que la calibración necesita —escenas aceptadas y una distribución de
+# puntuaciones— sin estimar ni un número.
+#
+# Es una fase declarada, no una excepción silenciosa. Ponerlo en `true` con umbrales en
+# null hace fallar el arranque, que es exactamente lo que verifica A-41.
+
+medicion:
+  cerrar_el_paso: false   # [decisión] pasa a true cuando haya con qué calibrar
 
 # ---------------------------------------------------------------------------
 # Calidad
@@ -74,6 +114,7 @@ orquestacion:
 # Una dimensión sin umbral es una opinión, no una métrica (definitions.md, Capa 4).
 # Solo se listan las dimensiones clasificadas `T` en docs/verification.md: son las que
 # v1 puntúa. Las `D` y `U` quedan fuera de v1 y por eso no tienen entrada aquí.
+# Todas son [mutación]: se calibran con la pícara #12 sobre escenas ya aceptadas.
 
 calidad:
   consistencia_factica: null
@@ -104,7 +145,7 @@ embeddings:
   dimension: null         # debe coincidir con la declarada en la tabla vec0
 
 recuperacion:
-  max_fragmentos: null    # tope antes de ordenar por similitud
+  max_fragmentos: null    # [decisión] tope antes de ordenar por similitud
 
 # ---------------------------------------------------------------------------
 # Continuidad y estructura
@@ -114,13 +155,13 @@ recuperacion:
 # dice que fila de docs/verification.md la lee.
 
 continuidad:
-  escenas_sin_avanzar_arco: null        # P-44
-  escenas_sin_avanzar_hilo: null        # P-44
-  promesas_pendientes_max: null         # P-44
-  similitud_escena_duplicada: null      # P-43, firma dramatica + vecino vec0
-  repeticion_descripcion_entidad: null  # P-09, medida al consolidar
-  deriva_estilo_vs_linea_base: null     # P-49
-  densidad_acto_final: null             # P-14
+  escenas_sin_avanzar_arco: null        # [histórico] P-44
+  escenas_sin_avanzar_hilo: null        # [histórico] P-44
+  promesas_pendientes_max: null         # [histórico] P-44
+  similitud_escena_duplicada: null      # [mutación] P-43, firma dramatica + vecino vec0
+  repeticion_descripcion_entidad: null  # [mutación] P-09, medida al consolidar
+  deriva_estilo_vs_linea_base: null     # [mutación] P-49
+  densidad_acto_final: null             # [histórico] P-14
 
 # ---------------------------------------------------------------------------
 # Higiene de salida
@@ -128,7 +169,7 @@ continuidad:
 # La puerta de A-47 es booleana salvo en la longitud, que necesita margen.
 
 higiene:
-  desviacion_longitud_escena: null      # A-47, contra Obra.extension objetivo
+  desviacion_longitud_escena: null      # [decisión] A-47, sale de Obra.extension objetivo
 
 # ---------------------------------------------------------------------------
 # Medida de los validadores
@@ -138,5 +179,5 @@ higiene:
 # un validador por debajo de esto no aprueba ni suspende, adivina.
 
 validadores:
-  precision_minima: null                # P-50
-  cobertura_minima: null                # P-50
+  precision_minima: null                # [decisión] P-50
+  cobertura_minima: null                # [decisión] P-50
