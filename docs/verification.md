@@ -51,12 +51,12 @@ referenciarla desde «Cubierto por».
 
 | Nivel | Filas | T | A | I | D | U | % programático | Ciegos sin cubrir |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Artefacto | 51 | 27 | 25 | 9 | 1 | 0 | 98 % (88 sí · 10 parcial) | 5 |
-| Proceso | 51 | 37 | 4 | 2 | 6 | 2 | 94 % (39 sí · 55 parcial) | 8 |
+| Artefacto | 52 | 28 | 25 | 9 | 1 | 0 | 98 % (88 sí · 10 parcial) | 6 |
+| Proceso | 53 | 39 | 4 | 2 | 6 | 2 | 94 % (42 sí · 53 parcial) | 8 |
 
 Una fila puede llevar dos letras cuando la prueba y el análisis son complementarios, de
 ahí que las columnas sumen más que las filas. El porcentaje cuenta las filas marcadas
-`sí` o `parcial`; el reparto exacto es 45 `sí`, 5 `parcial` y 1 `no` en artefacto, y 20
+`sí` o `parcial`; el reparto exacto es 46 `sí`, 5 `parcial` y 1 `no` en artefacto, y 22
 `sí`, 28 `parcial` y 3 `no` en proceso.
 
 La forma de la tabla dice dos cosas. La primera, que el nivel artefacto es casi todo
@@ -68,9 +68,10 @@ de los puntos ciegos sin cubrir: casi cada fila de calidad tiene una mitad que d
 
 **El nivel proceso se volvió más programático, no menos.** Las quince filas que entraron
 con el catálogo de modos de fallo son casi todas consultas contra estado que la ontología
-ya modela —inventario, relaciones, alcance temporal, promesas, arcos—, y suben el reparto
-de `sí` del 31 % al 39 %. Es la consecuencia del principio **cuatro** llevada hasta el
-final: donde el dominio ya guarda el dato, el validador no necesita juicio.
+ya modela —inventario, relaciones, alcance temporal, promesas, arcos—, y con la medida de
+la deriva suben el reparto de `sí` del 31 % al 42 %. Es la consecuencia del principio
+**cuatro** llevada hasta el final: donde el dominio ya guarda el dato, el validador no
+necesita juicio.
 
 **La ejecución en sandbox no aparece en ninguna fila.** El sistema no ejecuta código ni
 herramientas generadas por el modelo: la salida del redactor es prosa que se guarda, no
@@ -83,7 +84,7 @@ cambiara, la metodología entraría de inmediato y con prioridad alta.
 
 Todo lo que las tablas marcan `NADIE`, ordenado por lo que se rompe si se materializa.
 Es la sección que hay que leer primero: las tablas dicen qué se comprueba, esta dice
-dónde el sistema está descubierto. Tres de las quince no llevan fila: nombran un hueco que
+dónde el sistema está descubierto. Dos de las diecisiete no llevan fila: nombran un hueco que
 ninguna metodología del catálogo alcanza todavía, y una fila con la columna de validadores
 vacía diría menos que esto.
 
@@ -91,11 +92,11 @@ vacía diría menos que esto.
 | --- | --- | --- | --- | --- |
 | 1 | **El canon extraído puede no ser fiel a la escena aceptada.** `A-48` comprueba que los términos del hecho aparecen en el texto, no que el hecho afirme lo que la escena dice | A-48 | Todo el plan verifica contra una verdad que puede haber derivado de la escena que dice representar. Es la raíz de la propagación del error: un detalle perdido al consolidar reaparece como contradicción veinte escenas después, y el culpable ya no está | Ninguno del catálogo alcanza la afirmación fuerte sin un anclaje textual que `Hecho canónico` no tiene (§ Filas pendientes de ontología). Con él, **pruebas basadas en propiedades**: todo hecho cita el fragmento que lo sostiene o no se consolida |
 | 2 | **Nadie mide el acuerdo entre el crítico y el autor.** Todas las filas de evals puntúan contra un criterio que nunca se ha contrastado con quien decide | P-29, P-13, P-06, P-02, P-05 | El sistema converge hacia lo que le gusta al crítico, no al autor, y la convergencia parece calidad porque las métricas suben | **Evals sobre dataset etiquetado por el autor**, midiendo acuerdo. Necesita una clase que hoy no existe: la etiqueta del autor sobre un borrador (§ Filas pendientes de ontología) |
-| 3 | **La deriva no tiene medida ni umbral.** `definitions.md` da a `Deriva` el atributo `medida` sin decir cuál es, y `deriva.umbral` sigue en `null` | P-23 | El esquema deja de describir la obra y nada lo dispara. Es justo el fallo que el modo híbrido existe para evitar | Ninguno sirve antes de definir la medida; cualquiera después. Sigue siendo la primera pregunta abierta al autor |
+| 3 | **La deriva tiene medida pero no umbral.** El vector se calcula y es determinista (`P-52`); los tres umbrales siguen en `null` y no disparan nada | P-23, P-52 | El esquema deja de describir la obra, la medida lo ve y nada lo dispara. Es el fallo que el modo híbrido existe para evitar, un paso más cerca de cerrarse que antes | **Evals sobre las etiquetas del propio autor**: el modo sombra de v1 registra cada cambio de `plan_hash` con su motivo, y el umbral de un componente es el valor que mejor separa «replanificó en las siguientes `k` escenas» de «no lo hizo». Hasta que haya suficientes, ninguno |
 | 4 | **Nadie sabe si el modelo atendió a una capa en la escena real.** El canario prueba que puede usarla en una sonda, no que la usara al escribir | P-31, A-04, A-08 | Una escena generada sin el estado que la condiciona: indistinguible de una buena hasta que el verificador encuentra la contradicción, o hasta que no la encuentra | Ninguno del catálogo alcanza la afirmación fuerte. El canario por escena (§ Soluciones pícaras #1) la reduce a este residuo, y el residuo se queda aquí |
 | 5 | **Deriva lenta de personaje.** El contraste con la ficha detecta la contradicción explícita, no al personaje que sigue siendo coherente y ha dejado de ser él | P-06 | La novela pierde a su protagonista sin que falle ninguna fila | **Evals** sobre la trayectoria del arco y no sobre la escena: comparar la ficha con lo que el personaje hace en las últimas N escenas, no en la última |
 | 6 | **Los defectos que nadie sabe inyectar.** `P-50` mide cada validador contra un corpus de mutaciones, y el corpus lo escribe quien ya sabe qué buscar | P-50 | La medida de precisión y cobertura sale alta y solo dice que el validador ve lo que su autor imaginó. El modo de fallo que a nadie se le ocurrió no baja ninguna métrica | Ninguno se cierra a sí mismo. Lo más cerca: **red-teaming** sobre el propio corpus de mutaciones, con un adversario distinto de quien escribió los validadores |
-| 7 | **Deriva respecto a la premisa.** `Deriva` mide la distancia al **esquema**; la distancia a `Obra.premisa` no la mide nada | — | La novela cumple su esquema acto por acto y ha dejado de ser el libro que se quería escribir. Ninguna fila falla, porque el esquema también derivó | **Evals** contra `Obra.premisa` como línea base. No hay fila porque la afirmación no tiene todavía criterio de aprobado: es la misma pregunta abierta que la medida de deriva, un nivel más arriba |
+| 7 | **Deriva tonal o temática.** `P-52` mide la estructura declarada, porque es lo único que el esquema declara; la distancia a `Obra.premisa` no la mide nada | P-52 | La novela cumple su esquema acto por acto y ha dejado de ser el libro que se quería escribir. Ninguna fila falla, porque el esquema también derivó | **Evals** contra `Obra.premisa` como línea base. Es el complemento declarado de `P-52`, no una carencia suya: la deriva estructural se cerró a propósito sin componente semántico |
 | 8 | **El autor puede aprobar sin leer.** Los guardarraíles garantizan que la transición la dispare él, no que la haya leído | P-19, A-46 | `training_samples` se llena de texto que solo pasó umbrales: exactamente el bucle de autoentrenamiento que `architecture.md` prohíbe | **Observabilidad**: registrar ediciones y tiempo de revisión antes de aceptar, y distinguir aceptación leída de aceptación en bloque |
 | 9 | **El frontend puede reimplementar reglas de canon.** El análisis estático mide importaciones, no contenido, y no hay ninguna fila de comportamiento del frontend | A-25, A-14 | Dos verdades sobre el canon: la del backend y la que ve el autor. La divergencia se nota cuando ya hay decisiones tomadas sobre la equivocada | **Pruebas de contrato** extendidas —toda vista deriva de una respuesta del backend y no recalcula— más pruebas de integración de frontend, hoy fuera de alcance |
 | 10 | **Dos instancias sobre el mismo `data/novel.db`.** La serialización la impone el proceso, y nada impide arrancar dos | P-35, P-36 | El escritor único de SQLite deja de ser un no-problema: dos consolidaciones concurrentes sobre el mismo canon | **Guardarraíles**: cerrojo de instancia sobre el fichero al arrancar, con fallo en voz alta |
@@ -104,6 +105,8 @@ vacía diría menos que esto.
 | 13 | **Coincidencias excesivas y metáforas mezcladas.** Dos residuos de familias que por lo demás sí bajan a código | — | Poco, por separado. Juntos son la textura que delata a un modelo cuando todo lo medible ya pasa | Para las coincidencias, `P-45` cubre lo no preparado y el resto no tiene forma reconocible. Para las metáforas, **verificación multiagente** y nada más barato. No hay fila porque ninguna de las dos tiene criterio de aprobado |
 | 14 | **Sentido de la maravilla y gusto del autor.** Sin validador, por razones distintas | P-16, P-30 | Nada mecánico: es el hueco por diseño del sistema. Importa saber que está ahí y no confundirlo con una carencia del plan | Para `P-16`, pasajes etiquetados por el autor lo convertirían en eval. Para `P-30`, nada, y debe seguir así (§ Lo que no se puede verificar) |
 | 15 | **La fase de medición puede no terminar nunca.** Con `medicion.cerrar_el_paso` en `false`, ningún umbral se pide y ninguno falla: el sistema mide, registra y no suspende jamás | A-41 | La capa de calidad queda de adorno sin que nada proteste. Es el mismo fallo que el punto ciego de umbrales sin calibrar, un piso más abajo: allí el umbral estaba mal puesto, aquí no hay umbral que poner | **Observabilidad**: registrar la fase junto a cada puntuación, y el número de escenas aceptadas desde que se declaró. Un corpus que ya da para calibrar y una fase que sigue abierta es una señal, no un estado |
+| 16 | **El histórico de deriva solo es recalculable hacia atrás.** `A-52` guarda los ingredientes de la definición de hoy | A-52 | Una definición futura que mire algo que v1 no guarda —el tono de una escena, la distancia entre dos lugares— no se puede recalcular, y el histórico deja de valer justo para el cambio que lo necesitaba | Ninguno del catálogo lo cierra. Lo más cerca: **inspección** al cambiar la definición, comprobando antes que lo que la medida nueva necesita ya se estaba guardando |
+| 17 | **La densidad de declaración cuenta restricciones, no contenido.** `P-53` protege del plan vacío, no del plan trivial | P-53 | Un esquema con una restricción de destino por escena y todas intercambiables pasa la densidad y no dice hacia dónde va la novela. La deriva sale baja **y fiable**, y las dos cosas son mentira | **Revisión humana en el bucle**: que el autor lea las restricciones al fijarlas. No hay validador programático para «esta restricción dice algo» |
 
 ---
 
@@ -162,6 +165,7 @@ vacía diría menos que esto.
 | **A-49** · Tras cada corrección se re-ejecutan todos los validadores, no solo el que falló | `architecture.md` § Ruta de un defecto; RF-QUA-02, RF-QUA-07 | Análisis estático / SAST + model checking | A | sí | Garantiza que se invoquen todos; no que cada uno reciba el texto corregido en vez de una puntuación en caché del anterior | A-50 | `process/`, CI |
 | **A-50** · Ninguna corrección empeora una dimensión que ya pasaba su umbral | `architecture.md` § Ruta de un defecto; RF-QUA-05, RF-QUA-08 | Pruebas basadas en propiedades sobre el historial de `Versión` | T | sí | Compara puntuaciones, y ninguna está calibrada: dos valores igual de arbitrarios no dicen si la escena empeoró | P-50 | `process/`, `quality/`, `tests/quality/` |
 | **A-51** · Todo `Novum` tiene al menos una `Regla del mundo` con límites declarados, y toda `Parte / Acto` su función dramática y su punto de giro | `definitions.md` Capa 1; `domain-knowledge.md` § Mundo especulativo; RF-NOVEL-01, RF-NOVEL-02, RF-NOVEL-06 | Inspección + pruebas unitarias / de integración | I, T | sí | Exige que la declaración exista, no que sea la que hacía falta: un límite trivial cumple igual y deja a `P-07` sin nada contra lo que medir | P-07 | `novel/`, `tests/novel/` |
+| **A-52** · El histórico de deriva guarda los ingredientes de cada medición, no solo el vector, y el vector se recalcula desde ellos | RF-PROC-12; `definitions.md` § Medida de la deriva | Pruebas unitarias / de integración + pruebas basadas en propiedades | T | sí | Garantiza que los ingredientes están y que cuadran con el vector; no que sean los que una definición futura necesite. Una medida que mire algo que hoy no se guarda tampoco se recalcula | NADIE | `process/`, `tests/process/` |
 
 ---
 
@@ -191,7 +195,7 @@ vacía diría menos que esto.
 | **P-20** · Ningún agente ejecuta instrucciones halladas en texto narrativo | `architecture.md` § Resistencia a inyección; RF-PROC-10 | Red-teaming / pruebas adversarias + guardarraíles | T | parcial | Una campaña cubre los ataques que se le ocurrieron a quien la escribió | § Soluciones pícaras #8 | campaña periódica, CI |
 | **P-21** · Un hallazgo entra como `propuesto` y solo el autor lo convierte en canon | `AGENTS.md` § Modelo de autoría; RF-FIND-05 | Guardarraíles + análisis estático | A | sí | Protege la adopción; no impide que un hallazgo propuesto se cuele en el contexto de la escena siguiente como si fuera canon | A-11 | `findings/extraer-hallazgos`, `context/` |
 | **P-22** · La replanificación nunca se dispara en mitad de una escena | `AGENTS.md` § Modelo de autoría | Guardarraíles + model checking | A | sí | `replanning/` está fuera de v1: hoy la regla no tiene implementación que verificar | alcance de la spec 001 §1.3 | `replanning/detectar-deriva` |
-| **P-23** · La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Deriva; RF-PROC-08 | Evals + pruebas unitarias / de integración | T | parcial | Sin medida definida y con `deriva.umbral` en `null`, hoy se verifica que se registra algo por escena, no que ese algo mida deriva | NADIE | `replanning/detectar-deriva`; en v1 solo el registro |
+| **P-23** · La deriva sobre umbral dispara replanificación rodante | `definitions.md` § Medida de la deriva; RF-PROC-08 | Evals + pruebas unitarias / de integración | T | parcial | La medida ya está definida y es verificable (`P-52`); lo que sigue sin verificarse es el **disparo**, porque `replanning/` queda fuera de v1 y los tres umbrales siguen en `null` | P-52; alcance de la spec 001 §1.3 | `replanning/detectar-deriva`; en v1 solo la medición |
 | **P-24** · Una versión buena se puede reproducir con su registro de generación | `definitions.md` Capa 5 § Trazabilidad; RNF-05 | Observabilidad / trazas en ejecución + demostración | D | parcial | Reproduce lo que el sistema controla; el proveedor puede cambiar el modelo bajo el mismo identificador | § Soluciones pícaras #9 | `process/registrar-generacion` |
 | **P-25** · Ningún agente inventa un hecho del mundo ni una clase del dominio | `AGENTS.md` regla 4 | Red-teaming + verificación multiagente | D | parcial | Un nombre propio nuevo se detecta; un hecho inventado sobre una entidad que ya existe («el puerto llevaba años cerrado») no tiene forma reconocible | P-02 | campaña periódica, `findings/` |
 | **P-26** · Un cambio en los prompts o en el ensamblador no degrada la obra en curso | `architecture.md` § Sistema | Despliegue progresivo + evals | D | parcial | Compara escenas nuevas entre sí; no dice nada de su coherencia con las cien escritas con el prompt anterior | P-49 | proceso de release |
@@ -220,6 +224,8 @@ vacía diría menos que esto.
 | **P-49** · El estilo de un borrador no se aleja de la línea base congelada de escenas aceptadas más de lo declarado | `definitions.md` Capa 4 § Regresión a la media; `architecture.md` § Sistema; RF-QUA-12; `config/thresholds.yaml` | Evals contra muestra congelada | T | parcial | Mide distancia a lo ya escrito: una obra que debe cambiar de registro al entrar en el tercer acto se penaliza igual que una que deriva | P-26 | `quality/`, proceso de release |
 | **P-50** · Cada validador tiene precisión y cobertura medidas sobre un corpus de defectos inyectados | `AGENTS.md` regla 7; § Soluciones pícaras #12; RF-QUA-13; `config/thresholds.yaml` | Pruebas de mutación aplicadas al texto + evals | T | sí | Mide contra los defectos que alguien supo inyectar, que son los mismos que el validador sabe ver | NADIE | `quality/`, CI nocturno |
 | **P-51** · Ningún personaje ignora ni pregunta por un hecho que su `Estado epistémico` ya registra | `definitions.md` Capa 2 § Estado epistémico; `domain-knowledge.md` § Anatomía del personaje; RF-CANON-04, RF-QUA-01 | Pruebas unitarias / de integración + verificación multiagente | T | parcial | Detecta la pregunta explícita por un hecho conocido; no detecta al personaje que simplemente deja de actuar en consecuencia | crítico, con el residuo en § Puntos ciegos #2 | `quality/verificar-continuidad` |
+| **P-52** · La deriva mide si el esquema sigue describiendo la obra, no si el texto se parece al plan | `definitions.md` § Medida de la deriva; RF-PROC-08 | Pruebas basadas en propiedades + pruebas de mutación aplicadas al canon | T | sí | Mide la estructura declarada, que es lo único que el esquema declara: una novela que cumple todas sus restricciones de destino y ha dejado de ser el libro que se quería escribir no mueve ningún componente | P-53, con el residuo en § Puntos ciegos #7 | `process/`, `tests/process/`; el disparo en `replanning/` cuando entre |
+| **P-53** · Una medición con densidad de declaración bajo umbral se reporta como **no fiable**, no como baja | RF-PROC-08; `config/thresholds.yaml` | Pruebas unitarias / de integración | T | sí | Cuenta restricciones declaradas, no si declaran algo: un esquema con una restricción trivial por escena tiene densidad alta y sigue sin decir hacia dónde va | NADIE | `process/`, `tests/process/` |
 
 ---
 
@@ -371,6 +377,18 @@ vigentes en `t` sin establecer ninguno nuevo está recapitulando.
 *Baja a `T`* `P-39` y la mitad medible de `P-46`. *Sigue sin cubrir*: el cambio justificado
 por un hecho que la escena se inventa en el mismo sitio.
 
+**#17 · Deriva por restricción de destino, no por parecido.** «¿Sigue el esquema
+describiendo la obra?» parece una pregunta para un modelo y no lo es. El modo híbrido
+declara del futuro **una sola cosa** —la restricción de destino— y sus tres `tipo` son los
+tres que la pícara #5 ya sabe comprobar contra un `Snapshot de mundo`. Corridos al revés
+—las restricciones aún no escritas contra el canon en `t`— dan la invalidación sin modelo
+de por medio, y las promesas y los hilos que ninguna restricción recoge dan los otros dos
+componentes.
+*Ahorra*: una batería de evals de similitud semántica entre el plan y lo escrito, que
+además habría medido lo que no se quería medir: el parecido del texto al plan es el *cómo*,
+y el *cómo* es libre. *Baja de inverificable a `T`* la fila `P-52`. *Sigue sin cubrir*: la
+deriva tonal o temática (§ Puntos ciegos #7) y el plan que declara poco (`P-53`).
+
 ---
 
 ## Lo que no se puede verificar
@@ -422,7 +440,7 @@ sincronía).
 | --- | --- | --- |
 | A-30 | Las transiciones de `Implícito` en el ciclo de vida del hecho: se dibujaron al homologar los dos documentos y ninguna pregunta de competencia las respalda | El `CHECK` de la columna es firme; el grafo de transiciones, no |
 | A-46 | `Muestra de entrenamiento` (`training_samples`) no está ratificada como clase | La tabla entra en v1; la fila verifica una tabla sin entrada en la ontología |
-| P-23 | La medida de `Deriva` | Sin criterio de aprobado: se verifica el registro, no la medida |
+| P-52, P-53 | Que `Restricción de destino` declare las entidades que toca: `alcance` existe sin contenido especificado | `canon huérfano` e `inviabilidad de pago` cuentan sin poder atribuir qué restricción recoge qué promesa o qué hilo, y se quedan en su forma débil. El histórico guarda los ingredientes, así que se recalculan enteros el día que llegue |
 | P-29, § Puntos ciegos #2 | La etiqueta del autor sobre un borrador, que sería la verdad de referencia del crítico | No hay dataset contra el que medir acuerdo |
 | § Puntos ciegos #4 | Auditoría de texto sospechoso: no hay clase para un texto bajo sospecha ni estado de cuarentena para un hallazgo (`architecture.md` § Resistencia a inyección) | Las reglas antiinyección son de arquitectura y no se pueden auditar escena a escena |
 | A-48, § Puntos ciegos #1 | El anclaje textual de un `Hecho canónico` a la escena que lo establece: la clase no tiene forma de citar el fragmento que lo sostiene | La fidelidad se comprueba por presencia de términos, no por lo que el hecho afirma |
@@ -447,15 +465,10 @@ confunda con una omisión del plan.
 
 ## Preguntas abiertas al autor
 
-Quedan dos. El resto de la lista original está decidido y vive abajo, con la fila del plan
+Queda una. El resto de la lista original está decidido y vive abajo, con la fila del plan
 en que se convirtió cada decisión: sin la decisión al lado vuelven a leerse como abiertas,
 y las skills y las specs las citan por número.
 
-1. **La medida de deriva no está definida.** `definitions.md` da a `Deriva` el atributo
-   `medida` sin decir cuál es, y `deriva.umbral` sigue en `null` a la espera de histórico.
-   Hasta que exista, `P-23` verifica que se registra algo por escena, no que ese algo mida
-   deriva, y el punto ciego #3 sigue abierto. Es la pregunta más cara del documento: es el
-   detector del fallo que el modo híbrido existe para evitar.
 6. **«Clasificación ciega de diálogo»: ¿quién clasifica?** Si es un clasificador con
    dataset, `P-08` es `T`; si es una persona, es `D`. La solución pícara #10 propone el
    candidato barato —clasificador entrenado con el propio corpus, evaluado dejando fuera al
@@ -465,6 +478,7 @@ y las skills y las specs las citan por número.
 
 | # | Pregunta | Decisión | En qué fila del plan se convirtió |
 | --- | --- | --- | --- |
+| 1 | La medida de deriva no estaba definida | **Vector de tres componentes** —invalidación, canon huérfano e inviabilidad de pago— sin agregado escalar y sin similitud semántica. Mide si el esquema sigue describiendo la obra, no si el texto se parece al plan: se calcula solo contra lo que el esquema declara del futuro, que es la restricción de destino. Los umbrales, uno por componente, se calibran en modo sombra con las veces que el autor replanifica | P-52, P-53, A-52 (RF-PROC-08, RF-PROC-12, RF-PROC-13) |
 | 2 | `config/thresholds.yaml` no existía en el repositorio | **Creado.** Es la única fuente de umbrales y presupuestos; ninguna cifra se duplica en documentos ni se escribe suelta en el código | A-40, A-41 (RNF-14, RF-QUA-05) |
 | 3 | Los presupuestos de contexto estaban declarados dos veces y no coincidían | **Viven solo en `config/thresholds.yaml`**, en tokens. La capa Estructural queda con el valor de `contexto.capas.estructural`; los porcentajes de la Capa 3 dejan de mandar y se retiran al reexportar la ontología | A-07, A-40 (RF-CTX-02) |
 | 4 | `Rota` sin arista de salida en `Promesa narrativa` | **Terminal por diseño.** No se revive; si la trama vuelve sobre ello, se crea una entidad nueva que referencia a la anterior | A-31, A-33 (RF-CANON-10) |

@@ -204,14 +204,16 @@ RNF-09, RNF-11, RNF-12 y RNF-13.
 
 | Id | Requisito | Verifica |
 | --- | --- | --- |
-| RF-PROC-01 | Crear `Brief de escena` con estado de entrada y `Restricción de destino`. **Mínimo: no se planifican beats** | I |
+| RF-PROC-01 | Crear `Brief de escena` con estado de entrada y `Restricción de destino`. **Mínimo: no se planifican beats.** El esquema materializa además las `Restricción de destino` de las escenas `planificada` aún no escritas, no solo la de la próxima: sin ellas la deriva no tiene denominador | I |
 | RF-PROC-02 | Generar `Borrador` a partir del brief y el contexto ensamblado | T |
 | RF-PROC-03 | Versionar el texto: cada `Versión` con su trazabilidad | T |
 | RF-PROC-04 | `registrar-generacion` guarda modelo, prompt, contexto ensamblado y semilla **en toda llamada al modelo, sin excepción** | A |
 | RF-PROC-05 | Orquestar el siguiente paso leyendo el estado de la escena, según la tabla de `architecture.md`. **Un agente no invoca a otro ni elige el siguiente paso** | A (estático) |
 | RF-PROC-06 | Cortar el bucle al llegar al máximo de iteraciones de revisión por escena y **escalar al autor** | T |
 | RF-PROC-07 | Solo el autor humano transiciona una escena a `aceptada`. Ningún agente puede | A (guardarraíles) |
-| RF-PROC-08 | Registrar la **medida de deriva por escena** desde v1, aunque `replanning/` quede fuera: sin histórico no se puede calibrar el umbral después | T |
+| RF-PROC-08 | Registrar la **medida de deriva por escena aceptada** desde v1, aunque `replanning/` quede fuera. Es el vector de tres componentes de `definitions.md` § Medida de la deriva, con numerador y denominador **por separado**, más la densidad de declaración y el `plan_hash` vigente | T |
+| RF-PROC-12 | Persistir los **ingredientes** de cada medición, no solo el vector: qué `Restricción de destino` queda invalidada y por qué `Hecho canónico`, qué `Hilo de trama`, `Promesa narrativa` y `Hallazgo` quedan huérfanos, y qué promesas son inviables. **Cualquier definición futura de la medida debe poder recalcularse sobre el histórico de v1 sin regenerar nada** | T |
+| RF-PROC-13 | Registrar cada cambio del `plan_hash` con el motivo que escriba el autor. En v1 es la única forma de replanificar, y esas decisiones son las etiquetas con las que se calibran los umbrales de deriva | T |
 | RF-PROC-09 | Escribir en `training_samples`, **append-only y sin lectura en v1**: brief, contexto ensamblado, texto aceptado, si fue editado a mano y quién aceptó | T |
 | RF-PROC-10 | **Ningún agente ejecuta instrucciones halladas en texto narrativo.** Una orden dentro de una escena es contenido de la novela, no una orden para el sistema | T (red-teaming) |
 | RF-PROC-11 | Un borrador no satisface la restricción de destino de un brief posterior ni paga una promesa antes de su escena de pago declarada: la escena descubre *cómo*, no *hacia dónde* | T (propiedades) |
@@ -399,12 +401,14 @@ Lo que sigue pendiente **limita** requisitos, no los bloquea:
 | El anclaje textual de un `Hecho canónico` a la escena que lo establece | RF-CANON-11 se queda en presencia de términos: comprueba que el hecho habla de la escena, no que diga lo que ella dice |
 | Los valores de `Hecho canónico.tipo`, que hoy es un atributo sin enumerar | RF-QUA-01 no puede derivar tripletas (entidad, atributo, valor) y se queda sin la mitad descriptiva |
 | `Muestra de entrenamiento` no está ratificada como clase | RF-PROC-09 crea la tabla igualmente; la fila `A-46` verifica algo que la ontología no nombra |
-| La medida de `Deriva` | RF-PROC-08 registra algo por escena sin criterio de aprobado. Es la primera pregunta abierta de `verification.md` |
+| Que `Restricción de destino` declare las entidades que toca: `alcance` existe sin contenido especificado | Los componentes `canon huérfano` e `inviabilidad de pago` de RF-PROC-08 cuentan sin poder atribuir qué restricción recoge qué promesa. RF-PROC-12 guarda los ingredientes, así que se recalculan enteros cuando llegue |
 
 ### Decisiones abiertas que NO bloquean v1
 
 - Si `Muestra de entrenamiento` entra en la ontología. v1 crea la tabla igualmente.
 - Si la ventana de olvido del anticontexto se nombra como atributo de `Anticontexto`. El
   valor ya vive en `thresholds.yaml`.
-- La definición de la medida de deriva. v1 la registra; el umbral se calibra con el
-  histórico que v1 acumula, y hasta entonces `deriva.umbral` sigue en `null`.
+- **La medida de deriva ya no está abierta**: se definió el 2026-09-22 como el vector de
+  tres componentes de `definitions.md` § Medida de la deriva. Lo que sigue abierto son sus
+  tres umbrales, que se calibran en modo sombra con las veces que el autor replanifica
+  (RF-PROC-13) y hasta entonces siguen en `null` sin disparar nada.

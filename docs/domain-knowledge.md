@@ -50,7 +50,7 @@ flowchart LR
   VAL --> CSL[Consolidar]
   CSL --> BRF
   CSL --> EXT[Extraer hallazgos]
-  EXT --> DRV{¿Deriva sobre umbral?}
+  EXT --> DRV{¿Algún componente<br/>de la deriva sobre su umbral?}
   DRV -->|no| BRF
   DRV -->|sí| RPL[Replanificar esquema]
   RPL --> BRF

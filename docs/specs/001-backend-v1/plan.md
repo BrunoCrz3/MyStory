@@ -40,7 +40,7 @@ que falla por la razón correcta, luego el código mínimo que la pasa, luego re
 | H3 | `canon/`: la verdad en `t`, y consolidar | 003 | RF-CANON-01 a 15 |
 | H4 | `context/`: ensamblado, presupuesto y recuperación híbrida | 004 | RF-CTX-01 a 12, RNF-01 |
 | H5 | `quality/`: la puerta de higiene y el contraste contra canon | 005 | RF-QUA-01 a 09 |
-| H6 | `process/`: briefs, versiones, orquestación y trazabilidad | 006 | RF-PROC-01 a 11, RNF-05, RNF-06, RNF-09, RNF-10, RNF-13 |
+| H6 | `process/`: briefs, versiones, orquestación, trazabilidad y deriva | 006 | RF-PROC-01 a 13, RNF-05, RNF-06, RNF-09, RNF-10, RNF-13 |
 | H7 | `findings/`: extracción y adopción. **Aquí cierra el ciclo** | 007 | RF-FIND-01 a 05 |
 | H8 | API completa y OpenAPI estable | — | RI-01 a 07 |
 | H9 | Las 21 preguntas de competencia y la traza | — | RNF-04, criterio 3 |
@@ -209,7 +209,11 @@ clasificados y ninguna puntuación suspende porque la fase está abierta.
 vuelo en `commons/tokens/`, y la skill `registrar-generacion`.
 
 **Migración 006.** `brief_escena`, `restriccion_destino`, `borrador`, `version`,
-`registro_generacion` y `training_samples`.
+`registro_generacion`, `training_samples` y las dos tablas de deriva: `deriva_medicion`
+—numerador y denominador **por separado** de cada componente, densidad de declaración,
+`plan_hash` y `definicion_version`— y `deriva_ingrediente`, que guarda qué elemento falla
+y por qué. Separar numerador de denominador no es cosmético: una proporción sola no se
+puede recalcular si mañana cambia la definición del denominador.
 
 **Pruebas, en este orden:**
 
@@ -226,9 +230,29 @@ vuelo en `commons/tokens/`, y la skill `registrar-generacion`.
    `test_un_trabajo_que_no_cabe_entero_falla_al_encolarse` (`P-36`, RNF-10).
 6. `test_solo_entra_en_training_samples_texto_aceptado_y_editado` — append-only y sin
    lectura en v1 (`A-46`, RF-PROC-09).
-7. `test_la_medida_de_deriva_se_registra_por_escena` — se verifica el registro, no la
-   medida: la definición sigue abierta (RF-PROC-08, § Puntos ciegos #3).
-8. `test_un_borrador_no_satisface_el_destino_de_un_brief_posterior` (`P-41`, RF-PROC-11).
+7. **La deriva, en cinco pruebas** (RF-PROC-08, RF-PROC-12, RF-PROC-13). La definición
+   está cerrada desde el 2026-09-22, así que aquí ya se verifica la medida y no solo el
+   registro:
+   - `test_la_deriva_vale_cero_tras_un_hito_de_plan` — el plan que el autor acaba de
+     escribir describe la obra por construcción.
+   - `test_una_escena_que_cumple_su_restriccion_sin_hechos_nuevos_no_mueve_la_deriva` —
+     es la prueba de que el descubrimiento del *cómo* no cuenta (`P-01`).
+   - `test_matar_a_un_personaje_que_una_restriccion_futura_necesita_sube_invalidacion` —
+     con el fixture de mutación de canon, que toca un componente y deja los otros dos
+     quietos.
+   - `test_la_deriva_es_determinista_para_el_mismo_canon_y_el_mismo_plan_hash` — sin esto
+     el histórico no sirve para calibrar.
+   - `test_solo_invalidacion_es_monotona` — y sus controles negativos:
+     `canon_huerfano` **baja** al cerrar un hilo e `inviabilidad_pago` **baja** al pagar
+     una promesa. Probar monotonía en los tres convertiría un acierto del sistema en un
+     fallo.
+8. `test_una_medicion_con_densidad_bajo_umbral_se_reporta_no_fiable` — no basta con que
+   salga baja: un esquema que no declara nada tiene deriva cero para siempre
+   (RF-PROC-08, `P-53`).
+9. `test_los_ingredientes_bastan_para_recalcular_el_vector_sin_regenerar_nada` — se
+   recalcula el vector desde `deriva_ingrediente` y tiene que dar lo mismo que la
+   columna. Es la prueba que hace del histórico algo aprovechable (RF-PROC-12).
+10. `test_un_borrador_no_satisface_el_destino_de_un_brief_posterior` (`P-41`, RF-PROC-11).
 
 **Terminado cuando** el orquestador lleva una escena de `planificada` a `en revisión` sin
 que ningún agente decida el paso siguiente.
@@ -313,7 +337,8 @@ necesita cambiar algo de una migración anterior, se escribe una nueva.
 
 | Riesgo | Qué pasa si se materializa | Qué lo contiene |
 | --- | --- | --- |
-| **La medida de `Deriva` sigue sin definir** | RF-PROC-08 registra un número sin criterio de aprobado durante toda v1, y el histórico que acumula puede no servir para calibrar nada | Nada del plan. Es la primera pregunta abierta de `verification.md` y solo la cierra el autor |
+| **El esquema declara pocas restricciones de destino** | La deriva sale baja por no decir nada, y un plan que no declara ninguna la tiene en cero para siempre: la medida premia no planificar | La densidad de declaración, que marca la medición como no fiable en vez de como baja (`P-53`). Es contrapeso, no cura: si el plan no declara, no hay deriva que medir |
+| **El `alcance` de `Restricción de destino` no dice qué entidades toca** | `canon_huérfano` e `inviabilidad_pago` cuentan sin poder atribuir qué restricción recoge qué promesa o qué hilo | Se implementan en su forma débil y el histórico guarda los ingredientes, así que los dos componentes se recalculan enteros el día que el atributo llegue |
 | **`Hecho canónico.tipo` sin enumerar** | RF-QUA-01 se queda sin la mitad descriptiva: los ojos que cambian de color no los ve nadie | Se implementa la mitad enumerable y se deja la otra explícitamente fuera, no a medias y en silencio |
 | **El anclaje textual no existe** | RF-CANON-11 comprueba presencia de términos, no significado. Es el punto ciego #1 | Se acepta el proxy y se documenta como tal; no se presenta como garantía |
 | **El modelo de embeddings local no cabe en la máquina** | H4 se bloquea entero: sin embeddings no hay recuperación | Se detecta en H4 y no antes. Si pasa, la alternativa aprobada es `multilingual-e5-large` (§9.2) |

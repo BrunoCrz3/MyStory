@@ -712,10 +712,13 @@ generado es verdad en la novela.
 
 ### Bucle largo — replanificación rodante
 
-Se dispara por umbral de deriva o por cadencia fija (cada N escenas o al cerrar
-capítulo), nunca en mitad de una escena. `replanificador` recoge los hallazgos
-adoptados, revisa el esquema, reajusta las restricciones de destino de las escenas aún
-no escritas y propaga el retcon a las afectadas.
+Se dispara cuando **algún componente** de la deriva supera su umbral, o por cadencia
+fija (cada N escenas o al cerrar capítulo), nunca en mitad de una escena. La deriva es un
+vector de tres, no un escalar: `definitions.md` § Medida de la deriva.
+
+`replanificador` recoge los hallazgos adoptados, revisa el esquema, reajusta las
+restricciones de destino de las escenas aún no escritas y propaga el retcon a las
+afectadas.
 
 ### Ruta de un defecto
 

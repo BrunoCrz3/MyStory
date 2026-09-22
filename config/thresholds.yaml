@@ -85,14 +85,29 @@ en_vuelo:
 # Deriva
 # ---------------------------------------------------------------------------
 # El alcance de v1 lo fija docs/specs/001-backend-v1/spec.md §1.3, no este fichero.
-# Aquí solo viven los valores: mientras no haya histórico suficiente, `umbral` sigue en
-# null y no dispara nada; su ausencia no impide arrancar.
-
 # Que la medida se registre por escena no es configurable: es RF-PROC-08.
+#
+# `medida` ya no es una clave. La medida está definida en definitions.md, seccion Medida
+# de la deriva: un vector de tres componentes, sin agregado escalar. Aquí solo viven sus
+# umbrales, uno por componente, porque comparar un vector contra un solo numero seria
+# perder justo la informacion por la que es un vector.
+#
+# Se calibran en modo sombra: v1 registra el vector por escena aceptada y tambien cuando
+# el autor replanifica o edita briefs a mano. Esas decisiones son las etiquetas, y el
+# umbral de un componente es el valor que mejor separa "replanifico en las siguientes k
+# escenas" de "no lo hizo". Mientras sigan en null no disparan nada y no impiden arrancar.
 
 deriva:
-  medida: null    # [bloqueado] la definición sigue abierta en la ontología
-  umbral: null    # [bloqueado] pasa a [histórico] en cuanto la medida exista
+  umbral:
+    invalidacion: null                # [histórico] con etiquetas del autor
+    canon_huerfano: null              # [histórico] con etiquetas del autor
+    inviabilidad_pago: null           # [histórico] con etiquetas del autor
+
+  # Contrapeso. Un esquema que declara pocas restricciones de destino tiene deriva baja
+  # por no decir nada, y uno que no declara ninguna la tiene en cero para siempre: la
+  # medida, a solas, premia no planificar. Por debajo de esta densidad la medicion se
+  # reporta NO FIABLE, que no es lo mismo que reportarla baja.
+  densidad_declaracion_minima: null   # [decisión] restricciones por escena planificada
 
 # ---------------------------------------------------------------------------
 # Orquestación

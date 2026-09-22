@@ -38,7 +38,7 @@ La obra se planifica a nivel de acto y se descubre a nivel de escena. El esquema
 | Estado de hallazgo | Situación del hallazgo en el ciclo de adopción | propuesto, adoptado, descartado, conflictivo, integrado |
 | Extracción | Lectura automática de una escena aceptada para detectar hallazgos | entradas, hallazgos propuestos, confianza |
 | Replanificación rodante | Revisión del esquema a la luz de los hallazgos acumulados | disparador, escenas afectadas, cambios al esquema |
-| Deriva | Distancia acumulada entre lo escrito y el esquema vigente | medida, umbral de disparo |
+| Deriva | Distancia acumulada entre lo escrito y el esquema vigente | medida (vector de tres componentes), umbral por componente, hito de plan desde el que se acumula |
 
 **Reglas de gobierno**
 
@@ -46,6 +46,14 @@ La obra se planifica a nivel de acto y se descubre a nivel de escena. El esquema
 - Nada se declara por adelantado salvo las restricciones de destino; el resto del canon se extrae después de aceptar la escena.
 - El retcon deja de ser excepción y pasa a ser operación rutinaria, con propagación a las escenas afectadas.
 - La replanificación se dispara por umbral de deriva o por cadencia fija (cada N escenas o al cerrar capítulo), nunca en mitad de una escena.
+
+**Medida de la deriva.** La deriva no mide si el texto se parece al plan: mide si el plan sigue describiendo la obra. Lo que una escena descubre —el *cómo*— no cuenta nunca; solo cuenta lo que deja sin sostener al *hacia dónde*. Es un vector de tres componentes, sin agregado escalar y sin similitud semántica:
+
+- **Invalidación**: proporción de `Restricción de destino` aún no escritas cuyo tipo declarado contradice el canon vigente en `t` — un estado final ya imposible, una `Revelación` ya ocurrida o cuyo hecho fue refutado, un `Personaje` que no puede estar donde la restricción dice.
+- **Canon huérfano**: `Hilo de trama` activos, `Promesa narrativa` pendientes y `Hallazgo` adoptados desde el último hito de plan que ninguna `Restricción de destino` futura recoge.
+- **Inviabilidad de pago**: `Promesa narrativa` pendientes sin ninguna `Restricción de destino` futura que pudiera pagarlas, o cuya única candidata está invalidada.
+
+Cada componente tiene su umbral y se compara por separado; superar uno dispara `Replanificación rodante`. Los tres se calculan contra el canon en `t` y contra lo único que el esquema declara del futuro, que es la restricción de destino: es la consecuencia directa de «nada se declara por adelantado salvo las restricciones de destino».
 
 ## Capa 1 — Obra
 
