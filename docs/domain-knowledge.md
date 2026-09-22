@@ -12,10 +12,11 @@ Las cinco capas forman un ciclo cerrado: la obra se planifica, el canon fija lo 
 flowchart LR
   OBRA[Obra<br/>esquema por actos] --> CANON[Canon<br/>estado en t]
   CANON --> CTX[Contexto<br/>qué ve el modelo]
-  CTX --> GEN[Generación<br/>escena descubierta]
-  GEN --> CAL[Calidad<br/>dimensiones y umbrales]
-  CAL -->|aceptada| CANON
-  CANON -->|hallazgos| EXT[Extracción]
+  CTX --> PRC[Proceso<br/>escena descubierta]
+  PRC --> CAL[Calidad<br/>dimensiones y umbrales]
+  CAL -->|escena aceptada| CANON
+  CAL -->|escena aceptada| EXT[Extracción]
+  CAL -->|defecto sistémico| OBRA
   EXT -->|deriva sobre umbral| OBRA
 ```
 
@@ -44,7 +45,7 @@ La flecha descendente lleva restricciones: qué debe ser cierto al terminar la e
 
 ```mermaid
 flowchart LR
-  BRF[Brief mínimo] --> GEN[Generar escena]
+  BRF[Brief de escena] --> GEN[Generar escena]
   GEN --> VAL[Validar]
   VAL --> CSL[Consolidar]
   CSL --> BRF
@@ -84,7 +85,7 @@ flowchart TD
   C --> E[Escena]
   E --> B[Beat]
   E -.-> BR[Brief de escena]
-  E -.-> SN[Snapshot de salida]
+  E -.-> SN[Snapshot de mundo]
 ```
 
 Las líneas discontinuas marcan lo que acompaña a la escena sin formar parte del texto: el encargo que la origina y el estado del mundo que deja tras de sí.
@@ -109,7 +110,8 @@ flowchart LR
   TR --> AR[Arco]
   TR --> AT[Artefacto]
   ES --> VN[Voz narrativa]
-  ES --> TM[Tema y motivo]
+  ES --> TM[Tema]
+  ES --> MT[Motivo]
 ```
 
 La rama de mundo es la que más crece en ciencia ficción: el novum genera reglas, las reglas generan términos y los términos exigen un glosario canónico que el sistema debe respetar en cada escena.
@@ -139,7 +141,7 @@ flowchart TD
   LU[Lugar]
   HI[Hilo de trama]
   HC[Hecho canónico]
-  PR[Promesa]
+  PR[Promesa narrativa]
   AT[Artefacto]
   ESC -->|se narra desde| PJ
   ESC -->|transcurre en| LU
@@ -158,11 +160,10 @@ La arista `Personaje conoce Hecho` es distinta de `Escena establece Hecho`: un h
 ```mermaid
 flowchart LR
   NO[Novum] -->|impone| RG[Regla del mundo]
-  RG -->|restringe| ACC[Acción posible]
   NO -->|nombra| TC[Término canónico]
   RG -->|configura| FA[Facción]
   FA -->|disputa| AT[Artefacto]
-  ACC -->|limita| ESC[Escena]
+  RG -->|restringe| ESC[Escena]
 ```
 
 Si una escena viola una regla derivada del novum, el defecto es sistémico: no se corrige reescribiendo la escena, sino revisando la regla o la planificación.
@@ -197,11 +198,11 @@ El canon no se almacena como texto: se deriva de las escenas aceptadas y se proy
 ```mermaid
 flowchart LR
   ESC[Escena aceptada] -->|establece| HC[Hecho canónico]
-  HC -->|proyecta| SN[Snapshot en t]
+  HC -->|proyecta| SN[Snapshot de mundo]
   HC -->|visible para| EP[Estado epistémico]
   HC -->|choca con| CO[Contradicción]
   CO -->|resuelve con| RT[Retcon]
-  RT -->|invalida| ESC
+  RT -->|marca obsoleta| ESC
 ```
 
 El ciclo contradicción → retcon → invalidación es lo que mantiene el canon coherente a lo largo de una novela entera; sin él los errores se acumulan en silencio.
@@ -212,11 +213,12 @@ El ciclo contradicción → retcon → invalidación es lo que mantiene el canon
 stateDiagram-v2
   [*] --> Provisional
   Provisional --> Confirmado: escena aceptada
-  Provisional --> Descartado: escena rechazada
+  Provisional --> Implícito: la escena lo implica sin enunciarlo
+  Implícito --> Confirmado: una escena posterior lo enuncia
   Confirmado --> Retconeado: reescritura deliberada
   Confirmado --> Refutado: contradicción resuelta en contra
   Retconeado --> Confirmado: nueva versión fijada
-  Descartado --> [*]
+  Refutado --> [*]
 ```
 
 **Ciclo de vida de una promesa narrativa:**
@@ -229,6 +231,7 @@ stateDiagram-v2
   Pendiente --> Rota: la obra termina sin pago
   Pagada --> [*]
   Subvertida --> [*]
+  Rota --> [*]
 ```
 
 El recuento de promesas en estado `Pendiente` frente a las escenas restantes es el mejor indicador temprano de que una novela se está desarmando.
@@ -241,7 +244,7 @@ Siete capas confluyen en el prompt de una escena, cada una con su fuente y su pr
 flowchart LR
   BIB[Biblia de la obra] --> INV[Invariante]
   BRF[Brief de escena] --> EST[Estructural]
-  CAN[Canon] --> SNP[Estado en t]
+  CAN[Canon] --> SNP[Estado]
   TXT[Escenas previas] --> LOC[Local]
   IDX[Índice de entidades] --> REC[Recuperado]
   VOZ[Muestras de voz] --> STY[Estilo]
@@ -270,7 +273,7 @@ Lo lejano entra comprimido y lo cercano literal. La regla práctica: el estado s
 
 ## Árbol de calidad
 
-Seis familias de dimensiones. Cada hoja del árbol necesita definición, nivel de aplicación, método de medición y umbral.
+Seis familias que agrupan las diecisiete dimensiones de la Capa 4, sin dejar ninguna fuera ni repetir ninguna. Cada hoja del árbol necesita definición, nivel de aplicación, método de medición y umbral.
 
 ```mermaid
 flowchart LR
@@ -280,15 +283,23 @@ flowchart LR
   CAL --> STR[Estructura]
   CAL --> GEN[Género]
   CAL --> ORI[Originalidad]
-  CON --> C1[Fáctica y temporal]
-  CON --> C2[Espacial y epistémica]
-  CON --> C3[Especulativa]
-  PRO --> P1[Eco y repetición]
-  PRO --> P2[Clichés y filtros]
+  CON --> C1[Consistencia fáctica]
+  CON --> C2[Consistencia temporal]
+  CON --> C3[Consistencia espacial]
+  CON --> C4[Consistencia epistémica]
+  PRO --> P1[Calidad de prosa]
+  PRO --> P2[Mostrar vs. contar]
+  PRO --> P3[Integridad de POV]
   PER --> R1[Distintividad de voz]
-  PER --> R2[Progresión de arco]
-  STR --> S1[Causalidad y tensión]
-  GEN --> G1[Plausibilidad y exposición]
+  PER --> R2[Consistencia de caracterización]
+  STR --> S1[Causalidad]
+  STR --> S2[Curva de tensión]
+  STR --> S3[Ritmo]
+  STR --> S4[Cumplimiento del brief]
+  GEN --> G1[Plausibilidad especulativa]
+  GEN --> G2[Carga expositiva]
+  GEN --> G3[Sentido de la maravilla]
+  ORI --> O1[Originalidad]
 ```
 
 **Ruta de un defecto**, que determina el coste de la corrección:
@@ -312,7 +323,7 @@ El canon solo se actualiza al consolidar. Ese es el punto donde el sistema decid
 
 ```mermaid
 flowchart TD
-  PLN[Brief mínimo<br/>+ restricción de destino] --> CTX[Ensamblar contexto]
+  PLN[Brief de escena<br/>+ restricción de destino] --> CTX[Ensamblar contexto]
   CTX --> GEN[Generar borrador]
   GEN --> CRI[Criticar<br/>dimensiones de calidad]
   CRI --> VER[Verificar continuidad<br/>contra canon]
@@ -334,8 +345,7 @@ stateDiagram-v2
   EnRevision --> EnBorrador: defecto local
   EnRevision --> Planificada: defecto sistémico
   EnRevision --> Aceptada: supera umbrales
-  Aceptada --> Extraida: hallazgos propuestos
-  Extraida --> Obsoleta: retcon o replanificación
+  Aceptada --> Obsoleta: retcon o replanificación
   Obsoleta --> Planificada: se reescribe
 ```
 
@@ -348,7 +358,7 @@ sequenceDiagram
   participant P as Planificador
   participant R as Redactor
   participant C as Crítico
-  participant V as Verificador
+  participant V as Verificador de continuidad
   participant A as Autor
   P->>R: brief + contexto
   R->>C: borrador

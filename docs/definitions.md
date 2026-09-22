@@ -35,6 +35,7 @@ La obra se planifica a nivel de acto y se descubre a nivel de escena. El esquema
 | --- | --- | --- |
 | Restricción de destino | Lo que la escena no puede cambiar sin replanificar | tipo (estado final, revelación, posición de personaje), alcance |
 | Hallazgo | Elemento surgido al escribir y no previsto en el plan | tipo (hecho, promesa, motivo, personaje), escena de origen, estado de adopción |
+| Estado de hallazgo | Situación del hallazgo en el ciclo de adopción | propuesto, adoptado, descartado, conflictivo, integrado |
 | Extracción | Lectura automática de una escena aceptada para detectar hallazgos | entradas, hallazgos propuestos, confianza |
 | Replanificación rodante | Revisión del esquema a la luz de los hallazgos acumulados | disparador, escenas afectadas, cambios al esquema |
 | Deriva | Distancia acumulada entre lo escrito y el esquema vigente | medida, umbral de disparo |
@@ -77,6 +78,8 @@ La **Escena** es la unidad atómica de generación y validación: todo lo demás
 | Tema | Idea que la obra interroga | enunciado, motivos que lo encarnan |
 | Motivo | Imagen u objeto que recurre con sentido | forma, apariciones, evolución |
 | Voz narrativa | Configuración del narrador | persona, tiempo verbal, distancia, focalización, ratio escena/resumen |
+| Evento | Suceso de la fábula, situado en el orden cronológico ficcional | qué ocurre, momento en la fábula, participantes, duración |
+| Objetivo | Lo que un personaje persigue en un tramo de la obra | enunciado, alcance (de escena, de arco), tipo (deseo, necesidad), estado |
 
 **Fábula y discurso.** La *fábula* es el conjunto de eventos en orden cronológico ficcional; el *discurso* es el orden y la forma en que se narran. Son dos clases separadas unidas por una relación `se narra en`. Sin esta separación no se pueden gestionar analepsis, revelaciones diferidas ni tramas con manipulación temporal, frecuentes en ciencia ficción.
 
@@ -101,7 +104,7 @@ Una novela es una secuencia de transiciones de estado: toda escena nueva debe se
 
 **Visibilidad.** Cada hecho lleva dos marcas independientes: qué personajes lo conocen y si el lector lo conoce. Confundirlas produce los fallos más costosos del género: personajes que actúan con información que aún no han recibido, o revelaciones que llegan después de haberse filtrado.
 
-**Canon extraído.** En modo híbrido el canon crece sobre todo por extracción, no por declaración: al aceptar una escena se leen los hechos, promesas y motivos que ha introducido sin que nadie los hubiera previsto. Cada hallazgo entra como `provisional` hasta que el autor lo adopta, lo descarta o lo corrige; adoptarlo es lo que lo convierte en canon consultable.
+**Canon extraído.** En modo híbrido el canon crece sobre todo por extracción, no por declaración: al aceptar una escena se leen los hechos, promesas y motivos que ha introducido sin que nadie los hubiera previsto. Cada hallazgo entra como `propuesto` hasta que el autor lo adopta, lo descarta o lo corrige; adoptarlo es lo que lo convierte en canon consultable. El nombre no es `provisional` a propósito: esa palabra ya es un `Estatus de hecho` y un concepto no puede tener dos nombres.
 
 **Retcon rutinario.** Al descubrir escena a escena, las contradicciones no son fallos del sistema sino subproducto normal del método. El modelo necesita, por tanto, un retcon barato: identificar las escenas afectadas por el cambio de un hecho, marcarlas `obsoleta` y encolar su reescritura, sin tocar el resto de la obra.
 
@@ -119,15 +122,17 @@ Generar la escena N es un problema de recuperación, compresión y proyección d
 
 **Capas del contexto de una escena**
 
-| Capa | Contenido | Presupuesto orientativo |
-| --- | --- | --- |
-| Invariante | Premisa, guía de estilo, reglas de POV, glosario | 5–10 % |
-| Estructural | Brief de la escena y su lugar en el esquema | 5 % |
-| Estado | Snapshot en t(N), no el texto anterior | 15–20 % |
-| Local | Últimas escenas literales, para continuidad de prosa | 25–35 % |
-| Recuperado | Fragmentos filtrados por las entidades del brief | 20–30 % |
-| Estilo | Muestras de voz de los personajes presentes | 5–10 % |
-| Anticontexto | Metáforas ya usadas, repeticiones, clichés vetados, revelaciones prohibidas | 5 % |
+| Capa | Contenido |
+| --- | --- |
+| Invariante | Premisa, guía de estilo, reglas de POV, glosario |
+| Estructural | Brief de la escena y su lugar en el esquema |
+| Estado | Snapshot en t(N), no el texto anterior |
+| Local | Últimas escenas literales, para continuidad de prosa |
+| Recuperado | Fragmentos filtrados por las entidades del brief |
+| Estilo | Muestras de voz de los personajes presentes |
+| Anticontexto | Metáforas ya usadas, repeticiones, clichés vetados, revelaciones prohibidas |
+
+El reparto de la ventana entre estas siete capas, más el Margen, vive en `config/thresholds.yaml`: es la fuente única de cifras del sistema y no se copia a este documento. Aquí vive qué contiene cada capa; allí, cuánto ocupa.
 
 **Otras clases**
 
@@ -162,6 +167,8 @@ Cada dimensión necesita definición, nivel de aplicación, método de medición
 | Cumplimiento del brief | La escena hizo lo que se le encargó | Escena | Cotejo punto por punto |
 
 **Regresión a la media.** El fallo característico de un modelo de lenguaje no es escribir mal, sino escribir correcto y genérico. La originalidad necesita métrica y presión propias; no aparece como efecto secundario de las demás.
+
+**Defecto.** Incumplimiento concreto de una dimensión de calidad detectado en un borrador: dimensión violada, gravedad, alcance y localización en el texto. Es lo que un informe de crítica enumera.
 
 **Clasificación del defecto.** Un *defecto local* se corrige reescribiendo en sitio. Un *defecto sistémico* invalida la planificación y obliga a replanificar. Distinguirlos determina la ruta de corrección y evita parchear síntomas de un problema estructural.
 
@@ -226,13 +233,20 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 | Personaje | recorre | Arco | 1:1 |
 | Personaje | posee | Artefacto | N:M |
 | Personaje | pertenece a | Facción | N:M |
-| Regla del mundo | deriva de | Novum | N:1 |
 | Hecho canónico | contradice | Hecho canónico | N:M |
 | Brief de escena | encarga | Escena | 1:1 |
 | Borrador | realiza | Brief de escena | N:1 |
 | Informe de crítica | evalúa | Borrador | 1:1 |
 | Defecto | viola | Dimensión de calidad | N:1 |
 | Motivo | encarna | Tema | N:M |
+| Novum | impone | Regla del mundo | 1:N |
+| Novum | nombra | Término canónico | 1:N |
+| Regla del mundo | configura | Facción | N:M |
+| Facción | disputa | Artefacto | N:M |
+| Artefacto | genera deuda | Promesa narrativa | 1:N |
+| Hecho canónico | proyecta | Snapshot de mundo | N:M |
+| Hecho canónico | visible para | Estado epistémico | 1:N |
+| Contradicción | se resuelve con | Retcon | N:1 |
 
 **Relaciones propias del modo híbrido**
 
