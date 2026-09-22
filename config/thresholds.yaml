@@ -165,6 +165,20 @@ calidad:
   cumplimiento_del_brief: null
 
 # ---------------------------------------------------------------------------
+# Modelo de generación
+# ---------------------------------------------------------------------------
+# El proveedor es la API de Claude (architecture.md § Adaptación del modelo). El
+# timeout vive aquí y no en el código porque RI-06 exige que sea explícito y A-40 prohíbe
+# escribir cifras sueltas: un timeout implícito es un cuelgue esperando a ocurrir.
+#
+# No hay `max_tokens` propio. El tope de la respuesta es `contexto.capas.margen`, que ya
+# es la reserva declarada para ella; repetirlo aquí sería la cifra duplicada que A-40 veta.
+
+modelo:
+  id: claude-opus-5
+  timeout_segundos: 600   # [decisión] cota superior de una llamada, reintentos aparte
+
+# ---------------------------------------------------------------------------
 # Recuperación y embeddings
 # ---------------------------------------------------------------------------
 # Modelo multilingüe local. El porqué está en architecture.md § Embeddings y reindexado;
