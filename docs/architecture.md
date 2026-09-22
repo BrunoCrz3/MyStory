@@ -145,12 +145,18 @@ canon/
 | `canon/` | 2 — Canon | Hecho canónico, Estatus de hecho, Snapshot de mundo, Estado epistémico, Ironía dramática, Promesa narrativa, Estado de promesa, Revelación, Contradicción, Retcon |
 | `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto, jerarquía de compresión |
 | `quality/` | 4 — Calidad | Dimensión de calidad, Informe de crítica, Defecto |
-| `process/` | 5 — Proceso | Esquema, Brief de escena, Restricción de destino, Borrador, Versión, Registro de generación |
+| `process/` | 5 — Proceso | Esquema, Brief de escena, Restricción de destino, Borrador, Versión, Registro de generación, Deriva |
 | `findings/` | híbrido | Hallazgo, Estado de hallazgo, Extracción, adopción |
-| `replanning/` | híbrido | Deriva, Replanificación rodante, propagación del retcon |
+| `replanning/` | híbrido | Replanificación rodante, propagación del retcon |
 
 La tabla es exhaustiva sobre las clases de `definitions.md`: si una clase de la ontología
 no aparece aquí, es un hueco de este documento, no una clase sin dueña.
+
+**`Deriva` es de `process/`, no de `replanning/`**, aunque sea una clase del modo híbrido.
+Se mide una vez por escena aceptada, en el mismo punto y con la misma cadencia que el
+`Registro de generación`: es un hecho del ciclo de producción. Lo que `replanning/` posee
+es lo que **reacciona** a ella. La distinción no es cosmética: por eso v1 puede medir la
+deriva desde el primer día con `replanning/` entero fuera de alcance (RF-PROC-08).
 
 **Tres excepciones que no son tablas de nadie.** `Biblia de la obra` es la vista
 consolidada de `novel/` y `canon/` que alimenta la capa Invariante; las tres memorias
