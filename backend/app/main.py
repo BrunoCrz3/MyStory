@@ -1,6 +1,6 @@
 """Arranque de la instancia.
 
-Monta los routers de cada feature —todavia ninguno: H1 solo entrega el suelo— y
+Monta los routers de cada feature y
 hace las tres cosas que tienen que pasar antes de servir la primera peticion:
 leer los umbrales, comprobar que la fase declarada es coherente con ellos y
 aplicar las migraciones pendientes.
@@ -23,6 +23,7 @@ from app.commons.config import Umbrales, cargar_umbrales, verificar_arranque
 from app.commons.db import migraciones
 from app.commons.db.conexion import crear_conexion
 from app.commons.http import registrar_manejadores
+from app.novel.router import router as router_de_novel
 
 HOST_POR_DEFECTO = "127.0.0.1"
 
@@ -57,6 +58,7 @@ app = FastAPI(
     lifespan=ciclo_de_vida,
 )
 registrar_manejadores(app)
+app.include_router(router_de_novel)
 
 
 @app.get("/salud")

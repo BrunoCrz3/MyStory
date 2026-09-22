@@ -77,3 +77,28 @@ class PresupuestoExcedido(ErrorDeDominio):
 
     http = 422
     codigo_por_defecto = "presupuesto_excedido"
+
+
+class ReglaDelDominioIncumplida(ErrorDeDominio):
+    """Lo que se pide es coherente con el esquema pero no con la obra."""
+
+    http = 422
+    codigo_por_defecto = "regla_incumplida"
+
+
+class NovumSinLimites(ReglaDelDominioIncumplida):
+    """A-51: sin limites declarados, RF-QUA-01 no tiene contra que medir."""
+
+    codigo_por_defecto = "novum_sin_limites"
+
+
+class NovumSinRegla(ReglaDelDominioIncumplida):
+    """A-51: todo `Novum` impone al menos una `Regla del mundo`."""
+
+    codigo_por_defecto = "novum_sin_regla"
+
+
+class ActoIncompleto(ReglaDelDominioIncumplida):
+    """A-51: una `Parte / Acto` sin funcion dramatica ni punto de giro."""
+
+    codigo_por_defecto = "acto_incompleto"
