@@ -23,8 +23,11 @@ REPOSITORIO = RAIZ.parent
 DEFINICIONES = REPOSITORIO / "docs" / "definitions.md"
 
 # Cada capa de la ontologia tiene su feature dueña (`architecture.md`
-# § Anatomia de una feature). H2 implementa la Capa 1.
-MODELOS_POR_CAPA = {"Capa 1 — Obra": RAIZ / "app" / "novel" / "models.py"}
+# § Anatomia de una feature). La tabla crece con cada hito.
+MODELOS_POR_CAPA = {
+    "Capa 1 — Obra": RAIZ / "app" / "novel" / "models.py",
+    "Capa 2 — Canon y estado": RAIZ / "app" / "canon" / "models.py",
+}
 
 # Tres clases de la Capa 1 no llevan `models.py` y architecture.md lo dice:
 # no son tablas de nadie.

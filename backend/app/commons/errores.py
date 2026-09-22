@@ -102,3 +102,27 @@ class ActoIncompleto(ReglaDelDominioIncumplida):
     """A-51: una `Parte / Acto` sin funcion dramatica ni punto de giro."""
 
     codigo_por_defecto = "acto_incompleto"
+
+
+class CanonSoloAlAceptar(ReglaDelDominioIncumplida):
+    """A-27, A-28, RF-CANON-07. El canon solo cambia al consolidar una escena
+    aceptada; un borrador rechazado no deja rastro."""
+
+    codigo_por_defecto = "canon_solo_al_aceptar"
+
+
+class HechoSinAnclaje(ReglaDelDominioIncumplida):
+    """RF-CANON-11, A-48. Un hecho cuyos terminos no estan en la escena que lo
+    establece no esta atado a la prosa de la que salio."""
+
+    codigo_por_defecto = "hecho_sin_anclaje"
+
+
+class PromesaSinEscenaDePago(ReglaDelDominioIncumplida):
+    codigo_por_defecto = "promesa_sin_escena_de_pago"
+
+
+class PromesaPagadaAntesDeAbrirse(ReglaDelDominioIncumplida):
+    """P-45, RF-CANON-13. El pago necesita un setup anterior."""
+
+    codigo_por_defecto = "promesa_pagada_antes_de_abrirse"

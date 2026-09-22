@@ -19,6 +19,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from app.canon.router import router as router_de_canon
 from app.commons.config import Umbrales, cargar_umbrales, verificar_arranque
 from app.commons.db import migraciones
 from app.commons.db.conexion import crear_conexion
@@ -59,6 +60,7 @@ app = FastAPI(
 )
 registrar_manejadores(app)
 app.include_router(router_de_novel)
+app.include_router(router_de_canon)
 
 
 @app.get("/salud")
