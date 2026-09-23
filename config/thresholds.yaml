@@ -45,14 +45,15 @@ capitulo:
 # ---------------------------------------------------------------------------
 # Presupuesto de contexto
 # ---------------------------------------------------------------------------
-# Límite duro de la ventana de UNA petición. Ningún prompt puede superarlo.
-# El reparto por capa debe sumar exactamente este total, y la comprobación de la suma
-# se hace contra este fichero.
+# Límite duro por petición. Ningún prompt puede superarlo, y el reparto por capa debe
+# sumar exactamente este total.
 #
-# OJO: esto NO es el límite de 100.000 tokens concurrentes del alcance §7. Ese es
-# `en_vuelo.total`, más abajo. Que hoy coincidan en la misma cifra es casualidad
-# aritmética, no una atadura: la ventana la fija el proveedor y limita una petición;
-# el pool lo fijamos nosotros y limita cuántas caben a la vez.
+# ESTE TOPE ES NUESTRO, NO DEL PROVEEDOR (TO-019). Los modelos de config/models.yaml
+# tienen ventanas muy superiores; esta cifra es una decisión de diseño sobre cuánto
+# contexto queremos ensamblar, no un techo que nos impongan.
+#
+# Y no es el límite de tokens concurrentes del alcance §7: ese es `en_vuelo.total`, más
+# abajo. Que hoy coincidan en la misma cifra es casualidad aritmética, no una atadura.
 
 contexto:
   total: 100000
@@ -122,8 +123,8 @@ replanificacion:
 # devuelva un 429 no es un defecto del capítulo.
 
 orquestacion:
-  max_intentos_capitulo: null      # [decisión] reescrituras antes de detener la novela
-  max_intentos_trabajo: null       # [decisión] reintentos ante fallo de infraestructura
+  max_intentos_capitulo: 3         # [decisión] TO-014 · contador acumulativo; peor caso 4 generaciones
+  max_intentos_trabajo: 3          # [decisión] TO-014 · fallo de infraestructura; no gasta del anterior
   backoff:
     base_segundos: null           # [decisión]
     factor: null                  # [decisión]
@@ -152,7 +153,10 @@ guardrail:
     plurales: true
     variantes_simples: true
 
-  max_reescrituras: null   # [decisión] al agotarlo, la generación se detiene y lo informa
+  # TO-014: NO es un contador aparte, es un SUBLÍMITE dentro de max_intentos_capitulo.
+  # Dos pasadas consecutivas sin limpiar el texto detienen la generación sin esperar
+  # al tercer intento: un modelo que no quita una palabra en dos pasadas no la quita.
+  max_reescrituras: 2      # [decisión] TO-014
 
 # ---------------------------------------------------------------------------
 # Fase de medición
@@ -220,6 +224,53 @@ continuidad:
 validadores:
   precision_minima: null                # [decisión]
   cobertura_minima: null                # [decisión]
+
+# ---------------------------------------------------------------------------
+# Salida del modelo por rol
+# ---------------------------------------------------------------------------
+# El `max_tokens` de cada llamada, por rol. Vive aquí y no en config/models.yaml porque
+# es una cifra del presupuesto, no un identificador (TO-013).
+#
+# INVARIANTE QUE SE COMPRUEBA AL ARRANCAR: `contexto.capas.margen` >= el max_tokens de
+# CADA rol. Con thinking adaptativo los tokens de razonamiento cuentan dentro de
+# max_tokens, así que el margen solo cubre la respuesta si esa desigualdad se cumple. Si
+# no se cumple, el arranque falla en voz alta: un margen corto no da un error claro, da
+# respuestas truncadas a mitad de capítulo que parecen un problema de calidad.
+
+modelo:
+  max_tokens_por_rol:
+    entrevistador: null   # [decisión] pendiente de fijar junto con el margen
+    planificador: null    # [decisión]
+    redactor: null        # [decisión] el mayor de los seis: escribe el capítulo entero
+    editor: null          # [decisión]
+    judge: null           # [decisión] solo puntuaciones y justificaciones
+    extractor: null       # [decisión]
+
+# ---------------------------------------------------------------------------
+# Verificación formal
+# ---------------------------------------------------------------------------
+# TO-016. El gate es lo único que bloquea; el chequeo incremental por capítulo es un
+# aviso temprano y no detiene nada.
+#
+# El timeout está en null a propósito y no por olvido: NO HAY TOOLCHAIN LEAN en la
+# máquina de desarrollo, así que el coste está estimado y no medido. Se fija midiendo,
+# no decidiendo. Restricción de diseño que lo condiciona: el fichero .lean generado no
+# importa Mathlib, que es lo que mantiene el build en segundos.
+
+formal:
+  lean_incremental: true         # [decisión] TO-016 · aviso por capítulo, no bloqueante
+  lean_timeout_segundos: null    # [bloqueado] TO-016 · falta medirlo con la toolchain instalada
+
+# ---------------------------------------------------------------------------
+# Export a PDF
+# ---------------------------------------------------------------------------
+# TO-025. El PDF se genera bajo demanda, una vez por versión, y en ese momento corre
+# `paridad_pdf_web`. Recuento de capítulos, títulos, índice y dedicatoria son booleanos;
+# lo único que necesita margen es el recuento de palabras, que difiere entre el render
+# web y el paginado del PDF por guionado y saltos.
+
+export:
+  tolerancia_recuento_palabras: null   # [decisión] TO-025 · desviación admitida por capítulo
 
 # ---------------------------------------------------------------------------
 # Comprobación del modelo del harness

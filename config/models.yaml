@@ -1,0 +1,59 @@
+# Modelo y effort por rol.
+#
+# Aquí viven los IDENTIFICADORES; las cifras del presupuesto están en thresholds.yaml.
+# La separación no es burocracia: `config/thresholds.yaml` se declara a sí mismo fuente
+# única de cifras y umbrales, y un identificador de modelo no es una cifra. Por eso el
+# `max_tokens` de cada rol vive allí y no aquí (TO-013, TO-017).
+#
+# Los identificadores se COMPROBARON contra la documentación oficial de la API, no contra
+# memoria: `claude-opus-5` pasó a legacy y lo sustituye `claude-opus-5-5`, que además es
+# más barato. Al cambiar de modelo hay que volver a comprobarlos, porque una tabla
+# cacheada envejece sin avisar.
+#
+# El `effort` va explícito aunque coincida con el valor por defecto del modelo: un defecto
+# que cambia río arriba no debería mover el comportamiento de este sistema en silencio.
+
+version: 1
+
+roles:
+
+  # Lleva la entrevista y produce el brief validado. La entrevista es híbrida (TO-027):
+  # el formulario recoge lo estructurado y el modelo solo trabaja donde hace falta juicio
+  # —recuerdos, anécdotas, contradicciones semánticas—, así que no necesita el modelo alto.
+  entrevistador:
+    id: claude-sonnet-5
+    effort: medium
+
+  # Convierte el brief en el esquema de capítulos con sus restricciones de destino.
+  # Decide el destino de la novela entera de una vez: se equivoca caro y barato no sale.
+  planificador:
+    id: claude-opus-5-5
+    effort: medium
+
+  # Escribe la prosa. Es el producto, y es el único rol donde bajar de modelo se lee en
+  # el resultado: no se abarata (TO-013).
+  redactor:
+    id: claude-opus-5-5
+    effort: high
+
+  # Corrige el capítulo a partir del informe de crítica. Su salida vuelve a pasar por los
+  # validadores, así que no arrastra sesgo de autopreferencia y puede compartir modelo
+  # con el redactor.
+  editor:
+    id: claude-opus-5-5
+    effort: high
+
+  # Puntúa contra la rúbrica. DEBE SER DISTINTO DEL REDACTOR (TO-013): si quien puntúa es
+  # el mismo modelo que escribió, el sistema converge hacia lo que a ese modelo le gusta
+  # y la métrica sube mientras la calidad no.
+  # Punto ciego declarado: el judge es menos capaz que el redactor, y lo único que mide
+  # esa brecha es la comparación con el revisor humano.
+  judge:
+    id: claude-sonnet-5
+    effort: high
+
+  # Lee el capítulo aceptado y propone los hechos que introdujo. Extracción estructurada
+  # contra un schema: la tarea más acotada de las seis.
+  extractor:
+    id: claude-sonnet-5
+    effort: low
