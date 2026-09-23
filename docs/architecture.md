@@ -1,134 +1,126 @@
 # Arquitectura — sistema, agentes y proceso
 
-Cómo se implementa la ontología: qué piezas corren, qué agente hace cada cosa y en
-qué orden. Es un documento editable en el repositorio, sin documento vivo asociado.
+Cómo se implementa la ontología: qué piezas corren, qué agente hace cada cosa y en qué
+orden. Es un documento editable en el repositorio.
 
 ## Frontera con el contexto semilla
 
-`definitions.md` dice *qué existe* (clases,
-atributos, relaciones) y `domain-knowledge.md` *cómo se relaciona* (jerarquías, grafos,
-máquinas de estado). Aquí vive lo que no es ninguna de las dos cosas: el despliegue, los
-agentes concretos que encarnan los roles, sus skills y el orden de ejecución. Los
-requisitos técnicos cerrados están en `AGENTS.md`; todas las cifras, en
-`config/thresholds.yaml`.
+`definitions.md` dice *qué existe* —clases, atributos, relaciones— y `domain-knowledge.md`
+*cómo se relaciona* —jerarquías, grafos, máquinas de estado—. Aquí vive lo que no es
+ninguna de las dos cosas: el despliegue, los agentes concretos que encarnan los roles, sus
+skills y el orden de ejecución. Las reglas cerradas están en `CLAUDE.md`; todas las cifras,
+en `config/thresholds.yaml`.
+
+**Nada de `backend/`, `frontend/`, `formal/`, `data/`, `ejemplos/` ni `.claude/agents/`
+existe todavía.** El layout los reserva en `CLAUDE.md` y este documento describe su destino,
+no su estado: toda ruta bajo esos árboles se lee **▸ prevista** aunque no lo repita cada vez.
+
+**Regla que gobierna este documento: `domain-knowledge.md` dibuja la ontología y este
+dibuja la implementación.** Ningún diagrama se repite entre los dos. Donde hace falta el de
+ontología, hay enlace y no copia.
 
 | Si buscas | Está en |
 | --- | --- |
-| Qué es un Hecho canónico, un Hallazgo, una Promesa | `definitions.md` |
-| Qué aristas unen las entidades, qué estados tiene una escena | `domain-knowledge.md` |
-| Qué agente escribe la escena y con qué skill | este documento |
-| Qué skills de agente hay instaladas y de dónde salen | este documento |
-| Qué tecnología y qué capas de contexto hay | `AGENTS.md` |
-| **Cualquier número**: presupuesto por capa, umbrales de calidad y deriva | `config/thresholds.yaml` |
-
-### Qué sección responde a qué
-
-| Necesitas | Documento | Sección |
-| --- | --- | --- |
-| Convenciones de notación y capas del modelo | Definiciones | Convenciones del modelo |
-| Reglas del modo híbrido y sus clases | Definiciones | Modo de autoría: híbrido |
-| Estructura de la obra y entidades narrativas | Definiciones | Capa 1 — Obra |
-| Hechos, snapshots, promesas, retcon | Definiciones | Capa 2 — Canon y estado |
-| Memorias, capas y presupuesto de contexto | Definiciones | Capa 3 — Contexto y memoria |
-| Dimensiones de calidad y sus umbrales | Definiciones | Capa 4 — Calidad |
-| Roles, artefactos y estados del ciclo | Definiciones | Capa 5 — Proceso |
-| Esquema relacional y cardinalidades | Definiciones | Relaciones del dominio |
-| Criterios de aceptación del modelo de datos | Definiciones | Preguntas de competencia |
-| Visión general de las cinco capas | Dominio | Mapa de capas |
-| Frontera planificado/descubrimiento y los dos bucles | Dominio | Modo híbrido |
-| Jerarquía de contención y taxonomías | Dominio | Árbol estructural, Árbol de entidades |
-| Aristas del grafo de entidades | Dominio | Grafo de entidades |
-| Relación fábula ↔ discurso | Dominio | Fábula y discurso |
-| Máquinas de estado de hecho, promesa y hallazgo | Dominio | Modelo de canon, Modo híbrido |
-| Flujo de ensamblado del contexto | Dominio | Ensamblado del contexto |
-| Ruta de un defecto y ciclo de producción | Dominio | Árbol de calidad, Ciclo de producción |
+| Qué es un Hecho, una Promesa, un Elemento personalizado | `definitions.md` |
+| Qué aristas unen las entidades, qué estados tiene un capítulo | `domain-knowledge.md` |
+| Qué agente escribe el capítulo, con qué modelo y qué skill | este documento |
+| Qué valida cada validador, dónde corre y qué pasa si falla | `verification.md` |
+| Qué tecnología, qué reglas y qué política de contexto | `CLAUDE.md` |
+| Por qué se eligió una opción frente a otras | `trade-offs.md` |
+| **Cualquier número** | `config/thresholds.yaml` |
+| Identificador y effort de modelo por rol | `config/models.yaml` ▸ previsto |
 
 ### Cómo usarlo
 
-1. Las clases de dominio se nombran **igual** que en Definiciones, viva en la feature que
-   viva cada una. Un nombre nuevo en el código sin entrada en la ontología es un error,
-   no una mejora.
-2. Las tablas y sus claves foráneas siguen la tabla «Relaciones del dominio», incluidas
-   las cardinalidades.
-3. Las máquinas de estado del documento de dominio se implementan tal cual: mismos
-   estados, mismas transiciones. Ninguna transición extra sin actualizar antes el diagrama.
-4. La lista de capas del contexto sale de «Capa 3»; su presupuesto, de
-   `config/thresholds.yaml`. La Capa 3 ya no da cifras: se retiraron al homologar la
-   ontología, y el reparto vive solo en el fichero.
-5. Antes de cerrar una tarea de dominio, comprueba que las preguntas de competencia
+1. Las clases de dominio se nombran **igual** que en `definitions.md`, viva en la feature
+   que viva cada una. Un nombre nuevo en el código sin entrada en la ontología es un error.
+2. Las tablas y sus claves foráneas siguen «Relaciones del dominio», cardinalidades
+   incluidas.
+3. Las máquinas de estado de `domain-knowledge.md` se implementan tal cual. Ninguna
+   transición extra sin actualizar antes el diagrama y la tabla de transiciones de § Proceso.
+4. Antes de cerrar una tarea de dominio, comprueba que las preguntas de competencia
    afectadas siguen respondiéndose.
 
 ---
 
-## Sistema
+## Visión del sistema
 
-Dos procesos y un fichero. Sin cola de tareas, sin caché externa, sin servidor de base
-de datos: el estado vive en SQLite y el trabajo largo corre como tarea asíncrona dentro
-del propio backend.
+Dos procesos propios, un fichero de base de datos y tres herramientas externas que no son
+servidores nuestros: Langfuse para observabilidad, la toolchain de Lean para la
+verificación de la historia y un servidor Playwright MCP para la validación visual y el
+export. TLC corre en desarrollo, nunca en una generación.
 
 ```mermaid
 flowchart TD
   subgraph FE[Frontend · React 18 + TypeScript · Vite]
-    ED[Editor de escena]
-    MP[Mapa de canon]
-    QP[Panel de calidad]
-    CL[Cliente tipado<br/>generado del OpenAPI]
-    ED --> CL
-    MP --> CL
-    QP --> CL
+    ENT[Página entrevista]
+    LEC[Página lectura]
+    CLI[Cliente tipado<br/>generado del OpenAPI]
+    ENT --> CLI
+    LEC --> CLI
   end
-  subgraph BE[Backend · FastAPI · Python 3.12 · una carpeta por feature]
+  subgraph BE[Backend · FastAPI · Python 3.12]
     MN[main.py · monta los routers]
-    NOV[novel/ · obra, capítulos, escenas]
-    CAN[canon/ · hechos, snapshots, retcon]
-    CTX[context/ · ensamblado y presupuesto]
-    QUA[quality/ · críticos y verificadores]
-    PRO[process/ · briefs, borradores, versiones]
-    FND[findings/ · extracción de hallazgos]
-    RPL[replanning/ · deriva y replanificación]
-    CMN[commons/ · db, llm, errores, tokens]
+    INT[intake/]
+    NOV[novel/]
+    CAN[canon/]
+    CTX[context/]
+    QUA[quality/]
+    GRD[guardrail/]
+    PRO[process/]
+    POL[policy/]
+    VER[versioning/]
+    MCP[mcp_server/ · adaptador]
+    SKL[skills/ · runtime]
+    CMN[commons/ · db, llm, tokens, errores, Langfuse]
+    MN --> INT
     MN --> NOV
     MN --> CAN
     MN --> CTX
     MN --> QUA
     MN --> PRO
-    MN --> FND
-    MN --> RPL
-    NOV -.-> CMN
-    CAN -.-> CMN
-    CTX -.-> CMN
-    QUA -.-> CMN
-    PRO -.-> CMN
-    FND -.-> CMN
-    RPL -.-> CMN
-    CMN --> LLM[Modelo · ventana de thresholds.yaml]
+    MN --> VER
+    MN --> MCP
+    PRO --> POL
+    PRO --> GRD
+    CTX --> SKL
   end
-  subgraph DB[Persistencia · SQLite + sqlite-vec]
-    REL[(Tablas relacionales)]
-    VEC[(Tablas vec0<br/>embeddings)]
+  subgraph EXT[Herramientas externas]
+    LF[Langfuse · trazas y scores]
+    LEAN[lake build · Lean 4]
+    PW[Playwright MCP · render y PDF]
   end
-  CL -->|HTTP · JSON| MN
-  NOV --> REL
-  CAN --> REL
-  PRO --> REL
-  CTX --> REL
-  CTX --> VEC
+  DB[(data/storymaker.db<br/>SQLite)]
+  CLI -->|HTTP · JSON| MN
+  CMN --> LLM[API de Claude]
+  CMN --> LF
+  VER --> LEAN
+  VER --> PW
+  CAN --> DB
+  NOV --> DB
+  INT --> DB
+  PRO --> DB
+  VER --> DB
+  POL --> DB
 ```
 
-**Reparto de responsabilidades.** El frontend no decide nada del canon: muestra, edita
-briefs y recoge las decisiones del autor. Toda regla de dominio se resuelve en el
-backend. El cliente tipado de `frontend/src/shared/api/` se deriva del OpenAPI de
-FastAPI, de modo que el contrato se escribe una sola vez.
+**Reparto de responsabilidades.** El frontend no decide nada de la story bible: muestra,
+recoge el brief y recoge peticiones de cambio. Toda regla de dominio se resuelve en el
+backend. El cliente tipado de `frontend/src/shared/api/` ▸ previsto se deriva del OpenAPI de FastAPI,
+de modo que el contrato se escribe una sola vez.
 
-### Anatomía de una feature
+**El orquestador es código propio** (`trade-offs.md` TO-012): una máquina de estados en
+`process/` que lee el estado del capítulo y decide qué rol corre a continuación. No hay
+agentes autónomos que conversen entre sí, y ningún agente elige el paso siguiente. El
+motivo no es estético: la especificación TLA+ del alcance solo puede corresponderse con el
+código si la máquina de estados es nuestra.
 
-El backend se organiza por features, no por capas técnicas. Las siete features salen de
-las cinco capas de la ontología más las dos operaciones propias del modo híbrido.
-«Convenciones del modelo», en `definitions.md`, advierte que las cinco capas tienen
-ciclos de vida distintos y que mezclarlas es el error de diseño más común: una carpeta
-por capa es lo que lo impide.
+---
 
-Cada carpeta es una rodaja vertical con la misma anatomía:
+## Anatomía de una feature
+
+El backend se organiza por features, no por capas técnicas. Cada carpeta es una rodaja
+vertical con la misma anatomía:
 
 ```
 canon/
@@ -141,701 +133,821 @@ canon/
 
 | Feature | Capa | Es dueña de |
 | --- | --- | --- |
-| `novel/` | 1 — Obra | Obra, Parte / Acto, Capítulo, Escena, Beat, Evento, Objetivo, Personaje, Voz, Arco, Hilo de trama, Lugar, Facción, Artefacto, Novum, Regla del mundo, Término canónico, Tema, Motivo, Voz narrativa |
-| `canon/` | 2 — Canon | Hecho canónico, Estatus de hecho, Snapshot de mundo, Estado epistémico, Ironía dramática, Promesa narrativa, Estado de promesa, Revelación, Contradicción, Retcon |
-| `context/` | 3 — Contexto | Ensamblado, presupuesto de tokens, recuperación, anticontexto, jerarquía de compresión |
-| `quality/` | 4 — Calidad | Dimensión de calidad, Informe de crítica, Defecto |
-| `process/` | 5 — Proceso | Esquema, Brief de escena, Restricción de destino, Borrador, Versión, Registro de generación, Deriva |
-| `findings/` | híbrido | Hallazgo, Estado de hallazgo, Extracción, adopción |
-| `replanning/` | híbrido | Replanificación rodante, propagación del retcon |
+| `intake/` | 1A — Encargo | Comprador, Destinatario, Ocasión, Brief de novela, Elemento personalizado, Texto libre aportado, Fragmento sospechoso, Dato faltante, Contradicción de brief, Dedicatoria |
+| `novel/` | 1B — Obra | Obra, Capítulo, Personaje, Lugar, Arco, Hilo de trama, Evento, Evento excluyente, Regla del mundo, Voz narrativa |
+| `canon/` | 2 — Canon | Hecho, Estado de hecho, Uso de hecho, Snapshot, Promesa narrativa, Estado de promesa, Contradicción de canon, Retcon |
+| `context/` | 3 — Contexto | Brief de capítulo, Resumen de capítulo, Jerarquía de compresión, Política de recuperación, Anticontexto, Ventana efectiva, y los tres tipos de memoria como lectura |
+| `quality/` | 4 — Calidad | Dimensión de calidad, Validador, Defecto, Informe de crítica, Rúbrica, Revisor humano |
+| `guardrail/` | 4 — Calidad | Palabra prohibida, Nivel de palabra prohibida, Normalización, Coincidencia, Límite de reescrituras |
+| `process/` | 5 — Proceso | Esquema, Restricción de destino, Borrador, Extracción, Invalidación de restricción, Replanificación de capítulos pendientes, Checkpoint |
+| `policy/` | 5 — Proceso | Policy engine, Decisión de policy, Audit log |
+| `versioning/` | 5 — Proceso | Versión de novela, Solicitud de cambio, Análisis de impacto, Regeneración dirigida, Lector |
 
-La tabla es exhaustiva sobre las clases de `definitions.md`: si una clase de la ontología
-no aparece aquí, es un hueco de este documento, no una clase sin dueña.
+La tabla es exhaustiva sobre las clases de `definitions.md`. Si una clase de la ontología no
+aparece aquí, es un hueco de este documento, no una clase sin dueña.
 
-**`Deriva` es de `process/`, no de `replanning/`**, aunque sea una clase del modo híbrido.
-Se mide una vez por escena aceptada, en el mismo punto y con la misma cadencia que el
-`Registro de generación`: es un hecho del ciclo de producción. Lo que `replanning/` posee
-es lo que **reacciona** a ella. La distinción no es cosmética: por eso v1 puede medir la
-deriva desde el primer día con `replanning/` entero fuera de alcance (RF-PROC-08).
+**Dos excepciones declaradas, y se declaran para que la regla no se erosione por costumbre.**
+`mcp_server/` y `skills/` viven junto a las features y **no son features**: no tienen
+`models.py` ni `repository.py` y no son dueñas de ninguna clase. El primero expone por otro
+protocolo lo que los `service.py` ya resuelven; el segundo es contenido que los roles
+cargan. Cualquier carpeta nueva que quiera esta excepción tiene que justificarla aquí.
 
-**Tres excepciones que no son tablas de nadie.** `Biblia de la obra` es la vista
-consolidada de `novel/` y `canon/` que alimenta la capa Invariante; las tres memorias
-—episódica, semántica, procedural— son la lectura por tipo de lo que ya está en
-`data/novel.db` (ver «Memoria»); y `Ventana efectiva` es una propiedad medida del modelo,
-no un dato que se persista. Ninguna de las tres lleva `models.py`.
+**Tres clases que no son tabla de nadie.** Las tres memorias —episódica, semántica,
+procedural— son la lectura por tipo de lo que ya está en `data/storymaker.db` y en el repo
+(ver § Memoria); `Ventana efectiva` es una propiedad medida del modelo, no un dato que se
+persista; y `Sesión`, `Traza`, `Span`, `Score` y `Versión de prompt` viven en Langfuse.
 
-**Qué entra en `commons/`.** Solo infraestructura que usan dos o más features: conexión
-y migraciones de SQLite, cliente del modelo con su timeout, contador de tokens,
-excepciones de dominio y su handler HTTP central. Ninguna clase de la ontología vive
-ahí: `commons/` no sabe qué es una escena.
+**Qué entra en `commons/`.** Solo infraestructura que usan dos o más features: conexión y
+migraciones de SQLite, cliente del modelo con su timeout, contador de tokens, cliente de
+Langfuse, excepciones de dominio y su handler HTTP central. Ninguna clase de la ontología
+vive ahí.
 
-**Regla de importación.** Una feature importa de `commons/` y del `service.py` de otra
-feature, nunca de su `repository.py`. Si dos features se necesitan mutuamente, falta una
-tercera o la frontera está mal puesta.
+**Regla de importación.** Una feature importa de `commons/` y del `service.py` de otra,
+**nunca de su `repository.py`**, y sin ciclos.
 
-**Por qué esta forma.** Un solo fichero de base elimina la sincronía entre un almacén
-relacional y uno vectorial: la recuperación filtra primero por entidades del brief
-(SQL) y solo después ordena por similitud (`vec0`), en la misma transacción y sin
-salir del proceso.
-
-### Anatomía del frontend
-
-El backend se organiza por features y el frontend por **capas de Feature-Sliced Design
-v2.1**; no es incoherencia, es que resuelven problemas distintos. En el backend la unidad
-de cambio es la feature porque cada capa de la ontología tiene su ciclo de vida. En el
-frontend no hay dominio que proteger —el canon se decide en el backend—, y lo que hay que
-impedir es que una pantalla importe de otra.
-
-**Se empieza con tres capas y no más:**
-
+```mermaid
+flowchart LR
+  INT[intake/] --> CMN[commons/]
+  NOV[novel/] --> CMN
+  CAN[canon/] --> CMN
+  CTX[context/] --> CAN
+  CTX --> NOV
+  CTX --> SKL[skills/]
+  QUA[quality/] --> CAN
+  QUA --> NOV
+  GRD[guardrail/] --> CMN
+  PRO[process/] --> CTX
+  PRO --> QUA
+  PRO --> GRD
+  PRO --> POL[policy/]
+  PRO --> CAN
+  VER[versioning/] --> CAN
+  VER --> NOV
+  VER --> PRO
+  MCP[mcp_server/] --> CAN
+  MCP --> NOV
+  MCP --> VER
 ```
-frontend/src/
-  app/       # arranque, providers, router
-  pages/     # editor-de-escena, mapa-de-canon, panel-de-calidad
-  shared/    # ui/, api/ (cliente tipado), lib/
-```
 
-`features/` y `entities/` **se crean al extraer, no por adelantado**: el día que dos
-páginas necesiten lo mismo. `widgets/` no se usa nunca (§ Precedencia). Las importaciones
-van solo hacia capas inferiores y cada slice se consume por su `index.ts`.
-
-| Página | Qué muestra | De qué endpoints vive |
-| --- | --- | --- |
-| `editor-de-escena` | El brief, el contexto ensamblado con su reparto por capa, el borrador y sus versiones. Es donde el autor acepta o pide revisión | `process/`, `context/` |
-| `mapa-de-canon` | Snapshot en t, hechos, estado epistémico, promesas abiertas, contradicciones. Y los hallazgos `propuesto` a la espera de adopción | `canon/`, `findings/` |
-| `panel-de-calidad` | El informe de crítica dimensión a dimensión, con sus defectos clasificados en local o sistémico | `quality/` |
-
-**El cliente tipado no se escribe a mano.** Vive en `shared/api/` y se genera del
-`/openapi.json` de FastAPI: los tipos se escriben una vez, en Pydantic. CI regenera y
-compara, y un cliente que diverja del esquema rompe la build (fila `A-15`).
-
-**El frontend no decide nada del canon.** No recalcula un snapshot, no deriva si un hecho
-contradice a otro, no clasifica un defecto. Si una vista necesita algo que el backend no
-devuelve, falta un endpoint, no un `useMemo`. Es la regla que `A-25` vigila por
-importaciones, con el límite de que el análisis estático mide de dónde importas, no qué
-escribes (§ Puntos ciegos #9 de `verification.md`).
-
-**Estado de servidor con TanStack Query**, no en un store global: lo que se pinta es
-resultado de una consulta al backend, y su caché e invalidación son el problema que
-TanStack ya resuelve. TypeScript estricto y sin `any` (`A-14`).
-
-### Embeddings y reindexado
-
-Modelo **multilingüe y local**; cuál, con qué versión y con qué dimensión se declara en
-`config/thresholds.yaml`, bajo `embeddings`. Local porque el corpus es la novela inédita
-del autor y no tiene por qué salir de la máquina; multilingüe porque el vocabulario del
-mundo —términos canónicos, neologismos del novum— no se parece al de ningún corpus de
-entrenamiento general.
-
-**Cada fila de embedding guarda con qué se generó**: `embedding_model` y
-`embedding_version`. No es metadato decorativo. Vectores de modelos distintos no son
-comparables entre sí: mezclarlos no produce un error, produce una recuperación que
-devuelve lo que no toca y nadie sabe por qué.
-
-De ahí la regla: **un cambio de modelo o de versión obliga a reindexar**, y el sistema
-tiene que **detectarlo al arrancar** comparando lo configurado en `config/thresholds.yaml`
-con lo que hay en las filas. Si no coinciden, falla en voz alta y pide reindexar; nunca
-sigue sirviendo consultas sobre un índice mixto.
-
-**Dónde escucha.** La instancia escucha en `127.0.0.1` por defecto. No es un servicio
-compartido: la escala de «un autor, una obra» que fija `AGENTS.md` se corresponde con un
-proceso local, y sin autenticación en v1 exponerlo en `0.0.0.0` abriría el canon entero a
-la red. Publicarlo fuera del bucle local es una decisión aparte, y trae consigo la
-autenticación que hoy no existe.
+`process/` es la única que depende de casi todas, y es correcto: es el orquestador. Nadie
+depende de `process/` salvo `versioning/`, que necesita encolar una regeneración.
 
 ---
 
 ## Agentes
 
-Cada agente encarna uno de los roles de la Capa 5 de `definitions.md`. Los nombres de
-rol son ontología y no se inventan; los nombres de agente y de skill son
-implementación y viven aquí.
+Cada agente encarna un rol de la Capa 5 de `definitions.md`. Los nombres de rol son
+ontología; los de agente e identificadores de modelo son implementación.
 
-| Agente | Rol de la ontología | Qué hace | Skills del sistema que usa | Escribe en |
-| --- | --- | --- | --- | --- |
-| `arquitecto` | Arquitecto | Premisa, mundo, novum, reglas, estructura de actos | **ninguna** | Biblia de la obra |
-| `planificador` | Planificador | Convierte la estructura en briefs mínimos con restricción de destino | `consultar-canon` | Esquema, briefs |
-| `redactor` | Redactor | Genera la prosa de la escena a partir del brief y el contexto | `ensamblar-contexto`, `consultar-canon` | Borrador |
-| `critico` | Crítico | Puntúa el borrador contra las dimensiones de calidad | `medir-calidad`, `muestrear-voz` | Informe de crítica |
-| `verificador` | Verificador de continuidad | Contrasta la escena contra el canon vigente en t | `verificar-continuidad`, `consultar-canon` | Contradicción |
-| `editor` | Editor | Aplica correcciones locales y de estilo sin tocar la estructura | `ensamblar-contexto` | Versión |
-| `extractor` | Extractor | Lee la escena aceptada y propone hallazgos | `extraer-hallazgos` | Hallazgos `propuesto` |
-| `replanificador` | Replanificador | Revisa el esquema cuando la deriva supera el umbral | `detectar-deriva`, `propagar-retcon` | Esquema, escenas `obsoleta` |
+**El identificador y el effort de cada rol viven en `config/models.yaml`** ▸ previsto, no
+escritos en este documento. La tabla nombra la clave, no el valor.
 
-`registrar-generacion` no aparece en la columna porque **la usan los ocho, sin
-excepción**: ponerla en cada fila sería ruido y dejarla fuera de la tabla, un olvido.
+| Agente | Rol | Entrada → salida | Tools | Skills | Clave en `config/models.yaml` ▸ previsto | Span |
+| --- | --- | --- | --- | --- | --- | --- |
+| `interviewer` | Entrevistador | Formulario y texto libre → `BriefNovela` | `extraer_hechos_texto_libre`, `detectar_contradiccion` | — | `roles.entrevistador` | `interviewer` |
+| `planner` | Planificador | `BriefNovela` → `Esquema` con una `RestriccionDestino` por capítulo | `consultar_story_bible` | `personalizacion-natural` | `roles.planificador` | `planner` |
+| `writer` | Redactor | `BriefCapitulo` + contexto → `Borrador` | `consultar_story_bible` | `personalizacion-natural` | `roles.redactor` | `writer` |
+| `judge` | Editor / Crítico, mitad que **puntúa** | `Borrador` → `Score` por criterio de la `Rúbrica`, con justificación | — | — | `roles.judge` | `judge` |
+| `editor` | Editor / Crítico, mitad que **corrige** | `Borrador` + `InformeCritica` → `Borrador` corregido | `consultar_story_bible` | `personalizacion-natural` | `roles.editor` | `editor` |
+| `extractor` | Extractor | Capítulo aceptado → `Hecho` en estado `propuesto` | `consultar_story_bible` | — | `roles.extractor` | `extractor` |
 
-**El `arquitecto` no usa ninguna skill del sistema, y es deliberado.** Trabaja con el
-autor sobre la Biblia de la obra antes de que exista una sola escena: no hay canon que
-consultar, ni contexto que ensamblar, ni versión que registrar. El día que necesite una,
-será la señal de que ha dejado de ser el primer paso y se ha metido en el bucle.
+**Todo esquema de entrada y salida es Pydantic, y toda tool lleva `strict: true`**, que es
+lo que da el «schema validado» que el alcance exige. Una salida que no valida es un fallo
+del validador `schema_valido` en el hook de policy, no una excepción que se traga nadie.
 
-**El autor humano no es un agente.** Decide dirección, acepta o rechaza, adopta o
-descarta hallazgos y define el gusto. Ningún modelo ocupa ese puesto: adoptar un
-hallazgo equivale a cambiar la novela que se está escribiendo.
+**El judge se separa del editor, y no es cosmética** (TO-013). Puntuar y corregir son dos
+operaciones y solo la primera arrastra sesgo de autopreferencia: si quien puntúa es el mismo
+modelo que escribió, el sistema converge hacia lo que a ese modelo le gusta. La corrección
+no lo arrastra porque su salida vuelve a pasar por los validadores. **Punto ciego declarado**:
+el judge corre en un modelo menos capaz que el redactor, y lo único que mide esa brecha es
+la comparación con el `Revisor humano`.
 
-**Ningún agente escribe en el canon directamente.** Solo `canon/` lo hace, y solo al
-consolidar una escena aceptada. Un borrador rechazado no deja rastro.
+**Política de reintentos, la misma para todos**: un solo contador acumulativo por capítulo
+(`orquestacion.max_intentos_capitulo`), con el guardrail como sublímite de coincidencias
+consecutivas (`guardrail.max_reescrituras`). Los fallos de infraestructura tienen su propio
+contador (`orquestacion.max_intentos_trabajo`) y **no gastan** del primero: que el proveedor
+devuelva un 429 no es un defecto del capítulo. Las llamadas al modelo son asíncronas y con
+timeout explícito.
 
-### Adaptación del modelo
-
-**Premisa de partida: la API de Claude no ofrece fine-tuning.** No hay endpoint de
-entrenamiento ni modelos propios derivados. Aquí «fine-tuning» no significa entrenar el
-modelo que escribe: significa una escalera de adaptación de cuatro escalones, que se
-suben en orden y donde los tres primeros no tocan pesos de ningún modelo.
-
-| Escalón | Qué es | Para qué agentes o skills | Cuándo |
-| --- | --- | --- | --- |
-| 1. Prompt y few-shot canónico | Instrucciones y ejemplos elegidos a mano, versionados con el repositorio | Todos | Desde el principio; es el único escalón siempre activo |
-| 2. Banco de ejemplos | Pares entrada/salida aceptados, acumulados en `training_samples` *(propuesta)* | Todos | Se recoge **desde el primer día**, aunque no se use todavía |
-| 3. Fine-tune de modelo abierto pequeño | Entrenamiento real, pero solo de tareas estrechas y medibles | `extractor`, `critico`, `verificador` | Cuando el banco tiene volumen y la tarea tiene métrica |
-| 4. Embeddings propios | Vectores entrenados sobre el corpus de la obra, no genéricos | `recuperar-fragmentos`, skill de `context/` | Cuando la recuperación falle por vocabulario del mundo |
-
-El escalón 2 es el que hay que empezar ya aunque no se use: un banco de ejemplos se
-acumula con el tiempo y no se puede reconstruir hacia atrás. Los escalones 3 y 4 solo se
-abren si el 1 y el 2 se quedan cortos, y nunca para el `redactor`: la prosa se gobierna
-con contexto y anticontexto, no con pesos.
-
-**El `redactor` nunca se entrena sobre su propia salida.** Solo entra en el banco texto
-aceptado **y editado por el autor**. El motivo: entrenar un modelo sobre lo que él mismo
-escribió amplifica la regresión a la media que la Capa 4 de `definitions.md` señala como
-su fallo característico —el sistema aprendería a sonar más a sí mismo, no mejor.
-
-**La traza de aceptación se mantiene aunque el autor sea uno solo.** Que no haya
-multiusuario ni autenticación no la vuelve prescindible: lo que hay que poder distinguir
-no es *quién* aceptó, sino **cómo** —aceptación humana frente a automática—, junto con
-qué se editó antes de aceptar. De esa distinción depende entera la utilidad de
-`training_samples`: sin ella el banco mezcla texto que el autor aprobó con texto que
-simplemente pasó los umbrales, y entrenar sobre esa mezcla es exactamente el bucle de
-autoentrenamiento que la regla anterior prohíbe. Un banco sin traza de aceptación no es
-un banco pequeño: es un banco inservible.
-
-## Skills del sistema
-
-Capacidades compartidas, invocables por varios agentes. Cada una es una operación del
-backend con contrato propio, no una instrucción suelta en un prompt. No confundir con las
-skills de agente de la sección siguiente: estas son código nuestro; aquellas son
-documentación que se carga en la ventana de contexto.
-
-| Skill | Qué resuelve | Módulo | La usan |
-| --- | --- | --- | --- |
-| `ensamblar-contexto` | Reparte las siete capas y falla si no cabe en la ventana | `context/` | redactor, editor |
-| `consultar-canon` | Snapshot en t, estado epistémico, promesas abiertas | `canon/` | planificador, redactor, verificador |
-| `recuperar-fragmentos` | Filtro relacional por entidades del brief y después `vec0` | `context/` | ensamblar-contexto |
-| `construir-anticontexto` | Metáforas usadas, ecos, clichés vetados, revelaciones prohibidas | `context/` | ensamblar-contexto |
-| `muestrear-voz` | Extrae muestras de voz de los personajes presentes | `context/` | ensamblar-contexto, critico |
-| `medir-calidad` | Aplica las dimensiones al borrador y clasifica el defecto | `quality/` | critico |
-| `verificar-continuidad` | Contrasta hechos, tiempo, espacio y epistémica contra el canon | `quality/` | verificador |
-| `extraer-hallazgos` | Detecta hechos, promesas y motivos no previstos | `findings/` | extractor |
-| `detectar-deriva` | Mide distancia entre lo escrito y el esquema vigente | `replanning/` | replanificador |
-| `propagar-retcon` | Marca las escenas afectadas `obsoleta` y encola su reescritura | `replanning/` | replanificador |
-| `registrar-generacion` | Guarda modelo, prompt, contexto y semilla de cada versión | `process/` | todos |
-
-`registrar-generacion` corre en toda llamada al modelo sin excepción: sin ella no se
-puede reproducir un resultado bueno ni diagnosticar uno malo.
+**Ningún agente escribe en la story bible directamente.** Solo `canon/` lo hace, y solo al
+consolidar un capítulo aceptado.
 
 ---
 
-## Skills de agente
+## Skills
 
-Paquetes de documentación en `.claude/skills/`, uno por carpeta con un `SKILL.md` y sus
-referencias. El agente los carga bajo demanda cuando la tarea entra en su ámbito. Se
-versionan con el repositorio: un clon nuevo los tiene sin instalar nada.
+Dos bloques que no se mezclan: uno corre en producción y el otro no corre nunca.
 
-| Skill | Ámbito | Se carga cuando |
+### Runtime — `backend/app/skills/` ▸ previsto
+
+Contenido en formato Agent Skill que el ensamblador inyecta en la capa Invariante del
+prompt. Se empaqueta y se instala con el backend.
+
+| Skill | Qué enseña | La cargan | Validador que mide si sirvió |
+| --- | --- | --- | --- |
+| `personalizacion-natural` | Qué distingue un elemento tejido de uno insertado, cómo repartirlos entre capítulos y las tres formas reconocibles de personalización forzada | `planner`, `writer`, `editor` | `personalizacion_natural` |
+
+Es **la skill reutilizable que exige el alcance §3**. Comparte nombre con el score que la
+mide, por la regla «un concepto, un nombre en cada ámbito»: es lo que permite leer un eval y
+saber qué fichero tocar.
+
+**No contiene datos de ninguna novela.** Los elementos concretos los trae
+`consultar_story_bible`; la skill trae el método. Y **no contiene la rúbrica**: la escala,
+las anclas y los pesos viven solo en el prompt del `judge`, para que el `writer` no optimice
+contra el criterio con el que se le va a puntuar. **Punto ciego declarado**: la frontera
+entre método y rúbrica no es nítida, ninguna ancla numérica puede aparecer en la skill, y
+nada detecta esa deriva salvo leer la skill.
+
+### Desarrollo — `.claude/skills/`
+
+Documentación que un agente carga al escribir código. Ninguna corre en el harness. Origen y
+hash en `skills-lock.json`.
+
+| Skill | Origen | Se carga cuando |
 | --- | --- | --- |
-| `backend-feature-slice` | Estructura del backend, rodajas verticales | Hay que colocar un archivo de Python, añadir un endpoint, decidir qué feature es dueña de una clase, resolver una importación entre features o mover algo a `commons/` |
-| `feature-sliced-design` | Estructura del frontend, FSD v2.1 | Hay que colocar un archivo, definir la API pública de un slice, resolver un cross-import, decidir si extraer a `features/` o `entities/`, o integrar el router |
-| `sqlite-relacional` | Lado relacional de la persistencia | Se crea o cambia una tabla, se escribe una migración o cualquier SQL, se traduce una cardinalidad o un estado de la ontología al esquema, o se abre una transacción |
-| `sqlite-vec` | Búsqueda vectorial en SQLite | Se crea o cambia una tabla `vec0`, se escribe una consulta KNN, se serializan embeddings, o se elige métrica de distancia, columna de metadatos o clave de partición |
-| `presupuesto-de-contexto` | Reparto de la ventana de contexto | Se ensambla un prompt, se toca el contador de tokens, se decide qué comprimir cuando algo no cabe, o una tarea parece necesitar más ventana |
-| `plan-de-verificacion` | Verificación | Se construye o revisa el plan de verificación, o se clasifica una afirmación como T/A/I/D/U |
+| `backend-feature-slice` | Escrita aquí | Hay que colocar un archivo Python, añadir un endpoint, decidir de qué feature es una clase o resolver una importación |
+| `feature-sliced-design` | [`feature-sliced/skills`](https://github.com/feature-sliced/skills) | Hay que colocar un archivo del frontend, definir la API pública de un slice o resolver un cross-import |
+| `sqlite-relacional` | Escrita aquí | Se crea o cambia una tabla, se escribe una migración o cualquier SQL, se abre una transacción |
+| `sqlite-vec` | Vendorizada desde `existential-birds/beagle` | Solo si se reactiva la búsqueda vectorial, que **no se usa en v1** (TO-015) |
+| `presupuesto-de-contexto` | Escrita aquí | Se ensambla un prompt, se toca el contador de tokens o se decide qué comprimir |
+| `plan-de-verificacion` | Escrita aquí | Se construye o revisa el plan de verificación, o se clasifica una afirmación T/A/I/D/U |
+| `grill-me` | [`mattpocock/skills`](https://github.com/mattpocock/skills) | Se quiere someter a interrogatorio un plan o un diseño. Es un shim que invoca a `grilling` |
+| `grilling` | [`mattpocock/skills`](https://github.com/mattpocock/skills) | Cerrar decisiones abiertas antes de escribir: recorre el árbol de decisiones por rondas y no deja ninguna rama sin visitar. Este documento salió de una sesión suya |
 
-Las cuatro primeras van en pares y cubren las decisiones donde este proyecto se equivoca
-caro: dónde vive un archivo —en el backend y en el frontend— y cómo se consulta la base
-—por SQL y por vectores—. El par de persistencia es además la referencia operativa de la
-regla «filtro relacional y después similitud» que fija AGENTS.md: `sqlite-relacional` pone
-el filtro, `sqlite-vec` el orden por similitud. `presupuesto-de-contexto` existe porque la
-política de reparto y degradación se consultaba en varios documentos y necesitaba un solo
-sitio donde leerse antes de ensamblar; las cifras, como siempre, salen de
-`config/thresholds.yaml`.
+Instalación y actualización de las de origen externo con `npx skills add <url> --skill
+<nombre> --agent claude-code --copy`. El flag `--copy` es deliberado: sin él la CLI deja un
+symlink que en Windows se commitea como fichero de texto.
 
 ### Precedencia
 
-Una skill es referencia, no autoridad. Si lo que propone choca con `AGENTS.md` o con el
-contexto semilla, manda el repositorio. Dos casos concretos que ya sabemos que chocan:
+Una skill es referencia, no autoridad. Si lo que propone choca con `CLAUDE.md` o con el
+contexto semilla, manda el repositorio. Dos casos que ya sabemos que chocan:
 
 - FSD admite `widgets/` y lo desaconseja; aquí directamente no se usa.
-- `sqlite-vec` ilustra la integración con embeddings de OpenAI; este proyecto usa un
-  modelo multilingüe **local** (ver «Embeddings y reindexado»), y de la skill se reutiliza
-  el patrón SQL, no el proveedor.
-
-### Origen y actualización
-
-| Skill | Origen | Cómo se actualiza |
-| --- | --- | --- |
-| `feature-sliced-design` | [`feature-sliced/skills`](https://github.com/feature-sliced/skills) | Reinstalar con el comando de abajo |
-| `sqlite-vec` | Vendorizada desde `existential-birds/beagle` | A mano, contra la documentación oficial |
-| `backend-feature-slice` | Escrita en este repositorio | Se edita aquí, junto con «Anatomía de una feature» |
-| `sqlite-relacional` | Escrita en este repositorio | Se edita aquí, junto con «Persistencia, backend y frontend» de `AGENTS.md` |
-| `presupuesto-de-contexto` | Escrita en este repositorio | Se edita aquí; los números salen de `config/thresholds.yaml` |
-| `plan-de-verificacion` | Escrita en este repositorio | Se edita aquí |
-
-Las cuatro escritas aquí son espejo de una sección de `AGENTS.md` o de este documento. Si
-cambias la regla, cambia también la skill: una skill que contradice la guía es peor que no
-tenerla, porque se carga antes de escribir y la guía se lee después.
-
-Instalación y actualización de la primera, que es el mismo comando:
-
-```bash
-npx skills add https://github.com/feature-sliced/skills --skill feature-sliced-design --agent claude-code --copy
-```
-
-El flag `--copy` es deliberado: por defecto la CLI deja un symlink desde `.claude/skills/`
-hacia `.agents/skills/`, y con `core.symlinks=false` en Windows Git lo commitea como un
-fichero de texto con una ruta dentro. Con `--copy` lo que se versiona es el directorio
-real. `skills-lock.json` guarda el origen y el hash de lo instalado.
-
-**No uses `npx skills update`**: ignora el modo de instalación, borra el directorio y lo
-deja otra vez como symlink. Para actualizar, repite el `add --copy` de arriba y revisa el
-diff. Si algún día aparece `.agents/`, está de más: bórralo.
-
-`sqlite-vec` no se instala con la CLI: su upstream la retiró el 2026-05-27 al reestructurar
-su marketplace, aunque los registros públicos la sigan listando. Está copiada en el
-repositorio a partir del último commit en que existía; el detalle está en
-`.claude/skills/sqlite-vec/PROVENANCE.md`.
-
-### Añadir una skill
-
-1. Instálala o cópiala en `.claude/skills/<nombre>/`.
-2. Léela entera antes de usarla: se ejecuta con los permisos del agente.
-3. Comprueba que no contradice «Requisitos técnicos» de `AGENTS.md`. Si lo hace y aun así
-   la quieres, anota la excepción en «Precedencia», arriba.
-4. Añádela a las tres tablas de esta sección y a la lista de `AGENTS.md`.
-
-### Documentación de referencia
-
-- Feature-Sliced Design: <https://feature-sliced.design> — versiones para agentes en
-  <https://feature-sliced.design/llms.txt>, <https://feature-sliced.design/llms-small.txt>
-  y <https://feature-sliced.design/llms-full.txt> (índice en
-  <https://feature-sliced.design/docs/llms>).
-- sqlite-vec: <https://alexgarcia.xyz/sqlite-vec> y
-  <https://github.com/asg017/sqlite-vec>.
+- `sqlite-vec` ilustra la integración con embeddings de OpenAI; de la skill se reutilizaría
+  el patrón SQL, nunca el proveedor.
 
 ---
 
-## Orquestación
+## Hooks y policy engine
 
-**El backend orquesta; los agentes no.** No hay agentes autónomos que conversen entre
-sí: una máquina de estados en el backend decide cuál corre a continuación, leyendo el
-estado de la escena. Un agente recibe su entrada, devuelve su salida y termina.
+Cuatro puntos de ejecución en orden fijo. Lo barato y determinista corre primero: no tiene
+sentido pagar un juicio de modelo sobre un capítulo que no cumple su schema.
 
-**Regla explícita: un agente no invoca a otro ni elige el siguiente paso.** Si el agente
-eligiera, el grafo de ejecución dejaría de ser inspeccionable y los corta-circuitos no se
-podrían imponer desde fuera: quien decide cuándo parar no puede ser quien quiere seguir.
+```mermaid
+flowchart LR
+  BOR[Borrador] --> HP[Hook de policy]
+  HP --> HC[Hook de capítulo]
+  HC --> ED[Rol editor]
+  ED --> ACP[Capítulo aceptado]
+  ACP --> GT[Gate de publicación]
+  GT --> PUB[Versión publicada]
+  HP -.->|falla| REW[Reescribir · intentos + 1]
+  HC -.->|falla| REW
+  ED -.->|defecto local| REW
+  ED -.->|defecto sistémico| RPL[Replanificar pendientes]
+  GT -.->|falla| ED
+  REW --> BOR
+```
 
-### Máquina de estados
+| Punto | Quién lo ejecuta | Qué corre | Coste |
+| --- | --- | --- | --- |
+| Hook de policy | `policy/` | Conformidad de schema y guardrail de palabras prohibidas | Determinista, sin modelo |
+| Hook de capítulo | `quality/` | Los validadores programáticos de continuidad y prosa, **en paralelo** | Determinista, sin modelo |
+| Rol editor | `quality/` | El `judge` puntúa la rúbrica; el `editor` corrige | Dos llamadas al modelo |
+| Gate de publicación | `versioning/` | Lean, elementos obligatorios, cierre del arco y render visual | Subprocesos, sin modelo |
 
-Los estados son los de la ontología (`planificada`, `en borrador`, `en revisión`,
-`aceptada`, `obsoleta`); no se añade ninguno. El orquestador lee el estado y, cuando hace
-falta, el informe de crítica, y de ahí sale el siguiente paso.
+**El policy engine es lo que sustituyó al autor humano.** Adopta o descarta un `Hecho`
+propuesto, acepta o devuelve un capítulo y detiene la generación. Cada decisión deja fila en
+el audit log con la regla aplicada, la entrada y el resultado: si nadie puede reconstruir
+por qué se adoptó un hecho, la automatización ha sustituido un juicio por un misterio.
 
-**Extracción: paso, no estado.** Los dos documentos de ontología ya coinciden: `Extraida`
-se retiró del diagrama de `domain-knowledge.md`. La extracción es el paso que sigue a
-`aceptada`, y por eso la tabla no tiene fila para él.
+**Guardrail.** Tres niveles —`global`, `perfil` y `novela`—, aplicados en conjunto y ganando
+el más restrictivo, con la normalización corriendo **antes** de comparar. Toda `Coincidencia`
+queda en el audit log y en Langfuse. Dos pasadas consecutivas sin limpiar el texto detienen
+la generación e informan, sin esperar al tercer intento: un modelo que no quita una palabra
+en dos pasadas no la va a quitar en la tercera.
 
-| Estado de la escena | Condición | Siguiente agente |
-| --- | --- | --- |
-| `planificada` | — | `redactor` |
-| `en borrador` | — | `critico` |
-| `en revisión` | sin defectos sobre umbral | `verificador` |
-| `en revisión` | defecto local | `editor` |
-| `en revisión` | defecto sistémico | la escena vuelve a `planificada` |
-| `aceptada` | — | `extractor` |
-| `obsoleta` | — | vuelve a `planificada` |
+---
 
-Solo el autor humano mueve una escena a `aceptada`. El orquestador nunca salta ese paso.
+## Proceso de producción
 
-**En fase de medición no hay umbral que superar.** Con `medicion.cerrar_el_paso` en
-`false` (`config/thresholds.yaml`) el crítico puntúa y deja su informe, pero ninguna
-puntuación suspende: la escena pasa a `verificador` siempre, y las rutas de `defecto
-local` y `defecto sistémico` las abre el autor al leer el informe, no el umbral. Es el
-mismo reparto de decisión que ya fija RF-PROC-07 —quien acepta es el autor—, aplicado un
-paso antes. Cuando la fase se cierre, la condición de la tabla vuelve a leerse tal cual.
+### Ciclo
 
-**El defecto sistémico devuelve la escena a `planificada`**, que es lo que dibuja la
-máquina de estados de `domain-knowledge.md`. Quién replanifica depende del alcance: con
-`replanning/` fuera de v1 (spec 001 §1.3) el orquestador escala al autor, que replanifica
-a mano y reencarga la escena; cuando entre el bucle largo, ese hueco lo ocupa el
-`replanificador`. En los dos casos el estado al que vuelve la escena es el mismo, así que
-insertar el agente después no cambia la máquina.
+```mermaid
+sequenceDiagram
+  participant I as interviewer
+  participant P as planner
+  participant X as context/
+  participant W as writer
+  participant J as judge
+  participant E as editor
+  participant G as policy engine
+  participant B as story bible
+  I->>P: BriefNovela validado
+  P->>X: BriefCapitulo + restricción de destino
+  X->>W: contexto ensamblado, dentro de la ventana
+  W->>J: Borrador
+  J->>E: Score por criterio + justificación
+  E->>G: Borrador corregido + InformeCritica
+  G-->>W: reescritura pedida, intentos + 1
+  G->>B: capítulo aceptado
+  B->>B: consolidar · checkpoint · extraer hechos
+```
 
-### Cola de trabajos
+### Estados y la tabla que exige el README
 
-**En v1 la cola es síncrona y en proceso.** El orquestador llama al paso, espera y
-guarda el resultado; no hay tabla `jobs` ni trabajadores. Cuando haga falta encolar, la
-cola vivirá en SQLite —el stack está cerrado y `data/novel.db` ya es el punto de
-serialización—, no en un broker externo.
-
-> **Esto no es ontología.** El trabajo encolado es infraestructura de ejecución, no
-> vocabulario del dominio: no se ratifica en `definitions.md` ni se le pone nombre de
-> clase. Lo que sí es del dominio —el estado de la escena— ya está en la ontología, y es
-> ahí donde vive el avance del ciclo.
-
-**Insertar la cola después no debe tocar a ningún agente.** De eso dependen dos
-condiciones que v1 tiene que cumplir desde el primer día:
-
-| Condición | Qué obliga |
-| --- | --- |
-| Contrato de agente cerrado | Un agente recibe entrada, devuelve salida y no conoce quién lo llama ni qué viene después. Ni espera, ni reintenta, ni consulta la cola |
-| Estado del ciclo persistido en la escena | El avance se deduce del estado de la escena en la base, no de variables en memoria ni de la pila de llamadas |
-
-Con esas dos, pasar de síncrono a encolado es cambiar quién invoca al agente: el
-orquestador deja de llamar en línea y escribe una fila. Sin ellas, la migración toca a
-los ocho agentes.
-
-Clave de idempotencia **cuando llegue la cola**: `scene_id` + `step` + `attempt`.
-Reintentar con la misma clave no duplica efectos; un reintento es una fila nueva con
-`attempt + 1`, no una sobrescritura, de modo que el historial queda para diagnóstico. En
-v1 la idempotencia que sí aplica es la de la consolidación, por `scene_id` + `version`.
+Los estados son exactamente los de `domain-knowledge.md`, que los dibuja como ontología.
+Aquí van **anotados con el nombre de la acción TLA+** que los recorre, que es lo que este
+documento añade y aquel no tiene:
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Pendiente: el orquestador encola el paso
-  Pendiente --> EnCurso: hay presupuesto en vuelo
-  EnCurso --> Hecho: salida válida
-  EnCurso --> Pendiente: fallo reintentable (attempt + 1)
-  EnCurso --> Escalado: agotados los intentos
-  Hecho --> [*]
-  Escalado --> [*]: decide el autor
+  [*] --> Pendiente: Init
+  Pendiente --> Escribiendo: Escribir
+  Escribiendo --> Validando: Validar
+  Validando --> Aceptado: Aceptar
+  Validando --> Reescribiendo: Reescribir
+  Reescribiendo --> Escribiendo: Reintentar
+  Reescribiendo --> Agotado: Agotar
+  Aceptado --> Obsoleto: Obsoletar
+  Obsoleto --> Pendiente: Reencolar
+  Agotado --> [*]
 ```
+
+La máquina de estados del orquestador **es una tabla declarativa** `(estado, condición) →
+estado` en `process/`, y el `.tla` declara las mismas acciones; **un test falla si divergen**
+(TO-020). La tabla del README se genera desde ese dato, de modo que no puede quedarse vieja
+en silencio.
+
+| Acción TLA+ | Estado origen | Estado destino | Función de código |
+| --- | --- | --- | --- |
+| `Init` | — | `Pendiente` | `orquestador.estado_inicial` · normaliza a `Pendiente` el capítulo a medias al reanudar |
+| `Planificar` | `Configurando` | `Planificando` | `orquestador.planificar` |
+| `Escribir` | `Pendiente` | `Escribiendo` | `orquestador.escribir` |
+| `Validar` | `Escribiendo` | `Validando` | `orquestador.validar` |
+| `Aceptar` | `Validando` | `Aceptado` | `orquestador.aceptar` · única que escribe en la story bible |
+| `Reescribir` | `Validando` | `Reescribiendo` | `orquestador.reescribir` · `intentos + 1` |
+| `Reintentar` | `Reescribiendo` | `Escribiendo` | `orquestador.reintentar` |
+| `Agotar` | `Reescribiendo` | `Agotado` | `orquestador.agotar` |
+| `Obsoletar` | `Aceptado` | `Obsoleto` | `orquestador.obsoletar` · lo dispara el retcon |
+| `Reencolar` | `Obsoleto` | `Pendiente` | `orquestador.reencolar` |
+| `Publicar` | `Validando` | `Publicando` | `orquestador.publicar` · exige el gate en verde |
+| `Detener` | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
+
+### Checkpoint y reanudación
+
+El `Checkpoint` es el último capítulo completado. **La reanudación no es una transición**
+(TO-023): una caída de infraestructura no lleva a `Detenida` —que es el fin deliberado tras
+agotar intentos—, sino que hace desaparecer el proceso en mitad de `Escribiendo`. Por eso la
+reanudación se modela en el predicado `Init`: capítulos `1..k` en `Aceptado`, checkpoint en
+`k`, y el capítulo `k+1` normalizado a `Pendiente`. La función que lo implementa es
+`orquestador.estado_inicial`, primera fila de la tabla de arriba.
+
+Las dos mitades de la invariante «no duplica ni pierde capítulos»: el conjunto de aceptados
+es siempre un **prefijo contiguo**, y **la aceptación de un capítulo ocurre a lo sumo una vez
+por versión**. No se formula sobre la escritura del texto: los reintentos producen varios
+borradores en la misma versión, y eso es correcto.
+
+### Regeneración dirigida
+
+```mermaid
+flowchart TD
+  LEC[Lector] --> SEL{¿Cómo lo pide?}
+  SEL -->|selecciona un hecho| HEC[Hecho afectado]
+  SEL -->|selecciona un fragmento| CAND[Hecho candidato propuesto]
+  CAND --> CONF[El lector confirma]
+  CONF --> HEC
+  HEC --> AI[Análisis de impacto<br/>capítulos que USAN el hecho]
+  AI --> RT[Retcon · cierra el hecho viejo, abre el nuevo]
+  RT --> OBS[Capítulos afectados a Obsoleto]
+  OBS --> RG[Regeneración dirigida]
+  RG --> HOK[Hooks y rol editor]
+  HOK --> GT[Gate de publicación]
+  GT -->|falla| RG
+  GT -->|pasa| NV[Versión de novela nueva]
+  ANT[Versión anterior] -.->|se conserva entera| NV
+```
+
+**La selección de fragmento nunca regenera sola** (TO-011): propone un hecho candidato y el
+lector confirma. El `Análisis de impacto` se calcula sobre la relación `usa`, no sobre
+`establece`: un hecho establecido en el capítulo 2 y mencionado en el 7 obliga a reescribir
+los dos.
 
 ### Paralelo y serie
 
 | Modo | Quién | Por qué |
 | --- | --- | --- |
-| Paralelo | `critico`, `verificador`, y las skills de `context/` | Solo leen: canon y texto en t no cambian mientras corren |
-| Serie, por escena | `redactor`, `editor`, `extractor` | Escriben sobre el borrador o los hallazgos de esa escena |
-| Serie, global | Consolidación en `canon/` | Una transacción de escritura a la vez; `WAL` deja leer en paralelo |
-
-Hay **una sola escena en generación a la vez**: con un autor y una obra por instancia, no
-existe la concurrencia entre escenas. Lo que queda en paralelo es la fila de arriba, los
-pasos de solo lectura sobre esa escena.
-
-Eso convierte al escritor único de SQLite en un no-problema. La limitación clásica de
-SQLite —un escritor a la vez— solo duele cuando varias unidades de trabajo compiten por
-escribir; aquí la serialización ya la impone el proceso, mucho antes de llegar a la base.
-No hay que diseñar contra el escritor único: es el mismo grano de concurrencia que tiene
-el dominio.
-
-### Corta-circuitos
-
-- **Máximo de iteraciones de revisión por escena.** El umbral vive en
-  `config/thresholds.yaml`. Al alcanzarlo, el orquestador deja de reencolar, la escena se
-  queda en `en revisión` y **escala al autor**. Sin este tope, una escena que no converge
-  gira indefinidamente entre `critico` y `editor` gastando presupuesto.
-- **Máximo de intentos por trabajo.** Un fallo de infraestructura reintenta con backoff;
-  agotados los intentos, el trabajo pasa a escalado. Un fallo del proveedor no es un
-  defecto de la escena y no cuenta contra el tope de revisiones.
-- **Escalar es un resultado válido**, no un error. Es el mecanismo por el que el sistema
-  devuelve el juicio al único rol que la ontología no deja automatizar.
+| Serie, por novela | Los capítulos, uno tras otro | El contexto del capítulo N incluye el snapshot al cierre de N−1: generarlos en paralelo es semánticamente imposible, no solo caro |
+| Serie, por capítulo | `writer` → `judge` → `editor` | Cada uno consume la salida del anterior |
+| Paralelo, sin pool | Los validadores programáticos del hook de capítulo | No llaman al modelo |
+| Serie, global | La consolidación en `canon/` | Una transacción de escritura a la vez; `WAL` deja leer en paralelo |
 
 ---
 
-## Memoria
+## Validadores
+
+**La tabla vive en `docs/verification.md`** (TO-018), con nombre, tipo, punto de ejecución,
+score y qué pasa si falla. Aquí solo el mapa de dónde corre cada familia; duplicar la tabla
+crearía una tercera copia y una de las tres se quedaría vieja.
+
+`definitions.md` Capa 4 define **qué mide** cada dimensión; `verification.md`, **cómo se
+comprueba y qué pasa si falla**; este documento, **dónde corre**.
+
+```mermaid
+flowchart TD
+  HP[Hook de policy] --> V1[schema_valido]
+  HP --> V2[palabras_prohibidas]
+  HC[Hook de capítulo] --> V3[nombres_exactos]
+  HC --> V4[longitud]
+  HC --> V5[consistencia_factica]
+  HC --> V6[calidad_prosa]
+  HC --> V7[integridad_pov]
+  HC --> V8[cumplimiento_brief]
+  ED[Rol editor] --> V9[personalizacion_natural]
+  ED --> V10[reconocibilidad]
+  ED --> V11[adecuacion_tono]
+  ED --> V12[coherencia_personajes]
+  ED --> V13[ritmo]
+  GT[Gate de publicación] --> V14[lean_cronologia]
+  GT --> V15[lean_ubicacion]
+  GT --> V16[lean_edad]
+  GT --> V17[elementos_obligatorios]
+  GT --> V18[cierre_arco]
+  GT --> V19[render_visual]
+  EXP[Export a PDF] --> V20[paridad_pdf_web]
+```
+
+**`paridad_pdf_web` y el punto de ejecución `export` son nuevos y no están en la ontología.**
+Van en la lista de cambios pendientes de `definitions.md`: añadir una fila a la Capa 4 y un
+quinto punto de ejecución es un cambio de ontología con su entrada en el registro de
+iteraciones, y no se hace de tapadillo desde aquí.
+
+---
+
+## Ensamblado de contexto
+
+La política está en `CLAUDE.md` § Presupuesto de contexto. Aquí, cómo se implementa.
+
+```mermaid
+flowchart LR
+  BN[Brief de novela<br/>+ dedicatoria + guía de estilo] --> INV[Invariante]
+  SK[skills/ del rol] --> INV
+  BC[Brief de capítulo<br/>+ restricción de destino] --> EST[Estructural]
+  SNP[Snapshot al cierre de N-1] --> EDO[Estado]
+  TXT[Últimos capítulos literales] --> LOC[Local]
+  IDX[Filtro por entidades del brief] --> REC[Recuperado]
+  VOZ[Muestras de voz] --> STY[Estilo]
+  USO[Registro de uso] --> ANT[Anticontexto]
+  VET[Palabras prohibidas de la novela] --> ANT
+  INV --> ASM[Ensamblador]
+  EST --> ASM
+  EDO --> ASM
+  LOC --> ASM
+  REC --> ASM
+  STY --> ASM
+  ANT --> ASM
+  ASM --> CNT[Contar antes de llamar]
+  CNT -->|cabe| PR[Prompt]
+  CNT -->|no cabe| DEG[Degradar por capas]
+  DEG --> CNT
+  CNT -->|no cabe tras degradar| ERR[Fallo en voz alta]
+```
+
+**La capa Invariante se compone por rol** (TO-021). `planner`, `writer` y `editor` cargan
+`personalizacion-natural` en su Invariante; `interviewer`, `judge` y `extractor` no. La
+consecuencia práctica hay que decirla en voz alta: **los tres roles que cargan la skill
+tienen menos sitio** en su Invariante para premisa, brief y guía de estilo que los que no la
+cargan, y su presupuesto se mide por rol, no una vez para todos.
+
+**El recuento usa `messages.count_tokens` del proveedor, nunca una estimación por
+caracteres.** El contador propio y el del proveedor tienen que coincidir, y la diferencia,
+si la hay, cabe en el margen. Se cuenta **antes** de llamar: contar después es descubrir el
+problema cuando ya has pagado la llamada.
+
+**Degradación**: Recuperado → Estilo → Local → Estado, parando en cuanto quepa. La capa
+Invariante y la restricción de destino **no se degradan nunca**. Comprimir es bajar de
+resolución —sustituir un capítulo literal por su resumen— antes que eliminar nada.
+
+**Recuperado sin `sqlite-vec` en v1** (TO-015). La novela entera cabe en el presupuesto de
+la capa, así que no hace falta un índice vectorial para elegir qué traer. **Caber no es
+enviar**: la capa sigue filtrando por las entidades del brief de capítulo, porque mandar la
+novela entera en cada llamada chocaría con el tope concurrente.
+
+---
+
+## Presupuesto de tokens concurrentes
+
+Dos topes que se confunden a menudo, y ninguna cifra en esta sección: todas en
+`config/thresholds.yaml`.
+
+| | `contexto.total` | `en_vuelo.total` |
+| --- | --- | --- |
+| Qué limita | **Una** petición | **Cuántas** caben a la vez |
+| Quién lo fija | Nosotros | Nosotros |
+| De dónde sale | Decisión de diseño | Alcance §7, «máximo de tokens concurrentes» |
+| Alcance | Un prompt | Toda la instancia |
+
+**Ninguno de los dos es la ventana del proveedor.** Los modelos elegidos tienen ventanas
+muy superiores; estos topes son nuestros. El comentario de `config/thresholds.yaml` que
+atribuye el primero al proveedor es una corrección pendiente.
+
+**Estimación antes de encolar.** La estimación de un trabajo es el tamaño de su contexto
+ensamblado, que **ya incluye** `contexto.capas.margen` como reserva de respuesta: la salida
+no se suma dos veces.
+
+**El margen tiene que cubrir la salida, y eso se comprueba.** Con thinking adaptativo los
+tokens de razonamiento cuentan **dentro** de `max_tokens`, así que el margen solo cubre la
+respuesta si `contexto.capas.margen ≥ max_tokens` **de cada rol**. El arranque comprueba esa
+desigualdad rol por rol y **falla en voz alta** si no se cumple: un margen corto no produce
+un error claro, produce respuestas truncadas a mitad de capítulo que parecen un problema de
+calidad. Va también a `verification.md` como validador candidato, programático y de arranque.
+
+**El pool es un guardarraíl, no un planificador.** Es un semáforo en proceso, **compartido
+entre todas las novelas de la instancia**, con admisión **FIFO estricta**: nadie adelanta a
+nadie, aunque quepa. Es más lento en conjunto que dejar colarse a los pequeños, y a cambio
+el `writer` —que es quien pide más ventana— no se queda esperando detrás de una fila de
+llamadas cortas que nunca deja hueco suficiente.
+
+**Un trabajo cuya estimación supera `en_vuelo.total` falla al encolarse.** Esperar un hueco
+que no va a existir nunca no es esperar, es colgarse.
+
+**Qué corre a la vez**: entre novelas, lo que la admisión FIFO permita; dentro de una novela,
+los capítulos van en serie y los validadores programáticos del hook en paralelo y **fuera
+del pool**, porque no llaman al modelo. Backoff exponencial con jitter ante límites de tasa;
+agotados los intentos de trabajo, escala.
+
+---
+
+## Memoria a corto y largo plazo
 
 Dos memorias con vidas distintas. Confundirlas es lo que hace que un borrador rechazado
 contamine el estado del mundo.
 
-| | Corto plazo | Largo plazo |
-| --- | --- | --- |
-| Dónde vive | En el trabajo de una escena | `data/novel.db` |
-| Qué contiene | Borrador, informes de crítica, iteraciones, contexto ensamblado | Memoria episódica, semántica y procedural |
-| Cuánto dura | Hasta consolidar o descartar | Permanente |
-| Quién escribe | Los agentes del bucle corto | Al consolidar: `canon/` el canon, `findings/` los hallazgos que salen de ahí |
+### Corto plazo
 
-La memoria de largo plazo es la de la Capa 3 de `definitions.md`, sin cambios: la
-**episódica** son las escenas aceptadas en su forma literal, la **semántica** son los
-hechos canónicos, los snapshots y las reglas derivadas, y la **procedural** son la guía
-de estilo, las convenciones y las muestras de voz.
-
-**Punto único de promoción.** Lo de corto plazo pasa a largo **al consolidar, y solo
-ahí**. Ese punto tiene dos escrituras, no dos puntos: `canon/` escribe el canon dentro de
-la transacción, y acto seguido el `extractor` lee la escena ya aceptada y deja sus
-hallazgos en `findings/`. Sin consolidación no hay extracción, y los hallazgos **no son
-canon** hasta que el autor los adopta: hasta entonces son memoria larga en estado
-`propuesto`, no verdad de la novela. Ningún otro camino escribe en memoria larga. Un
-borrador rechazado se descarta entero: no deja hechos, ni promesas, ni muestras de voz. Si
-hubiera un segundo punto de promoción, cada iteración fallida dejaría sedimento y el canon
-acabaría siendo el registro de lo que el sistema intentó, no de lo que la novela dice.
-
-### Olvido del anticontexto
-
-El anticontexto no acumula indefinidamente: recuerda solo lo usado en las **últimas N
-escenas**, en ventana deslizante, y lo anterior se olvida.
-
-Dos razones. La primera es de coste: su presupuesto es fijo, y una lista que crece con la
-obra acabaría sin caber o desplazando a las demás capas. La segunda es de criterio, y
-pesa más: un anticontexto que recuerda toda la novela termina vetando el vocabulario
-propio del mundo —los términos canónicos y los motivos **deben** repetirse— y confunde
-repetición con recurrencia. La repetición molesta cuando está cerca; a doscientas páginas
-de distancia, lo que parecía un tic es un motivo.
-
-El valor de N vive en `config/thresholds.yaml`, no aquí: es un umbral que se ajusta
-midiendo, como los de calidad.
-
----
-
-## Resistencia a inyección
-
-El sistema mete en sus propios prompts dos clases de texto que no controla: lo que
-escribe el autor y lo que devuelve `vec0` de escenas anteriores. Ese texto puede contener
-instrucciones —por accidente, porque una escena narra a alguien dando órdenes, o a
-propósito—. Tres reglas, y ninguna es opcional:
-
-| Regla | Qué obliga |
-| --- | --- |
-| **El texto de obra y de canon entra marcado como datos** | Va delimitado y etiquetado como material narrativo, nunca concatenado en la posición donde el prompt pone sus instrucciones. Ninguna capa del contexto se monta pegando texto a pelo |
-| **Ningún agente ejecuta instrucciones halladas en texto narrativo** | Una orden dentro de una escena es contenido de la novela, no una orden para el sistema. El agente la narra si toca; no la obedece |
-| **Ningún hallazgo se adopta sin el autor** | Aunque un texto lograra colar una afirmación, entra como `propuesto` y muere ahí salvo que el autor la adopte |
-
-Las tres se refuerzan: la primera reduce la probabilidad, la segunda contiene el efecto y
-la tercera impide que llegue al canon. La tercera ya era regla del modo híbrido por otras
-razones; aquí resulta ser además el último cortafuegos, y por eso no se relaja «para
-agilizar» la adopción.
-
-**Lo que esto no cubre.** La ontología no modela la amenaza: no hay clase para un texto
-sospechoso ni estado para un hallazgo bajo cuarentena. Estas reglas son de arquitectura, y
-si alguna vez hay que auditarlas escena a escena, harán falta clases que hoy no existen.
-
----
-
-## Gestión de tokens
-
-Dos presupuestos distintos, que se confunden a menudo: cuánto entra en **una** petición y
-cuántas peticiones caben **a la vez**.
-
-### Presupuesto por petición
-
-El reparto entre las siete capas más el margen vive en `config/thresholds.yaml`, **fuente
-única de todos los números del sistema**. `AGENTS.md` describe las capas y la política; las cifras se
-leen del fichero y no se copian a ningún documento ni se escriben sueltas en el código.
-La skill `presupuesto-de-contexto` lleva la política al agente que ensambla.
-
-**Orden de degradación.** Cuando el ensamblado no cabe, se comprime **en este orden**,
-parando en cuanto quepa:
-
-| Orden | Capa | Cómo se degrada | Qué se pierde |
+| Pieza | Quién la escribe | Cuánto dura | Dónde vive |
 | --- | --- | --- | --- |
-| 1 | Recuperado | Menos fragmentos, los peor puntuados primero | Contexto lejano |
-| 2 | Estilo | Menos muestras por personaje | Fidelidad de voz |
-| 3 | Local | Escenas literales → resúmenes (jerarquía de compresión) | Continuidad de prosa |
-| 4 | Estado | Snapshot podado a las entidades del brief | Estado periférico |
+| Contexto ensamblado por capas | `context/` | Una llamada | Memoria del proceso |
+| Capítulos literales de la capa Local | `context/`, leídos de `novel/` | Una llamada | Memoria del proceso |
+| Borradores y reintentos de un capítulo | `process/` | Hasta aceptar o agotar | Memoria del proceso |
+| Informe de crítica del intento | `quality/` | Hasta aceptar | Memoria del proceso |
+| **Diálogo en curso del Entrevistador** | `intake/` | Hasta validar el brief | **SQLite**, con `novel_id` |
 
-**Nunca se degradan: la capa Invariante y la restricción de destino** (dentro de la capa
-Estructural). Son lo que impide que la escena deje de ser de esta novela o deje de ir
-adonde tiene que ir; recortarlas para que quepa más material de apoyo es cambiar la
-escena para ahorrar espacio. El anticontexto queda fuera de la escalera: su tamaño lo
-gobierna la ventana deslizante de arriba, no la presión de un ensamblado concreto.
+**El diálogo de la entrevista es corto plazo persistido**, y es la única pieza de corto plazo
+que toca disco. El motivo es que ocupa varias peticiones HTTP y forma parte de la sesión de
+Langfuse de la novela: no puede vivir en memoria de un trabajo que termina con cada
+respuesta. Consecuencias: lleva `novel_id` como cualquier tabla de dominio; **el texto libre
+aportado se guarda marcado como no confiable** y nunca se reinyecta como instrucción; y al
+validar el brief se conservan el texto libre y los `Fragmento sospechoso` detectados
+—porque son la evidencia de qué se descartó y por qué, y la pregunta de competencia 4 los
+consulta— mientras que los turnos intermedios del diálogo se descartan.
 
-El orden no es arbitrario: va de lo más sustituible a lo menos. Un fragmento recuperado
-de menos da una escena más pobre; un snapshot equivocado da una escena que contradice el
-canon.
+### Largo plazo, en `data/storymaker.db` ▸ previsto
 
-### Presupuesto en vuelo
+| Pieza | Quién la escribe | Cuándo |
+| --- | --- | --- |
+| Brief de novela y sus elementos | `intake/` | Al validar contra el schema |
+| Story bible: hechos, uso, snapshots, promesas, eventos | `canon/` | Al consolidar |
+| Capítulos aceptados, texto literal | `novel/` | Al consolidar |
+| Resúmenes por capítulo | `context/` | Al consolidar |
+| Checkpoint | `process/` | Al consolidar |
+| Versión de novela y su vínculo con los capítulos | `versioning/` | Al publicar |
+| Audit log | `policy/` | En cada decisión del policy engine |
 
-Un pool global de tokens concurrentes, con control de admisión: **un trabajo no arranca
-si no hay presupuesto libre**, se queda `Pendiente` y espera. Cuánto ocupa cada trabajo y
-en qué orden entran se define más abajo.
+**Punto único de promoción.** Lo de corto plazo pasa a largo **al consolidar un capítulo
+aceptado, y solo ahí**. Un borrador rechazado se descarta entero: no deja hechos, ni
+resumen, ni muestras de voz. Si hubiera un segundo punto, cada iteración fallida dejaría
+sedimento y la story bible acabaría siendo el registro de lo que el sistema intentó, no de
+lo que la novela dice.
 
-**El pool es un semáforo en proceso, no un recurso compartido.** Vive en memoria, dentro
-de la instancia, y no se coordina con nada externo: no hay otras sesiones con las que
-repartirlo, ni estado que persistir para que sobreviva a un reinicio. Un contador
-protegido por un candado basta; cualquier cosa más elaborada estaría resolviendo un
-problema que este alcance no tiene.
+**Compresión.** Tres niveles —resumen de obra, resumen de capítulo, capítulo literal—. Lo
+lejano entra comprimido y lo cercano literal, y el estado se pasa siempre como `Snapshot`
+derivado, nunca como el texto completo de lo anterior.
 
-Lo que sí protege es la ráfaga dentro de una escena: los pasos de solo lectura salen a la
-vez y, sin control de admisión, un límite de tasa del proveedor se convierte en cascada
-—todos reciben 429 y todos reintentan a la vez—. El pool hace que la espera ocurra antes
-de llamar, que es donde no cuesta dinero.
+**Qué sobrevive a una regeneración: todo.** Una regeneración **no borra nada**. La versión
+nueva sustituye a la anterior como versión vigente, y **la anterior queda consultable
+entera**: su texto, sus capítulos y **sus hechos**, porque el retcon no sobrescribe la story
+bible en su sitio (§ Story bible, versionado por vigencia). Los capítulos que el retcon marca
+`Obsoleto` lo quedan **para la versión nueva**, no para la anterior.
 
-**Cuánto cabe y cómo se reparte.** El tope vive en `en_vuelo.total` de
-`config/thresholds.yaml`, y **no es la ventana de contexto**: la ventana la fija el
-proveedor y limita una petición; el pool lo fija el autor y limita cuántas caben a la vez.
-Que hoy coincidan en la misma cifra es deliberado y no las ata. La estimación de un
-trabajo es el tamaño de su contexto ensamblado, que ya incluye `contexto.capas.margen`
-como reserva de respuesta; no se suma la respuesta dos veces.
+**Aislamiento.** Toda tabla de dominio lleva `novel_id`. En corto plazo el aislamiento es por
+construcción, porque un trabajo pertenece a una novela; la excepción persistida —el diálogo
+de la entrevista— lo lleva explícito.
 
-**Admisión FIFO estricta.** Los trabajos entran en orden de llegada y ninguno adelanta a
-otro, aunque quepa. Es más lento en conjunto que dejar colarse a los pequeños, y a cambio
-el `redactor` —que es el que pide la ventana entera— no se queda esperando detrás de una
-fila de críticos y verificadores que nunca deja hueco suficiente. Un trabajo cuya
-estimación supera `en_vuelo.total` **falla en voz alta al encolarse**: esperar un hueco
-que no va a existir nunca no es esperar, es colgarse.
+### Mapeo a los tres tipos de la ontología
 
-**Backoff exponencial ante límites de tasa**, con jitter para que los reintentos no se
-sincronicen. El trabajo vuelve a la cola con `attempt + 1`; agotados los intentos, escala.
+| Tipo | Qué lo encarna | Dónde |
+| --- | --- | --- |
+| **Episódica** | Capítulos aceptados en su forma literal y sus resúmenes | SQLite |
+| **Semántica** | Story bible: hechos, snapshots, promesas, cronología, reglas del mundo. Y el brief | SQLite |
+| **Procedural** | La `Voz narrativa`, la guía de estilo, **los prompts de cada rol** y la skill `personalizacion-natural` | **El repositorio, no SQLite** |
 
-### Regla
+**La memoria procedural vive en el repositorio**, y eso tiene tres consecuencias que la
+distinguen de las otras dos: se versiona con **git**, pasa por el ciclo de cambio del
+repositorio como cualquier otro fichero, y entra en la **`Versión de prompt`** de Langfuse,
+de modo que un cambio en un prompt, en la guía de estilo o en la skill es **atribuible** en
+los evals. Ninguna de las tres cosas es cierta de la memoria episódica ni de la semántica.
 
-Recuento **antes** de llamar al modelo, nunca después. Un ensamblado que no cabe falla en
-voz alta: **nunca truncado silencioso**. Truncar en silencio produce el peor fallo posible
-del sistema —una escena generada sin el estado que la condiciona, indistinguible de una
-buena hasta que el verificador encuentra la contradicción, o hasta que no la encuentra.
+**Las trazas de Langfuse son observabilidad, no memoria.** Nada del sistema las lee para
+generar: un prompt nunca contiene una traza. Importa decirlo porque el día que algo las
+leyera pasarían a ser memoria, y entonces necesitarían la disciplina de `novel_id` y de
+retención que hoy no tienen.
 
 ---
 
-## Proceso
+## Story bible
 
-Dos bucles con cadencias distintas. Separarlos evita los dos fallos del descubrimiento
-asistido: replanificar en cada escena, que disuelve la estructura, y no replanificar
-nunca, que acumula deriva hasta hacer el esquema inservible.
+El esquema conceptual está en `domain-knowledge.md` § Story bible y la correspondencia clase
+a tabla en `definitions.md` § Mapeo. Aquí, lo que es implementación.
 
-### Bucle corto — una escena
+### Versionado por vigencia
+
+Un retcon **no sobrescribe un hecho en su sitio**. `Hecho` lleva `version_desde` y
+`version_hasta`: el retcon cierra el viejo poniéndole `version_hasta` y abre el nuevo con
+`version_desde`. Lo mismo vale para el puente `hecho_capitulo`, que es lo que sostiene el
+análisis de impacto.
+
+Sin esto se rompen tres cosas a la vez: Lean no se puede volver a ejecutar sobre una versión
+anterior porque su cronología ya no existe, `query_story_bible` no puede responder por
+versión, y la marca de capítulos modificados pierde la referencia contra la que comparar.
+
+**La trampa, y su guardarraíl.** Una consulta que olvide la versión devuelve «lo vigente» en
+silencio, que es el mismo fallo silencioso que olvidar `novel_id`. Por eso **`novel_id` y
+`version` son parámetros obligatorios de toda consulta de dominio**, sin valor por defecto,
+y eso es comprobable: va a `verification.md` como validador candidato junto al de `novel_id`.
+
+`version_desde` y `version_hasta` sobre `Hecho` son un cambio de ontología y van en la lista
+de pendientes, no aplicados desde aquí.
+
+### Índices
+
+El índice que decide el rendimiento del sistema es el del análisis de impacto: «qué
+capítulos usan este hecho» se ejecuta en cada solicitud de cambio.
+
+| Índice | Sobre | Para qué |
+| --- | --- | --- |
+| `(novel_id, hecho_id, version_desde, version_hasta)` | `hecho_capitulo` | **Capítulos que usan un hecho**, por versión |
+| `(novel_id, capitulo_id)` | `hecho_capitulo` | El camino inverso: hechos que usa un capítulo, para ensamblar contexto |
+| `(novel_id, version)` | `version_capitulo` | Qué capítulos cambiaron entre dos versiones |
+| `(novel_id, momento)` | `evento` | Orden cronológico para generar el fichero Lean |
+| `(novel_id, personaje_id)` | `evento_personaje` | Personajes presentes en cada evento |
+| `(novel_id, estado)` | `promesa` | Promesas pendientes al cerrar |
+
+Migraciones numeradas en `backend/app/commons/db/migrations/` ▸ previsto, aplicadas en orden y **nunca
+editadas** una vez commiteadas. `WAL` activado. Toda escritura a la story bible va en
+transacción y es idempotente por `novel_id` + `chapter_id` + `version`.
+
+---
+
+## Verificación formal
+
+Dos verificaciones con objetos distintos que no se sustituyen: **Lean verifica la historia,
+TLA+ verifica el harness**. Una novela puede tener una cronología impecable generada por un
+harness que publica capítulos sin validar.
+
+### Lean — la historia
 
 ```mermaid
-sequenceDiagram
-  participant P as planificador
-  participant X as context/
-  participant R as redactor
-  participant C as critico
-  participant V as verificador
-  participant A as Autor humano
-  participant K as canon/
-  P->>X: brief + restricción de destino
-  X->>R: contexto ensamblado (dentro de la ventana)
-  R->>C: borrador
-  C->>V: informe de crítica
-  V->>A: continuidad verificada
-  A-->>R: revisión pedida (defecto local)
-  A-->>P: replanificación (defecto sistémico)
-  A->>K: escena aceptada
-  K->>K: consolidar · extraer hallazgos
+flowchart LR
+  SQL[SELECT sobre evento, evento_personaje,<br/>evento_excluyente y personaje] --> GEN[Generador de Lean]
+  GEN --> FIC[Fichero .lean sin Mathlib]
+  FIC --> LAKE[lake build]
+  LAKE -->|éxito| SC[Score lean_cronologia<br/>lean_ubicacion · lean_edad]
+  LAKE -->|fallo| INF[Informe al editor]
+  SC --> GATE{¿Gate?}
+  GATE -->|sí, bloquea| PUB[Publicar o no]
+  GATE -->|no, incremental| AVISO[Aviso no bloqueante]
 ```
 
-El punto de consolidación es el único que modifica el canon. Antes de él nada de lo
-generado es verdad en la novela.
+**Dos ejecuciones con papeles distintos** (TO-016). En el **gate**, sobre la cronología
+completa, y es lo único que bloquea. **Incremental por capítulo**, sobre la cronología hasta
+`t`, no bloqueante: emite un `Score` de aviso y entra en el informe de crítica. El motivo del
+incremental es que los invariantes son de seguridad —una violación en un prefijo lo es en la
+novela entera—, así que detectarla en el capítulo 3 ahorra siete capítulos de trabajo.
 
-### Bucle largo — replanificación rodante
+**El fichero generado no importa Mathlib.** Es una restricción de diseño del generador, no
+una preferencia: es lo que mantiene el build en segundos en vez de minutos, y sin ella el
+chequeo incremental no sale a cuenta.
 
-Se dispara cuando **algún componente** de la deriva supera su umbral, o por cadencia
-fija (cada N escenas o al cerrar capítulo), nunca en mitad de una escena. La deriva es un
-vector de tres, no un escalar: `definitions.md` § Medida de la deriva.
+**El timeout está sin fijar y es deliberado.** No hay toolchain Lean en la máquina de
+desarrollo, así que el coste está **estimado y no medido**. `formal.lean_timeout_segundos`
+se queda en `null` hasta medirlo. Lean es dependencia de **toolchain**, no de Python: se
+declara en el README y en CI, no en `pyproject.toml`.
 
-`replanificador` recoge los hallazgos adoptados, revisa el esquema, reajusta las
-restricciones de destino de las escenas aún no escritas y propaga el retcon a las
-afectadas.
+### TLA+ — el harness
 
-### Ruta de un defecto
+Un módulo con las dos máquinas, `Novela` y `Capitulo`, porque la transición
+`Escribiendo → Detenida` las acopla. TLC corre **en desarrollo**, nunca en una generación,
+sobre el modelo pequeño cuyos tamaños fija `config/thresholds.yaml` § `modelo_formal`.
 
-Un *defecto local* se corrige reescribiendo en sitio y revalidando la escena. Un
-*defecto sistémico* invalida la planificación: la escena vuelve a `planificada` y se
-generan briefs nuevos —por el bucle largo cuando exista, por el autor mientras
-`replanning/` esté fuera—. Clasificarlo bien es lo que evita parchear síntomas de un
-problema estructural.
+**Qué se demuestra**: al menos tres invariantes de seguridad —ninguna versión se publica con
+un capítulo que no pasó todos los validadores; la reanudación no duplica ni pierde capítulos;
+la versión anterior se conserva siempre tras una regeneración— y una de liveness: toda
+ejecución termina en `Publicada` o en `Detenida`, nunca en bucle.
 
-### Reglas de ejecución
+**Dos abstracciones declaradas** (TO-023), porque una abstracción declarada es honesta y una
+omisión silenciosa no:
 
-- El contador de tokens se calcula **antes** de llamar al modelo. Un ensamblado que no
-  cabe falla en voz alta; no se trunca en silencio.
-- Las llamadas al modelo son asíncronas y con timeout explícito.
-- La escritura al canon va siempre en transacción y es idempotente por
-  `scene_id` + `version`.
-- Un hallazgo entra como `propuesto` y solo el autor lo convierte en canon.
+1. **El contador de fallos de infraestructura se abstrae.** Un 429 reintentado no mueve
+   ningún estado del capítulo; modelarlo multiplicaría el espacio que TLC explora sin añadir
+   propiedad que demostrar.
+2. **La reanudación se modela en `Init`, no como acción externa.** Con una acción externa, la
+   liveness quedaría condicionada a una hipótesis de fairness sobre alguien que la spec no
+   modela. Con `Init`, la fairness se declara **solo sobre las acciones internas**.
+
+**Residuo declarado**: ninguna traza individual exhibe caída→reanudación. Se demuestra que
+toda reanudación válida es correcta, no que la reanudación ocurra.
+
+**Correspondencia con el código**: la tabla de § Proceso, generada desde la tabla de
+transiciones declarativa de `process/`, con un test que falla si el `.tla` y el código
+divergen. El `.tla` expone los nombres de acción y sus pares origen → destino de forma
+extraíble trivialmente, para que el test no tenga que interpretar TLA+.
+
+**Contraejemplos.** Todo contraejemplo que TLC encuentre se documenta en
+`docs/registro-iteraciones.md` con la propiedad violada, la traza y el cambio que provocó.
+Un contraejemplo sin el cambio que produjo es una anécdota.
+
+---
+
+## Observabilidad
+
+La jerarquía está en `domain-knowledge.md` § Observabilidad. Aquí, cómo se instrumenta.
+
+| Concepto | Cómo se materializa |
+| --- | --- |
+| Sesión | Una por novela: entrevista, generación y todas las regeneraciones |
+| Traza | Una por generación, inicial o dirigida |
+| Span | Uno por rol y uno por tool, con el nombre de la tabla de § Agentes |
+| Score | Uno por validador ejecutado, con **justificación** cuando el validador es semántico |
+| Versión de prompt | Nombre y **hash de git** del fichero de prompt realmente usado |
+
+Tokens, coste y latencia se leen de `response.usage` y se acumulan por capítulo y por
+novela. El cliente de Langfuse vive en `commons/`, porque lo usan todas las features.
+
+**Versionado de prompts: el repositorio es la fuente** (TO-024). Un comando idempotente
+publica cada prompt en Langfuse como versión nueva etiquetada con su hash de git, y cada
+generación se vincula a esa versión. Sin red, el backend usa el fichero local. Tres
+guardarraíles, y los tres importan:
+
+1. **La sincronización corre en CI y a mano antes de cada eval, nunca al arrancar.** Si
+   corriera al arrancar, el arranque volvería a depender de la red.
+2. **Es idempotente por hash**: solo publica si ese hash no está ya, o cada ejecución crearía
+   una versión idéntica y el historial dejaría de significar nada.
+3. **El span registra el hash del fichero realmente usado**, no solo el identificador de
+   versión de Langfuse. Si discrepan —sincronización fallida, despliegue a medias— la
+   discrepancia es detectable. Sin esto, el sistema puede atribuir un resultado a un prompt
+   que no lo produjo, que es justo el fallo que el versionado existe para impedir.
+
+**La ejecución de evals comprueba antes de empezar que el hash de cada prompt existe en
+Langfuse, y falla si no.** Sin esa puerta, un eval de tuning local queda mal atribuido.
+
+---
+
+## Lectura web y export
+
+El formato de lectura es **web**, y el PDF es un export de ese mismo render (TO-009).
+
+La página `lectura` sirve índice navegable, ficha de personajes y lugares con enlaces a los
+capítulos donde aparece cada uno, portada con la dedicatoria, petición de cambio desde la
+propia página y marca de los capítulos modificados respecto a la versión anterior.
+
+### `render_visual` en el gate
+
+```mermaid
+flowchart TD
+  GT[Gate de publicación] --> MCPC[Cliente MCP del harness]
+  MCPC --> PW[Servidor Playwright MCP]
+  PW --> AS[Aserciones deterministas]
+  AS -->|todo verde| SC[Score render_visual]
+  AS -->|falla| DIAG{¿El dato está<br/>en la story bible?}
+  DIAG -->|no| ROL[Problema de datos:<br/>vuelve al rol dueño]
+  DIAG -->|sí, no se renderiza| BUG[Bug de maquetación:<br/>detiene con informe]
+```
+
+**El harness es cliente del servidor Playwright MCP con llamadas guionizadas** (TO-026): es
+programático, cuesta cero tokens y usa el browser MCP de forma literal, como pide el alcance
+§5a. Un agente LLM navegando queda descartado para el gate porque un juicio de modelo en una
+puerta bloqueante significa que una publicación puede fallar por razones que nadie puede
+reproducir.
+
+**Aserciones**: el índice tiene una entrada por capítulo y todas resuelven; cada enlace de la
+ficha lleva a su capítulo; la portada muestra la dedicatoria; no hay errores de consola ni
+desbordes de caja.
+
+**Enrutado del fallo**, determinista y decidido consultando la story bible primero: si el
+dato **no está**, es problema de datos y vuelve al rol dueño; si **está y no se renderiza**,
+es bug de maquetación y detiene la generación con informe. Un bug de maquetación **no consume
+intentos de capítulo**: reintentar no lo arregla, porque el defecto está en el código.
+
+**Residuo declarado**: el vocabulario de aserciones queda acotado por las tools que exponga
+el servidor MCP. Cada aserción declara qué tool le da la evidencia, y la que no se pueda
+expresar **se declara no cubierta** en vez de debilitarse en silencio.
+
+**Lo que ninguna aserción caza**: un fallo visual que nadie previó —contraste ilegible,
+solapamiento en móvil—. Eso lo cubre el uso del browser MCP **en desarrollo**, con Claude
+Code contra el mismo servidor, documentado en `docs/browser-mcp.md` ▸ previsto con qué
+inspeccionó, qué detectó y qué cambió. No es decoración del entregable: es el complemento
+real del punto ciego.
+
+### Export a PDF
+
+Bajo demanda, **una vez por versión**, porque las versiones son inmutables (TO-025). Sale
+del mismo render con `page.pdf()` de Playwright (TO-003), de modo que el PDF entregado es lo
+que el gate acaba de validar; con otro motor se validaría uno y se entregaría otro. En ese
+momento corre `paridad_pdf_web`, que comprueba recuento y títulos de capítulos, presencia de
+dedicatoria e índice, y recuento de palabras dentro de tolerancia.
+`ejemplos/novela-ejemplo.pdf` ▸ previsto se genera así una vez y se commitea.
+
+---
+
+## Seguridad
+
+| Amenaza | Qué la contiene |
+| --- | --- |
+| **Inyección por el texto libre** | Entra marcado como datos, nunca en la posición de las instrucciones. Ningún agente ejecuta instrucciones halladas en él. Lo que lo parece se registra como `Fragmento sospechoso` y se descarta. La adopción de un hecho la decide el policy engine, no el texto |
+| **Fuga entre novelas** | `novel_id` obligatorio en toda tabla y en toda consulta de dominio, sin valor por defecto |
+| **Secretos en el repositorio** | Solo `.env.example` ▸ previsto, con las claves vacías |
+| **Ejecución de lo que devuelve el modelo** | Ningún camino del código ejecuta, evalúa ni lanza como proceso la salida del modelo: es prosa que se guarda |
+
+**Lo que esto no cubre.** El aislamiento por `novel_id` depende de que cada consulta lo lleve,
+y eso es exactamente lo que hoy no comprueba nadie. Es el validador candidato que va a
+`verification.md`, junto con el de `version`.
+
+**Agente de seguridad** (TO-017). Agente de desarrollo en `.claude/agents/` ▸ previsto, no
+runtime. Cubre inyección de prompt sobre el texto libre, exfiltración entre novelas,
+dependencias con vulnerabilidades conocidas y secretos en el historial de commits. Su salida
+es `docs/security-report.md` ▸ previsto, con cada vulnerabilidad, su severidad y el cambio
+que la resolvió.
+
+---
+
+## Opcionales decididos
+
+De los ocho opcionales del alcance se implementan dos (TO-017).
+
+### Servidor MCP de solo lectura
+
+`backend/app/mcp_server/` ▸ previsto, con FastMCP como plugin del FastAPI existente: no añade
+infraestructura. Es un **adaptador**, no una feature: no es dueño de ninguna clase y solo
+importa `service.py` de otras.
+
+| Tool | Devuelve |
+| --- | --- |
+| `list_novels` | Novelas con su estado y versión vigente |
+| `get_chapter` | Un capítulo de una versión concreta |
+| `list_versions` | Historial de versiones y qué capítulos cambiaron en cada una |
+| `query_story_bible` | Personajes, lugares, hechos y cronología **de una versión** |
+| `download_novel` | La novela completa en PDF |
+
+Cada tool con schema validado, **servidor de solo lectura**, y cada llamada registrada en
+Langfuse. Que `query_story_bible` responda por versión es lo que exige el versionado por
+vigencia de § Story bible.
+
+### Agente de seguridad
+
+Descrito en § Seguridad.
+
+**Descartados y por qué**: los linters de prosa, porque `calidad_prosa` ya mide lo mismo con
+validador propio; el linter de edición manual, porque presupone una edición manual que no
+está en el flujo; las tools de escritura sobre MCP, los invariantes Lean adicionales y la
+spec TLA+ del MCP, porque profundizan donde ya hay cobertura. El login quedó fuera en TO-004.
 
 ---
 
 ## Ciclo de cambio del repositorio
 
-El detalle de cada paso de las tres puertas que fija `AGENTS.md` § Ciclo de cambio. Ahí
-está el diagrama, el frontmatter y qué queda fuera de la cadena; aquí, qué contiene cada
-artefacto. **No confundir con el ciclo de producción de la novela**, que es la sección
-«Proceso» de más arriba: aquel genera escenas, este genera código.
+El detalle de las tres puertas que fija `CLAUDE.md` § Ciclo de cambio. **No confundir con el
+ciclo de producción de la novela**, que es § Proceso de producción: aquel genera capítulos,
+este genera código.
 
 ### 1. Actualizar la documentación de `docs/`
 
-Los documentos de `docs/` —no `docs/specs/`, que es el paso siguiente—. Es la entrada
-del ciclo y lo único que no necesita spec.
+Es la entrada del ciclo y lo único que no necesita spec. `definitions.md`,
+`domain-knowledge.md` y este documento **se editan aquí, en el repositorio**: no hay
+documento vivo externo ni nada que reexportar (`trade-offs.md` TO-001). Un cambio de
+ontología deja entrada en `docs/registro-iteraciones.md` y va en su propio commit con el
+registro actualizado en él.
 
-- `definitions.md` y `domain-knowledge.md` **no se editan aquí**: se cambian en el
-  documento vivo y se reexportan (`AGENTS.md` § Canonicidad y sincronía). Un cambio de
-  ontología empieza ahí, no en una spec.
-- `architecture.md` sí se edita en el repositorio. Si un cambio toca la arquitectura, se
-  actualiza **antes** de escribir la spec que se apoya en ella.
-- Si al terminar un cambio la documentación queda desfasada, se corrige en el mismo
-  commit. Documentación que miente es peor que no tenerla.
+### 2. Crear o actualizar una spec
 
-### 2. Crear o actualizar una spec (`docs/specs/`)
-
-Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa.
-
-**Pregunta antes de escribirla.** Una spec no se adivina: es el punto del ciclo donde el
-agente interroga al autor hasta que no queda ambigüedad. Como mínimo hay que dejar
-resuelto qué comportamiento observable se espera, qué criterios de aceptación la dan por
-cumplida, qué queda explícitamente fuera, y qué toca de ontología, esquema o contrato de
-API. Si algo sigue abierto, la spec no está lista: no se pasa a plan con huecos.
-
-Contenido mínimo: problema, comportamiento esperado, criterios de aceptación
+Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa. Una spec no se
+adivina: es el punto del ciclo donde el agente interroga al desarrollador hasta que no queda
+ambigüedad. Contenido mínimo: problema, comportamiento esperado, criterios de aceptación
 verificables, fuera de alcance, impacto en ontología, esquema y API, y las preguntas de
 competencia afectadas.
 
-Actualizar una spec existente sigue el mismo camino: vuelve a `borrador` y necesita
-aprobación otra vez antes de que su plan valga.
-
 ### 3. Plan de implementación
 
-`docs/specs/NNN-slug/plan.md`, junto a su spec.
-
-- **No se crea un plan si la spec no está `aprobada`.** Se comprueba leyendo su
-  frontmatter, no de memoria.
-- Contenido: pasos ordenados, features y ficheros que se tocan, migraciones necesarias,
-  **la lista de pruebas que se van a escribir** y en qué orden, riesgos y criterio de
-  terminado.
-- Un plan que no se puede probar no es un plan: si no sabes qué prueba falla primero,
-  falta diseño.
+`docs/specs/NNN-slug/plan.md`. **No se crea si la spec no está `aprobada`**, y se comprueba
+leyendo su frontmatter, no de memoria. Contenido: pasos ordenados, features y ficheros que se
+tocan, migraciones necesarias, **la lista de pruebas que se van a escribir** y en qué orden,
+riesgos y criterio de terminado. Un plan que no se puede probar no es un plan.
 
 ### 4. Crear o modificar código
 
-- **No se escribe código si el plan no está `aprobado`.** Sin plan aprobado el agente se
-  detiene y lo dice; no «adelanta» implementación.
-- **TDD, sin excepciones**: la prueba primero, se comprueba que falla por la razón
-  correcta, luego el código mínimo que la pasa, luego refactor. Escribir la prueba
-  después no es TDD, es cobertura.
-- Al cerrar: si el comportamiento resultó distinto del aprobado, se actualiza la spec y
-  vuelve a aprobación; si cambió la estructura, se actualiza este documento. La spec
-  describe lo que el código hace, no lo que se pensaba hacer.
-- El commit que cierra un plan nombra su carpeta: `docs/specs/NNN-slug/`.
-
----
-
-## Pendiente de llevar a la ontología
-
-Este documento describe mecanismos que **no** tienen entrada en `definitions.md`. Se
-listan aquí como propuestas, no como hechos: mientras no estén en el documento vivo y
-reexportadas, ninguna clase del código puede llamarse así (regla 4 de `AGENTS.md`).
-
-Las tres primeras filas eran **desacuerdos dentro del propio contexto semilla**. El autor
-los cerró el 2026-09-22 y los dos documentos ya dicen lo mismo; se dejan aquí, con su
-resolución, para que el rastro de la decisión no se pierda.
-
-| Propuesta | Qué sería | Dónde entraría | Estado |
-| --- | --- | --- | --- |
-| Estado `Extraida` de `Escena` | `domain-knowledge.md` lo dibuja entre `Aceptada` y `Obsoleta`; `definitions.md` lista cinco estados sin él | `definitions.md` Capa 5 y `domain-knowledge.md` § Ciclo de producción | **Resuelto.** Retirado del diagrama: la extracción es un paso, no un estado |
-| Valores de `Estatus de hecho` | `definitions.md` lista `implícito`, que no es un estado del diagrama; el diagrama tiene `Descartado`, que no está en la lista | `definitions.md` Capa 2 y `domain-knowledge.md` § Modelo de canon | **Resuelto.** Valen los cinco de `definitions.md`: `Descartado` sale del diagrama e `Implícito` entra |
-| Nombre del estado inicial de `Hallazgo` | El diagrama lo llama `Propuesto`; los otros cuatro documentos lo llamaban `provisional`, palabra que además ya es un `Estatus de hecho` | `definitions.md` § Modo de autoría, `AGENTS.md`, este documento y la spec | **Resuelto.** `propuesto` en todas partes; `provisional` queda solo como `Estatus de hecho` |
-| Transición a estado final de `Refutado` | `Hecho canónico`: `Refutado` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Exportado.** Aplicado en el documento vivo y en `docs/` |
-| Transición a estado final de `Rota` | `Promesa narrativa`: `Rota` es **terminal**; hay que dibujar la arista a `[*]` | `domain-knowledge.md` § Modelo de canon | **Exportado.** Aplicado en el documento vivo y en `docs/` |
-| Retirar las cifras de presupuesto | La Capa 3 da porcentajes por capa; los números pasan a `config/thresholds.yaml` | `definitions.md` Capa 3 | **Exportado.** Aplicado en el documento vivo y en `docs/` |
-| `Muestra de entrenamiento` (tabla `training_samples`) | Par entrada/salida aceptado, con procedencia y forma de aceptación | Capa 5, o capa nueva de adaptación | Abierto. Entra en v1 como tabla; falta decidir si es vocabulario del dominio |
-| Ventana de olvido del anticontexto | Atributo `N escenas` sobre el Anticontexto ya definido | Capa 3, atributo de Anticontexto | Abierto. El **valor** ya vive en `config/thresholds.yaml`; falta si el atributo se nombra en la ontología |
-
-**Ningún estado sumidero se revive.** `Refutado` y `Rota` son terminales por diseño: si la
-trama vuelve sobre ello, se crea una entidad nueva que referencia a la anterior. Resucitar
-un hecho refutado destruiría la única cosa que el canon garantiza —que lo que fue verdad
-en t siga siendo consultable en t— y convertiría el historial en un estado mutable.
-
-**Lo que NO se propone como ontología, a propósito.** El trabajo encolado y sus estados,
-el pool de tokens en vuelo y el control de admisión son infraestructura de ejecución: no
-se persisten como dominio ni responden a ninguna pregunta de competencia. En v1 ni
-siquiera existen como tabla. Si algún día hay que auditar por qué un trabajo esperó,
-dejarán de serlo.
+**No se escribe código si el plan no está `aprobado`.** TDD sin excepciones: la prueba
+primero, se comprueba que falla por la razón correcta, luego el código mínimo que la pasa.
+Al cerrar: si el comportamiento resultó distinto del aprobado, se actualiza la spec y vuelve
+a aprobación; si cambió la estructura, se actualiza este documento. El commit que cierra un
+plan nombra su carpeta.
