@@ -126,3 +126,16 @@ class PromesaPagadaAntesDeAbrirse(ReglaDelDominioIncumplida):
     """P-45, RF-CANON-13. El pago necesita un setup anterior."""
 
     codigo_por_defecto = "promesa_pagada_antes_de_abrirse"
+
+
+class IndiceDesactualizado(ErrorDeArranque):
+    """A-42, RF-CTX-10. Vectores de modelos distintos no son comparables, y
+    mezclarlos no da error: da una recuperacion que devuelve lo que no toca."""
+
+    codigo_por_defecto = "indice_desactualizado"
+
+
+class DimensionDeEmbeddingInvalida(ReglaDelDominioIncumplida):
+    """El vector no tiene la dimension que declara `config/thresholds.yaml`."""
+
+    codigo_por_defecto = "dimension_de_embedding_invalida"

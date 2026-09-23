@@ -64,6 +64,13 @@ contexto:
   # Ventana deslizante del anticontexto, en escenas. Cuánto se recuerda antes de olvidar.
   anticontexto_ventana_escenas: null   # [histórico]
 
+  # Estimador local de tokens, en caracteres por token. No es el contador que manda:
+  # el que decide es el del proveedor (A-09), y corre una sola vez, justo antes de
+  # llamar. Este estima durante el ensamblado, que itera al degradar y no puede pagar
+  # una llamada por vuelta. La diferencia entre los dos la absorbe `capas.margen`, que
+  # es exactamente la mitigación que A-09 declara.
+  tokens_por_mil_caracteres: 250   # [decisión] aproximación para prosa en español
+
 # ---------------------------------------------------------------------------
 # Presupuesto en vuelo
 # ---------------------------------------------------------------------------
@@ -187,8 +194,8 @@ modelo:
 
 embeddings:
   modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
-  version: null           # versión concreta del modelo; se fija al elegir el artefacto
-  dimension: null         # debe coincidir con la declarada en la tabla vec0
+  version: BAAI/bge-m3    # artefacto concreto; un cambio aquí obliga a reindexar
+  dimension: 1024         # la que produce bge-m3; debe coincidir con la tabla vec0
 
 recuperacion:
   max_fragmentos: null    # [decisión] tope antes de ordenar por similitud

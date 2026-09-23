@@ -174,6 +174,17 @@ def inventario_del_canon(base: Conexion) -> dict[str, int]:
     return repository.inventario(base)
 
 
+def posicion_de(base: Conexion, escena_id: int) -> int:
+    """Posicion de la escena en el orden del discurso.
+
+    La expone `canon/` porque es quien posee la vista `escena_ordenada`, y
+    porque `t` —una posicion en el discurso, no una fecha del mundo ficcional—
+    es un concepto del canon. Otras features la leen por aqui, nunca por el
+    repositorio (RD-04).
+    """
+    return repository.posicion_de(base, escena_id)
+
+
 def estado_de_escena(base: Conexion, escena_id: int) -> EstadoDeEscena:
     return novel.obtener_escena(base, escena_id).estado
 

@@ -11,6 +11,8 @@ dependencies = [
     "pydantic>=2.9",         # contrato de datos, v2, RI-02
     "pyyaml>=6.0",           # unica forma de leer config/thresholds.yaml (RNF-14)
     "anthropic>=0.40",       # proveedor del modelo (architecture.md, Adaptacion del modelo)
+    "sqlite-vec>=0.1.9",
+    "sentence-transformers>=6.1.0",
 ]
 
 [dependency-groups]
@@ -34,6 +36,10 @@ packages = ["app"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+# La suite no descarga gigas de pesos. La prueba del modelo local se pide a mano:
+#   uv run pytest -m modelo
+addopts = "-m 'not modelo'"
+markers = ["modelo: carga el modelo de embeddings local; descarga el artefacto"]
 filterwarnings = [
     "error",
     # Deprecacion de terceros: starlette.testclient toca un alias viejo de anyio.
@@ -51,3 +57,9 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.12"
 strict = true
 files = ["app"]
+
+# `sqlite-vec` no publica `py.typed`. Es la extension del stack cerrado, no una
+# dependencia opcional: se ignora el stub que falta, no el modulo.
+[[tool.mypy.overrides]]
+module = "sqlite_vec.*"
+ignore_missing_imports = true

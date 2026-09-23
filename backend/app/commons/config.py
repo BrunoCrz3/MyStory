@@ -50,6 +50,7 @@ class Contexto(_Bloque):
     capas: Capas
     degradacion: list[str]
     anticontexto_ventana_escenas: int | None
+    tokens_por_mil_caracteres: int
 
 
 class EnVuelo(_Bloque):

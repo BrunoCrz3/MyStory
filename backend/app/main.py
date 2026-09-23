@@ -24,6 +24,8 @@ from app.commons.config import Umbrales, cargar_umbrales, verificar_arranque
 from app.commons.db import migraciones
 from app.commons.db.conexion import crear_conexion
 from app.commons.http import registrar_manejadores
+from app.context import service as contexto
+from app.context.router import router as router_de_context
 from app.novel.router import router as router_de_novel
 
 HOST_POR_DEFECTO = "127.0.0.1"
@@ -44,6 +46,9 @@ async def ciclo_de_vida(aplicacion: FastAPI) -> AsyncIterator[None]:
 
     conexion = crear_conexion()
     migraciones.aplicar_migraciones(conexion)
+    # A-42: un cambio de modelo o de version de embeddings se detecta aqui, antes
+    # de servir la primera consulta sobre un indice mixto.
+    contexto.verificar_indice(conexion, umbrales)
 
     aplicacion.state.umbrales = umbrales
     aplicacion.state.conexion = conexion
@@ -61,6 +66,7 @@ app = FastAPI(
 registrar_manejadores(app)
 app.include_router(router_de_novel)
 app.include_router(router_de_canon)
+app.include_router(router_de_context)
 
 
 @app.get("/salud")

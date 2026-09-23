@@ -13,6 +13,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
+import sqlite_vec
+
 from app.commons.config import raiz_del_repositorio
 
 Conexion = sqlite3.Connection
@@ -35,11 +37,18 @@ def crear_conexion(ruta: Path | None = None) -> Conexion:
       se aplica es documentacion, no integridad.
     - `isolation_level = None`: sin transacciones implicitas de la libreria. El
       SQL es explicito, incluido el `BEGIN`.
+    - `sqlite-vec` cargado: las tablas `vec0` viven en el mismo fichero.
     """
     destino = ruta or ruta_de_la_base()
     destino.parent.mkdir(parents=True, exist_ok=True)
     conexion = sqlite3.connect(destino, isolation_level=None)
     conexion.row_factory = sqlite3.Row
+    # `sqlite-vec` se carga aqui y solo aqui, por el mismo motivo que `WAL`: una
+    # conexion abierta aparte no veria las tablas `vec0` y fallaria al leer el
+    # indice, no al abrirlo.
+    conexion.enable_load_extension(True)
+    sqlite_vec.load(conexion)
+    conexion.enable_load_extension(False)
     conexion.execute("PRAGMA journal_mode = WAL")
     conexion.execute("PRAGMA foreign_keys = ON")
     return conexion
