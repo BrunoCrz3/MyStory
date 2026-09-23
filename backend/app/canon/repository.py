@@ -243,6 +243,28 @@ def nombres_de_entidades(base: Conexion, referencias: dict[str, int]) -> list[st
     return nombres
 
 
+def revelaciones_pendientes(base: Conexion, posicion: int) -> list[dict[str, object]]:
+    """Revelaciones cuya escena minima esta por delante de `t`.
+
+    P-40: lo que todavia no se puede contar. Cubre las registradas; la que el
+    borrador filtra sin que nadie la haya registrado se queda fuera.
+    """
+    return [
+        dict(fila)
+        for fila in base.execute(
+            """
+            SELECT revelacion.hecho_id AS hecho_id, hecho.texto AS texto,
+                   hecho.valor AS valor, minima.posicion AS minima
+            FROM revelacion
+            JOIN hecho_canonico AS hecho ON hecho.id = revelacion.hecho_id
+            JOIN escena_ordenada AS minima ON minima.escena_id = revelacion.escena_minima_id
+            WHERE minima.posicion > ?
+            """,
+            (posicion,),
+        )
+    ]
+
+
 def contradicciones(base: Conexion) -> list[models.Contradiccion]:
     return [
         models.Contradiccion.model_validate(dict(fila))
@@ -317,6 +339,14 @@ def escribir_consolidacion(
             base.execute(
                 "INSERT INTO escena_promesa (escena_id, promesa_id, rol) VALUES (?, ?, 'abre')",
                 (datos.escena_id, promesa_id),
+            )
+
+        for revelacion in datos.revelaciones:
+            base.execute(
+                "INSERT INTO revelacion (hecho_id, destinatario, personaje_id, "
+                "escena_minima_id) VALUES (:hecho_id, :destinatario, :personaje_id, "
+                ":escena_minima_id)",
+                revelacion.model_dump(),
             )
 
         epistemicos: list[int] = []

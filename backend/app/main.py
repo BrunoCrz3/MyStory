@@ -27,6 +27,7 @@ from app.commons.http import registrar_manejadores
 from app.context import service as contexto
 from app.context.router import router as router_de_context
 from app.novel.router import router as router_de_novel
+from app.quality.router import router as router_de_quality
 
 HOST_POR_DEFECTO = "127.0.0.1"
 
@@ -67,6 +68,7 @@ registrar_manejadores(app)
 app.include_router(router_de_novel)
 app.include_router(router_de_canon)
 app.include_router(router_de_context)
+app.include_router(router_de_quality)
 
 
 @app.get("/salud")

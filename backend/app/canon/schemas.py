@@ -51,6 +51,13 @@ class NuevoEstadoEpistemico(_Esquema):
     certeza: str | None = None
 
 
+class NuevaRevelacion(_Esquema):
+    hecho_id: int
+    destinatario: str = "lector"
+    personaje_id: int | None = None
+    escena_minima_id: int | None = None
+
+
 class Consolidacion(_Esquema):
     escena_id: int
     version: int
@@ -59,6 +66,7 @@ class Consolidacion(_Esquema):
     hechos: list[NuevoHechoCanonico] = []
     promesas: list[NuevaPromesaNarrativa] = []
     epistemicos: list[NuevoEstadoEpistemico] = []
+    revelaciones: list[NuevaRevelacion] = []
 
 
 class ResultadoDeConsolidacion(_Esquema):

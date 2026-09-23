@@ -192,6 +192,11 @@ def estado_de_escena(base: Conexion, escena_id: int) -> EstadoDeEscena:
 # --- Ciclos de vida -------------------------------------------------------
 
 
+def revelaciones_pendientes(base: Conexion, escena_id: int) -> list[dict[str, object]]:
+    """P-40: que no se puede revelar todavia en `t`."""
+    return repository.revelaciones_pendientes(base, repository.posicion_de(base, escena_id))
+
+
 def obtener_hecho(base: Conexion, hecho_id: int) -> models.HechoCanonico:
     return repository.obtener_hecho(base, hecho_id)
 

@@ -64,7 +64,12 @@ class Mundo:
 
         obra = novel.crear_obra(
             base,
-            novel_schemas.NuevaObra(titulo="El vado", premisa="un puente recuerda", genero="cf"),
+            novel_schemas.NuevaObra(
+                titulo="El vado",
+                premisa="un puente recuerda",
+                genero="cf",
+                extension_objetivo=90000,
+            ),
         )
         parte = novel.crear_parte(
             base,
@@ -125,6 +130,7 @@ class Mundo:
         hechos: list[canon_schemas.NuevoHechoCanonico],
         promesas: list[str] | None = None,
         epistemicos: list[canon_schemas.NuevoEstadoEpistemico] | None = None,
+        revelaciones: list[canon_schemas.NuevaRevelacion] | None = None,
         fecha_ficcional: str | None = None,
     ) -> int:
         escena_id = self._siguiente_escena()
@@ -148,6 +154,7 @@ class Mundo:
                     for texto in (promesas or [])
                 ],
                 epistemicos=epistemicos or [],
+                revelaciones=revelaciones or [],
             ),
         )
         return escena_id

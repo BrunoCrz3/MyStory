@@ -139,3 +139,20 @@ class DimensionDeEmbeddingInvalida(ReglaDelDominioIncumplida):
     """El vector no tiene la dimension que declara `config/thresholds.yaml`."""
 
     codigo_por_defecto = "dimension_de_embedding_invalida"
+
+
+class BorradorNoHigienico(ReglaDelDominioIncumplida):
+    """A-47, RF-QUA-06. La puerta corre antes de la critica y antes del punto
+    unico de promocion: un borrador que la falla no entra al ciclo."""
+
+    codigo_por_defecto = "borrador_no_higienico"
+
+
+class DimensionSinValidador(ErrorDeArranque):
+    """RF-QUA-02: una dimension declarada que ninguna validacion puntua.
+
+    Es de arranque y no de dominio a proposito: un informe al que le falta una
+    dimension no es una peticion mal hecha, es el sistema mal montado.
+    """
+
+    codigo_por_defecto = "dimension_sin_validador"

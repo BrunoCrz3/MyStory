@@ -95,3 +95,76 @@ def test_ningun_modelo_inventa_una_clase_que_la_ontologia_no_tiene() -> None:
         assert inventadas == set(), (
             f"{capa}: nombres que no estan en la ontologia: {sorted(inventadas)}"
         )
+
+
+# --- Duenas de cada clase, segun architecture.md --------------------------
+
+ARQUITECTURA = REPOSITORIO / "docs" / "architecture.md"
+
+# Entradas de esa tabla que no son clases sino conceptos que la feature posee.
+# La tabla las mezcla a proposito —«Ensamblado, presupuesto de tokens,
+# recuperacion...»— y `architecture.md` dice de las tres memorias y de
+# `Ventana efectiva` que no llevan `models.py`.
+NO_SON_CLASES = {
+    "Ensamblado",
+    "PresupuestoDeTokens",
+    "Recuperacion",
+    "Anticontexto",
+    "JerarquiaDeCompresion",
+    "Adopcion",
+    "PropagacionDelRetcon",
+    "ReplanificacionRodante",
+}
+
+# Features ya implementadas. Las que faltan entran con su hito.
+IMPLEMENTADAS = {"novel/", "canon/", "quality/"}
+
+
+def _duenas() -> dict[str, set[str]]:
+    texto = ARQUITECTURA.read_text(encoding="utf-8")
+    duenas: dict[str, set[str]] = {}
+    for linea in texto.splitlines():
+        if not linea.startswith("| `") or "` |" not in linea:
+            continue
+        celdas = [celda.strip() for celda in linea.strip("|").split("|")]
+        if len(celdas) != 3:
+            continue
+        feature = celdas[0].strip("`")
+        clases = {_a_nombre_de_clase(pieza) for pieza in celdas[2].split(",")}
+        duenas[feature] = {clase for clase in clases - NO_SON_CLASES if clase}
+    return duenas
+
+
+def test_cada_feature_implementa_las_clases_que_architecture_le_asigna() -> None:
+    """A-23, segunda via.
+
+    `docs/definitions.md` solo tabula las clases de las Capas 1 y 2; las de la 4
+    estan en prosa. La tabla «Anatomia de una feature» de `architecture.md` si
+    las lista todas y se declara exhaustiva, asi que es la que se lee aqui. De
+    paso comprueba que esa tabla sigue al dia.
+    """
+    duenas = _duenas()
+    assert set(duenas) >= IMPLEMENTADAS, "architecture.md ya no lista alguna feature"
+
+    for feature in sorted(IMPLEMENTADAS):
+        fichero = RAIZ / "app" / feature.rstrip("/") / "models.py"
+        faltan = duenas[feature] - _clases_del_modulo(fichero)
+        assert faltan == set(), f"{feature}: clases asignadas sin modelo: {sorted(faltan)}"
+
+
+def test_los_niveles_del_codigo_y_de_la_migracion_coinciden() -> None:
+    """La Capa 4 vive en dos sitios: la migracion 005 la siembra y
+    `quality/service.py` la copia para clasificar sin tocar la base. Que no se
+    separen no puede quedar en la buena intencion."""
+    import re
+
+    from app.quality.service import NIVEL_POR_DIMENSION
+
+    migracion = (RAIZ / "app" / "commons" / "db" / "migrations" / "005_calidad.sql").read_text(
+        encoding="utf-8"
+    )
+    inicio = migracion.index("INSERT INTO dimension_calidad")
+    siembra = migracion[inicio : migracion.index(";", inicio)]
+    sembrados = dict(re.findall(r"\('([a-z_]+)',\s*'(\w+)'", siembra))
+
+    assert sembrados == NIVEL_POR_DIMENSION

@@ -112,6 +112,13 @@ def fragmentos_de(base: Conexion, escena_id: int, nivel: NivelDeCompresion) -> l
     return repository.fragmentos_de(base, escena_id, nivel)
 
 
+def muestras_de_voz(
+    base: Conexion, personajes: list[int], escena_id: int, cuantas: int = MAXIMO_DE_MUESTRAS
+) -> list[Fragmento]:
+    """`muestrear-voz`. La usan `ensamblar-contexto` y el `critico`."""
+    return repository.muestras_de_voz(base, personajes, canon.posicion_de(base, escena_id), cuantas)
+
+
 def niveles_disponibles(base: Conexion, escena_id: int) -> list[NivelDeCompresion]:
     return repository.niveles_de(base, escena_id)
 
