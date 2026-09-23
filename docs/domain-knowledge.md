@@ -1,98 +1,76 @@
 # Conocimiento de dominio — Árboles y grafos de la ontología
 
-2026-09-21 · @Bruno Cruz
+2026-09-23 · @Bruno Cruz
 
-Representación visual de la ontología definida en el documento de definiciones: jerarquías de clases, grafo de relaciones, flujos de contexto y máquina de estados de producción. Cada diagrama es un bloque Mermaid editable.
+Representación visual de la ontología definida en el documento de definiciones: jerarquías de clases, grafo de relaciones, flujos de contexto, máquinas de estado del harness y mapa de validadores. Cada diagrama es un bloque Mermaid editable y ninguno introduce una clase o un estado que el documento de definiciones no liste.
 
 ## Mapa de capas
 
-Las cinco capas forman un ciclo cerrado: la obra se planifica, el canon fija lo verdadero, el contexto alimenta la generación, la calidad decide si se acepta y el proceso devuelve el resultado al canon.
+Las cinco capas forman un ciclo cerrado: el encargo fija para quién es la novela y de qué está hecha, el canon fija lo verdadero, el contexto alimenta la generación, la calidad decide si se acepta y el proceso devuelve el resultado al canon.
 
 ```mermaid
 flowchart LR
-  OBRA[Obra<br/>esquema por actos] --> CANON[Canon<br/>estado en t]
+  ENC[Encargo y obra<br/>brief y esquema] --> CANON[Canon<br/>story bible en t]
   CANON --> CTX[Contexto<br/>qué ve el modelo]
-  CTX --> PRC[Proceso<br/>escena descubierta]
-  PRC --> CAL[Calidad<br/>dimensiones y umbrales]
-  CAL -->|escena aceptada| CANON
-  CAL -->|escena aceptada| EXT[Extracción]
-  CAL -->|defecto sistémico| OBRA
-  EXT -->|deriva sobre umbral| OBRA
+  CTX --> PRC[Proceso<br/>harness]
+  PRC --> CAL[Calidad<br/>validadores y scores]
+  CAL -->|capítulo aceptado| CANON
+  CAL -->|capítulo aceptado| EXT[Extracción]
+  CAL -->|defecto sistémico| ENC
+  EXT -->|restricción invalidada| ENC
+  CANON -->|solicitud de cambio| ENC
 ```
 
-Hay dos retornos hacia la obra: el defecto sistémico, que obliga a replanificar de inmediato, y el acumulado de hallazgos, que dispara la replanificación rodante cuando la deriva supera el umbral.
+Hay tres retornos hacia el encargo: el defecto sistémico, que obliga a replanificar los capítulos pendientes; la invalidación de una restricción de destino, detectada al extraer; y la solicitud de cambio del lector sobre una novela ya publicada. Los tres terminan en el mismo sitio y por eso comparten flecha de destino.
 
-## Modo híbrido
+## Entrevista y brief
 
-Se planifica por arriba y se descubre por abajo. La frontera entre ambos regímenes cae entre el capítulo y la escena.
+La entrevista es el único punto donde entra información de fuera, y por eso es donde vive la desconfianza. Produce un brief validado con schema o no produce nada.
 
 ```mermaid
 flowchart TD
-  subgraph PLAN[Planificado: destino fijo]
-    O[Obra] --> A[Acto]
-    A --> C[Capítulo]
-  end
-  subgraph DESC[Descubrimiento: camino libre]
-    E[Escena] --> B[Beat]
-  end
-  C -->|restricción de destino| E
-  E -->|hallazgo| C
+  CLI[Comprador] --> ENT[Entrevistador]
+  ENT --> DAT[Datos del destinatario<br/>nombre, edad, rasgos, recuerdos]
+  ENT --> CFG[Género, tono, extensión]
+  ENT --> VET[Palabras y temas vetados]
+  CLI -.->|no confiable| TL[Texto libre aportado]
+  TL --> SAN[Saneado y marcado como datos]
+  SAN --> FS[Fragmento sospechoso<br/>se descarta y se registra]
+  SAN --> HEX[Hechos extraídos del texto libre]
+  DAT --> VAL{¿Completo y sin contradicciones?}
+  CFG --> VAL
+  VET --> VAL
+  HEX --> VAL
+  VAL -->|falta un campo| DF[Dato faltante<br/>se repregunta]
+  VAL -->|edad vs tono o género| CB[Contradicción de brief<br/>se resuelve con el comprador]
+  DF --> ENT
+  CB --> ENT
+  VAL -->|sí| BN[Brief de novela<br/>validado con schema]
 ```
 
-La flecha descendente lleva restricciones: qué debe ser cierto al terminar la escena. La ascendente lleva hallazgos: lo que surgió al escribirla y el plan no había previsto.
-
-**Los dos bucles de producción**, con cadencias distintas:
-
-```mermaid
-flowchart LR
-  BRF[Brief de escena] --> GEN[Generar escena]
-  GEN --> VAL[Validar]
-  VAL --> CSL[Consolidar]
-  CSL --> BRF
-  CSL --> EXT[Extraer hallazgos]
-  EXT --> DRV{¿Algún componente<br/>de la deriva sobre su umbral?}
-  DRV -->|no| BRF
-  DRV -->|sí| RPL[Replanificar esquema]
-  RPL --> BRF
-```
-
-El bucle corto gira en cada escena; el largo solo cuando la deriva lo justifica. Replanificar en cada escena disuelve la estructura; no hacerlo nunca deja un esquema que ya no describe la obra.
-
-**Ciclo de vida de un hallazgo:**
-
-```mermaid
-stateDiagram-v2
-  [*] --> Propuesto: extracción tras aceptar
-  Propuesto --> Adoptado: pasa a canon
-  Propuesto --> Descartado: se corrige la escena
-  Adoptado --> Integrado: el esquema lo recoge
-  Adoptado --> Conflictivo: choca con el plan
-  Conflictivo --> Integrado: replanificación
-  Conflictivo --> Descartado: prevalece el plan
-  Integrado --> [*]
-```
-
-El estado `Conflictivo` es el punto de decisión del método: ahí se elige entre defender el plan o dejar que la novela cambie de rumbo.
+Las dos ramas de rechazo vuelven al entrevistador, no al planificador: un brief incompleto o contradictorio no entra en el ciclo de generación. El texto libre nunca alcanza el brief sin pasar por el saneado, y lo que en él parece una instrucción al sistema se registra y muere ahí.
 
 ## Árbol estructural de la obra
 
-Jerarquía de contención pura: cada nivel agrupa al siguiente y la escena es el nivel donde se genera y se valida.
+Jerarquía de contención pura. El capítulo es el nivel donde se genera, se valida y se hace checkpoint, y no hay nivel por debajo.
 
 ```mermaid
 flowchart TD
-  O[Obra] --> P[Parte / Acto]
-  P --> C[Capítulo]
-  C --> E[Escena]
-  E --> B[Beat]
-  E -.-> BR[Brief de escena]
-  E -.-> SN[Snapshot de mundo]
+  O[Obra] --> C[Capítulo]
+  O -.-> BN[Brief de novela]
+  O -.-> DED[Dedicatoria]
+  C -.-> BC[Brief de capítulo]
+  C -.-> SN[Snapshot]
+  C -.-> RC[Resumen de capítulo]
 ```
 
-Las líneas discontinuas marcan lo que acompaña a la escena sin formar parte del texto: el encargo que la origina y el estado del mundo que deja tras de sí.
+Las líneas discontinuas marcan lo que acompaña sin formar parte del texto: el encargo que lo origina, el estado del mundo que deja tras de sí y su versión comprimida para el contexto de los siguientes.
+
+No hay acto ni escena. Un nivel intermedio sin estado, sin presupuesto y sin validador propios no se sostiene con el número de capítulos que declara `config/thresholds.yaml`: la función dramática que justificaría el acto es atributo del capítulo, y el grano fino de tiempo y lugar lo lleva el evento, que pertenece a la fábula y no a esta jerarquía.
 
 ## Árbol de entidades narrativas
 
-Taxonomía de las clases sustantivas, en tres ramas. Se separan del árbol estructural porque atraviesan capítulos y escenas sin pertenecer a ninguno.
+Taxonomía de las clases sustantivas, en tres ramas. Se separan del árbol estructural porque atraviesan capítulos sin pertenecer a ninguno.
 
 ```mermaid
 flowchart LR
@@ -101,154 +79,174 @@ flowchart LR
   EN --> TR[Trama]
   EN --> ES[Estilo]
   AG --> PJ[Personaje]
-  AG --> FA[Facción]
   MU --> LU[Lugar]
-  MU --> NO[Novum]
   MU --> RG[Regla del mundo]
-  MU --> TC[Término canónico]
   TR --> HI[Hilo de trama]
   TR --> AR[Arco]
-  TR --> AT[Artefacto]
+  TR --> EV[Evento]
+  EV --> EX[Evento excluyente]
   ES --> VN[Voz narrativa]
-  ES --> TM[Tema]
-  ES --> MT[Motivo]
 ```
 
-La rama de mundo es la que más crece en ciencia ficción: el novum genera reglas, las reglas generan términos y los términos exigen un glosario canónico que el sistema debe respetar en cada escena.
+Personaje y Lugar son las dos entidades que la novela publica como ficha consultable, y de ahí que sean las dos con nombre propio en la rama de agente y de mundo. La regla del mundo ya no deriva de un punto de divergencia especulativa: su origen es el brief, y «el abuelo nunca aparece» es una regla tanto como lo sería la física de una novela de género.
 
-**Anatomía del personaje**, la clase más compleja:
+**Anatomía del personaje**, la clase que más restricciones sostiene:
 
 ```mermaid
 flowchart TD
-  PJ[Personaje] --> MO[Motivación<br/>deseo vs necesidad]
-  PJ --> PS[Psique<br/>herida y creencia falsa]
-  PJ --> VZ[Voz<br/>léxico y sintaxis]
+  PJ[Personaje] --> MO[Motivación<br/>deseo y herida]
+  PJ --> VZ[Voz<br/>léxico y registro]
   PJ --> AR[Arco<br/>estado inicial a final]
-  PJ --> EP[Estado epistémico<br/>qué sabe y desde cuándo]
-  PJ --> RL[Relaciones<br/>con otros agentes]
+  PJ --> FN[Fecha de nacimiento]
+  PJ --> ED[Es destinatario]
 ```
 
-El estado epistémico es la rama que más fallos previene: sin ella el sistema escribe personajes que actúan sobre información que aún no han recibido.
+Las dos últimas ramas no son narrativas y por eso se dibujan: `fecha de nacimiento` es lo que permite demostrar que la edad de un personaje en cada evento cuadra, y `es destinatario` es lo que distingue al protagonista real de los demás para los validadores de reconocibilidad y de ortografía exacta del nombre.
 
 ## Grafo de entidades
 
-A diferencia de los árboles anteriores, aquí las aristas son relaciones con semántica propia. La escena es el nodo central porque casi todas las relaciones del dominio pasan por ella.
+Aquí las aristas son relaciones con semántica propia. El capítulo es el nodo central porque casi todas las relaciones del dominio pasan por él.
 
 ```mermaid
 flowchart TD
-  ESC[Escena]
+  CAP[Capítulo]
   PJ[Personaje]
   LU[Lugar]
   HI[Hilo de trama]
-  HC[Hecho canónico]
+  HC[Hecho]
   PR[Promesa narrativa]
-  AT[Artefacto]
-  ESC -->|se narra desde| PJ
-  ESC -->|transcurre en| LU
-  ESC -->|avanza| HI
-  ESC -->|establece| HC
-  ESC -->|abre o paga| PR
-  PJ -->|conoce| HC
-  PJ -->|posee| AT
-  AT -->|genera deuda| PR
+  EP[Elemento personalizado]
+  CAP -->|se narra desde| PJ
+  CAP -->|transcurre en| LU
+  CAP -->|avanza| HI
+  CAP -->|establece| HC
+  CAP -->|usa| HC
+  CAP -->|abre o paga| PR
+  EP -->|aparece en| CAP
 ```
 
-La arista `Personaje conoce Hecho` es distinta de `Escena establece Hecho`: un hecho puede ser verdad en el mundo y desconocido para casi todos los personajes. De esa diferencia salen la ironía dramática y las revelaciones.
+Las dos aristas entre capítulo y hecho son distintas y las dos hacen falta. `establece` es de dónde salió el hecho y hay una sola por hecho; `usa` es dónde se apoya el texto en él y hay tantas como capítulos lo mencionen. La regeneración dirigida se calcula con la segunda: si el perro pasa a llamarse Nala, hay que reescribir todo lo que *usa* el hecho, no solo el capítulo que lo *estableció*.
 
-**Mundo especulativo**, donde el novum propaga consecuencias:
-
-```mermaid
-flowchart LR
-  NO[Novum] -->|impone| RG[Regla del mundo]
-  NO -->|nombra| TC[Término canónico]
-  RG -->|configura| FA[Facción]
-  FA -->|disputa| AT[Artefacto]
-  RG -->|restringe| ESC[Escena]
-```
-
-Si una escena viola una regla derivada del novum, el defecto es sistémico: no se corrige reescribiendo la escena, sino revisando la regla o la planificación.
+`Elemento personalizado aparece en Capítulo` es la arista que convierte «que se note que es para él» en una consulta con respuesta.
 
 ## Fábula y discurso
 
-Dos ordenaciones del mismo material. Los eventos ocurren en un orden cronológico; las escenas los narran en otro.
+Dos ordenaciones del mismo material. Los eventos ocurren en un orden cronológico; los capítulos los narran en otro.
 
 ```mermaid
 flowchart TD
   subgraph FAB[Fábula: orden cronológico]
-    E1[Evento 1<br/>el accidente] --> E2[Evento 2<br/>la huida]
-    E2 --> E3[Evento 3<br/>el hallazgo]
-    E3 --> E4[Evento 4<br/>la confesión]
+    E1[Evento 1<br/>la mudanza] --> E2[Evento 2<br/>el perro]
+    E2 --> E3[Evento 3<br/>la beca]
+    E3 --> E4[Evento 4<br/>la boda]
   end
   subgraph DIS[Discurso: orden de lectura]
-    S1[Escena A] --> S2[Escena B]
-    S2 --> S3[Escena C]
+    C1[Capítulo 1] --> C2[Capítulo 2]
+    C2 --> C3[Capítulo 3]
   end
-  E3 -.-> S1
-  E1 -.-> S2
-  E4 -.-> S3
-  E2 -.-> S3
+  E3 -.-> C1
+  E1 -.-> C2
+  E4 -.-> C3
+  E2 -.-> C3
 ```
 
-Una escena puede narrar varios eventos y un evento puede narrarse en varias escenas o en ninguna. Esta relación N:M es lo que permite modelar analepsis, elipsis y revelaciones diferidas sin romper la consistencia temporal.
+Un capítulo puede narrar varios eventos y un evento puede narrarse en varios capítulos o en ninguno. Esta relación N:M es lo que permite modelar analepsis y elipsis, y es además la razón de que la verificación de cronología lea de la fábula y no del orden de los capítulos: comprobar que el capítulo 3 va después del 2 no dice nada sobre cuándo ocurrieron los hechos que narran.
 
 ## Modelo de canon
 
-El canon no se almacena como texto: se deriva de las escenas aceptadas y se proyecta en snapshots consultables.
+El canon no se almacena como texto: se deriva de los capítulos aceptados y se proyecta en snapshots consultables.
 
 ```mermaid
 flowchart LR
-  ESC[Escena aceptada] -->|establece| HC[Hecho canónico]
-  HC -->|proyecta| SN[Snapshot de mundo]
-  HC -->|visible para| EP[Estado epistémico]
-  HC -->|choca con| CO[Contradicción]
-  CO -->|resuelve con| RT[Retcon]
-  RT -->|marca obsoleta| ESC
+  CAP[Capítulo aceptado] -->|establece| HC[Hecho]
+  HC -->|proyecta| SN[Snapshot]
+  HC -->|choca con| CO[Contradicción de canon]
+  CO -->|se resuelve con| RT[Retcon]
+  RT -->|marca obsoleto| CAP
+  HC -->|se usa en| CAP
 ```
 
-El ciclo contradicción → retcon → invalidación es lo que mantiene el canon coherente a lo largo de una novela entera; sin él los errores se acumulan en silencio.
+El ciclo contradicción → retcon → invalidación es lo que mantiene el canon coherente a lo largo de la novela; sin él los errores se acumulan en silencio. Es además el mismo mecanismo que atiende la solicitud de cambio del lector: un retcon pedido desde fuera y un retcon nacido de una contradicción recorren el mismo camino.
 
-**Ciclo de vida de un hecho canónico:**
+**Ciclo de vida de un hecho:**
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Provisional
-  Provisional --> Confirmado: escena aceptada
-  Provisional --> Implícito: la escena lo implica sin enunciarlo
-  Implícito --> Confirmado: una escena posterior lo enuncia
-  Confirmado --> Retconeado: reescritura deliberada
-  Confirmado --> Refutado: contradicción resuelta en contra
-  Retconeado --> Confirmado: nueva versión fijada
+  [*] --> Propuesto: extracción tras aceptar el capítulo
+  Propuesto --> Adoptado: lo adopta el policy engine
+  Propuesto --> Descartado: lo rechaza el policy engine
+  Adoptado --> Retconeado: reescritura deliberada
+  Adoptado --> Refutado: contradicción resuelta en contra
+  Retconeado --> Adoptado: nueva versión fijada
+  Descartado --> [*]
   Refutado --> [*]
 ```
+
+Quien mueve `Propuesto` a `Adoptado` es el policy engine y la decisión queda en el audit log. Un hecho `Propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación. `Refutado` y `Descartado` son terminales: si la novela vuelve sobre ello, se crea un hecho nuevo que referencia al anterior, porque resucitar uno refutado destruiría lo único que el canon garantiza, que lo que fue verdad en `t` siga siendo consultable en `t`.
 
 **Ciclo de vida de una promesa narrativa:**
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Pendiente: se abre el setup
-  Pendiente --> Pagada: llega el payoff
-  Pendiente --> Subvertida: se paga de otro modo
-  Pendiente --> Rota: la obra termina sin pago
+  [*] --> Pendiente: se abre en un capítulo
+  Pendiente --> Pagada: llega el pago
+  Pendiente --> Rota: la novela termina sin pago
   Pagada --> [*]
-  Subvertida --> [*]
   Rota --> [*]
 ```
 
-El recuento de promesas en estado `Pendiente` frente a las escenas restantes es el mejor indicador temprano de que una novela se está desarmando.
+El recuento de promesas en `Pendiente` al llegar al último capítulo es exactamente el validador de cierre del arco: una novela que termina con promesas abiertas es una novela con final abrupto, y esa es una de las dos cosas que el comprador no acepta.
+
+## Story bible
+
+Modelo conceptual de la persistencia. No es el esquema SQL, pero el esquema se deriva de aquí sin decidir nada; la correspondencia clase a tabla vive en el documento de definiciones.
+
+```mermaid
+erDiagram
+  OBRA ||--o{ CAPITULO : "se compone de"
+  OBRA ||--|| BRIEF_NOVELA : "nace de"
+  BRIEF_NOVELA ||--o{ ELEMENTO_PERSONALIZADO : declara
+  BRIEF_NOVELA ||--o{ TEXTO_LIBRE : adjunta
+  TEXTO_LIBRE ||--o{ FRAGMENTO_SOSPECHOSO : contiene
+  DESTINATARIO ||--|| BRIEF_NOVELA : describe
+  ELEMENTO_PERSONALIZADO }o--o{ CAPITULO : "aparece en"
+  CAPITULO ||--o{ HECHO : establece
+  CAPITULO }o--o{ HECHO : usa
+  CAPITULO ||--|| SNAPSHOT : produce
+  CAPITULO ||--|| RESUMEN_CAPITULO : "se resume en"
+  CAPITULO }o--o{ PROMESA : "abre o paga"
+  CAPITULO }o--o{ EVENTO : narra
+  EVENTO }o--|| LUGAR : "ocurre en"
+  EVENTO }o--o{ PERSONAJE : "involucra a"
+  EVENTO ||--o| EVENTO_EXCLUYENTE : "puede ser"
+  EVENTO_EXCLUYENTE }o--o{ PERSONAJE : "excluye a"
+  PERSONAJE ||--|| ARCO : recorre
+  HECHO ||--o{ RETCON : "origina"
+  VERSION_NOVELA }o--o{ CAPITULO : incluye
+  VERSION_NOVELA ||--o| VERSION_NOVELA : "sucede a"
+  SOLICITUD_CAMBIO }o--|| HECHO : "afecta a"
+  SOLICITUD_CAMBIO ||--|| ANALISIS_IMPACTO : produce
+  PALABRA_PROHIBIDA ||--o{ COINCIDENCIA : "se detecta como"
+  COINCIDENCIA }o--|| CAPITULO : "devuelve"
+  VALIDADOR ||--o{ SCORE : emite
+```
+
+Tres puentes cargan con casi todo el peso del sistema. `CAPITULO }o--o{ HECHO : usa` es el que hace posible el análisis de impacto. `EVENTO }o--o{ PERSONAJE` junto con `EVENTO }o--|| LUGAR` es lo que se exporta a la verificación formal de la cronología. `VERSION_NOVELA }o--o{ CAPITULO` lleva la marca de capítulo modificado y es lo que permite decir qué cambió entre dos versiones sin diferenciar el texto.
 
 ## Ensamblado del contexto
 
-Siete capas confluyen en el prompt de una escena, cada una con su fuente y su presupuesto.
+Siete capas confluyen en el prompt de un capítulo, cada una con su fuente y su presupuesto.
 
 ```mermaid
 flowchart LR
-  BIB[Biblia de la obra] --> INV[Invariante]
-  BRF[Brief de escena] --> EST[Estructural]
+  BIB[Story bible<br/>+ brief de novela] --> INV[Invariante]
+  BRF[Brief de capítulo<br/>+ restricción de destino] --> EST[Estructural]
   CAN[Canon] --> SNP[Estado]
-  TXT[Escenas previas] --> LOC[Local]
+  TXT[Capítulos previos] --> LOC[Local]
   IDX[Índice de entidades] --> REC[Recuperado]
   VOZ[Muestras de voz] --> STY[Estilo]
   USO[Registro de uso] --> ANT[Anticontexto]
+  VET[Palabras prohibidas<br/>de la novela] --> ANT
   INV --> CTX[Contexto ensamblado]
   EST --> CTX
   SNP --> CTX
@@ -258,116 +256,207 @@ flowchart LR
   ANT --> CTX
 ```
 
-La recuperación se filtra por las entidades declaradas en el brief, no por similitud semántica: esta última devuelve fragmentos de tono parecido pero de estado irrelevante.
+Las palabras prohibidas entran por el anticontexto y no solo por el guardrail: es más barato que el modelo no las escriba que rechazar el capítulo y reescribirlo, y el límite de reescrituras es finito.
 
-**Jerarquía de compresión**, para ajustar el zoom según el presupuesto disponible:
+La recuperación se filtra por las entidades declaradas en el brief de capítulo y solo después ordena por similitud: la similitud sola devuelve fragmentos de tono parecido y estado irrelevante.
+
+**Jerarquía de compresión**, en tres niveles:
 
 ```mermaid
 flowchart TD
-  ACT[Resumen de acto<br/>~200 tokens] --> CAP[Resumen de capítulo<br/>~500 tokens]
-  CAP --> RES[Resumen de escena<br/>~100 tokens]
-  RES --> ESC[Escena literal<br/>~2000 tokens]
+  OBR[Resumen de obra] --> CAP[Resumen de capítulo]
+  CAP --> LIT[Capítulo literal]
 ```
 
-Lo lejano entra comprimido y lo cercano literal. La regla práctica: el estado se pasa como snapshot derivado, nunca como el texto completo de lo anterior.
+Lo lejano entra comprimido y lo cercano literal. El estado se pasa siempre como snapshot derivado, nunca como el texto completo de lo anterior.
 
-## Árbol de calidad
+## Mapa de validadores
 
-Seis familias que agrupan las diecisiete dimensiones de la Capa 4, sin dejar ninguna fuera ni repetir ninguna. Cada hoja del árbol necesita definición, nivel de aplicación, método de medición y umbral.
+Cada validador tiene un punto de ejecución y un nombre de score. El diagrama es el orden real: un capítulo los atraviesa de izquierda a derecha y no alcanza el gate si no ha pasado los hooks.
 
 ```mermaid
-flowchart LR
-  CAL[Calidad] --> CON[Consistencia]
-  CAL --> PRO[Prosa]
-  CAL --> PER[Personaje]
-  CAL --> STR[Estructura]
-  CAL --> GEN[Género]
-  CAL --> ORI[Originalidad]
-  CON --> C1[Consistencia fáctica]
-  CON --> C2[Consistencia temporal]
-  CON --> C3[Consistencia espacial]
-  CON --> C4[Consistencia epistémica]
-  PRO --> P1[Calidad de prosa]
-  PRO --> P2[Mostrar vs. contar]
-  PRO --> P3[Integridad de POV]
-  PER --> R1[Distintividad de voz]
-  PER --> R2[Consistencia de caracterización]
-  STR --> S1[Causalidad]
-  STR --> S2[Curva de tensión]
-  STR --> S3[Ritmo]
-  STR --> S4[Cumplimiento del brief]
-  GEN --> G1[Plausibilidad especulativa]
-  GEN --> G2[Carga expositiva]
-  GEN --> G3[Sentido de la maravilla]
-  ORI --> O1[Originalidad]
+flowchart TD
+  BOR[Borrador del capítulo] --> HP[Hook de policy]
+  HP --> V1[schema_valido]
+  HP --> V2[palabras_prohibidas]
+  HP --> HC[Hook de capítulo]
+  HC --> V3[nombres_exactos]
+  HC --> V4[longitud]
+  HC --> V5[consistencia_factica]
+  HC --> V6[calidad_prosa]
+  HC --> V7[integridad_pov]
+  HC --> V8[cumplimiento_brief]
+  HC --> ED[Rol editor]
+  ED --> V9[personalizacion_natural]
+  ED --> V10[reconocibilidad]
+  ED --> V11[adecuacion_tono]
+  ED --> V12[coherencia_personajes]
+  ED --> V13[ritmo]
+  ED --> ACP[Capítulo aceptado]
+  ACP --> GT[Gate de publicación]
+  GT --> V14[lean_cronologia]
+  GT --> V15[lean_ubicacion]
+  GT --> V16[lean_edad]
+  GT --> V17[elementos_obligatorios]
+  GT --> V18[cierre_arco]
+  GT --> V19[render_visual]
+  GT --> PUB[Versión publicada]
 ```
+
+Los dos hooks y el rol editor operan sobre **un** capítulo; el gate opera sobre la **novela entera** y por eso es donde viven las tres demostraciones formales de la cronología, la cobertura de elementos obligatorios y el cierre del arco: ninguna de las cinco se puede decidir mirando un capítulo aislado.
+
+Cada validador deja su resultado como score en la traza de la generación. El comprobador de modelos del harness no aparece en este diagrama porque no corre aquí: corre en desarrollo, no en cada generación.
 
 **Ruta de un defecto**, que determina el coste de la corrección:
 
 ```mermaid
 flowchart TD
   DEF[Defecto detectado] --> CLS{¿Local o sistémico?}
-  CLS -->|local| EDI[Reescritura en sitio]
-  CLS -->|sistémico| PLN[Replanificar]
-  EDI --> VAL[Revalidar escena]
-  PLN --> BRF[Nuevos briefs]
+  CLS -->|local| REW[Reescribir el capítulo<br/>intentos + 1]
+  CLS -->|sistémico| PLN[Replanificar capítulos pendientes]
+  REW --> VAL[Revalidar]
+  PLN --> BRF[Nuevos briefs de capítulo]
   BRF --> VAL
-  VAL --> ACP[Aceptar o repetir]
+  VAL --> ACP{¿Pasa?}
+  ACP -->|sí| OK[Aceptado]
+  ACP -->|no, quedan intentos| REW
+  ACP -->|no, agotados| STOP[Generación detenida]
 ```
-
-La originalidad merece rama propia porque el fallo característico de un modelo no es escribir mal, sino escribir correcto y genérico; ninguna de las otras dimensiones lo detecta.
 
 ## Ciclo de producción
 
-El canon solo se actualiza al consolidar. Ese es el punto donde el sistema decide qué pasa a ser verdad en la novela.
+El canon solo se actualiza al aceptar un capítulo. Ese es el punto donde el sistema decide qué pasa a ser verdad en la novela.
 
 ```mermaid
 flowchart TD
-  PLN[Brief de escena<br/>+ restricción de destino] --> CTX[Ensamblar contexto]
+  BN[Brief de novela] --> PLN[Planificar esquema<br/>10 restricciones de destino]
+  PLN --> BC[Brief de capítulo]
+  BC --> CTX[Ensamblar contexto]
   CTX --> GEN[Generar borrador]
-  GEN --> CRI[Criticar<br/>dimensiones de calidad]
-  CRI --> VER[Verificar continuidad<br/>contra canon]
-  VER --> DEC{¿Supera umbrales?}
-  DEC -->|no| REV[Revisar]
-  REV --> CRI
-  DEC -->|sí| CSL[Consolidar en canon]
-  CSL --> EXT[Extraer hallazgos]
-  EXT --> PLN
+  GEN --> HOK[Hooks y rol editor]
+  HOK --> DEC{¿Pasa todos?}
+  DEC -->|no| REV[Reescribir]
+  REV --> GEN
+  DEC -->|sí| CSL[Consolidar en la story bible]
+  CSL --> CKP[Checkpoint]
+  CSL --> EXT[Extraer hechos]
+  EXT --> INV{¿Invalida alguna<br/>restricción pendiente?}
+  INV -->|no| BC
+  INV -->|sí| RPL[Replanificar pendientes]
+  RPL --> BC
+  BC --> GATE{¿Último capítulo?}
+  GATE -->|sí| PUB[Gate de publicación]
 ```
 
-**Estados de una escena:**
-
-```mermaid
-stateDiagram-v2
-  [*] --> Planificada: restricción de destino fijada
-  Planificada --> EnBorrador: se genera
-  EnBorrador --> EnRevision: se critica
-  EnRevision --> EnBorrador: defecto local
-  EnRevision --> Planificada: defecto sistémico
-  EnRevision --> Aceptada: supera umbrales
-  Aceptada --> Obsoleta: retcon o replanificación
-  Obsoleta --> Planificada: se reescribe
-```
-
-Solo la transición a `Aceptada` escribe en el canon. Un borrador rechazado no deja rastro; si lo dejara, cada iteración fallida contaminaría el estado del mundo.
-
-**Secuencia de una escena entre roles:**
+**Secuencia de un capítulo entre roles:**
 
 ```mermaid
 sequenceDiagram
-  participant P as Planificador
-  participant R as Redactor
-  participant C as Crítico
-  participant V as Verificador de continuidad
-  participant A as Autor
-  P->>R: brief + contexto
-  R->>C: borrador
-  C->>V: informe de crítica
-  V->>A: continuidad verificada
-  A-->>R: revisión pedida
-  A->>P: escena aceptada
+  participant P as planner
+  participant X as contexto
+  participant W as writer
+  participant E as editor
+  participant G as policy engine
+  participant B as story bible
+  P->>X: brief de capítulo + restricción de destino
+  X->>W: contexto ensamblado, dentro de la ventana
+  W->>E: borrador
+  E->>G: informe de crítica + scores
+  G-->>W: reescritura pedida, intentos + 1
+  G->>B: capítulo aceptado
+  B->>B: consolidar · checkpoint · extraer hechos
 ```
 
-El autor humano mantiene la última decisión: define el gusto, acepta y marca dirección. Los demás roles pueden ser modelos, pero ese no.
+Quien acepta es el policy engine, no una persona, y cada una de sus decisiones queda en el audit log. Es el puesto que antes ocupaba el autor humano: la generación es automática de principio a fin, y el único humano que vuelve a entrar lo hace después de publicar.
 
-El autor humano decide además qué hallazgos se adoptan: es donde el método híbrido concentra el juicio que ningún modelo puede sustituir, porque adoptar un hallazgo equivale a cambiar la novela que se está escribiendo.
+## Estados
+
+Las dos máquinas son las de la especificación formal del harness, una a una. Ningún estado intermedio se añade en el código sin actualizar antes este diagrama.
+
+**Capítulo:**
+
+```mermaid
+stateDiagram-v2
+  [*] --> Pendiente: el planificador fija su restricción de destino
+  Pendiente --> Escribiendo: el redactor lo toma
+  Escribiendo --> Validando: hay borrador
+  Validando --> Aceptado: pasa hooks y editor
+  Validando --> Reescribiendo: falla algún validador
+  Reescribiendo --> Escribiendo: quedan intentos
+  Reescribiendo --> Agotado: se alcanzó el límite
+  Aceptado --> Obsoleto: retcon o replanificación
+  Obsoleto --> Pendiente: se reescribe
+  Agotado --> [*]
+```
+
+Solo la transición a `Aceptado` escribe en el canon. Un borrador rechazado no deja rastro; si lo dejara, cada iteración fallida contaminaría el estado del mundo y la regeneración dirigida acabaría propagando hechos que nunca llegaron a la novela.
+
+`Agotado` es terminal y arrastra a la novela entera a `Detenida`: un capítulo que no converge no se salta.
+
+**Novela:**
+
+```mermaid
+stateDiagram-v2
+  [*] --> Configurando: entrevista
+  Configurando --> Planificando: brief validado
+  Planificando --> Escribiendo: esquema fijado
+  Escribiendo --> Validando: todos los capítulos aceptados
+  Escribiendo --> Detenida: un capítulo agotado
+  Validando --> Publicando: gate en verde
+  Validando --> Escribiendo: falla el gate, vuelve al editor
+  Publicando --> Publicada: versión conservada
+  Publicada --> Regenerando: solicitud de cambio
+  Regenerando --> Validando: capítulos afectados reescritos
+  Detenida --> [*]
+```
+
+`Publicada` no es terminal: una novela publicada sigue viva mientras el lector pueda pedir cambios. Lo que sí es invariante es que salir de `Publicada` nunca destruye la versión anterior, y que la única entrada a `Publicando` pasa por el gate.
+
+## Solicitud de cambio
+
+Lo que ocurre cuando el lector dice «el perro se llama Nala». Es el flujo que justifica que cada hecho registre en qué capítulos se usa.
+
+```mermaid
+flowchart TD
+  LEC[Lector] --> SC[Solicitud de cambio]
+  SC --> HEC[Hecho afectado]
+  HEC --> AI[Análisis de impacto<br/>capítulos que USAN el hecho]
+  AI --> RT[Retcon<br/>marca obsoletos los afectados]
+  RT --> RG[Regeneración dirigida<br/>solo esos capítulos]
+  RG --> HOK[Hooks y rol editor]
+  HOK --> GT[Gate de publicación]
+  GT -->|falla| RG
+  GT -->|pasa| NV[Versión de novela nueva]
+  NV --> MRC[Marca de capítulo modificado]
+  NV --> EXP[Export a PDF<br/>mismo render que la lectura]
+  ANT[Versión anterior] -.->|se conserva siempre| NV
+```
+
+Tres cosas que el diagrama fija y no son negociables. **Una**, el análisis de impacto se calcula sobre `usa`, no sobre `establece`: un hecho establecido en el capítulo 2 y mencionado en el 7 obliga a reescribir los dos. **Dos**, la versión regenerada vuelve a pasar el gate completo, incluidas las tres demostraciones de cronología: cambiar un nombre no puede colarse sin verificar. **Tres**, la versión anterior se conserva siempre, porque un cambio pedido por el lector que empeora el resultado tiene que tener marcha atrás.
+
+**La lectura es web y el PDF es un export de ella**, del mismo render. Por eso el diagrama no tiene una caja de novedades: qué capítulos cambiaron ya lo lleva la marca del vínculo entre versión y capítulo, y presentarlo al abrir el export es maquetación, no una clase del dominio. La solicitud llega siempre desde la propia página.
+
+## Observabilidad
+
+Jerarquía de lo que se consulta a posteriori. Una novela es una sesión, y todo lo que le ocurre cuelga de ahí.
+
+```mermaid
+flowchart TD
+  SES[Sesión<br/>una por novela] --> T1[Traza · generación inicial]
+  SES --> T2[Traza · regeneración]
+  T1 --> S1[Span · interviewer]
+  T1 --> S2[Span · planner]
+  T1 --> S3[Span · writer]
+  T1 --> S4[Span · editor]
+  T1 --> S5[Span · extractor]
+  S3 --> VP[Versión de prompt]
+  T1 --> SC1[Score · consistencia_factica]
+  T1 --> SC2[Score · palabras_prohibidas]
+  T1 --> SC3[Score · lean_cronologia]
+  S1 --> TK[Tokens · coste · latencia]
+  S3 --> TK
+```
+
+La sesión agrupa la entrevista, la generación y todas las regeneraciones posteriores: sin eso, el coste de una novela quedaría repartido entre trazas sin nadie que las sume. Los scores cuelgan de la traza y no del span porque un validador puede leer varios capítulos —el cierre del arco los lee todos— y no pertenece a ninguno.
+
+Cada capítulo puede decir con qué versión de prompt se generó, que es lo que permite que una iteración de tuning enseñe qué cambió y qué efecto tuvo.

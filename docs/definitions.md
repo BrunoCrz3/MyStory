@@ -1,8 +1,10 @@
-# Ontología de generación de novelas — Definiciones
+# Ontología de generación de novelas personalizadas — Definiciones
 
-2026-09-21 · @Bruno Cruz
+2026-09-23 · @Bruno Cruz
 
-Este documento define el vocabulario del dominio: qué clases existen, qué atributos tiene cada una y qué relaciones las unen. Cubre cinco capas: obra, canon, contexto, calidad y proceso. Los diagramas viven en el documento de conocimiento de dominio.
+Este documento define el vocabulario del dominio: qué clases existen, qué atributos tiene cada una y qué relaciones las unen. Cubre cinco capas: encargo y obra, canon, contexto, calidad y proceso. Los diagramas viven en el documento de conocimiento de dominio.
+
+El sistema genera novelas personalizadas para regalar. Tiene dos objetivos de igual peso y ninguno subordinado al otro: que el destinatario se reconozca en el texto, y que el texto sea una novela y no una lista de datos suyos puestos en prosa. Cada clase de este documento sirve a uno de los dos, o a la maquinaria que los hace verificables.
 
 ## Convenciones del modelo
 
@@ -10,216 +12,328 @@ La ontología se organiza en cinco capas con ciclos de vida distintos; mezclarla
 
 | Capa | Responde a | Cambia cuando |
 | --- | --- | --- |
-| Obra | ¿De qué está hecha la novela? | Se replanifica la estructura |
-| Canon | ¿Qué es verdad en el punto t del texto? | Se acepta una escena |
+| Encargo y obra | ¿Para quién es la novela y de qué está hecha? | Se cierra el brief o el lector pide un cambio |
+| Canon | ¿Qué es verdad en el punto t del texto? | Se acepta un capítulo |
 | Contexto | ¿Qué ve el modelo al generar? | En cada llamada de generación |
 | Calidad | ¿Esto está bien? | Se ajustan umbrales o criterios |
-| Proceso | ¿Quién hace qué y en qué orden? | Se cambia el pipeline |
+| Proceso | ¿Quién hace qué y en qué orden? | Se cambia el harness |
+
+El encargo y la obra comparten capa porque en este dominio son lo mismo visto dos veces: el brief no es un requisito externo a la novela, es de lo que la novela está hecha. Separarlos daría dos capas con el mismo disparador de cambio.
 
 Criterio de inclusión: una clase entra en el modelo solo si alguna pregunta de competencia (última sección) la necesita. Convenciones de notación: `Clase` en mayúscula inicial, `atributo` en minúscula, `relación` en verbo. `t` denota una posición en el discurso, no una fecha del mundo ficcional.
 
-## Modo de autoría: híbrido
+**Un concepto, un nombre.** Dos clases nunca comparten nombre y una clase nunca tiene dos. Los pares que estuvieron a punto de colisionar quedan fijados aquí: `Brief de novela` es el encargo del comprador y `Brief de capítulo` el encargo de un capítulo; `Contradicción de brief` ocurre entre datos del comprador y `Contradicción de canon` entre hechos de la ficción; el `Comprador` paga y configura, y el `Lector` lee y pide cambios. La tabla de § Nomenclatura extiende la regla a cada ámbito donde el nombre reaparece: código, SQLite y Langfuse.
 
-La obra se planifica a nivel de acto y se descubre a nivel de escena. El esquema fija el destino y los puntos de giro; la escena concreta se genera sin guion de beats y lo que emerge se reincorpora al plan.
+## Modelo de generación
+
+La novela se planifica entera y se escribe capítulo a capítulo, sin humano en el bucle.
 
 | Nivel | Modo | Fuente de verdad |
 | --- | --- | --- |
-| Obra y acto | Planificado | Esquema |
-| Capítulo | Planificado con holgura | Esquema revisable |
-| Escena | Descubrimiento acotado | Canon |
-| Beat | Descubrimiento libre | Texto generado |
+| Obra | Planificado de una vez | Brief de novela |
+| Capítulo | Destino fijado, camino descubierto | Esquema |
+| Prosa del capítulo | Descubrimiento libre | Texto generado |
+
+**El capítulo es la unidad atómica** de generación, validación, checkpoint, regeneración y marca de cambio entre versiones. Todo lo demás se planifica hacia él o se deriva de él. No hay unidad por debajo: a la longitud de capítulo que declara `config/thresholds.yaml` no cabe una subdivisión a la que colgarle un estado, un presupuesto o un validador propios, y una clase sin operación no entra en el modelo.
+
+El grano temporal fino no lo da la estructura del discurso sino la fábula: es el `Evento` quien lleva momento, lugar y participantes, y es de él —no del capítulo— de donde sale el fichero que verifica la cronología.
 
 **Clases propias de este modo**
 
 | Clase | Definición | Atributos clave |
 | --- | --- | --- |
-| Restricción de destino | Lo que la escena no puede cambiar sin replanificar | tipo (estado final, revelación, posición de personaje), alcance |
-| Hallazgo | Elemento surgido al escribir y no previsto en el plan | tipo (hecho, promesa, motivo, personaje), escena de origen, estado de adopción |
-| Estado de hallazgo | Situación del hallazgo en el ciclo de adopción | propuesto, adoptado, descartado, conflictivo, integrado |
-| Extracción | Lectura automática de una escena aceptada para detectar hallazgos | entradas, hallazgos propuestos, confianza |
-| Replanificación rodante | Revisión del esquema a la luz de los hallazgos acumulados | disparador, escenas afectadas, cambios al esquema |
-| Deriva | Distancia acumulada entre lo escrito y el esquema vigente | medida (vector de tres componentes), umbral por componente, hito de plan desde el que se acumula |
+| Restricción de destino | Lo que el capítulo no puede dejar de cumplir sin replanificar | tipo (estado final, revelación, posición de personaje), alcance, capítulo que la debe cumplir |
+| Extracción | Lectura automática de un capítulo aceptado para detectar los hechos que ha introducido | entradas, hechos propuestos, confianza |
+| Invalidación de restricción | Una restricción de destino aún no escrita que el canon vigente ya hace imposible | restricción, hecho que la contradice, capítulo afectado |
+| Replanificación de capítulos pendientes | Revisión del esquema limitada a los capítulos aún no escritos | disparador, capítulos afectados, cambios al esquema |
 
 **Reglas de gobierno**
 
-- La escena descubre *cómo*, no *hacia dónde*: cambiar el destino exige pasar por replanificación, no se decide dentro de la escena.
-- Nada se declara por adelantado salvo las restricciones de destino; el resto del canon se extrae después de aceptar la escena.
-- El retcon deja de ser excepción y pasa a ser operación rutinaria, con propagación a las escenas afectadas.
-- La replanificación se dispara por umbral de deriva o por cadencia fija (cada N escenas o al cerrar capítulo), nunca en mitad de una escena.
+- El capítulo descubre *cómo*, no *hacia dónde*: cambiar el destino exige replanificar, no se decide dentro del capítulo.
+- Nada se declara por adelantado salvo las restricciones de destino; el resto del canon se extrae después de aceptar el capítulo.
+- El retcon es operación rutinaria, con propagación a los capítulos afectados y solo a ellos.
+- La replanificación se dispara por invalidación de una restricción, nunca por cadencia y nunca en mitad de un capítulo.
 
-**Medida de la deriva.** La deriva no mide si el texto se parece al plan: mide si el plan sigue describiendo la obra. Lo que una escena descubre —el *cómo*— no cuenta nunca; solo cuenta lo que deja sin sostener al *hacia dónde*. Es un vector de tres componentes, sin agregado escalar y sin similitud semántica:
+**Por qué la invalidación y no una medida de deriva.** Con la obra planificada de una vez y generada en una sola corrida, la única pregunta con respuesta útil es binaria: ¿queda alguna restricción de destino pendiente que el canon ya ha vuelto imposible? Una medida acumulativa necesitaría un umbral, y un umbral necesita a alguien que etiquete cuándo replanificar; ese alguien era el autor humano y ya no está en el bucle. Un número que nadie puede calibrar no dispara nada: es peso muerto con aspecto de rigor.
 
-- **Invalidación**: proporción de `Restricción de destino` aún no escritas cuyo tipo declarado contradice el canon vigente en `t` — un estado final ya imposible, una `Revelación` ya ocurrida o cuyo hecho fue refutado, un `Personaje` que no puede estar donde la restricción dice.
-- **Canon huérfano**: `Hilo de trama` activos, `Promesa narrativa` pendientes y `Hallazgo` adoptados desde el último hito de plan que ninguna `Restricción de destino` futura recoge.
-- **Inviabilidad de pago**: `Promesa narrativa` pendientes sin ninguna `Restricción de destino` futura que pudiera pagarlas, o cuya única candidata está invalidada.
+## Capa 1 — Encargo y obra
 
-Cada componente tiene su umbral y se compara por separado; superar uno dispara `Replanificación rodante`. Los tres se calculan contra el canon en `t` y contra lo único que el esquema declara del futuro, que es la restricción de destino: es la consecuencia directa de «nada se declara por adelantado salvo las restricciones de destino».
+### Bloque A — Encargo
 
-## Capa 1 — Obra
+Lo que el comprador aporta y lo que la entrevista convierte en contrato. Es la mitad del objetivo del sistema y la entrada de casi todos los validadores de personalización.
 
-La **Escena** es la unidad atómica de generación y validación: todo lo demás se planifica hacia ella o se deriva de ella.
+| Clase | Definición | Atributos clave |
+| --- | --- | --- |
+| Comprador | Quien encarga, paga y configura la novela | identificador, relación con el destinatario |
+| Destinatario | Persona a quien va dirigida la novela | nombre, edad, rasgos, recuerdos, relación con el comprador |
+| Ocasión | Motivo del regalo | tipo (cumpleaños, boda, aniversario, jubilación, nacimiento), fecha, tono esperado |
+| Brief de novela | Salida estructurada y validada con schema de la entrevista | género, tono, extensión, estado, schema y versión con que se validó |
+| Elemento personalizado | Detalle del destinatario que la novela debe integrar | enunciado, obligatoriedad, origen, estado de cobertura |
+| Texto libre aportado | Anécdota o carta que el comprador pega sin estructura | contenido, procedencia, estado de saneamiento |
+| Fragmento sospechoso | Parte del texto libre marcada como intento de instrucción al sistema | fragmento, motivo, decisión, texto libre de origen |
+| Dato faltante | Campo del brief que la entrevista no logró rellenar | campo, obligatoriedad, pregunta de reintento |
+| Contradicción de brief | Conflicto entre dos datos aportados por el comprador | campos implicados, tipo, resolución |
+| Dedicatoria | Texto personal que abre la novela | texto, firma |
+
+**El texto libre es contenido no confiable.** Entra marcado como datos y nunca en la posición donde el prompt pone sus instrucciones; de él se extraen hechos, y lo que parece una orden al sistema se registra como `Fragmento sospechoso` y se descarta. Es la única entrada del sistema que procede de fuera y la única que hace falta cuarentenar.
+
+**Obligatorio y opcional no es un matiz.** Un `Elemento personalizado` obligatorio que no aparece en ningún capítulo impide publicar la versión; uno opcional no. La distinción es lo que convierte «que se note que es para él» en una consulta que decide un `SELECT`.
+
+### Bloque B — Obra
 
 **Clases estructurales** (contenedoras, jerárquicas)
 
 | Clase | Definición | Atributos clave |
 | --- | --- | --- |
-| Obra | La novela completa | premisa, género, extensión objetivo, público |
-| Parte / Acto | Bloque de estructura dramática | función dramática, punto de giro que lo cierra |
-| Capítulo | Unidad de publicación y lectura | POV dominante, gancho de cierre |
-| Escena | Unidad de acción continua en tiempo y lugar | objetivo, conflicto, resultado, POV, lugar, momento, estado de entrada y salida |
-| Beat | Mínimo cambio de valor emocional dentro de una escena | valor inicial, valor final |
+| Obra | La novela completa | premisa, género, tono, extensión objetivo, estado |
+| Capítulo | Unidad atómica de generación, validación y publicación | número, título, función dramática, POV, lugar, momento, gancho de cierre, estado, recuento de palabras, intentos |
+
+No hay nivel intermedio entre obra y capítulo. La función dramática que sostendría un acto es atributo del capítulo, que es donde el validador de cierre del arco la necesita.
 
 **Entidades narrativas** (sustantivas, atraviesan la estructura)
 
 | Clase | Definición | Atributos clave |
 | --- | --- | --- |
-| Personaje | Agente con deseo y capacidad de acción | deseo, necesidad, herida, rol narrativo, arco, voz, estado epistémico |
-| Voz | Firma lingüística de un personaje | léxico, registro, sintaxis, muletillas, temas recurrentes |
-| Arco | Trayectoria de transformación | estado inicial, puntos de giro, estado final, escenas que lo avanzan |
-| Hilo de trama | Cadena causal de eventos con tensión propia | tipo (principal, secundario), pregunta dramática, estado |
-| Lugar | Espacio donde ocurre acción | geografía, atmósfera sensorial, reglas propias |
-| Facción | Grupo con agencia colectiva | objetivo, recursos, relaciones con otras facciones |
-| Artefacto | Objeto con carga narrativa | propiedades, poseedor actual, deuda narrativa que genera |
-| Novum | Punto de divergencia especulativa respecto al mundo real | mecanismo, límites, consecuencias en cascada |
-| Regla del mundo | Restricción que el texto no puede violar | enunciado, alcance, excepciones declaradas |
-| Término canónico | Neologismo o nombre propio del mundo | forma, definición, primera aparición, variantes prohibidas |
-| Tema | Idea que la obra interroga | enunciado, motivos que lo encarnan |
-| Motivo | Imagen u objeto que recurre con sentido | forma, apariciones, evolución |
-| Voz narrativa | Configuración del narrador | persona, tiempo verbal, distancia, focalización, ratio escena/resumen |
-| Evento | Suceso de la fábula, situado en el orden cronológico ficcional | qué ocurre, momento en la fábula, participantes, duración |
-| Objetivo | Lo que un personaje persigue en un tramo de la obra | enunciado, alcance (de escena, de arco), tipo (deseo, necesidad), estado |
+| Personaje | Agente con deseo y capacidad de acción | nombre, deseo, herida, rol narrativo, voz, fecha de nacimiento, es destinatario |
+| Arco | Trayectoria de transformación | estado inicial, puntos de giro, estado final, capítulos que lo avanzan |
+| Hilo de trama | Cadena causal de eventos con tensión propia | tipo, pregunta dramática, estado |
+| Lugar | Espacio donde ocurre acción | nombre, geografía, atmósfera sensorial |
+| Evento | Suceso de la fábula, situado en el orden cronológico ficcional | qué ocurre, momento, personajes presentes, lugar, duración |
+| Evento excluyente | Evento tras el cual un personaje no puede volver a aparecer | evento, personajes excluidos, tipo (muerte, partida definitiva) |
+| Regla del mundo | Restricción que el texto no puede violar | enunciado, alcance, excepciones declaradas, origen |
+| Voz narrativa | Configuración del narrador | persona, tiempo verbal, distancia, focalización |
 
-**Fábula y discurso.** La *fábula* es el conjunto de eventos en orden cronológico ficcional; el *discurso* es el orden y la forma en que se narran. Son dos clases separadas unidas por una relación `se narra en`. Sin esta separación no se pueden gestionar analepsis, revelaciones diferidas ni tramas con manipulación temporal, frecuentes en ciencia ficción.
+`Personaje` y `Lugar` son las dos entidades que la novela publica como ficha consultable, y por eso son las dos que sobreviven con nombre propio: lo que no se muestra ni se valida no necesita clase.
+
+`Evento excluyente` es subtipo de `Evento` y existe por una razón concreta: es el que permite demostrar que ningún personaje aparece después de morir o de marcharse para siempre. Sin él, esa demostración no tiene de dónde leer.
+
+`Regla del mundo` ya no deriva de un punto de divergencia especulativa: su origen es el brief. «El destinatario es alérgico a los gatos» y «el abuelo nunca aparece» son reglas del mundo tanto como lo sería la física de una novela de género.
+
+**Fábula y discurso.** La *fábula* es el conjunto de eventos en orden cronológico ficcional; el *discurso* es el orden y la forma en que se narran. Son dos clases separadas unidas por una relación `se narra en`. Sin esta separación no se pueden gestionar analepsis ni revelaciones diferidas, y —lo que aquí pesa más— no se puede verificar la cronología: comprobar el orden de los capítulos no dice nada sobre el orden de los hechos.
 
 ## Capa 2 — Canon y estado
 
-Una novela es una secuencia de transiciones de estado: toda escena nueva debe ser consistente con el estado vigente en su punto de inserción. Esta capa es la más difícil y la que más fallos de consistencia previene.
+El canon es la **story bible**: el conjunto de lo que es verdad en la novela, con el registro de en qué capítulos se usa cada cosa. Es la capa que hace posible la regeneración dirigida y la que alimenta la verificación formal de la historia.
 
 | Clase | Definición | Atributos clave |
 | --- | --- | --- |
-| Hecho canónico | Enunciado verdadero en el mundo ficcional | texto, tipo, escena que lo establece, estatus, alcance temporal |
-| Estatus de hecho | Grado de fijación de un hecho | confirmado, implícito, provisional, retconeado, refutado |
-| Snapshot de mundo | Estado derivado del mundo en el punto t | personajes vivos, ubicaciones, posesiones, relaciones, fecha ficcional |
-| Estado epistémico | Qué sabe un agente y desde cuándo | agente, hecho, escena en que lo aprende, certeza |
-| Ironía dramática | Desfase entre lo que sabe el lector y lo que sabe un personaje | hecho, quién lo sabe, quién no |
-| Promesa narrativa | Expectativa abierta ante el lector | tipo (setup, pregunta, amenaza, deuda), escena de apertura, escena de pago, estado |
-| Estado de promesa | Situación de la promesa | pendiente, pagada, rota, subvertida |
-| Revelación | Hecho que pasa de oculto a conocido | hecho, destinatario (lector o personaje), escena mínima permitida |
-| Contradicción | Conflicto detectado entre dos hechos | hechos implicados, tipo, gravedad, resolución |
-| Retcon | Reescritura deliberada del canon previo | hecho antiguo, hecho nuevo, escenas afectadas |
+| Hecho | Enunciado verdadero en el mundo ficcional | enunciado, tipo, capítulo que lo establece, estado, alcance temporal, origen, fragmento que lo sostiene |
+| Estado de hecho | Grado de fijación de un hecho | propuesto, adoptado, descartado, retconeado, refutado |
+| Snapshot | Estado derivado del mundo al cierre de un capítulo | personajes presentes, ubicaciones, relaciones, momento de la fábula |
+| Promesa narrativa | Expectativa abierta ante el lector | tipo, capítulo de apertura, capítulo de pago, estado |
+| Estado de promesa | Situación de la promesa | pendiente, pagada, rota |
+| Contradicción de canon | Conflicto detectado entre dos hechos | hechos implicados, tipo, gravedad, resolución |
+| Retcon | Reescritura deliberada del canon previo | hecho antiguo, hecho nuevo, capítulos afectados |
 
-**Regla de actualización.** El canon solo cambia cuando una escena se acepta. Un borrador rechazado no deja rastro en el canon; si lo dejara, cualquier iteración fallida contaminaría el estado del mundo.
+**Regla de actualización.** El canon solo cambia cuando un capítulo se acepta. Un borrador rechazado no deja rastro; si lo dejara, cualquier iteración fallida contaminaría el estado del mundo y la regeneración dirigida acabaría regenerando capítulos por hechos que nunca se escribieron.
 
-**Visibilidad.** Cada hecho lleva dos marcas independientes: qué personajes lo conocen y si el lector lo conoce. Confundirlas produce los fallos más costosos del género: personajes que actúan con información que aún no han recibido, o revelaciones que llegan después de haberse filtrado.
+**Uso de hecho.** Cada `Hecho` registra en qué capítulos se usa, en una relación N:M con `Capítulo`. No es metadato: es lo único que hace posible responder «si el perro pasa a llamarse Nala, ¿qué capítulos hay que reescribir?» sin releer la novela entera. Un hecho sin uso registrado es un hecho que la regeneración no sabrá propagar.
 
-**Canon extraído.** En modo híbrido el canon crece sobre todo por extracción, no por declaración: al aceptar una escena se leen los hechos, promesas y motivos que ha introducido sin que nadie los hubiera previsto. Cada hallazgo entra como `propuesto` hasta que el autor lo adopta, lo descarta o lo corrige; adoptarlo es lo que lo convierte en canon consultable. El nombre no es `provisional` a propósito: esa palabra ya es un `Estatus de hecho` y un concepto no puede tener dos nombres.
+**Canon extraído.** El canon crece sobre todo por extracción, no por declaración: al aceptar un capítulo se leen los hechos que ha introducido sin que nadie los hubiera previsto. Cada uno entra como `propuesto`, y lo que decide si pasa a `adoptado` es el **policy engine**, no una persona. Un hecho `propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación.
 
-**Retcon rutinario.** Al descubrir escena a escena, las contradicciones no son fallos del sistema sino subproducto normal del método. El modelo necesita, por tanto, un retcon barato: identificar las escenas afectadas por el cambio de un hecho, marcarlas `obsoleta` y encolar su reescritura, sin tocar el resto de la obra.
+**Procedencia y anclaje.** Todo hecho declara de dónde viene —brief, texto libre o extracción— y qué fragmento del capítulo lo sostiene. Lo primero permite tratar con desconfianza lo que procede del texto libre. Lo segundo es lo que impide que el canon derive de la novela que dice representar: un hecho que no puede citar el fragmento que lo respalda no se consolida.
+
+**Retcon rutinario.** Al descubrir capítulo a capítulo, las contradicciones no son fallos del sistema sino subproducto normal del método. El retcon tiene que ser barato: identificar los capítulos afectados por el cambio de un hecho a través de su uso registrado, marcarlos `obsoleto` y encolar su reescritura, sin tocar el resto de la obra.
+
+**La cronología no es una clase aparte.** Lo que la verificación formal lee —evento, momento, personajes presentes, lugar— ya está en `Evento` y en sus puentes a `Personaje` y `Lugar`. Darle una clase propia sería nombrar dos veces lo mismo.
 
 ## Capa 3 — Contexto y memoria
 
-Generar la escena N es un problema de recuperación, compresión y proyección de estado bajo un presupuesto de tokens repartido explícitamente.
+Generar el capítulo N es un problema de recuperación, compresión y proyección de estado bajo un presupuesto de tokens repartido explícitamente.
 
 **Tipos de memoria**
 
 | Clase | Definición | Contenido |
 | --- | --- | --- |
-| Memoria episódica | Lo que pasó, en su forma textual | escenas literales, diálogos |
-| Memoria semántica | Lo que es verdad, derivado | hechos canónicos, snapshots, reglas |
-| Memoria procedural | Cómo se escribe esta obra | guía de estilo, convenciones, voces |
+| Memoria episódica | Lo que pasó, en su forma textual | capítulos literales, diálogos |
+| Memoria semántica | Lo que es verdad, derivado | hechos, snapshots, reglas |
+| Memoria procedural | Cómo se escribe esta obra | guía de estilo, voz narrativa, muestras de voz |
 
-**Capas del contexto de una escena**
+**Capas del contexto de un capítulo**
 
 | Capa | Contenido |
 | --- | --- |
-| Invariante | Premisa, guía de estilo, reglas de POV, glosario |
-| Estructural | Brief de la escena y su lugar en el esquema |
-| Estado | Snapshot en t(N), no el texto anterior |
-| Local | Últimas escenas literales, para continuidad de prosa |
-| Recuperado | Fragmentos filtrados por las entidades del brief |
+| Invariante | Premisa, brief de novela, dedicatoria, guía de estilo, voz narrativa |
+| Estructural | Brief de capítulo y su restricción de destino |
+| Estado | Snapshot al cierre del capítulo N−1, no el texto anterior |
+| Local | Últimos capítulos literales, para continuidad de prosa |
+| Recuperado | Fragmentos filtrados por las entidades del brief de capítulo |
 | Estilo | Muestras de voz de los personajes presentes |
-| Anticontexto | Metáforas ya usadas, repeticiones, clichés vetados, revelaciones prohibidas |
+| Anticontexto | Metáforas ya usadas, repeticiones, clichés vetados y las palabras prohibidas de la novela |
 
 El reparto de la ventana entre estas siete capas, más el Margen, vive en `config/thresholds.yaml`: es la fuente única de cifras del sistema y no se copia a este documento. Aquí vive qué contiene cada capa; allí, cuánto ocupa.
 
+**Dos presupuestos, no uno.** La ventana limita **una** petición; el pool de tokens concurrentes limita **cuántas caben a la vez**. Son cifras distintas aunque coincidan, viven en claves distintas del mismo fichero y confundirlas produce o bien un sistema que no paraleliza nada o bien uno que desborda el límite concurrente sin que ningún prompt individual lo supere.
+
 **Otras clases**
 
-- **Brief de escena**: encargo que define qué debe lograr la escena. Es el contrato contra el que se valida el resultado.
-- **Jerarquía de compresión**: resúmenes multirresolución (escena → capítulo → acto) que permiten ajustar el zoom según el presupuesto disponible.
-- **Política de recuperación**: recuperar por entidades declaradas en el brief, no por similitud semántica genérica; esta última trae fragmentos parecidos en tono pero irrelevantes en estado.
-- **Anticontexto**: la capa que casi nadie modela y la que más mejora el resultado, porque combate la repetición y la regresión estilística a la media.
+- **Brief de capítulo**: encargo que define qué debe lograr el capítulo. Es mínimo por diseño —estado de entrada más restricción de destino— y es el contrato contra el que se valida el resultado.
+- **Resumen de capítulo**: versión comprimida de un capítulo aceptado, para construir el contexto de los siguientes sin gastar la ventana en texto literal.
+- **Jerarquía de compresión**: tres niveles —resumen de obra, resumen de capítulo, capítulo literal— que permiten ajustar el zoom según el presupuesto disponible.
+- **Política de recuperación**: recuperar por entidades declaradas en el brief y solo después ordenar por similitud; la similitud sola trae fragmentos parecidos en tono e irrelevantes en estado.
+- **Anticontexto**: la capa que casi nadie modela y la que más mejora el resultado. Aquí carga además las palabras prohibidas de la novela, de modo que el modelo las evite antes de que el guardrail tenga que rechazar el capítulo.
 - **Ventana efectiva**: porción del contexto que el modelo realmente atiende; no coincide con la ventana nominal.
 
-## Capa 4 — Calidad
+## Capa 4 — Calidad y validadores
 
-Cada dimensión necesita definición, nivel de aplicación, método de medición y umbral. Sin las cuatro cosas no es una métrica, es una opinión.
+Cada dimensión necesita definición, validador, tipo, punto de ejecución y nombre de score. Sin las cinco cosas no es una métrica, es una opinión.
 
-| Dimensión | Qué mide | Nivel | Medición |
-| --- | --- | --- | --- |
-| Consistencia fáctica | Ningún hecho contradice el canon | Escena | Verificación contra hechos canónicos |
-| Consistencia temporal | Los eventos respetan la cronología de la fábula | Obra | Orden de eventos vs. duraciones declaradas |
-| Consistencia espacial | Ubicaciones y desplazamientos posibles | Capítulo | Snapshot de posiciones |
-| Consistencia epistémica | Nadie usa información que no tiene | Escena | Estado epistémico del POV |
-| Consistencia de caracterización | Acciones coherentes con deseo, herida y arco | Obra | Contraste con la ficha de personaje |
-| Plausibilidad especulativa | El novum no viola sus propias reglas | Escena | Reglas del mundo declaradas |
-| Distintividad de voz | Se identifica quién habla sin acotaciones | Escena | Clasificación ciega de diálogo |
-| Calidad de prosa | Eco de n-gramas, clichés, palabras-filtro, varianza de frase | Frase | Métricas léxicas automáticas |
-| Mostrar vs. contar | Proporción de escena dramatizada frente a resumen | Escena | Ratio escena/sumario |
-| Integridad de POV | No hay fugas fuera de la focalización elegida | Escena | Detección de accesos mentales ajenos |
-| Causalidad | La cadena avanza por «por tanto / pero», no por «y entonces» | Capítulo | Prueba de conectores causales |
-| Curva de tensión | La tensión progresa y culmina donde debe | Obra | Puntuación de tensión por escena |
-| Ritmo | Alternancia de densidad y respiro | Parte | Longitud y tipo de escena en secuencia |
-| Carga expositiva | Infodumps y densidad de neologismos | Escena | Tokens de exposición sobre total |
-| Sentido de la maravilla | Efecto estético propio del género | Obra | Evaluación cualitativa asistida |
-| Originalidad | Distancia respecto a la prosa genérica del modelo | Obra | Comparación con línea base sin guía |
-| Cumplimiento del brief | La escena hizo lo que se le encargó | Escena | Cotejo punto por punto |
+Los **tipos** son cuatro: `programático` (decide un proceso determinista), `semántico` (decide un modelo con rúbrica), `formal-Lean` (se demuestra sobre la cronología) y `revisión humana`. Los **puntos de ejecución** son cuatro: `hook de policy`, `hook de capítulo`, `rol editor` y `gate de publicación`.
 
-**Regresión a la media.** El fallo característico de un modelo de lenguaje no es escribir mal, sino escribir correcto y genérico. La originalidad necesita métrica y presión propias; no aparece como efecto secundario de las demás.
+| Dimensión | Qué mide | Tipo | Punto de ejecución | Score |
+| --- | --- | --- | --- | --- |
+| Conformidad de schema | El brief y la salida de cada rol cumplen su schema | programático | hook de policy | `schema_valido` |
+| Ausencia de palabras prohibidas | Ninguna palabra vetada sobrevive en el capítulo | programático | hook de policy | `palabras_prohibidas` |
+| Ortografía exacta de nombres | Destinatario y personajes escritos como en la story bible | programático | hook de capítulo | `nombres_exactos` |
+| Longitud | El capítulo cae dentro del rango declarado | programático | hook de capítulo | `longitud` |
+| Consistencia fáctica | Ningún enunciado contradice el canon vigente | programático + semántico | hook de capítulo | `consistencia_factica` |
+| Calidad de prosa | Eco de n-gramas, clichés, muletillas, varianza de frase, giros típicos de texto generado | programático | hook de capítulo | `calidad_prosa` |
+| Integridad de POV y voz narrativa | Persona, tiempo verbal y focalización se mantienen | programático | hook de capítulo | `integridad_pov` |
+| Cumplimiento del brief de capítulo | El capítulo satisface su restricción de destino | programático | hook de capítulo | `cumplimiento_brief` |
+| Integración natural de la personalización | Los elementos personalizados están tejidos, no insertados | semántico | rol editor | `personalizacion_natural` |
+| Reconocibilidad del destinatario | El destinatario se reconocería en el texto | semántico + revisión humana | rol editor · revisión | `reconocibilidad` |
+| Adecuación del tono | El registro corresponde a la edad y la ocasión | semántico | rol editor | `adecuacion_tono` |
+| Coherencia de personajes | Las acciones encajan con deseo, herida y arco | semántico | rol editor | `coherencia_personajes` |
+| Ritmo entre capítulos | Alternancia de densidad y respiro a lo largo de la obra | semántico | rol editor | `ritmo` |
+| Consistencia temporal | Los eventos respetan el orden cronológico declarado | formal-Lean | gate de publicación | `lean_cronologia` |
+| Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un evento excluyente | formal-Lean | gate de publicación | `lean_ubicacion` |
+| Coherencia de edad | La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | formal-Lean | gate de publicación | `lean_edad` |
+| Cumplimiento de elementos obligatorios | Todo elemento obligatorio aparece en al menos un capítulo | programático | gate de publicación | `elementos_obligatorios` |
+| Cierre del arco | Ninguna promesa queda pendiente al terminar la novela | programático + semántico | gate de publicación | `cierre_arco` |
+| Render visual | Índice, ficha de personajes y lugares y portada renderizan sin error | programático | gate de publicación | `render_visual` |
 
-**Defecto.** Incumplimiento concreto de una dimensión de calidad detectado en un borrador: dimensión violada, gravedad, alcance y localización en el texto. Es lo que un informe de crítica enumera.
+**Aspiraciones sin validador.** Dos cosas que el sistema persigue y ninguna fila mide, declaradas aquí para que nadie las confunda con cobertura:
 
-**Clasificación del defecto.** Un *defecto local* se corrige reescribiendo en sitio. Un *defecto sistémico* invalida la planificación y obliga a replanificar. Distinguirlos determina la ruta de corrección y evita parchear síntomas de un problema estructural.
+| Aspiración | Por qué no tiene validador |
+| --- | --- |
+| Originalidad | El fallo característico de un modelo no es escribir mal sino escribir correcto y genérico. La parte con forma reconocible —ecos, muletillas, clichés— la absorbe `calidad_prosa`; lo que queda no tiene criterio de aprobado escrito, y sin criterio ningún validador puede suspender |
+| Satisfacción del comprador | Es la definición del criterio, no una consecuencia suya. Se estima por la revisión humana y no se automatiza |
 
-## Capa 5 — Proceso
+**Verificación formal de la historia.** Las tres dimensiones `formal-Lean` se demuestran sobre un fichero generado desde la story bible con los hechos temporales: eventos, momento, personajes presentes, lugar, fechas de nacimiento y eventos excluyentes. Si la demostración falla, la versión no se publica y el fallo vuelve al editor como feedback. Lo que Lean verifica es la **historia**; el comportamiento del harness se verifica aparte y vive en la capa 5.
 
-El ciclo es planificar → generar → validar → consolidar → extraer, con replanificación periódica. Consolidar es lo único que modifica el canon; extraer es lo que devuelve los hallazgos al plan.
+**Guardrail de palabras prohibidas**
+
+| Clase | Definición | Atributos clave |
+| --- | --- | --- |
+| Palabra prohibida | Término que no puede aparecer en el texto | forma, nivel, origen, novela (si el nivel lo es) |
+| Nivel de palabra prohibida | Alcance de la prohibición | global, perfil, novela |
+| Normalización | Transformación que se aplica antes de comparar | minúsculas, acentos, signos, plurales, variantes simples |
+| Coincidencia | Detección de una palabra prohibida en un capítulo | palabra, nivel, capítulo, posición, intento, decisión |
+| Límite de reescrituras | Número de veces que un capítulo vuelve al redactor antes de detener la generación | valor, alcanzado |
+
+Los tres niveles: **global** son insultos y términos ofensivos, iguales para toda novela; **perfil** se deriva de la edad del destinatario y del tipo de ocasión; **novela** la define el comprador en la configuración —el nombre de una expareja, un tema que no quiere leer—.
+
+**Por qué `perfil` es el tercer nivel.** Es el único de los tres que el comprador no puede enumerar y el sistema sí puede derivar solo: nadie sabe de antemano qué léxico es inadecuado para un niño de siete años, y sin este nivel una novela infantil queda protegida exactamente igual que una para adultos, es decir, solo por la lista de insultos. Es además el único que cierra sobre texto ya escrito la contradicción edad↔tono que el brief solo detecta antes de escribir.
+
+Los tres niveles se aplican en conjunto y gana el más restrictivo. Toda coincidencia queda en el audit log y en Langfuse; agotado el límite de reescrituras, la generación se detiene y lo informa.
+
+**Defecto.** Incumplimiento concreto de una dimensión detectado en un borrador: dimensión violada, gravedad, alcance y localización en el texto. Es lo que un informe de crítica enumera.
+
+**Clasificación del defecto.** Un *defecto local* se corrige reescribiendo el capítulo. Un *defecto sistémico* invalida la planificación y obliga a replanificar los capítulos pendientes. Distinguirlos determina la ruta de corrección y evita parchear síntomas de un problema estructural.
+
+**Rúbrica.** Criterios y escala con los que se puntúa lo semántico. La misma rúbrica la usan el rol editor y el revisor humano, que es lo que permite comparar el juicio del modelo con el de una persona; dos rúbricas distintas harían la comparación imposible.
+
+Sus **seis criterios** son los que el encargo nombra, uno por dimensión semántica:
+
+| Criterio de la rúbrica | Dimensión que puntúa |
+| --- | --- |
+| Continuidad | `consistencia_factica` |
+| Tono | `adecuacion_tono` |
+| Arco de la historia | `cierre_arco` |
+| Coherencia de personajes | `coherencia_personajes` |
+| Ritmo entre capítulos | `ritmo` |
+| Integración natural de la personalización | `personalizacion_natural` |
+
+**Cada criterio se puntúa por separado y cada puntuación va justificada.** Un único número para toda la rúbrica no dice qué hay que arreglar, y una puntuación sin justificación no se puede contrastar con la del revisor humano: eso es lo que hace que `Score` lleve justificación cuando el validador es semántico. `reconocibilidad` se puntúa con la misma escala pero fuera de estos seis, porque solo el revisor humano puede cerrarla.
+
+## Capa 5 — Proceso, harness y verificación formal del sistema
+
+El ciclo es entrevistar → planificar → escribir → validar → publicar, con regeneración dirigida cuando el lector pide un cambio. Consolidar es lo único que modifica el canon; extraer es lo que devuelve los hechos a la story bible.
 
 **Roles**
 
 | Rol | Responsabilidad |
 | --- | --- |
-| Arquitecto | Premisa, mundo, estructura de actos |
-| Planificador | Descompone la estructura en briefs de escena |
-| Redactor | Genera la prosa a partir del brief y el contexto |
-| Crítico | Evalúa contra las dimensiones de calidad |
-| Verificador de continuidad | Contrasta la escena contra el canon |
-| Editor | Aplica correcciones locales y de estilo |
-| Autor humano | Decide dirección, acepta o rechaza, define el gusto |
+| Entrevistador | Recoge los datos del destinatario y produce el brief de novela validado |
+| Planificador | Convierte el brief en el esquema de capítulos con sus restricciones de destino |
+| Redactor | Genera la prosa del capítulo a partir del brief de capítulo y el contexto |
+| Editor / Crítico | Puntúa el capítulo contra las dimensiones semánticas y aplica correcciones |
+| Extractor | Lee el capítulo aceptado y propone los hechos que ha introducido |
+
+**Componentes que no son roles**
+
+| Componente | Responsabilidad |
+| --- | --- |
+| Policy engine | Decide lo que antes decidía el autor humano: adoptar o descartar un hecho, aceptar o devolver un capítulo, detener la generación |
+| Guardrail | Aplica el veto de palabras prohibidas sobre cada capítulo antes de aceptarlo |
+| Hook de policy | Punto de ejecución de los validadores de schema y de palabras prohibidas |
+| Hook de capítulo | Punto de ejecución de los validadores programáticos de continuidad y prosa |
+| Gate de publicación | Última puerta: sin todos sus validadores en verde no se publica una versión |
+| Audit log | Registro de cada decisión del policy engine, con la regla aplicada y su resultado |
+
+**El verificador de continuidad no es un rol.** Nombra al conjunto de validadores programáticos del hook de capítulo. La continuidad aquí se decide contra datos estructurados —hechos en la story bible, cronología en Lean—, y ambas son deterministas: un rol que opinara sobre ellas duplicaría peor lo que ya se demuestra.
+
+**Humanos**
+
+| Humano | Qué hace |
+| --- | --- |
+| Lector | Lee la novela publicada y pide cambios sobre ella. Es un papel, no una persona distinta: lo ocupa el comprador o el destinatario |
+| Revisor humano | Evalúa al menos una novela completa con la misma rúbrica que el rol editor |
+
+El autor humano ha salido del bucle de producción: la generación es automática y sus decisiones son ahora políticas del policy engine, trazadas en el audit log.
 
 **Artefactos**
 
 | Artefacto | Definición |
 | --- | --- |
-| Biblia de la obra | Conjunto consolidado de mundo, personajes y reglas |
-| Esquema | Estructura planificada de partes, capítulos y escenas |
-| Brief de escena | Encargo concreto de una escena |
+| Story bible | Conjunto consolidado de personajes, lugares, hechos y cronología. Es el canon consultable de la Capa 2 |
+| Esquema | Plan de capítulos con sus funciones dramáticas y sus restricciones de destino |
+| Brief de capítulo | Encargo concreto de un capítulo |
 | Borrador | Salida de una generación, aún no aceptada |
 | Informe de crítica | Defectos detectados, clasificados y priorizados |
-| Versión | Estado del texto con su trazabilidad |
-| Registro de generación | Prompt, modelo, parámetros y contexto usados |
+| Versión de novela | Estado publicado del texto, con los capítulos que lo componen |
+| Checkpoint | Último capítulo completado, desde el que se reanuda una generación interrumpida |
 
-**Estados de una escena**: `planificada` → `en borrador` → `en revisión` → `aceptada` → (`obsoleta` si un retcon la invalida). Solo la transición a `aceptada` escribe en el canon.
+**Versionado y regeneración**
 
-**Trazabilidad.** Cada versión guarda modelo, prompt, contexto ensamblado y semilla. Sin esto no se puede reproducir un resultado bueno ni diagnosticar uno malo.
+| Clase | Definición | Atributos clave |
+| --- | --- | --- |
+| Solicitud de cambio | Petición del lector sobre un hecho o un fragmento | enunciado, hecho afectado, origen, estado |
+| Análisis de impacto | Cálculo de los capítulos que usan el hecho afectado | solicitud, capítulos afectados, hechos derivados |
+| Regeneración dirigida | Reescritura de solo los capítulos afectados | análisis de impacto, capítulos regenerados, versión resultante |
 
-**Roles añadidos por el modo híbrido**
+**La versión anterior se conserva siempre.** Una regeneración produce una versión nueva y no sobrescribe la anterior: sin eso, un cambio pedido por el lector que empeora el resultado no tiene marcha atrás. Que un capítulo haya cambiado respecto a la versión anterior es atributo del vínculo entre versión y capítulo, no una clase: nada se pregunta sobre esa marca que no sea a través de una versión concreta.
 
-| Rol | Responsabilidad |
-| --- | --- |
-| Extractor | Lee la escena aceptada y propone hallazgos: hechos, promesas, motivos |
-| Replanificador | Revisa el esquema cuando la deriva supera el umbral |
+**El formato de lectura es la web, y el PDF es un export de ella.** La novela se lee en el frontend, y de ese mismo render sale el PDF que se entrega. Dos consecuencias para el modelo: la `Solicitud de cambio` llega siempre desde la propia página, así que su `origen` deja de distinguir formatos y solo registra desde qué capítulo o fragmento se pidió; y **no hay clase `Página de novedades`**, porque qué capítulos cambiaron ya vive en la marca del vínculo entre versión y capítulo, y presentarlo al principio del export es maquetación, no vocabulario del dominio.
 
-**Dos bucles, no uno.** El bucle corto (por escena) genera, critica y consolida. El bucle largo (por capítulo o por umbral de deriva) recoge los hallazgos acumulados, revisa el esquema y reajusta las restricciones de destino de las escenas aún no escritas. Separarlos evita el fallo típico del descubrimiento asistido: replanificar en cada escena, que disuelve la estructura, o no replanificar nunca, que acumula deriva hasta hacer el esquema inservible.
+**Estados de la novela**: `configurando` → `planificando` → `escribiendo` → `validando` → `publicando` → `publicada`. Desde `publicada`, una solicitud de cambio lleva a `regenerando` y de ahí de nuevo a `validando`. `detenida` es terminal y se alcanza al agotar el límite de intentos.
+
+**Estados de un capítulo**: `pendiente` → `escribiendo` → `validando` → `aceptado`. Una validación fallida lleva a `reescribiendo` e incrementa el contador de intentos; agotado el límite, el capítulo queda `agotado` y detiene la novela. Un retcon o una replanificación marcan un capítulo aceptado como `obsoleto`, que vuelve a `pendiente`. Solo la transición a `aceptado` escribe en el canon.
+
+Los dos conjuntos de estados son los mismos que la especificación formal del sistema, uno a uno y sin estados intermedios añadidos. Si el código necesita un estado que no está aquí, es este documento el que se actualiza primero.
+
+**Verificación formal del sistema**
+
+| Clase | Definición | Atributos clave |
+| --- | --- | --- |
+| Especificación del harness | Modelo formal del flujo de generación como máquina de estados | acciones, estados, correspondencia con el código |
+| Invariante de seguridad | Propiedad que debe cumplirse en todo estado alcanzable | enunciado, alcance |
+| Propiedad de liveness | Propiedad que garantiza que el sistema progresa | enunciado |
+| Contraejemplo | Traza que viola una propiedad, hallada por el comprobador de modelos | propiedad violada, traza, cambio que provocó |
+
+Lean verifica la **historia**; la especificación del harness verifica el **sistema**. Son dos verificaciones formales con objetos distintos y no se sustituyen: una novela puede tener una cronología impecable generada por un harness que publica capítulos sin validar.
+
+**Trazabilidad.** Se expresa en términos de observabilidad, y sus clases son las que se consultan a posteriori:
+
+| Clase | Definición | Alcance |
+| --- | --- | --- |
+| Sesión | Todo lo relativo a una novela | entrevista, generación y regeneraciones posteriores |
+| Traza | Una generación completa | inicial o regeneración |
+| Span | Un paso identificable dentro de una traza | un rol o una llamada a tool |
+| Score | Resultado de un validador asociado a una traza | uno por validador ejecutado; lleva valor y, si el validador es semántico, la **justificación** de ese valor |
+| Versión de prompt | Identificador versionado del prompt con que se generó un capítulo | permite atribuir un resultado a un prompt concreto |
+
+Sin esto no se puede reproducir un resultado bueno, ni diagnosticar uno malo, ni decir qué versión de prompt produjo qué. El comprobador de modelos no participa: corre en desarrollo, no en cada generación.
 
 ## Relaciones del dominio
 
@@ -227,86 +341,207 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 
 | Sujeto | Relación | Objeto | Cardinalidad |
 | --- | --- | --- | --- |
-| Obra | se compone de | Parte | 1:N |
-| Capítulo | contiene | Escena | 1:N |
-| Escena | se narra desde | Personaje (POV) | N:1 |
-| Escena | transcurre en | Lugar | N:1 |
-| Escena | avanza | Hilo de trama | N:M |
-| Escena | establece | Hecho canónico | 1:N |
-| Escena | abre / paga | Promesa narrativa | N:M |
-| Escena | produce | Snapshot de mundo | 1:1 |
-| Evento (fábula) | se narra en | Escena (discurso) | N:M |
-| Personaje | conoce | Hecho canónico (desde escena) | N:M |
-| Personaje | desea / necesita | Objetivo | 1:N |
+| Comprador | encarga | Obra | 1:N |
+| Comprador | regala a | Destinatario | 1:N |
+| Obra | celebra | Ocasión | N:1 |
+| Entrevista | produce | Brief de novela | 1:1 |
+| Brief de novela | declara | Elemento personalizado | 1:N |
+| Brief de novela | adjunta | Texto libre aportado | 1:N |
+| Brief de novela | acusa | Dato faltante | 1:N |
+| Brief de novela | acusa | Contradicción de brief | 1:N |
+| Texto libre aportado | aporta | Hecho | 1:N |
+| Texto libre aportado | contiene | Fragmento sospechoso | 1:N |
+| Obra | se compone de | Capítulo | 1:N |
+| Obra | abre con | Dedicatoria | 1:1 |
+| Esquema | fija | Restricción de destino | 1:N |
+| Restricción de destino | acota | Brief de capítulo | 1:1 |
+| Brief de capítulo | encarga | Capítulo | 1:1 |
+| Capítulo | se narra desde | Personaje (POV) | N:1 |
+| Capítulo | transcurre en | Lugar | N:1 |
+| Capítulo | avanza | Hilo de trama | N:M |
+| Capítulo | establece | Hecho | 1:N |
+| Capítulo | usa | Hecho | N:M |
+| Capítulo | abre / paga | Promesa narrativa | N:M |
+| Capítulo | produce | Snapshot | 1:1 |
+| Capítulo | se resume en | Resumen de capítulo | 1:1 |
+| Elemento personalizado | aparece en | Capítulo | N:M |
+| Evento | se narra en | Capítulo | N:M |
+| Evento | ocurre en | Lugar | N:1 |
+| Evento | involucra a | Personaje | N:M |
+| Evento excluyente | excluye a | Personaje | N:M |
 | Personaje | recorre | Arco | 1:1 |
-| Personaje | posee | Artefacto | N:M |
-| Personaje | pertenece a | Facción | N:M |
-| Hecho canónico | contradice | Hecho canónico | N:M |
-| Brief de escena | encarga | Escena | 1:1 |
-| Borrador | realiza | Brief de escena | N:1 |
+| Hecho | contradice | Hecho | N:M |
+| Hecho | proyecta | Snapshot | N:M |
+| Contradicción de canon | se resuelve con | Retcon | N:1 |
+| Retcon | marca obsoleto | Capítulo | 1:N |
+| Extracción | propone | Hecho | 1:N |
+| Policy engine | decide sobre | Hecho | 1:N |
+| Policy engine | registra | Decisión de policy | 1:N |
+| Invalidación de restricción | dispara | Replanificación de capítulos pendientes | N:1 |
+| Replanificación de capítulos pendientes | revisa | Esquema | N:1 |
+| Borrador | realiza | Brief de capítulo | N:1 |
 | Informe de crítica | evalúa | Borrador | 1:1 |
 | Defecto | viola | Dimensión de calidad | N:1 |
-| Motivo | encarna | Tema | N:M |
-| Novum | impone | Regla del mundo | 1:N |
-| Novum | nombra | Término canónico | 1:N |
-| Regla del mundo | configura | Facción | N:M |
-| Facción | disputa | Artefacto | N:M |
-| Artefacto | genera deuda | Promesa narrativa | 1:N |
-| Hecho canónico | proyecta | Snapshot de mundo | N:M |
-| Hecho canónico | visible para | Estado epistémico | 1:N |
-| Contradicción | se resuelve con | Retcon | N:1 |
+| Validador | mide | Dimensión de calidad | N:1 |
+| Validador | emite | Score | 1:N |
+| Palabra prohibida | se detecta como | Coincidencia | 1:N |
+| Coincidencia | devuelve | Capítulo | N:1 |
+| Versión de novela | incluye | Capítulo | N:M |
+| Versión de novela | sucede a | Versión de novela | N:1 |
+| Lector | pide | Solicitud de cambio | 1:N |
+| Solicitud de cambio | afecta a | Hecho | N:1 |
+| Solicitud de cambio | produce | Análisis de impacto | 1:1 |
+| Análisis de impacto | ordena | Regeneración dirigida | 1:1 |
+| Regeneración dirigida | produce | Versión de novela | 1:1 |
+| Sesión | agrupa | Traza | 1:N |
+| Traza | contiene | Span | 1:N |
+| Traza | recoge | Score | 1:N |
+| Span | usa | Versión de prompt | N:1 |
 
-**Relaciones propias del modo híbrido**
+## Mapeo a la story bible
 
-| Sujeto | Relación | Objeto | Cardinalidad |
+Cada clase de canon corresponde a una tabla o a una columna nombrada. El SQL real no vive aquí, pero debe poder derivarse de esta tabla sin decidir nada.
+
+**Toda tabla de dominio lleva `novel_id`**, desde la primera migración. Una instancia aloja varias novelas y ninguna consulta de dominio es correcta sin acotar a una: añadir la columna después obligaría a reescribir todas las tablas y todas las consultas a la vez. La escritura a la story bible es **idempotente por `novel_id` + `chapter_id` + `version`**. Ninguna tabla lleva `user_id` ni `tenant_id`: no hay multiusuario.
+
+| Clase | Tabla | Notas |
+| --- | --- | --- |
+| Comprador | `comprador` | |
+| Destinatario | `destinatario` | |
+| Ocasión | `ocasion` | |
+| Brief de novela | `brief_novela` | `schema_version` guarda con qué se validó |
+| Elemento personalizado | `elemento_personalizado` | `obligatorio` booleano |
+| Elemento personalizado ↔ Capítulo | `elemento_capitulo` | puente; sostiene `elementos_obligatorios` |
+| Texto libre aportado | `texto_libre` | `estado_saneamiento` |
+| Fragmento sospechoso | `fragmento_sospechoso` | |
+| Dato faltante | `dato_faltante` | |
+| Contradicción de brief | `contradiccion_brief` | |
+| Dedicatoria | `dedicatoria` | |
+| Obra | `obra` | |
+| Capítulo | `capitulo` | `estado`, `intentos`, `palabras` |
+| Personaje | `personaje` | `fecha_nacimiento` y `es_destinatario`; entra en Lean |
+| Lugar | `lugar` | entra en Lean |
+| Arco | `arco` | |
+| Hilo de trama | `hilo_trama` | |
+| Evento | `evento` | `momento`, `lugar_id`; es la tabla de cronología |
+| Evento ↔ Personaje | `evento_personaje` | personajes presentes; entra en Lean |
+| Evento ↔ Capítulo | `evento_capitulo` | fábula ↔ discurso, N:M |
+| Evento excluyente | `evento_excluyente` | referencia a `evento`; entra en Lean |
+| Regla del mundo | `regla_mundo` | |
+| Voz narrativa | `voz_narrativa` | |
+| Hecho | `hecho` | `estado`, `origen`, `fragmento_soporte`, `alcance_temporal` |
+| Uso de hecho | `hecho_capitulo` | puente N:M; sostiene el análisis de impacto |
+| Snapshot | `snapshot` | derivado, uno por capítulo |
+| Promesa narrativa | `promesa` | `estado`, `capitulo_apertura`, `capitulo_pago` |
+| Contradicción de canon | `contradiccion_canon` | |
+| Retcon | `retcon` | |
+| Restricción de destino | `restriccion_destino` | |
+| Brief de capítulo | `brief_capitulo` | |
+| Resumen de capítulo | `resumen_capitulo` | |
+| Borrador | `borrador` | |
+| Informe de crítica | `informe_critica` | |
+| Defecto | `defecto` | `clasificacion` local o sistémico |
+| Palabra prohibida | `palabra_prohibida` | `nivel` en los tres valores |
+| Coincidencia | `coincidencia` | |
+| Validador | `validador` | `tipo`, `punto_ejecucion`, `score_langfuse` |
+| Score | `score` | valor por validador y traza |
+| Versión de novela | `version_novela` | `version_anterior_id` |
+| Versión ↔ Capítulo | `version_capitulo` | `modificado` booleano: la marca de capítulo cambiado |
+| Solicitud de cambio | `solicitud_cambio` | `origen`: capítulo o fragmento desde el que se pidió |
+| Análisis de impacto | `analisis_impacto` | |
+| Checkpoint | `checkpoint` | último capítulo completado |
+| Decisión de policy | `audit_log` | |
+
+Los fragmentos vectorizados para la capa Recuperado viven en su tabla de embeddings, fuera de esta lista: no son dominio, son índice.
+
+## Nomenclatura
+
+Un concepto, un nombre **en cada ámbito**. Esta tabla es la que impide que el mismo objeto se llame de tres maneras según dónde se mire.
+
+| Dominio (español) | Código | SQLite | Langfuse |
 | --- | --- | --- | --- |
-| Escena aceptada | revela | Hallazgo | 1:N |
-| Extracción | propone | Hallazgo | 1:N |
-| Hallazgo | se adopta como | Hecho canónico o Promesa | N:1 |
-| Restricción de destino | acota | Brief de escena | 1:N |
-| Esquema | fija | Restricción de destino | 1:N |
-| Deriva | dispara | Replanificación rodante | N:1 |
-| Replanificación rodante | revisa | Esquema | N:1 |
-| Retcon | marca obsoleta | Escena | 1:N |
+| Entrevistador | `interviewer` | — | span `interviewer` |
+| Planificador | `planner` | — | span `planner` |
+| Redactor | `writer` | — | span `writer` |
+| Editor / Crítico | `editor` | — | span `editor` |
+| Extractor | `extractor` | — | span `extractor` |
+| Policy engine | `PolicyEngine` | `audit_log` | — |
+| Guardrail | `Guardrail` | `palabra_prohibida`, `coincidencia` | score `palabras_prohibidas` |
+| Story bible | `StoryBible` | (vista sobre varias tablas) | — |
+| Obra | `Obra` | `obra` | — |
+| Capítulo | `Capitulo` | `capitulo` | span `capitulo_<n>` |
+| Brief de novela | `BriefNovela` | `brief_novela` | — |
+| Brief de capítulo | `BriefCapitulo` | `brief_capitulo` | — |
+| Destinatario | `Destinatario` | `destinatario` | — |
+| Elemento personalizado | `ElementoPersonalizado` | `elemento_personalizado` | score `elementos_obligatorios` |
+| Hecho | `Hecho` | `hecho`, `hecho_capitulo` | — |
+| Evento | `Evento` | `evento`, `evento_personaje`, `evento_capitulo` | — |
+| Promesa narrativa | `Promesa` | `promesa` | score `cierre_arco` |
+| Versión de novela | `VersionNovela` | `version_novela`, `version_capitulo` | — |
+| Solicitud de cambio | `SolicitudCambio` | `solicitud_cambio` | traza propia |
+| Sesión | — | — | sesión, una por novela |
+| Traza | — | — | traza, una por generación |
+| Score | `Score` | `score` | score |
+| Versión de prompt | `VersionPrompt` | — | versión de prompt |
+
+Las dimensiones de calidad usan el nombre de su score como identificador en los tres ámbitos: `consistencia_factica` es la clave en el fichero de umbrales, el nombre del validador en el código y el nombre del score en Langfuse. No hay traducción que mantener.
 
 ## Preguntas de competencia
 
 La ontología está validada cuando el sistema responde estas preguntas. Es el criterio de parada: evita modelar de más y detecta clases que faltan.
 
-**Canon y estado**
+**Encargo y personalización**
 
-1. ¿Qué sabe un personaje concreto en el capítulo 12, y en qué escena lo aprendió?
-2. ¿Dónde se estableció por primera vez un hecho del mundo?
-3. ¿Qué hechos entran en contradicción entre sí y cuál prevalece?
-4. ¿Qué escenas quedan invalidadas si se retconea un hecho?
-5. ¿Dónde está cada personaje y qué posee al inicio de la escena N?
+1. ¿Qué comprador encargó esta novela, para qué destinatario, con qué ocasión y con qué dedicatoria?
+2. ¿Qué elementos obligatorios del brief no aparecen en ningún capítulo?
+3. ¿Qué datos faltan en el brief y cuáles se contradicen entre sí?
+4. ¿Qué fragmentos del texto libre se usaron como hechos y cuáles se descartaron por sospechosos?
+5. ¿En qué capítulos aparece un elemento personalizado dado?
 
-**Estructura y promesas**
+**Estructura y plan**
 
-6. ¿Qué promesas siguen sin pagar y desde hace cuántas escenas?
-7. ¿Qué hilos de trama no avanzan desde hace más de X capítulos?
-8. ¿Qué escenas hacen avanzar el arco de un personaje dado?
-9. ¿Qué revelaciones están permitidas a partir de este punto del discurso?
+6. ¿Qué restricción de destino acota el capítulo N?
+7. ¿Qué restricciones de destino aún no escritas ha vuelto imposibles el canon vigente?
+8. ¿Qué arcos e hilos de trama llevan más capítulos de los declarados sin avanzar?
+9. ¿Qué reglas del mundo salidas del brief afectan a este capítulo?
+10. ¿Qué voz narrativa —persona y tiempo verbal— declara esta novela, y la respeta el capítulo N?
+
+**Canon y cronología**
+
+11. ¿Qué capítulos usan un hecho dado?
+12. ¿Dónde se estableció por primera vez un hecho, y qué fragmento del texto lo sostiene?
+13. ¿Dónde está cada personaje y qué es verdad del mundo al cierre del capítulo N?
+14. ¿Qué edad tiene un personaje en cada evento?
+15. ¿Puede un personaje estar en dos lugares en el mismo momento?
+16. ¿Qué personajes aparecen después de un evento que los excluye?
+17. ¿Qué hechos entran en contradicción entre sí y cuál prevalece?
+18. ¿Qué promesas siguen pendientes al llegar al último capítulo?
 
 **Contexto**
 
-10. ¿Qué debe entrar en el contexto para generar la escena N, y con qué presupuesto?
-11. ¿Qué metáforas, imágenes o formulaciones ya se han usado y conviene vetar?
-12. ¿Qué fragmentos anteriores son relevantes para las entidades de este brief?
+19. ¿Qué debe entrar en el contexto para generar el capítulo N, y con qué presupuesto por capa?
 
-**Calidad y proceso**
+**Versiones y regeneración**
 
-13. ¿Qué dimensiones falla este borrador y con qué gravedad?
-14. ¿Este defecto es local o exige replanificar?
-15. ¿Con qué modelo, prompt y contexto se generó esta versión?
-16. ¿Se distingue la voz de cada personaje sin acotaciones de diálogo?
+20. ¿Qué capítulos cambiaron entre dos versiones de la novela?
+21. ¿Qué capítulos hay que regenerar si cambia un hecho dado?
+22. ¿Qué versión de la novela estaba publicada antes de la última regeneración?
+23. ¿Qué lector pidió este cambio y desde qué capítulo de la lectura lo pidió?
 
-**Modo híbrido**
+**Calidad y guardrails**
 
-17. ¿Qué hallazgos ha introducido esta escena que no estaban en el plan?
-18. ¿Qué restricciones de destino acotan la escena N?
-19. ¿Cuánta deriva hay entre lo escrito y el esquema vigente, y toca replanificar?
-20. ¿Qué hallazgos siguen sin adoptar ni descartar?
-21. ¿Qué escenas quedan obsoletas tras la última replanificación?
+24. ¿Qué validadores fallaron en esta versión y con qué score?
+25. ¿Qué palabras prohibidas se detectaron, en qué nivel y en qué capítulo?
+26. ¿Este defecto es local o exige replanificar los capítulos pendientes?
+27. ¿Qué puntuó el revisor humano frente a lo que puntuó el rol editor, criterio a criterio de la misma rúbrica?
+
+**Proceso y observabilidad**
+
+28. ¿Desde qué capítulo se reanuda la generación tras un fallo?
+29. ¿Cuántos reintentos lleva un capítulo y cuánto le queda para agotarse?
+30. ¿Qué versión de prompt produjo este capítulo?
+31. ¿Qué decidió el policy engine sobre un hecho concreto, y con qué regla?
+32. ¿Cuántos tokens y cuánto coste lleva esta novela, por capítulo y en total?
+33. ¿Qué contraejemplos encontró el comprobador de modelos y qué cambio en el código provocó cada uno?
 
 **Cobertura.** Añadir una pregunta nueva obliga a comprobar si el modelo la soporta; si no, falta una clase o una relación. Quitar una clase obliga a comprobar qué pregunta deja de responderse.
