@@ -28,7 +28,7 @@ ontología, hay enlace y no copia.
 | Qué tecnología, qué reglas y qué política de contexto | `CLAUDE.md` |
 | Por qué se eligió una opción frente a otras | `trade-offs.md` |
 | **Cualquier número** | `config/thresholds.yaml` |
-| Identificador y effort de modelo por rol | `config/models.yaml` ▸ previsto |
+| Identificador y effort de modelo por rol | `config/models.yaml` |
 
 ### Cómo usarlo
 
@@ -199,10 +199,10 @@ depende de `process/` salvo `versioning/`, que necesita encolar una regeneració
 Cada agente encarna un rol de la Capa 5 de `definitions.md`. Los nombres de rol son
 ontología; los de agente e identificadores de modelo son implementación.
 
-**El identificador y el effort de cada rol viven en `config/models.yaml`** ▸ previsto, no
+**El identificador y el effort de cada rol viven en `config/models.yaml`**, no
 escritos en este documento. La tabla nombra la clave, no el valor.
 
-| Agente | Rol | Entrada → salida | Tools | Skills | Clave en `config/models.yaml` ▸ previsto | Span |
+| Agente | Rol | Entrada → salida | Tools | Skills | Clave en `config/models.yaml` | Span |
 | --- | --- | --- | --- | --- | --- | --- |
 | `interviewer` | Entrevistador | Formulario y texto libre → `BriefNovela` | `extraer_hechos_texto_libre`, `detectar_contradiccion` | — | `roles.entrevistador` | `interviewer` |
 | `planner` | Planificador | `BriefNovela` → `Esquema` con una `RestriccionDestino` por capítulo | `consultar_story_bible` | `personalizacion-natural` | `roles.planificador` | `planner` |
@@ -323,8 +323,23 @@ el audit log con la regla aplicada, la entrada y el resultado: si nadie puede re
 por qué se adoptó un hecho, la automatización ha sustituido un juicio por un misterio.
 
 **Guardrail.** Tres niveles —`global`, `perfil` y `novela`—, aplicados en conjunto y ganando
-el más restrictivo, con la normalización corriendo **antes** de comparar. Toda `Coincidencia`
-queda en el audit log y en Langfuse. Dos pasadas consecutivas sin limpiar el texto detienen
+el más restrictivo. Toda `Coincidencia` queda en el audit log y en Langfuse.
+
+**La normalización corre antes de comparar**, y se aplica **a los dos lados**: al texto del
+capítulo y a la palabra de la lista. Cinco transformaciones, todas activables por separado
+en `config/thresholds.yaml` § `guardrail.normalizacion`:
+
+| Transformación | Qué iguala |
+| --- | --- |
+| Minúsculas | `Idiota` y `idiota` |
+| Acentos | `imbécil` y `imbecil`, que es como se escribe cuando se quiere esquivar el filtro |
+| Signos | `i-d-i-o-t-a` y los separadores intercalados |
+| Plurales | `idiota` e `idiotas` |
+| Variantes simples | Diminutivos y aumentativos regulares |
+
+Desactivar una abre un agujero por variante, y el agujero no se ve en los tests que alguien
+escribió pensando en la forma canónica: por eso las cinco tienen valor por defecto `true` y
+apagarlas es una decisión explícita. Dos pasadas consecutivas sin limpiar el texto detienen
 la generación e informan, sin esperar al tercer intento: un modelo que no quita una palabra
 en dos pasadas no la va a quitar en la tercera.
 
@@ -658,8 +673,67 @@ retención que hoy no tienen.
 
 ## Story bible
 
-El esquema conceptual está en `domain-knowledge.md` § Story bible y la correspondencia clase
-a tabla en `definitions.md` § Mapeo. Aquí, lo que es implementación.
+El esquema conceptual está en `domain-knowledge.md` § Story bible. Aquí vive la
+materialización: qué tabla corresponde a cada clase, cómo se versiona y qué índices la
+sostienen. **`StoryBible` no es una tabla**: es la vista consolidada sobre las de `canon/` y
+`novel/` que los roles consultan.
+
+### Clase a tabla
+
+Derivable sin decidir nada: el SQL sale de aquí. **Toda tabla de dominio lleva `novel_id`**
+desde la primera migración —una instancia aloja varias novelas y ninguna consulta de dominio
+es correcta sin acotar a una—, y ninguna lleva `user_id` ni `tenant_id`.
+
+| Clase | Tabla | Notas |
+| --- | --- | --- |
+| Comprador | `comprador` | |
+| Destinatario | `destinatario` | |
+| Ocasión | `ocasion` | |
+| Brief de novela | `brief_novela` | `schema_version` guarda con qué se validó |
+| Elemento personalizado | `elemento_personalizado` | `obligatorio` booleano |
+| Elemento personalizado ↔ Capítulo | `elemento_capitulo` | puente; sostiene `elementos_obligatorios` |
+| Texto libre aportado | `texto_libre` | `estado_saneamiento` |
+| Fragmento sospechoso | `fragmento_sospechoso` | |
+| Dato faltante | `dato_faltante` | |
+| Contradicción de brief | `contradiccion_brief` | |
+| Dedicatoria | `dedicatoria` | |
+| Obra | `obra` | |
+| Capítulo | `capitulo` | `estado`, `intentos`, `palabras` |
+| Personaje | `personaje` | `fecha_nacimiento` y `es_destinatario`; entra en Lean |
+| Lugar | `lugar` | entra en Lean |
+| Arco | `arco` | |
+| Hilo de trama | `hilo_trama` | |
+| Evento | `evento` | `momento`, `lugar_id`; es la tabla de cronología |
+| Evento ↔ Personaje | `evento_personaje` | personajes presentes; entra en Lean |
+| Evento ↔ Capítulo | `evento_capitulo` | fábula ↔ discurso, N:M |
+| Evento excluyente | `evento_excluyente` | referencia a `evento`; entra en Lean |
+| Regla del mundo | `regla_mundo` | |
+| Voz narrativa | `voz_narrativa` | |
+| Hecho | `hecho` | `estado`, `origen`, `fragmento_soporte`, `alcance_temporal` |
+| Uso de hecho | `hecho_capitulo` | puente N:M; sostiene el análisis de impacto |
+| Snapshot | `snapshot` | derivado, uno por capítulo |
+| Promesa narrativa | `promesa` | `estado`, `capitulo_apertura`, `capitulo_pago` |
+| Contradicción de canon | `contradiccion_canon` | |
+| Retcon | `retcon` | |
+| Restricción de destino | `restriccion_destino` | |
+| Brief de capítulo | `brief_capitulo` | |
+| Resumen de capítulo | `resumen_capitulo` | |
+| Borrador | `borrador` | |
+| Informe de crítica | `informe_critica` | |
+| Defecto | `defecto` | `clasificacion` local o sistémico |
+| Palabra prohibida | `palabra_prohibida` | `nivel` en los tres valores |
+| Coincidencia | `coincidencia` | |
+| Validador | `validador` | `tipo`, `punto_ejecucion`, `score_langfuse` |
+| Score | `score` | valor por validador y traza |
+| Versión de novela | `version_novela` | `version_anterior_id` |
+| Versión ↔ Capítulo | `version_capitulo` | `modificado` booleano: la marca de capítulo cambiado |
+| Solicitud de cambio | `solicitud_cambio` | `origen`: capítulo o fragmento desde el que se pidió |
+| Análisis de impacto | `analisis_impacto` | |
+| Checkpoint | `checkpoint` | último capítulo completado |
+| Decisión de policy | `audit_log` | |
+
+Los fragmentos vectorizados para la capa Recuperado vivirían en su tabla de embeddings, fuera
+de esta lista: no son dominio, son índice. En v1 no existen (TO-015).
 
 ### Versionado por vigencia
 
@@ -677,8 +751,12 @@ silencio, que es el mismo fallo silencioso que olvidar `novel_id`. Por eso **`no
 `version` son parámetros obligatorios de toda consulta de dominio**, sin valor por defecto,
 y eso es comprobable: va a `verification.md` como validador candidato junto al de `novel_id`.
 
-`version_desde` y `version_hasta` sobre `Hecho` son un cambio de ontología y van en la lista
-de pendientes, no aplicados desde aquí.
+**El uso también se versiona, y no es lo mismo que versionar el hecho.** `hecho_capitulo`
+lleva su propio `version_desde` y `version_hasta` porque un capítulo puede dejar de mencionar
+un hecho al regenerarse sin que el hecho cambie. Si el puente no se versiona, «qué capítulos
+usaban este hecho en la versión 2» devuelve los de la versión vigente, y el análisis de
+impacto responde por la versión equivocada. **Invariante de esquema**: la vigencia de una
+fila de `hecho_capitulo` está contenida en la de su `hecho`.
 
 ### Índices
 

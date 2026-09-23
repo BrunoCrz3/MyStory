@@ -117,7 +117,7 @@ El canon es la **story bible**: el conjunto de lo que es verdad en la novela, co
 
 | Clase | Definición | Atributos clave |
 | --- | --- | --- |
-| Hecho | Enunciado verdadero en el mundo ficcional | enunciado, tipo, capítulo que lo establece, estado, alcance temporal, origen, fragmento que lo sostiene |
+| Hecho | Enunciado verdadero en el mundo ficcional | enunciado, tipo, capítulo que lo establece, estado, alcance temporal, origen, fragmento que lo sostiene, **versión desde**, **versión hasta** |
 | Estado de hecho | Grado de fijación de un hecho | propuesto, adoptado, descartado, retconeado, refutado |
 | Snapshot | Estado derivado del mundo al cierre de un capítulo | personajes presentes, ubicaciones, relaciones, momento de la fábula |
 | Promesa narrativa | Expectativa abierta ante el lector | tipo, capítulo de apertura, capítulo de pago, estado |
@@ -125,9 +125,13 @@ El canon es la **story bible**: el conjunto de lo que es verdad en la novela, co
 | Contradicción de canon | Conflicto detectado entre dos hechos | hechos implicados, tipo, gravedad, resolución |
 | Retcon | Reescritura deliberada del canon previo | hecho antiguo, hecho nuevo, capítulos afectados |
 
+**Vigencia, y por qué no basta con el estatus.** Un retcon **no sobrescribe un hecho en su sitio**: cierra el viejo poniéndole `versión hasta` y abre el nuevo con `versión desde`. De ahí salen dos reglas que se confunden con facilidad. La primera: **el `Estado de hecho` describe la versión vigente, no la historia**. La segunda, que es consecuencia: **toda consulta por versión se resuelve con la vigencia, nunca con el estatus** —en la versión anterior, un hecho que hoy está `retconeado` seguía siendo verdad, y filtrar por estatus lo dejaría fuera—. Sin esta separación, una versión publicada se queda sin la base que la sostiene: Lean no se puede volver a ejecutar sobre ella y `query_story_bible` no puede responder por versión.
+
 **Regla de actualización.** El canon solo cambia cuando un capítulo se acepta. Un borrador rechazado no deja rastro; si lo dejara, cualquier iteración fallida contaminaría el estado del mundo y la regeneración dirigida acabaría regenerando capítulos por hechos que nunca se escribieron.
 
 **Uso de hecho.** Cada `Hecho` registra en qué capítulos se usa, en una relación N:M con `Capítulo`. No es metadato: es lo único que hace posible responder «si el perro pasa a llamarse Nala, ¿qué capítulos hay que reescribir?» sin releer la novela entera. Un hecho sin uso registrado es un hecho que la regeneración no sabrá propagar.
+
+**El uso también tiene vigencia.** No basta con versionar el `Hecho`: la relación con el `Capítulo` lleva su propio `versión desde` y `versión hasta`, porque un capítulo puede dejar de mencionar un hecho al regenerarse sin que el hecho cambie. Sin eso, preguntar «qué capítulos usaban este hecho en la versión 2» devuelve los de la versión vigente, y tanto el análisis de impacto como la marca de capítulos modificados responden por la versión equivocada. **Invariante**: la vigencia de un uso está contenida en la del hecho que usa; un capítulo no puede apoyarse en un hecho que aún no existía o que ya se había cerrado.
 
 **Canon extraído.** El canon crece sobre todo por extracción, no por declaración: al aceptar un capítulo se leen los hechos que ha introducido sin que nadie los hubiera previsto. Cada uno entra como `propuesto`, y lo que decide si pasa a `adoptado` es el **policy engine**, no una persona. Un hecho `propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación.
 
@@ -178,29 +182,30 @@ El reparto de la ventana entre estas siete capas, más el Margen, vive en `confi
 
 Cada dimensión necesita definición, validador, tipo, punto de ejecución y nombre de score. Sin las cinco cosas no es una métrica, es una opinión.
 
-Los **tipos** son cuatro: `programático` (decide un proceso determinista), `semántico` (decide un modelo con rúbrica), `formal-Lean` (se demuestra sobre la cronología) y `revisión humana`. Los **puntos de ejecución** son cuatro: `hook de policy`, `hook de capítulo`, `rol editor` y `gate de publicación`.
+Los **tipos** son cuatro: `programático` (decide un proceso determinista), `semántico` (decide un modelo con rúbrica), `formal-Lean` (se demuestra sobre la cronología) y `revisión humana`. Los **puntos de ejecución** son cinco: `hook de policy`, `hook de capítulo`, `rol editor`, `gate de publicación` y `export`. Los cuatro primeros deciden si un capítulo o una versión siguen adelante; **`export` corre después de publicar**, sobre un artefacto derivado de una versión ya válida, y por eso no bloquea nada: lo que caza es que el fichero entregado no diga lo mismo que lo que se validó.
 
-| Dimensión | Qué mide | Tipo | Punto de ejecución | Score |
-| --- | --- | --- | --- | --- |
-| Conformidad de schema | El brief y la salida de cada rol cumplen su schema | programático | hook de policy | `schema_valido` |
-| Ausencia de palabras prohibidas | Ninguna palabra vetada sobrevive en el capítulo | programático | hook de policy | `palabras_prohibidas` |
-| Ortografía exacta de nombres | Destinatario y personajes escritos como en la story bible | programático | hook de capítulo | `nombres_exactos` |
-| Longitud | El capítulo cae dentro del rango declarado | programático | hook de capítulo | `longitud` |
-| Consistencia fáctica | Ningún enunciado contradice el canon vigente | programático + semántico | hook de capítulo | `consistencia_factica` |
-| Calidad de prosa | Eco de n-gramas, clichés, muletillas, varianza de frase, giros típicos de texto generado | programático | hook de capítulo | `calidad_prosa` |
-| Integridad de POV y voz narrativa | Persona, tiempo verbal y focalización se mantienen | programático | hook de capítulo | `integridad_pov` |
-| Cumplimiento del brief de capítulo | El capítulo satisface su restricción de destino | programático | hook de capítulo | `cumplimiento_brief` |
-| Integración natural de la personalización | Los elementos personalizados están tejidos, no insertados | semántico | rol editor | `personalizacion_natural` |
-| Reconocibilidad del destinatario | El destinatario se reconocería en el texto | semántico + revisión humana | rol editor · revisión | `reconocibilidad` |
-| Adecuación del tono | El registro corresponde a la edad y la ocasión | semántico | rol editor | `adecuacion_tono` |
-| Coherencia de personajes | Las acciones encajan con deseo, herida y arco | semántico | rol editor | `coherencia_personajes` |
-| Ritmo entre capítulos | Alternancia de densidad y respiro a lo largo de la obra | semántico | rol editor | `ritmo` |
-| Consistencia temporal | Los eventos respetan el orden cronológico declarado | formal-Lean | gate de publicación | `lean_cronologia` |
-| Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un evento excluyente | formal-Lean | gate de publicación | `lean_ubicacion` |
-| Coherencia de edad | La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | formal-Lean | gate de publicación | `lean_edad` |
-| Cumplimiento de elementos obligatorios | Todo elemento obligatorio aparece en al menos un capítulo | programático | gate de publicación | `elementos_obligatorios` |
-| Cierre del arco | Ninguna promesa queda pendiente al terminar la novela | programático + semántico | gate de publicación | `cierre_arco` |
-| Render visual | Índice, ficha de personajes y lugares y portada renderizan sin error | programático | gate de publicación | `render_visual` |
+| Dimensión | Qué mide | Tipo | Punto de ejecución |
+| --- | --- | --- | --- |
+| Conformidad de schema | El brief y la salida de cada rol cumplen su schema | programático | hook de policy |
+| Ausencia de palabras prohibidas | Ninguna palabra vetada sobrevive en el capítulo | programático | hook de policy |
+| Ortografía exacta de nombres | Destinatario y personajes escritos como en la story bible | programático | hook de capítulo |
+| Longitud | El capítulo cae dentro del rango declarado | programático | hook de capítulo |
+| Consistencia fáctica | Ningún enunciado contradice el canon vigente | programático + semántico | hook de capítulo |
+| Calidad de prosa | Eco de n-gramas, clichés, muletillas, varianza de frase, giros típicos de texto generado | programático | hook de capítulo |
+| Integridad de POV y voz narrativa | Persona, tiempo verbal y focalización se mantienen | programático | hook de capítulo |
+| Cumplimiento del brief de capítulo | El capítulo satisface su restricción de destino | programático | hook de capítulo |
+| Integración natural de la personalización | Los elementos personalizados están tejidos, no insertados | semántico | rol editor |
+| Reconocibilidad del destinatario | El destinatario se reconocería en el texto | semántico + revisión humana | rol editor · revisión |
+| Adecuación del tono | El registro corresponde a la edad y la ocasión | semántico | rol editor |
+| Coherencia de personajes | Las acciones encajan con deseo, herida y arco | semántico | rol editor |
+| Ritmo entre capítulos | Alternancia de densidad y respiro a lo largo de la obra | semántico | rol editor |
+| Consistencia temporal | Los eventos respetan el orden cronológico declarado | formal-Lean | gate de publicación |
+| Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un evento excluyente | formal-Lean | gate de publicación |
+| Coherencia de edad | La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | formal-Lean | gate de publicación |
+| Cumplimiento de elementos obligatorios | Todo elemento obligatorio aparece en al menos un capítulo | programático | gate de publicación |
+| Cierre del arco | Ninguna promesa queda pendiente al terminar la novela | programático + semántico | gate de publicación |
+| Render visual | Índice, ficha de personajes y lugares y portada renderizan sin error | programático | gate de publicación |
+| Paridad PDF ↔ web | El PDF exportado contiene lo mismo que la lectura web: capítulos, títulos, índice y dedicatoria | programático | export |
 
 **Aspiraciones sin validador.** Dos cosas que el sistema persigue y ninguna fila mide, declaradas aquí para que nadie las confunda con cobertura:
 
@@ -217,7 +222,7 @@ Los **tipos** son cuatro: `programático` (decide un proceso determinista), `sem
 | --- | --- | --- |
 | Palabra prohibida | Término que no puede aparecer en el texto | forma, nivel, origen, novela (si el nivel lo es) |
 | Nivel de palabra prohibida | Alcance de la prohibición | global, perfil, novela |
-| Normalización | Transformación que se aplica antes de comparar | minúsculas, acentos, signos, plurales, variantes simples |
+| Normalización | Transformación que se aplica al texto y a la palabra antes de compararlos | conjunto de reglas, declarado en `config/thresholds.yaml` |
 | Coincidencia | Detección de una palabra prohibida en un capítulo | palabra, nivel, capítulo, posición, intento, decisión |
 | Límite de reescrituras | Número de veces que un capítulo vuelve al redactor antes de detener la generación | valor, alcanzado |
 
@@ -360,7 +365,7 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 | Capítulo | transcurre en | Lugar | N:1 |
 | Capítulo | avanza | Hilo de trama | N:M |
 | Capítulo | establece | Hecho | 1:N |
-| Capítulo | usa | Hecho | N:M |
+| Capítulo | usa | Hecho | N:M, con vigencia propia |
 | Capítulo | abre / paga | Promesa narrativa | N:M |
 | Capítulo | produce | Snapshot | 1:1 |
 | Capítulo | se resume en | Resumen de capítulo | 1:1 |
@@ -373,6 +378,8 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 | Hecho | contradice | Hecho | N:M |
 | Hecho | proyecta | Snapshot | N:M |
 | Contradicción de canon | se resuelve con | Retcon | N:1 |
+| Retcon | cierra | Hecho (antiguo) | N:1 |
+| Retcon | abre | Hecho (nuevo) | N:1 |
 | Retcon | marca obsoleto | Capítulo | 1:N |
 | Extracción | propone | Hecho | 1:N |
 | Policy engine | decide sobre | Hecho | 1:N |
@@ -398,93 +405,37 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 | Traza | recoge | Score | 1:N |
 | Span | usa | Versión de prompt | N:1 |
 
-## Mapeo a la story bible
-
-Cada clase de canon corresponde a una tabla o a una columna nombrada. El SQL real no vive aquí, pero debe poder derivarse de esta tabla sin decidir nada.
-
-**Toda tabla de dominio lleva `novel_id`**, desde la primera migración. Una instancia aloja varias novelas y ninguna consulta de dominio es correcta sin acotar a una: añadir la columna después obligaría a reescribir todas las tablas y todas las consultas a la vez. La escritura a la story bible es **idempotente por `novel_id` + `chapter_id` + `version`**. Ninguna tabla lleva `user_id` ni `tenant_id`: no hay multiusuario.
-
-| Clase | Tabla | Notas |
-| --- | --- | --- |
-| Comprador | `comprador` | |
-| Destinatario | `destinatario` | |
-| Ocasión | `ocasion` | |
-| Brief de novela | `brief_novela` | `schema_version` guarda con qué se validó |
-| Elemento personalizado | `elemento_personalizado` | `obligatorio` booleano |
-| Elemento personalizado ↔ Capítulo | `elemento_capitulo` | puente; sostiene `elementos_obligatorios` |
-| Texto libre aportado | `texto_libre` | `estado_saneamiento` |
-| Fragmento sospechoso | `fragmento_sospechoso` | |
-| Dato faltante | `dato_faltante` | |
-| Contradicción de brief | `contradiccion_brief` | |
-| Dedicatoria | `dedicatoria` | |
-| Obra | `obra` | |
-| Capítulo | `capitulo` | `estado`, `intentos`, `palabras` |
-| Personaje | `personaje` | `fecha_nacimiento` y `es_destinatario`; entra en Lean |
-| Lugar | `lugar` | entra en Lean |
-| Arco | `arco` | |
-| Hilo de trama | `hilo_trama` | |
-| Evento | `evento` | `momento`, `lugar_id`; es la tabla de cronología |
-| Evento ↔ Personaje | `evento_personaje` | personajes presentes; entra en Lean |
-| Evento ↔ Capítulo | `evento_capitulo` | fábula ↔ discurso, N:M |
-| Evento excluyente | `evento_excluyente` | referencia a `evento`; entra en Lean |
-| Regla del mundo | `regla_mundo` | |
-| Voz narrativa | `voz_narrativa` | |
-| Hecho | `hecho` | `estado`, `origen`, `fragmento_soporte`, `alcance_temporal` |
-| Uso de hecho | `hecho_capitulo` | puente N:M; sostiene el análisis de impacto |
-| Snapshot | `snapshot` | derivado, uno por capítulo |
-| Promesa narrativa | `promesa` | `estado`, `capitulo_apertura`, `capitulo_pago` |
-| Contradicción de canon | `contradiccion_canon` | |
-| Retcon | `retcon` | |
-| Restricción de destino | `restriccion_destino` | |
-| Brief de capítulo | `brief_capitulo` | |
-| Resumen de capítulo | `resumen_capitulo` | |
-| Borrador | `borrador` | |
-| Informe de crítica | `informe_critica` | |
-| Defecto | `defecto` | `clasificacion` local o sistémico |
-| Palabra prohibida | `palabra_prohibida` | `nivel` en los tres valores |
-| Coincidencia | `coincidencia` | |
-| Validador | `validador` | `tipo`, `punto_ejecucion`, `score_langfuse` |
-| Score | `score` | valor por validador y traza |
-| Versión de novela | `version_novela` | `version_anterior_id` |
-| Versión ↔ Capítulo | `version_capitulo` | `modificado` booleano: la marca de capítulo cambiado |
-| Solicitud de cambio | `solicitud_cambio` | `origen`: capítulo o fragmento desde el que se pidió |
-| Análisis de impacto | `analisis_impacto` | |
-| Checkpoint | `checkpoint` | último capítulo completado |
-| Decisión de policy | `audit_log` | |
-
-Los fragmentos vectorizados para la capa Recuperado viven en su tabla de embeddings, fuera de esta lista: no son dominio, son índice.
-
 ## Nomenclatura
 
-Un concepto, un nombre **en cada ámbito**. Esta tabla es la que impide que el mismo objeto se llame de tres maneras según dónde se mire.
+Un concepto, un nombre **en cada ámbito**. Esta tabla fija la correspondencia entre el término del dominio y su identificador en código, que es vocabulario compartido y por tanto ontología. Los nombres de tabla viven en `architecture.md` § Story bible y los de span y score en `docs/verification.md`: son materialización, no vocabulario.
 
-| Dominio (español) | Código | SQLite | Langfuse |
-| --- | --- | --- | --- |
-| Entrevistador | `interviewer` | — | span `interviewer` |
-| Planificador | `planner` | — | span `planner` |
-| Redactor | `writer` | — | span `writer` |
-| Editor / Crítico | `editor` | — | span `editor` |
-| Extractor | `extractor` | — | span `extractor` |
-| Policy engine | `PolicyEngine` | `audit_log` | — |
-| Guardrail | `Guardrail` | `palabra_prohibida`, `coincidencia` | score `palabras_prohibidas` |
-| Story bible | `StoryBible` | (vista sobre varias tablas) | — |
-| Obra | `Obra` | `obra` | — |
-| Capítulo | `Capitulo` | `capitulo` | span `capitulo_<n>` |
-| Brief de novela | `BriefNovela` | `brief_novela` | — |
-| Brief de capítulo | `BriefCapitulo` | `brief_capitulo` | — |
-| Destinatario | `Destinatario` | `destinatario` | — |
-| Elemento personalizado | `ElementoPersonalizado` | `elemento_personalizado` | score `elementos_obligatorios` |
-| Hecho | `Hecho` | `hecho`, `hecho_capitulo` | — |
-| Evento | `Evento` | `evento`, `evento_personaje`, `evento_capitulo` | — |
-| Promesa narrativa | `Promesa` | `promesa` | score `cierre_arco` |
-| Versión de novela | `VersionNovela` | `version_novela`, `version_capitulo` | — |
-| Solicitud de cambio | `SolicitudCambio` | `solicitud_cambio` | traza propia |
-| Sesión | — | — | sesión, una por novela |
-| Traza | — | — | traza, una por generación |
-| Score | `Score` | `score` | score |
-| Versión de prompt | `VersionPrompt` | — | versión de prompt |
+| Dominio (español) | Código |
+| --- | --- |
+| Entrevistador | `interviewer` |
+| Planificador | `planner` |
+| Redactor | `writer` |
+| Editor / Crítico | `editor` |
+| Extractor | `extractor` |
+| Policy engine | `PolicyEngine` |
+| Guardrail | `Guardrail` |
+| Story bible | `StoryBible` |
+| Obra | `Obra` |
+| Capítulo | `Capitulo` |
+| Brief de novela | `BriefNovela` |
+| Brief de capítulo | `BriefCapitulo` |
+| Destinatario | `Destinatario` |
+| Elemento personalizado | `ElementoPersonalizado` |
+| Hecho | `Hecho` |
+| Evento | `Evento` |
+| Promesa narrativa | `Promesa` |
+| Versión de novela | `VersionNovela` |
+| Solicitud de cambio | `SolicitudCambio` |
+| Sesión | — |
+| Traza | — |
+| Score | `Score` |
+| Versión de prompt | `VersionPrompt` |
 
-Las dimensiones de calidad usan el nombre de su score como identificador en los tres ámbitos: `consistencia_factica` es la clave en el fichero de umbrales, el nombre del validador en el código y el nombre del score en Langfuse. No hay traducción que mantener.
+**Las dimensiones de calidad no están en esta tabla**, y no por olvido: su identificador —`consistencia_factica`, `nombres_exactos`— es el mismo en el fichero de umbrales, en el código y en Langfuse, así que no hay correspondencia que mantener, solo un nombre. Cuál le toca a cada dimensión lo dice `docs/verification.md`, porque **no es derivable del nombre en español**: «Ortografía exacta de nombres» es `nombres_exactos` y «Integridad de POV y voz narrativa» es `integridad_pov`.
 
 ## Preguntas de competencia
 

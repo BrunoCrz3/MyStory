@@ -281,7 +281,7 @@ Dos de los cuatro se cerraron después; se dejan tachados para que el rastro no 
 | --- | --- | --- |
 | ~~**D5**~~ | — | **Cerrado.** `architecture.md` rehizo la tabla clase → feature con las nueve features (RI-004) y `CLAUDE.md` se reconcilió con ella (RI-005) |
 | ~~**B1**~~ | — | **Cerrado.** El texto de documentos vivos y reexportación desapareció con la reescritura de `architecture.md` (RI-004) |
-| **Transversal** · Las ~44 referencias a `AGENTS.md` en `architecture.md` y `verification.md` | Regeneración de ambos | Ídem |
+| **Transversal** · Referencias a `AGENTS.md` | Regeneración de `docs/verification.md` | **A medias.** `architecture.md` quedó en **cero** al reescribirse (RI-004). Las 36 que quedan están todas en `verification.md`. Las de `trade-offs.md`, el registro y `CLAUDE.md` no cuentan: ahí `AGENTS.md` es el sujeto del que se habla, no un puntero |
 | **Puntero falso de `CLAUDE.md:207`** · `verification.md` no contiene scores ni puntos de ejecución | Regeneración de `docs/verification.md` | El puntero será cierto cuando ese fichero se convierta en la tabla de validadores |
 
 ### Corregido en la segunda tanda

@@ -438,3 +438,81 @@ tiene con qué divergir.
 de `CLAUDE.md` frente a las siete de `architecture.md`— y B1 —la prohibición de editar el
 contexto semilla— quedaban a medias desde RI-004: la arquitectura ya se había rehecho, pero
 faltaba el lado de `CLAUDE.md`. Ahora los dos están cerrados por los dos lados.
+
+---
+
+## RI-006 — La ontología recibe lo que la arquitectura destapó, y suelta lo que no era suyo
+
+**Fecha:** 2026-09-23 · **Ficheros:** `docs/definitions.md`, `docs/domain-knowledge.md`,
+`docs/architecture.md`, `docs/verification.md`, `config/thresholds.yaml`,
+`config/models.yaml`, `CLAUDE.md`
+
+### Causa
+
+Rediseñar `architecture.md` (RI-004) dejó dos deudas en direcciones opuestas. Por un lado,
+el diseño necesitaba tres cosas que la ontología no tenía: el validador `paridad_pdf_web`, el
+punto de ejecución `export` y la vigencia por versión de TO-028. Por otro, la ontología
+cargaba con detalle que no era vocabulario sino materialización: nombres de tabla, nombres de
+span y de score, y la lista de transformaciones del guardrail.
+
+Y la configuración seguía con valores en `null` que el grill ya había decidido.
+
+### Qué cambió
+
+**La ontología gana tres cosas y una cuarta que arrastran.** Entran la dimensión
+`Paridad PDF ↔ web`, el quinto punto de ejecución `export` —el único que corre **después** de
+publicar, sobre un artefacto derivado de una versión ya válida, y por eso no bloquea— y los
+atributos de vigencia sobre `Hecho`.
+
+La cuarta no estaba en el encargo y TO-028 la obligaba: **`Retconeado` pasa a estado
+terminal**. El diagrama tenía la arista `Retconeado → Adoptado`, «nueva versión fijada», y
+bajo vigencia eso es falso —el retcon cierra un hecho y abre otro, que es otra fila—.
+`Retcon` gana además las dos filas de relación que le faltaban, `cierra` y `abre`, con su
+cardinalidad: el linaje estaba en los atributos pero no en el grafo.
+
+**Y una quinta, del repaso del autor**: el puente `hecho_capitulo` también se versiona. Un
+capítulo puede dejar de mencionar un hecho al regenerarse sin que el hecho cambie, y sin
+vigencia propia el análisis de impacto responde por la versión equivocada.
+
+**La ontología suelta cuatro bloques.** Las 45 filas de § Mapeo y la materialización de
+`StoryBible` se van a `architecture.md` § Story bible —la sección § Mapeo **desaparece
+entera**, porque todo su contenido era schema—; las cinco transformaciones de
+`Normalización` se van a § Hooks y policy; y las columnas SQLite y Langfuse de
+§ Nomenclatura salen, que queda con dominio ↔ nombre de clase en código, que es el
+vocabulario compartido.
+
+**Lo que no se podía perder, no se perdió.** La columna Score **no es derivable** del nombre
+en español en seis de las diecinueve dimensiones —«Ortografía exacta de nombres» es
+`nombres_exactos`—, así que borrarla habría destruido información. Se aparcó, junto con la
+columna Langfuse, en una sección **«Entrada para la regeneración»** dentro del propio
+`docs/verification.md`, encabezada por la instrucción de consumirla y borrarla. Está en el
+fichero que la va a usar, que es donde menos puede extraviarse.
+
+**La configuración deja de estar a medias.** `max_intentos_capitulo: 3`,
+`max_intentos_trabajo: 3` y `max_reescrituras: 2`, este último documentado como **sublímite y
+no como contador**, que es lo que TO-014 decidió. Entran cuatro bloques: `modelo` con el
+`max_tokens` por rol y el invariante que se comprueba al arrancar —`margen` ≥ `max_tokens` de
+cada rol, porque con thinking adaptativo el razonamiento cuenta dentro—, `formal` con el
+incremental activado y el timeout **en `null` a propósito**, `export` con la tolerancia de
+recuento, y `config/models.yaml` nuevo. **Cada valor nombra la decisión que lo sostiene.**
+
+**Y se corrige una mentira del fichero de umbrales**: el comentario decía que la ventana la
+fija el proveedor. Los modelos elegidos tienen ventanas muy superiores; el tope es nuestro.
+
+### Efecto
+
+**Comprobado**: los 31 bloques Mermaid de los dos documentos pasan el verificador
+estructural; las 60 clases que `architecture.md` reparte entre features siguen existiendo en
+la ontología; no queda ninguna cifra duplicada fuera de `config/`; y **ningún identificador
+de modelo aparece fuera de `config/models.yaml`**, que era el punto del encargo.
+
+**`config/models.yaml` existe, así que la marca ▸ prevista se retiró de los cinco sitios** que
+la llevaban, en `CLAUDE.md` y en `architecture.md`.
+
+**Lo que enseña este cambio.** Las dos consecuencias de más peso —`Retconeado` terminal y la
+vigencia del puente— no estaban en el encargo ni en TO-028: salieron de llevar la decisión al
+diagrama y de que el autor preguntara por el linaje. Una decisión escrita en prosa parece
+completa hasta que alguien intenta dibujarla.
+
+**Sigue pendiente**: `docs/verification.md`, que tiene 36 referencias a `AGENTS.md`, sigue
+hablando de escenas y deriva, y ahora además carga la sección aparcada que debe consumir.

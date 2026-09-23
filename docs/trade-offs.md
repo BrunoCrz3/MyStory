@@ -838,4 +838,14 @@ Cuál de las dos conserva el **linaje** del retcon, que la ontología ya modela.
 
 - **La trampa, nombrada**: una consulta que olvide la versión devuelve «lo vigente» en silencio, que es el mismo fallo que olvidar `novel_id`. **`novel_id` y `version` son parámetros obligatorios de toda consulta de dominio, sin valor por defecto**, y eso es comprobable: va a `verification.md` como validador candidato junto al de `novel_id`.
 - Una regeneración **no borra nada**: la versión nueva sustituye a la anterior como vigente, y la anterior queda consultable entera —texto, capítulos y hechos—. Los capítulos que el retcon marca `Obsoleto` lo quedan **para la versión nueva**, no para la anterior.
-- `version_desde` y `version_hasta` son **atributos nuevos de `Hecho`**: cambio de ontología pendiente, no aplicado desde `architecture.md`.
+- `version_desde` y `version_hasta` son **atributos nuevos de `Hecho`**. Aplicados a la ontología en RI-006.
+
+### Ampliación (RI-006)
+
+Al llevar la decisión a la ontología aparecieron dos consecuencias que esta entrada no había desarrollado, y las dos son parte de la misma elección:
+
+**El uso también se versiona.** No basta con versionar el `Hecho`: el puente `hecho_capitulo` lleva su propio `version_desde` y `version_hasta`, porque un capítulo puede dejar de mencionar un hecho al regenerarse sin que el hecho cambie. Sin eso, «qué capítulos usaban este hecho en la versión 2» devuelve los de la versión vigente, y tanto el análisis de impacto como la marca de capítulos modificados responden por la versión equivocada. **Invariante**: la vigencia de una fila de `hecho_capitulo` está contenida en la de su `hecho`.
+
+**`Retconeado` pasa a ser estado terminal.** El ciclo de vida de `Hecho` tenía la arista `Retconeado → Adoptado`, «nueva versión fijada». Bajo vigencia eso es falso: el retcon **cierra** el hecho viejo y **abre otro**, que es una fila distinta, y el vínculo entre ambos lo guarda `Retcon` —que gana dos filas de relación con su cardinalidad, `cierra` y `abre`—. Resucitar el viejo destruiría el linaje, que es el mismo argumento por el que `Refutado` ya era terminal.
+
+**Y una regla que se deriva de las dos**: el `Estado de hecho` describe **la versión vigente, no la historia**, así que toda consulta por versión se resuelve con la vigencia y **nunca con el estatus**. En la versión anterior, un hecho que hoy está `retconeado` seguía siendo verdad.

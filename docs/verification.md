@@ -485,3 +485,67 @@ y las skills y las specs las citan por número.
 | 5 | `Refutado` sin arista de salida en `Hecho canónico` | **Terminal por diseño**, por la misma razón. Falta dibujar la arista al estado final en el diagrama | A-30, A-33 (RF-CANON-10) |
 | 7 | No había criterio frente a instrucciones inyectadas | **Tres reglas**: el texto de obra y canon entra marcado como datos, ningún agente ejecuta instrucciones halladas en texto narrativo, y ningún hallazgo se adopta sin el autor | A-11, P-20, P-21 (RF-CTX-11, RF-PROC-10, RF-FIND-05) |
 | 8 | ¿Se ejecutará alguna vez contenido generado por el modelo? | **No.** La salida del redactor es prosa que se guarda, no se corre, y ningún camino del código la ejecuta, evalúa ni lanza como proceso. Es una decisión, no una pregunta: si cambiara, la ejecución en sandbox entraría en el plan con prioridad alta | A-12 |
+
+---
+
+## Entrada para la regeneración
+
+> **Esta sección es material en tránsito, no contenido del documento.** Salió de
+> `docs/definitions.md` cuando la ontología se quedó solo con el vocabulario, y espera aquí
+> porque este es el fichero que la va a consumir. **La tarea que regenere `verification.md`
+> debe incorporarla y borrar esta sección.** Si sigue aquí cuando el documento esté rehecho,
+> es que se perdió por el camino.
+
+### Score de Langfuse por dimensión de calidad
+
+Viene de `definitions.md` Capa 4, columna «Score». **No es derivable del nombre en español**
+—«Ortografía exacta de nombres» es `nombres_exactos`—, así que si se pierde hay que
+reconstruirla a mano.
+
+| Dimensión | Score |
+| --- | --- |
+| Conformidad de schema | ``schema_valido`` |
+| Ausencia de palabras prohibidas | ``palabras_prohibidas`` |
+| Ortografía exacta de nombres | ``nombres_exactos`` |
+| Longitud | ``longitud`` |
+| Consistencia fáctica | ``consistencia_factica`` |
+| Calidad de prosa | ``calidad_prosa`` |
+| Integridad de POV y voz narrativa | ``integridad_pov`` |
+| Cumplimiento del brief de capítulo | ``cumplimiento_brief`` |
+| Integración natural de la personalización | ``personalizacion_natural`` |
+| Reconocibilidad del destinatario | ``reconocibilidad`` |
+| Adecuación del tono | ``adecuacion_tono`` |
+| Coherencia de personajes | ``coherencia_personajes`` |
+| Ritmo entre capítulos | ``ritmo`` |
+| Consistencia temporal | ``lean_cronologia`` |
+| Consistencia espacial | ``lean_ubicacion`` |
+| Coherencia de edad | ``lean_edad`` |
+| Cumplimiento de elementos obligatorios | ``elementos_obligatorios`` |
+| Cierre del arco | ``cierre_arco`` |
+| Render visual | ``render_visual`` |
+| Paridad PDF ↔ web | `paridad_pdf_web` |
+
+### Span y score por concepto
+
+Viene de `definitions.md` § Nomenclatura, columna «Langfuse».
+
+| Dominio | En Langfuse |
+| --- | --- |
+| Entrevistador | span `interviewer` |
+| Planificador | span `planner` |
+| Redactor | span `writer` |
+| Editor / Crítico | span `editor` |
+| Extractor | span `extractor` |
+| Guardrail | score `palabras_prohibidas` |
+| Capítulo | span `capitulo_<n>` |
+| Elemento personalizado | score `elementos_obligatorios` |
+| Promesa narrativa | score `cierre_arco` |
+| Solicitud de cambio | traza propia |
+| Sesión | sesión, una por novela |
+| Traza | traza, una por generación |
+| Score | score |
+| Versión de prompt | versión de prompt |
+
+El resto de esa tabla —dominio ↔ nombre de clase en código— se quedó en la ontología, que es
+donde vive el vocabulario compartido; los nombres de tabla se fueron a `architecture.md`
+§ Story bible.

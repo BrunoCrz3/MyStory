@@ -177,12 +177,14 @@ stateDiagram-v2
   Propuesto --> Descartado: lo rechaza el policy engine
   Adoptado --> Retconeado: reescritura deliberada
   Adoptado --> Refutado: contradicción resuelta en contra
-  Retconeado --> Adoptado: nueva versión fijada
   Descartado --> [*]
+  Retconeado --> [*]
   Refutado --> [*]
 ```
 
-Quien mueve `Propuesto` a `Adoptado` es el policy engine y la decisión queda en el audit log. Un hecho `Propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación. `Refutado` y `Descartado` son terminales: si la novela vuelve sobre ello, se crea un hecho nuevo que referencia al anterior, porque resucitar uno refutado destruiría lo único que el canon garantiza, que lo que fue verdad en `t` siga siendo consultable en `t`.
+Quien mueve `Propuesto` a `Adoptado` es el policy engine y la decisión queda en el audit log. Un hecho `Propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación. **Los tres estados de salida son terminales.** `Descartado` y `Refutado` lo eran ya; `Retconeado` lo es desde que la story bible se versiona por vigencia: el retcon **cierra** el hecho viejo con su `versión hasta` y **abre otro**, que es una fila distinta, no el mismo hecho revivido. La relación entre ambos la guarda `Retcon`. Resucitarlo destruiría lo único que el canon garantiza, que lo que fue verdad en `t` siga siendo consultable en `t`.
+
+**El estatus describe la versión vigente, no la historia**, y de ahí sale la regla que más fácil es incumplir: **una consulta por versión se resuelve con la vigencia, nunca con el estatus**. En la versión anterior, un hecho que hoy está `Retconeado` seguía siendo verdad, y filtrar por estatus lo dejaría fuera.
 
 **Ciclo de vida de una promesa narrativa:**
 
@@ -301,6 +303,8 @@ flowchart TD
   GT --> V18[cierre_arco]
   GT --> V19[render_visual]
   GT --> PUB[Versión publicada]
+  PUB --> EXP[Export a PDF]
+  EXP --> V20[paridad_pdf_web]
 ```
 
 Los dos hooks y el rol editor operan sobre **un** capítulo; el gate opera sobre la **novela entera** y por eso es donde viven las tres demostraciones formales de la cronología, la cobertura de elementos obligatorios y el cierre del arco: ninguna de las cinco se puede decidir mirando un capítulo aislado.

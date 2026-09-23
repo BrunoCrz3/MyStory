@@ -94,7 +94,7 @@ formal/tla/             ▸ previsto · especificación del harness y el .cfg de
 docs/                   contexto semilla y documentación de proceso (ver tabla abajo)
 docs/specs/NNN-slug/    spec.md y plan.md, ambos con frontmatter
 config/thresholds.yaml  fuente única de cifras y umbrales
-config/models.yaml      ▸ previsto · id y effort de modelo por rol
+config/models.yaml      id y effort de modelo por rol
 data/storymaker.db      ▸ previsto · base de datos, no versionada
 ejemplos/               ▸ previsto · novela-ejemplo.pdf
 presentacion/           ▸ previsto · vídeo de demo
@@ -201,8 +201,8 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Jerarquías, grafos y máquinas de estado | `docs/domain-knowledge.md` |
 | Sistema, agentes, hooks, proceso de producción y ciclo de cambio | `docs/architecture.md` |
 | Qué feature es dueña de cada clase | `docs/architecture.md` § Anatomía de una feature |
-| Identificador y effort de modelo por rol | `config/models.yaml` ▸ previsto |
-| Qué tabla corresponde a cada clase | `docs/definitions.md` § Mapeo a la story bible |
+| Identificador y effort de modelo por rol | `config/models.yaml` |
+| Qué tabla corresponde a cada clase | `docs/architecture.md` § Story bible |
 | Qué valida cada validador, dónde corre y con qué score | `docs/verification.md` |
 | **Todos los números**: presupuesto por capa y umbrales | `config/thresholds.yaml` |
 | Por qué se eligió una opción frente a otras | `docs/trade-offs.md` |
