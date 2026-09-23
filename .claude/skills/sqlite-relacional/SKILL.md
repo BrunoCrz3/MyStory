@@ -95,5 +95,5 @@ clave de partición, carga la skill `sqlite-vec`.
 ## Vetado
 
 Sin ORM que oculte el SQL, sin Postgres, sin pgvector, sin Pinecone, sin Chroma, sin
-Redis. El stack está cerrado en «Requisitos técnicos» de `AGENTS.md` y no se renegocia
+Redis. El stack está cerrado en «Requisitos técnicos» de `CLAUDE.md` y no se renegocia
 dentro de una tarea. Si una tarea parece exigirlo, detente y pregunta.

@@ -24,7 +24,7 @@ El contexto semilla del proyecto. En este repositorio:
 | `docs/definitions.md` | Clases, atributos, relaciones, cardinalidades y preguntas de competencia. Cada pregunta de competencia es ya una afirmación verificable. |
 | `docs/domain-knowledge.md` | Máquinas de estado, jerarquías y aristas del grafo. Los invariantes de transición salen de aquí. |
 | `docs/architecture.md` | Componentes, agentes, skills y orden de ejecución. Dice *dónde* vive cada comprobación. |
-| `AGENTS.md` | Requisitos técnicos cerrados y presupuesto de tokens. Los límites duros son afirmaciones de primera clase. |
+| `CLAUDE.md` | Requisitos técnicos cerrados y presupuesto de tokens. Los límites duros son afirmaciones de primera clase. |
 
 Si el proyecto tiene otros documentos semilla, úsalos igual: el criterio es que
 describan el dominio, no la implementación.

@@ -103,5 +103,5 @@ import diferido ni una importación dentro de la función.
 Los nombres de clases, estados y relaciones salen de `docs/definitions.md` y
 `docs/domain-knowledge.md`, no de aquí. El SQL y las migraciones tienen su propia skill
 (`sqlite-relacional`), y el reparto de tokens de `context/` la suya
-(`presupuesto-de-contexto`). Si algo de esta skill choca con `AGENTS.md`, manda
-`AGENTS.md`.
+(`presupuesto-de-contexto`). Si algo de esta skill choca con `CLAUDE.md`, manda
+`CLAUDE.md`.
