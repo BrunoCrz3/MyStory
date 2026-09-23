@@ -849,3 +849,71 @@ Al llevar la decisión a la ontología aparecieron dos consecuencias que esta en
 **`Retconeado` pasa a ser estado terminal.** El ciclo de vida de `Hecho` tenía la arista `Retconeado → Adoptado`, «nueva versión fijada». Bajo vigencia eso es falso: el retcon **cierra** el hecho viejo y **abre otro**, que es una fila distinta, y el vínculo entre ambos lo guarda `Retcon` —que gana dos filas de relación con su cardinalidad, `cierra` y `abre`—. Resucitar el viejo destruiría el linaje, que es el mismo argumento por el que `Refutado` ya era terminal.
 
 **Y una regla que se deriva de las dos**: el `Estado de hecho` describe **la versión vigente, no la historia**, así que toda consulta por versión se resuelve con la vigencia y **nunca con el estatus**. En la versión anterior, un hecho que hoy está `retconeado` seguía siendo verdad.
+
+---
+
+## TO-029 — El plan de verificación gana dos niveles: Obra y Entregables
+
+**Fecha:** 2026-09-23 · **Estado:** decidida · **Afecta a:** `docs/verification.md`, `.claude/skills/plan-de-verificacion/SKILL.md`
+
+### Problema
+
+La skill `plan-de-verificacion` clasifica toda afirmación en dos niveles y su paso 3 es
+binario: *artefacto* si lo que puede fallar es el código, *proceso* si lo que puede fallar
+es el comportamiento del agente. Al regenerar `verification.md` sobre el alcance de
+storyMaker, esa partición deja dos conjuntos de afirmaciones sin sitio.
+
+El primero es la novela. «La prosa repite n-gramas», «el último capítulo paga las promesas
+abiertas» y «ningún hecho personal sobre el destinatario está inventado» no son
+comportamiento del agente: son propiedades del **producto** que alguien de fuera va a leer,
+y se establecen con evidencias distintas —un `SELECT` sobre el canon, una rúbrica, una
+demostración en Lean— de las que establecen que el harness reanuda sin duplicar capítulos.
+Mezclarlos en «proceso» produce una tabla donde el lector no encuentra su pregunta.
+
+El segundo son los entregables. El alcance evalúa explícitamente el PDF de ejemplo, la
+documentación de `/docs`, el vídeo, `.claude/` y `.env.example`. Ningún validador de código
+ni de salida los mira, y un proyecto sin ellos no aprueba.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| Dejar dos niveles y meter obra y entregables en «proceso» | No toca la skill | 84 de las 228 filas quedan en un cajón que no responde a la pregunta que encabeza la tabla. La distinción entre «el agente se porta bien» y «la novela está bien» es justo la que el alcance evalúa por separado |
+| Cuatro niveles, enmendando la skill | Cada tabla responde una pregunta; el lector busca primero su nivel | La skill deja de ser la de dos niveles con la que se generó el documento anterior |
+| Cuatro niveles sin tocar la skill | Rápido | El documento dejaría de derivar de su método, que es lo único que impide que un plan de verificación sea una lluvia de ideas ordenada |
+
+### Criterio
+
+Un plan de verificación vale por su método, no por su longitud: si el documento se separa
+de la skill, la próxima regeneración no tiene de dónde salir. Y el método no se rompe al
+añadir un nivel —los seis principios, las letras `T/A/I/D/U` y el catálogo cerrado siguen
+valiendo igual—; lo que se rompía era una partición pensada para un sistema que no entrega
+nada a un tercero.
+
+### Elección
+
+**Cuatro niveles, y se enmienda la skill.** El paso 3 pasa a ser una tabla de cuatro:
+*Artefacto*, *Proceso*, **Obra** —el artefacto que el sistema produce para un tercero— y
+**Entregables** —el repositorio frente a su encargo—. Los dos nuevos se declaran opcionales:
+**Obra** hace falta en cuanto lo producido es el producto y no un efecto sobre el estado del
+sistema; **Entregables**, cuando el encargo exige artefactos del repositorio.
+
+La plantilla del documento gana las dos secciones, y las columnas nuevas de
+`verification.md` —punto de ejecución, score en Langfuse, prioridad y coste— **no** entran
+en la skill: son de este proyecto, no del método. La skill ya admitía columnas propias, y el
+`verification.md` anterior lo demostraba con tres.
+
+### Consecuencias
+
+El documento se lee por pregunta y no por origen del fallo: «¿es correcto el código?»,
+«¿se comporta el harness?», «¿es correcta la novela?», «¿está entregado lo que se pidió?».
+
+La partición no es gratis: la frontera entre Proceso y Obra hay que decidirla fila a fila, y
+hay casos que admiten las dos lecturas —`P-01`, que el capítulo no altere su restricción de
+destino, es comportamiento del redactor y es propiedad del capítulo—. La regla que se aplicó:
+**si la afirmación se puede comprobar leyendo la novela publicada, es Obra**; si hace falta
+mirar cómo se produjo, es Proceso.
+
+Y la skill queda con un método que otro proyecto puede no necesitar entero. Se declara ahí
+mismo: los dos niveles nuevos son condicionales, y un sistema que no entrega nada a un
+tercero sigue teniendo un plan de dos tablas.

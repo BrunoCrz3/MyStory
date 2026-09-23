@@ -275,14 +275,22 @@ el registro en una crónica de lo que debería haber pasado.
 
 ### Diferido
 
-Dos de los cuatro se cerraron después; se dejan tachados para que el rastro no se pierda.
+**Los cuatro se cerraron después**; se dejan tachados para que el rastro no se pierda. Los
+dos primeros con la reescritura de `architecture.md` (RI-004, RI-005); los dos últimos con
+la regeneración de `docs/verification.md` (RI-007), que era la tarea a la que se difirieron.
 
 | Hallazgo | A qué tarea | Por qué |
 | --- | --- | --- |
 | ~~**D5**~~ | — | **Cerrado.** `architecture.md` rehizo la tabla clase → feature con las nueve features (RI-004) y `CLAUDE.md` se reconcilió con ella (RI-005) |
 | ~~**B1**~~ | — | **Cerrado.** El texto de documentos vivos y reexportación desapareció con la reescritura de `architecture.md` (RI-004) |
-| **Transversal** · Referencias a `AGENTS.md` | Regeneración de `docs/verification.md` | **A medias.** `architecture.md` quedó en **cero** al reescribirse (RI-004). Las 36 que quedan están todas en `verification.md`. Las de `trade-offs.md`, el registro y `CLAUDE.md` no cuentan: ahí `AGENTS.md` es el sujeto del que se habla, no un puntero |
-| **Puntero falso de `CLAUDE.md:207`** · `verification.md` no contiene scores ni puntos de ejecución | Regeneración de `docs/verification.md` | El puntero será cierto cuando ese fichero se convierta en la tabla de validadores |
+| ~~**Transversal** · Referencias a `AGENTS.md`~~ | — | **Cerrado** (RI-007). `verification.md` se regeneró y pasó de 36 a **una**, que es legítima por este mismo criterio: está en § Pendientes diciendo que la spec 001 cita `AGENTS.md` entre sus documentos de referencia. Sujeto, no puntero. Con esto el hallazgo transversal queda cerrado en los cinco ficheros |
+| ~~**Puntero falso de `CLAUDE.md:207`**~~ | — | **Cerrado** (RI-007). `verification.md` abre con un § Índice de validadores con nombre: tipo, punto de ejecución, score en Langfuse y las filas que sostiene cada uno, más las cuatro columnas nuevas en las 228 filas. El puntero de `CLAUDE.md` § Dónde está cada cosa ya es cierto |
+
+**La fila que el informe pedía por su nombre existe.** § Pendientes fuera de los cuatro
+ficheros exigía que `verification.md` cubriera «la consulta de dominio que olvide acotar por
+`novel_id`». Son dos filas y no una, porque el mismo fallo silencioso tiene dos formas:
+`A-83` para `novel_id` y `A-84` para `version`, más `A-85`, que impide resolver una consulta
+por versión con el estatus del hecho en vez de con su vigencia.
 
 ### Corregido en la segunda tanda
 
@@ -304,7 +312,13 @@ no es este concepto.
 
 ### Pendiente de aprobación
 
-Nada. Los seis hallazgos de esta auditoría están cerrados o diferidos con destino.
+Nada. **Los seis hallazgos de esta auditoría están cerrados**, los dos últimos con RI-007.
+
+Lo que la regeneración de `verification.md` abrió es otra cosa y no es un hallazgo de esta
+auditoría: seis dimensiones de calidad que el alcance exige y la Capa 4 no nombra, y seis
+huecos de ontología más, listados como **PO-1 a PO-12** en `docs/verification.md`
+§ Propuestas de cambio a la ontología. Ninguno se aplicó: tocar la ontología es un cambio con
+su propio commit.
 
 ### Sin cambio
 

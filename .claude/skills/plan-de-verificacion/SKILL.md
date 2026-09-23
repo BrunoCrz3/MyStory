@@ -49,10 +49,24 @@ falsa. Busca:
 Cita el origen de cada afirmación con fichero y sección. Una fila sin origen no se
 puede auditar después, y el plan envejece mal.
 
-**3. Clasifica cada afirmación por nivel.** *Artefacto* si lo que puede fallar es el
-código; *proceso* si lo que puede fallar es el comportamiento del agente o del modelo.
-La distinción manda: una salida mala de un LLM no se arregla con una prueba unitaria,
-y un esquema de base mal puesto no se arregla con un eval.
+**3. Clasifica cada afirmación por nivel.** Cuatro niveles, y la distinción manda: una
+salida mala de un LLM no se arregla con una prueba unitaria, y un esquema de base mal
+puesto no se arregla con un eval.
+
+| Nivel | Lo que puede fallar | Pregunta que responde |
+| --- | --- | --- |
+| **Artefacto** | El código | ¿Es correcto lo que se construyó? |
+| **Proceso** | El comportamiento del agente o del modelo | ¿Se comporta de forma fiable? |
+| **Obra** | El artefacto que el sistema produce para un tercero | ¿Es correcto lo que salió? |
+| **Entregables** | El repositorio frente a su encargo | ¿Está entregado lo que se pidió? |
+
+Los dos primeros bastan cuando el sistema no produce nada que alguien de fuera vaya a
+leer. **Obra** hace falta en cuanto lo producido es el producto —una novela, un informe,
+un dictamen— y no un efecto sobre el estado del sistema: sin ese nivel, «la prosa repite
+n-gramas» y «el harness reanuda sin duplicar capítulos» acaban en la misma tabla, y son
+dos preguntas que se contestan con evidencias distintas. **Entregables** hace falta
+cuando el encargo exige artefactos del repositorio —documentación, ejemplos, configuración—
+que ningún validador de código ni de salida mira. Puede ser una sección más breve.
 
 **4. Asigna metodología** desde `references/metodologias.md`. Lee ese fichero antes de
 rellenar la columna; es una lista cerrada y los nombres importan porque el plan se
@@ -108,6 +122,14 @@ nivel su componente.
 
 | Afirmación | Origen | Metodología | T/A/I/D/U | Dónde vive |
 | --- | --- | --- | --- | --- |
+
+## Nivel obra — ¿es correcto lo que el sistema produjo?
+
+<Solo si el sistema produce un artefacto para un tercero.>
+
+## Nivel entregables — ¿está entregado lo que el encargo pide?
+
+<Solo si el encargo exige artefactos del repositorio. Puede ser más breve.>
 
 ## Lo que no se puede verificar
 

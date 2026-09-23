@@ -47,6 +47,8 @@ El grano temporal fino no lo da la estructura del discurso sino la fábula: es e
 | Invalidación de restricción | Una restricción de destino aún no escrita que el canon vigente ya hace imposible | restricción, hecho que la contradice, capítulo afectado |
 | Replanificación de capítulos pendientes | Revisión del esquema limitada a los capítulos aún no escritos | disparador, capítulos afectados, cambios al esquema |
 
+**Qué declara el `alcance` de una restricción de destino.** No es un texto libre: es la lista explícita de lo que la restricción toca —`Personaje`, `Lugar`, `Hecho`, `Promesa narrativa` e `Hilo de trama`, cada uno por su identificador—. Sin esa lista, «¿ha vuelto el canon imposible esta restricción?» no se puede resolver con una consulta, porque no se sabe contra qué hechos compararla, y la invalidación vuelve a depender de un juicio. Es lo que convierte la `Invalidación de restricción` en el booleano determinista que sustituyó a la medida de deriva.
+
 **Reglas de gobierno**
 
 - El capítulo descubre *cómo*, no *hacia dónde*: cambiar el destino exige replanificar, no se decide dentro del capítulo.
@@ -199,6 +201,10 @@ Los **tipos** son cuatro: `programático` (decide un proceso determinista), `sem
 | Adecuación del tono | El registro corresponde a la edad y la ocasión | semántico | rol editor |
 | Coherencia de personajes | Las acciones encajan con deseo, herida y arco | semántico | rol editor |
 | Ritmo entre capítulos | Alternancia de densidad y respiro a lo largo de la obra | semántico | rol editor |
+| Invención sobre el destinatario | Ningún hecho personal sobre el destinatario que no venga del brief o del texto libre | programático + semántico | rol editor |
+| Temas excluidos | Los temas que el comprador vetó no aparecen, aunque ninguna palabra prohibida los nombre | semántico | rol editor |
+| Cumplimiento de reglas del mundo | Ninguna `Regla del mundo` salida del brief se viola | programático | hook de capítulo |
+| Legibilidad | El texto se lee a la altura de la edad del destinatario | programático | rol editor |
 | Consistencia temporal | Los eventos respetan el orden cronológico declarado | formal-Lean | gate de publicación |
 | Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un evento excluyente | formal-Lean | gate de publicación |
 | Coherencia de edad | La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | formal-Lean | gate de publicación |
@@ -206,6 +212,8 @@ Los **tipos** son cuatro: `programático` (decide un proceso determinista), `sem
 | Cierre del arco | Ninguna promesa queda pendiente al terminar la novela | programático + semántico | gate de publicación |
 | Render visual | Índice, ficha de personajes y lugares y portada renderizan sin error | programático | gate de publicación |
 | Paridad PDF ↔ web | El PDF exportado contiene lo mismo que la lectura web: capítulos, títulos, índice y dedicatoria | programático | export |
+| Estructura de la edición | La obra tiene los capítulos que declara, con títulos únicos y no vacíos | programático | gate de publicación |
+| Fidelidad de la regeneración | Los capítulos no afectados quedan idénticos, la marca de cambios es exacta y la versión anterior sigue entera | programático | gate de publicación |
 
 **Aspiraciones sin validador.** Dos cosas que el sistema persigue y ninguna fila mide, declaradas aquí para que nadie las confunda con cobertura:
 
@@ -250,6 +258,20 @@ Sus **seis criterios** son los que el encargo nombra, uno por dimensión semánt
 | Integración natural de la personalización | `personalizacion_natural` |
 
 **Cada criterio se puntúa por separado y cada puntuación va justificada.** Un único número para toda la rúbrica no dice qué hay que arreglar, y una puntuación sin justificación no se puede contrastar con la del revisor humano: eso es lo que hace que `Score` lleve justificación cuando el validador es semántico. `reconocibilidad` se puntúa con la misma escala pero fuera de estos seis, porque solo el revisor humano puede cerrarla.
+
+**Cómo se mide un validador.** Un umbral solo significa algo si el validador que lo aplica acierta, y eso se mide separando: se parte de capítulos ya aceptados, se les inyectan defectos conocidos y se comprueba cuántos caza y cuántos se inventa.
+
+| Clase | Definición | Atributos clave |
+| --- | --- | --- |
+| Defecto inyectado | Defecto conocido que se introduce a propósito en un capítulo aceptado para medir si un validador lo detecta | dimensión que viola, capítulo de origen, transformación aplicada, detectado por |
+| Brief de prueba | Brief fijo del corpus de evaluación, diseñado para ejercitar un conjunto de validadores | identificador, qué modo de fallo provoca, validadores que debe disparar |
+
+`Defecto inyectado` es lo que hace calibrables los umbrales marcados `[mutación]` en `config/thresholds.yaml`, y es la entrada de la precisión y la cobertura que se exige a cada validador. Un validador por debajo de esas dos cifras no aprueba ni suspende: adivina.
+
+`Brief de prueba` es la unidad de la evaluación del sistema. La tabla brief × validador del encargo tiene una columna por cada uno, y sin la clase no hay nada que nombre sus filas.
+
+**Los dos se quedan fuera de la story bible**, y es deliberado: no son verdad de ninguna novela sino instrumental de medida. Viven con el resto del corpus de evaluación, no en `data/storymaker.db`.
+
 
 ## Capa 5 — Proceso, harness y verificación formal del sistema
 
@@ -494,5 +516,10 @@ La ontología está validada cuando el sistema responde estas preguntas. Es el c
 31. ¿Qué decidió el policy engine sobre un hecho concreto, y con qué regla?
 32. ¿Cuántos tokens y cuánto coste lleva esta novela, por capítulo y en total?
 33. ¿Qué contraejemplos encontró el comprobador de modelos y qué cambio en el código provocó cada uno?
+
+**Medida de los propios validadores**
+
+34. ¿Qué precisión y qué cobertura tiene un validador sobre el corpus de `Defecto inyectado`, y qué defectos se le escaparon?
+35. ¿Qué `Brief de prueba` ejercita cada validador, y cuáles pasaron y cuáles fallaron en la última ejecución?
 
 **Cobertura.** Añadir una pregunta nueva obliga a comprobar si el modelo la soporta; si no, falta una clase o una relación. Quitar una clase obliga a comprobar qué pregunta deja de responderse.

@@ -137,7 +137,7 @@ canon/
 | `novel/` | 1B — Obra | Obra, Capítulo, Personaje, Lugar, Arco, Hilo de trama, Evento, Evento excluyente, Regla del mundo, Voz narrativa |
 | `canon/` | 2 — Canon | Hecho, Estado de hecho, Uso de hecho, Snapshot, Promesa narrativa, Estado de promesa, Contradicción de canon, Retcon |
 | `context/` | 3 — Contexto | Brief de capítulo, Resumen de capítulo, Jerarquía de compresión, Política de recuperación, Anticontexto, Ventana efectiva, y los tres tipos de memoria como lectura |
-| `quality/` | 4 — Calidad | Dimensión de calidad, Validador, Defecto, Informe de crítica, Rúbrica, Revisor humano |
+| `quality/` | 4 — Calidad | Dimensión de calidad, Validador, Defecto, Informe de crítica, Rúbrica, Revisor humano, Defecto inyectado, Brief de prueba |
 | `guardrail/` | 4 — Calidad | Palabra prohibida, Nivel de palabra prohibida, Normalización, Coincidencia, Límite de reescrituras |
 | `process/` | 5 — Proceso | Esquema, Restricción de destino, Borrador, Extracción, Invalidación de restricción, Replanificación de capítulos pendientes, Checkpoint |
 | `policy/` | 5 — Proceso | Policy engine, Decisión de policy, Audit log |
@@ -479,17 +479,23 @@ flowchart TD
   HC --> V6[calidad_prosa]
   HC --> V7[integridad_pov]
   HC --> V8[cumplimiento_brief]
+  HC --> V21[reglas_mundo]
   ED[Rol editor] --> V9[personalizacion_natural]
   ED --> V10[reconocibilidad]
   ED --> V11[adecuacion_tono]
   ED --> V12[coherencia_personajes]
   ED --> V13[ritmo]
+  ED --> V22[invencion_destinatario]
+  ED --> V23[temas_excluidos]
+  ED --> V24[legibilidad]
   GT[Gate de publicación] --> V14[lean_cronologia]
   GT --> V15[lean_ubicacion]
   GT --> V16[lean_edad]
   GT --> V17[elementos_obligatorios]
   GT --> V18[cierre_arco]
   GT --> V19[render_visual]
+  GT --> V25[estructura_edicion]
+  GT --> V26[regeneracion_fiel]
   EXP[Export a PDF] --> V20[paridad_pdf_web]
 ```
 
@@ -945,12 +951,14 @@ dedicatoria e índice, y recuento de palabras dentro de tolerancia.
 | --- | --- |
 | **Inyección por el texto libre** | Entra marcado como datos, nunca en la posición de las instrucciones. Ningún agente ejecuta instrucciones halladas en él. Lo que lo parece se registra como `Fragmento sospechoso` y se descarta. La adopción de un hecho la decide el policy engine, no el texto |
 | **Fuga entre novelas** | `novel_id` obligatorio en toda tabla y en toda consulta de dominio, sin valor por defecto |
-| **Secretos en el repositorio** | Solo `.env.example` ▸ previsto, con las claves vacías |
+| **Secretos en el repositorio** | Solo `.env.example`, con los nombres de las variables y ningún valor. `.env` está en `.gitignore` |
+| **Exposición en red sin autenticación** | El backend escucha **solo en la interfaz local** mientras no haya autenticación, y se niega a arrancar con un `host` que no lo sea salvo que se pase una opción explícita. El alcance deja las cuentas fuera, así que detrás de la API no hay nada más |
 | **Ejecución de lo que devuelve el modelo** | Ningún camino del código ejecuta, evalúa ni lanza como proceso la salida del modelo: es prosa que se guarda |
 
 **Lo que esto no cubre.** El aislamiento por `novel_id` depende de que cada consulta lo lleve,
-y eso es exactamente lo que hoy no comprueba nadie. Es el validador candidato que va a
-`verification.md`, junto con el de `version`.
+y eso lo comprueban `A-83` y `A-84` de `verification.md`, que exigen `novel_id` y `version`
+como parámetros obligatorios sin valor por defecto. Que el valor pasado sea el correcto no
+lo comprueba ninguno de los dos.
 
 **Agente de seguridad** (TO-017). Agente de desarrollo en `.claude/agents/` ▸ previsto, no
 runtime. Cubre inyección de prompt sobre el texto libre, exfiltración entre novelas,
@@ -1016,7 +1024,9 @@ nadie sabrá reconstruir.
 
 ### 2. Crear o actualizar una spec
 
-Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa.
+Un fichero por cambio: `specs/specN.md`, numeración correlativa y sin carpetas. Lo obsoleto
+se mueve a `docs/specs/_archivo/` con `estado: archivada`, que no es un estado del ciclo
+precisamente para que ningún agente lo confunda con trabajo pendiente.
 
 **El interrogatorio previo se hace con la skill `grill-me`**, que recorre el árbol de
 decisiones por rondas y no deja rama sin visitar; el catálogo de § Skills dice cuándo
@@ -1030,7 +1040,7 @@ preguntas de competencia afectadas.
 
 ### 3. Plan de implementación
 
-`docs/specs/NNN-slug/plan.md`. **No se crea si la spec no está `aprobada`**, y se comprueba
+`specs/planN.md`. **No se crea si la spec no está `aprobada`**, y se comprueba
 leyendo su frontmatter, no de memoria. **Nace en `borrador`** y necesita la aprobación del
 desarrollador, igual que la spec. Contenido: pasos ordenados, features y ficheros que se
 tocan, migraciones necesarias, **la lista de pruebas que se van a escribir** y en qué orden,
