@@ -258,6 +258,23 @@ def ensamblar(
     )
 
 
+def presupuesto_declarado(umbrales: Umbrales) -> schemas.PresupuestoDeclarado:
+    """Que hay, por capa, antes de ensamblar nada.
+
+    `margen` sale aparte y no como una capa mas porque no lo es: es la reserva
+    para la respuesta y el desbordamiento, y sumarlo al prompt seria contarlo
+    dos veces.
+    """
+    reparto = umbrales.contexto.capas.model_dump()
+    return schemas.PresupuestoDeclarado(
+        total=umbrales.contexto.total,
+        por_capa={capa: reparto[capa.value] for capa in CAPAS_DEL_PROMPT},
+        margen=umbrales.contexto.capas.margen,
+        orden_de_degradacion=[Capa(nombre) for nombre in umbrales.contexto.degradacion],
+        intocables=[capa for capa in CAPAS_DEL_PROMPT if capa in INTOCABLES],
+    )
+
+
 def _construir_capas(
     base: Conexion, umbrales: Umbrales, peticion: schemas.PeticionDeEnsamblado
 ) -> dict[Capa, list[schemas.Pieza]]:

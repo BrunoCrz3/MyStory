@@ -107,6 +107,33 @@ class SimulacionDeRetcon(_Esquema):
     contradicciones: list[Contradiccion] = []
 
 
+class LineaDeAvance(_Esquema):
+    """Ultima posicion en la que un arco, un hilo o una promesa avanzo.
+
+    Es la frontera entre el repositorio y el servicio, y es Pydantic por A-13:
+    un `dict[str, object]` cruzando esa frontera obliga a quien lo recibe a
+    adivinar las claves y a convertir a mano cada valor.
+    """
+
+    id: int
+    nombre: str
+    ultima: int
+
+
+class RevelacionPendiente(_Esquema):
+    """Una revelacion cuya escena minima esta por delante de `t` (P-40).
+
+    Es lo que todavia no se puede contar. Cubre las registradas; la que el
+    borrador filtra sin que nadie la haya declarado se queda fuera, y eso esta
+    declarado como punto ciego de la fila.
+    """
+
+    hecho_id: int
+    texto: str
+    valor: str | None = None
+    escena_minima: int
+
+
 class LineaDeEstancamiento(_Esquema):
     id: int
     nombre: str

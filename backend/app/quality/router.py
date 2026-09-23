@@ -17,7 +17,7 @@ from fastapi import APIRouter, Depends, Request
 
 from app.commons.config import Umbrales
 from app.commons.db.conexion import Conexion
-from app.quality import models, repository, schemas, service
+from app.quality import models, schemas, service
 
 
 def conexion_de_la_instancia(peticion: Request) -> Conexion:
@@ -74,4 +74,4 @@ async def regresiones(escena_id: int, version: int, base: Base) -> list[schemas.
 @router.get("/dimensiones")
 async def dimensiones(base: Base) -> list[models.DimensionDeCalidad]:
     """Las catorce `T`, con su nivel de aplicacion y su metodo de medicion."""
-    return repository.dimensiones(base)
+    return service.catalogo_de_dimensiones(base)

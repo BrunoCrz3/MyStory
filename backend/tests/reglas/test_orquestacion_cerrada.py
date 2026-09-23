@@ -32,6 +32,10 @@ PROCESO = CODIGO / "process"
 # que sea uno solo y declarado es justo la diferencia.
 COMPOSICION = CODIGO / "main.py"
 
+# La cadena que sostiene A-45, de dentro afuera: una sola funcion habla con el
+# proveedor, la llama una sola funcion, y esa escribe la fila. Romper cualquiera
+# de los tres eslabones deja una llamada sin registro.
+LLAMADA_AL_MODELO = "_llamar_con_backoff"
 PUERTA_DEL_MODELO = "_generar_con_registro"
 
 
@@ -118,11 +122,27 @@ def test_solo_hay_una_puerta_que_llama_al_modelo() -> None:
             if nodo.func.attr != "generar":
                 continue
             if fichero == PROCESO / "service.py" and _que_funcion(arbol, nodo.lineno) in {
-                PUERTA_DEL_MODELO
+                LLAMADA_AL_MODELO
             }:
                 continue
             fuera.append(f"{fichero.relative_to(RAIZ)}:{nodo.lineno}")
     assert fuera == [], f"llamadas al modelo fuera de la unica puerta: {fuera}"
+
+
+def test_la_llamada_al_modelo_solo_se_invoca_desde_la_puerta_que_registra() -> None:
+    """El eslabon del medio. Con reintentos, la llamada dejo de estar en la
+    misma funcion que escribe la fila, asi que hay que comprobar que sigue
+    colgando de ella y no de otra."""
+    arbol = ast.parse((PROCESO / "service.py").read_text(encoding="utf-8"), "service.py")
+    llamantes = {
+        nombre
+        for nombre, funcion in _funciones(arbol).items()
+        for nodo in ast.walk(funcion)
+        if isinstance(nodo, ast.Call)
+        and isinstance(nodo.func, ast.Name)
+        and nodo.func.id == LLAMADA_AL_MODELO
+    }
+    assert llamantes == {PUERTA_DEL_MODELO}, llamantes
 
 
 def test_la_puerta_del_modelo_registra_la_generacion() -> None:

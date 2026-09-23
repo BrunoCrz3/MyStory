@@ -290,7 +290,7 @@ def _epistemica(
 
     texto = _norma(peticion.texto)
     for revelacion in canon.revelaciones_pendientes(base, peticion.escena_id):
-        contenido = _norma(str(revelacion.get("valor") or ""))
+        contenido = _norma(revelacion.valor or "")
         if contenido and contenido in texto:
             defectos.append(
                 DefectoDetectado(
@@ -298,7 +298,7 @@ def _epistemica(
                     eje=Eje.EPISTEMICA,
                     gravedad="alta",
                     descripcion=(
-                        f"la revelacion del hecho {revelacion['hecho_id']} llega por debajo "
+                        f"la revelacion del hecho {revelacion.hecho_id} llega por debajo "
                         "de su escena minima permitida"
                     ),
                 )

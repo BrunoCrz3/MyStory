@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
 
 from app.commons.db.conexion import Conexion, transaccion
@@ -160,7 +161,7 @@ def informe_de(base: Conexion, escena_id: int, version: int) -> models.InformeDe
     return None if fila is None else _a_informe(fila)
 
 
-def _a_informe(fila: object) -> models.InformeDeCritica:
-    datos = dict(fila)  # type: ignore[call-overload]
+def _a_informe(fila: sqlite3.Row) -> models.InformeDeCritica:
+    datos = dict(fila)
     datos["fase_de_medicion"] = bool(datos["fase_de_medicion"])
     return models.InformeDeCritica.model_validate(datos)

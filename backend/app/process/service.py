@@ -23,6 +23,7 @@ insertarla mas adelante no toque a ningun agente.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 
@@ -37,7 +38,8 @@ from app.commons.errores import (
     PlanCambiadoSinHito,
     RecursoNoEncontrado,
 )
-from app.commons.llm.cliente import Generador
+from app.commons.llm.cliente import Generador, RespuestaDelModelo, es_reintentable
+from app.commons.reintentos import PRIMER_INTENTO, PoliticaDeReintentos
 from app.commons.tokens.en_vuelo import PoolEnVuelo
 from app.context import schemas as context_schemas
 from app.context import service as contexto
@@ -165,17 +167,24 @@ async def _generar_con_registro(
        vuelo. La estimacion es el tamano del contexto ensamblado mas el margen,
        que es la reserva declarada para la respuesta: no se suma dos veces.
     2. **La llamada**, asincrona y con timeout explicito, que el cliente de
-       `commons/` ya garantiza.
+       `commons/` ya garantiza, y con backoff exponencial y jitter ante un
+       limite de tasa del proveedor (RI-07). El presupuesto en vuelo **no se
+       suelta entre intentos**: el trabajo sigue en vuelo mientras espera, y
+       devolverlo dejaria entrar a otro que tampoco va a pasar.
     3. **El registro**, con modelo, prompt, contexto y semilla, mas las tres
-       huellas de la picara 9. Se escribe **siempre**, tambien cuando la salida
-       no sirva: un intento fallido del que no queda rastro es el que no se
-       puede diagnosticar.
+       huellas de la picara 9.
     4. La devolucion del texto, que es prosa y se guarda como prosa. Nada de lo
        que devuelve el modelo se ejecuta ni se interpreta como instruccion.
+
+    **Que no queda registrado, y por que.** Si todos los intentos fallan no hay
+    generacion y no hay fila: lo que subiria seria el error del proveedor, no un
+    resultado. Cuantos intentos hicieron falta tampoco se persiste, y es
+    deliberado: el `attempt` es de la clave de idempotencia que llega **con** la
+    cola (`architecture.md` § Cola de trabajos), y v1 no encola.
     """
     estimacion = ensamblado.total + umbrales.contexto.capas.margen
     async with pool.admitir(estimacion):
-        respuesta = await modelo.generar([{"role": "user", "content": ensamblado.prompt}])
+        respuesta = await _llamar_con_backoff(umbrales, modelo, ensamblado.prompt)
 
     parametros = json.dumps(
         {
@@ -207,6 +216,32 @@ async def _generar_con_registro(
         ),
     )
     return respuesta.texto, registro
+
+
+async def _llamar_con_backoff(
+    umbrales: Umbrales, modelo: Generador, prompt: str
+) -> RespuestaDelModelo:
+    """La llamada, con la politica de reintentos que declara el fichero.
+
+    Solo se reintenta lo transitorio --limite de tasa, corte de red, 5xx--, y
+    quien decide eso es `commons/llm`: un 4xx no se arregla esperando, y gastar
+    el tope de intentos en el es no tenerlo cuando haga falta.
+
+    Con los umbrales de `orquestacion` en `null` esto es una llamada y nada mas:
+    la politica no esta activa y el primer fallo sube. Es el mismo criterio que
+    la fase de medicion --un umbral que nadie ha puesto no decide-- y significa
+    que v1 **no** reintenta a espaldas del autor.
+    """
+    politica = PoliticaDeReintentos.declarada(umbrales)
+    intento = PRIMER_INTENTO
+    while True:
+        try:
+            return await modelo.generar([{"role": "user", "content": prompt}])
+        except Exception as error:
+            if not es_reintentable(error) or not politica.quedan_intentos(intento):
+                raise
+            await asyncio.sleep(politica.espera(intento))
+            intento += 1
 
 
 def _huella(texto: str) -> str:

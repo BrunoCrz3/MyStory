@@ -43,6 +43,16 @@ async def ensamblar(
     return service.ensamblar(base, umbrales, datos)
 
 
+@router.get("/presupuesto")
+async def presupuesto(umbrales: Config) -> schemas.PresupuestoDeclarado:
+    """RF-CTX-02. El reparto declarado, sin ensamblar nada.
+
+    Va antes que `/ensamblados` a proposito en la lectura: lo primero que hay
+    que poder mirar cuando un ensamblado no cabe es contra que no cabia.
+    """
+    return service.presupuesto_declarado(umbrales)
+
+
 @router.post("/fragmentos", status_code=status.HTTP_201_CREATED)
 async def indexar(datos: schemas.NuevoFragmento, base: Base, umbrales: Config) -> models.Fragmento:
     return service.indexar_fragmento(base, umbrales, datos)

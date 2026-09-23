@@ -24,7 +24,12 @@ from app.novel import service as novel
 from app.quality import continuidad, dimensiones, higiene, repository, schemas, voz
 from app.quality.dimensiones import Aportacion
 from app.quality.higiene import Fallo
-from app.quality.models import NIVELES_LOCALES, AlcanceDelDefecto, InformeDeCritica
+from app.quality.models import (
+    NIVELES_LOCALES,
+    AlcanceDelDefecto,
+    DimensionDeCalidad,
+    InformeDeCritica,
+)
 
 Validador = Callable[[Conexion, schemas.PeticionDeCritica], Aportacion]
 
@@ -233,6 +238,17 @@ def alcance_de(dimension: str) -> AlcanceDelDefecto:
 
 
 # --- Historial ------------------------------------------------------------
+
+
+def catalogo_de_dimensiones(base: Conexion) -> list[DimensionDeCalidad]:
+    """Las catorce `T`, con su nivel de aplicacion y su metodo de medicion.
+
+    Pasa por el servicio y no por el repositorio aunque no tenga regla que
+    aplicar: el contrato de la feature es `service.py`, y un router que llama al
+    repositorio abre una segunda via por la que manana entrara una regla
+    (RD-02, A-24).
+    """
+    return repository.dimensiones(base)
 
 
 def informes_de(base: Conexion, escena_id: int) -> list[InformeDeCritica]:

@@ -21,7 +21,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol
 
-from anthropic import AsyncAnthropic, omit
+from anthropic import (
+    APIConnectionError,
+    APIStatusError,
+    AsyncAnthropic,
+    RateLimitError,
+    omit,
+)
 
 from app.commons.config import Umbrales
 from app.commons.errores import PresupuestoExcedido
@@ -34,6 +40,28 @@ class RespuestaDelModelo:
     modelo: str
     tokens_de_entrada: int
     tokens_de_salida: int
+
+
+# Primer codigo de estado que es del proveedor y no de la peticion. Por debajo
+# de aqui el problema es nuestro, y reintentar lo repetiria igual.
+PRIMER_ERROR_DEL_SERVIDOR = 500
+
+
+def es_reintentable(error: BaseException) -> bool:
+    """Si volver a pedir lo mismo puede salir bien (RI-07).
+
+    Saber que errores son transitorios es del proveedor, asi que vive aqui y no
+    en `process/`: la feature que orquesta no tiene por que conocer el SDK.
+
+    Un 4xx no entra. Un prompt que no cabe, una credencial mala o un modelo que
+    no existe no se arreglan esperando, y reintentarlos es gastar el tope de
+    intentos en algo que va a fallar igual.
+    """
+    if isinstance(error, RateLimitError | APIConnectionError):
+        return True
+    if isinstance(error, APIStatusError):
+        return error.status_code >= PRIMER_ERROR_DEL_SERVIDOR
+    return False
 
 
 class Generador(Protocol):

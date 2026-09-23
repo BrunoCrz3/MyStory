@@ -61,6 +61,12 @@ async def promesas_abiertas(escena_id: int, base: Base) -> list[models.PromesaNa
     return service.promesas_abiertas_en(base, escena_id)
 
 
+@router.get("/escenas/{escena_id}/revelaciones-pendientes")
+async def revelaciones_pendientes(escena_id: int, base: Base) -> list[schemas.RevelacionPendiente]:
+    """Pregunta de competencia 9 y P-40: que no se puede contar todavia en `t`."""
+    return service.revelaciones_pendientes(base, escena_id)
+
+
 # --- Consolidacion --------------------------------------------------------
 
 

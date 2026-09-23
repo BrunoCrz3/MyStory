@@ -73,6 +73,24 @@ class ContextoEnsamblado(_Esquema):
     prompt: str
 
 
+class PresupuestoDeclarado(_Esquema):
+    """El reparto que declara `config/thresholds.yaml`, tal cual.
+
+    Es la otra mitad de «consultar presupuesto y reparto resultante»: esto es lo
+    que el sistema **tiene**, y `ContextoEnsamblado.tokens_por_capa` es lo que
+    una escena concreta **gasto**. Sin las dos, un ensamblado que no cabe no se
+    puede diagnosticar sin abrir el fichero.
+
+    Las cifras no se copian a ningun documento: se leen de ahi y se sirven.
+    """
+
+    total: int
+    por_capa: dict[Capa, int]
+    margen: int
+    orden_de_degradacion: list[Capa]
+    intocables: list[Capa]
+
+
 class FragmentoRecuperado(_Esquema):
     id: int
     escena_id: int
@@ -90,6 +108,7 @@ __all__ = [
     "NuevoUso",
     "PeticionDeEnsamblado",
     "PeticionDeRecuperacion",
+    "PresupuestoDeclarado",
     "Pieza",
     "Referencia",
 ]

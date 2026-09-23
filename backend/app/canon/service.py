@@ -197,7 +197,7 @@ def estado_de_escena(base: Conexion, escena_id: int) -> EstadoDeEscena:
 # --- Ciclos de vida -------------------------------------------------------
 
 
-def revelaciones_pendientes(base: Conexion, escena_id: int) -> list[dict[str, object]]:
+def revelaciones_pendientes(base: Conexion, escena_id: int) -> list[schemas.RevelacionPendiente]:
     """P-40: que no se puede revelar todavia en `t`."""
     return repository.revelaciones_pendientes(base, repository.posicion_de(base, escena_id))
 
@@ -434,15 +434,15 @@ def estancados(
     declarados = None not in (umbral_arco, umbral_hilo, umbral_promesa)
 
     def lineas(
-        filas: list[dict[str, object]], umbral: int | None
+        avances: list[schemas.LineaDeAvance], umbral: int | None
     ) -> list[schemas.LineaDeEstancamiento]:
         resultado = []
-        for fila in filas:
-            sin_avanzar = posicion - int(str(fila["ultima"]))
+        for avance in avances:
+            sin_avanzar = posicion - avance.ultima
             resultado.append(
                 schemas.LineaDeEstancamiento(
-                    id=int(str(fila["id"])),
-                    nombre=str(fila["nombre"]),
+                    id=avance.id,
+                    nombre=avance.nombre,
                     escenas_sin_avanzar=max(sin_avanzar, 0),
                     supera_umbral=None if umbral is None else sin_avanzar > umbral,
                 )
@@ -452,8 +452,8 @@ def estancados(
     return schemas.InformeDeEstancamiento(
         escena_actual_id=actual,
         umbrales_declarados=declarados,
-        arcos=lineas(repository.avances(base, "arco_escena", "arco_id", "arco"), umbral_arco),
-        hilos=lineas(repository.avances(base, "escena_hilo", "hilo_id", "hilo"), umbral_hilo),
+        arcos=lineas(repository.avances(base, "arco_escena"), umbral_arco),
+        hilos=lineas(repository.avances(base, "escena_hilo"), umbral_hilo),
         promesas=lineas(repository.promesas_pendientes_con_apertura(base), umbral_promesa),
     )
 

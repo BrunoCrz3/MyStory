@@ -12,6 +12,7 @@ ordenar por `id`: los `id` son de insercion, no de discurso.
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
 
 from app.commons.db.conexion import Conexion, transaccion
@@ -487,7 +488,7 @@ def ingredientes_de(base: Conexion, escena_id: int) -> list[schemas.IngredienteG
     ]
 
 
-def _a_deriva(fila: object) -> Deriva:
-    datos = dict(fila)  # type: ignore[call-overload]
+def _a_deriva(fila: sqlite3.Row) -> Deriva:
+    datos = dict(fila)
     datos["fiable"] = None if datos["fiable"] is None else bool(datos["fiable"])
     return Deriva.model_validate(datos)

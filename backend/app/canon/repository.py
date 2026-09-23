@@ -8,7 +8,6 @@ deja un canon que afirma cosas que el texto no dice.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
 
 from app.canon import models, schemas
 from app.canon.models import TIPOS_DE_ESTADO, EstadoDePromesa, EstatusDeHecho, TipoDeHecho
@@ -162,7 +161,7 @@ def ultima_escena_consolidada(base: Conexion) -> tuple[int, int] | None:
     return None if fila is None else (int(fila["escena_id"]), int(fila["posicion"]))
 
 
-def avances(base: Conexion, tabla: str, columna: str, nombre_de: str) -> list[dict[str, Any]]:
+def avances(base: Conexion, tabla: str) -> list[schemas.LineaDeAvance]:
     """Ultima posicion en la que cada arco o hilo avanzo. Cero si nunca avanzo."""
     sql = {
         "arco_escena": """
@@ -182,10 +181,10 @@ def avances(base: Conexion, tabla: str, columna: str, nombre_de: str) -> list[di
             GROUP BY hilo.id ORDER BY hilo.id
         """,
     }[tabla]
-    return [dict(fila) for fila in base.execute(sql)]
+    return [schemas.LineaDeAvance.model_validate(dict(fila)) for fila in base.execute(sql)]
 
 
-def promesas_pendientes_con_apertura(base: Conexion) -> list[dict[str, Any]]:
+def promesas_pendientes_con_apertura(base: Conexion) -> list[schemas.LineaDeAvance]:
     filas = base.execute(
         """
         SELECT promesa.id AS id, promesa.texto AS nombre, orden.posicion AS ultima
@@ -197,7 +196,7 @@ def promesas_pendientes_con_apertura(base: Conexion) -> list[dict[str, Any]]:
         ORDER BY promesa.id
         """
     )
-    return [dict(fila) for fila in filas]
+    return [schemas.LineaDeAvance.model_validate(dict(fila)) for fila in filas]
 
 
 def escenas_que_tocan(base: Conexion, entidades: dict[str, int], desde: int) -> list[int]:
@@ -243,18 +242,18 @@ def nombres_de_entidades(base: Conexion, referencias: dict[str, int]) -> list[st
     return nombres
 
 
-def revelaciones_pendientes(base: Conexion, posicion: int) -> list[dict[str, object]]:
+def revelaciones_pendientes(base: Conexion, posicion: int) -> list[schemas.RevelacionPendiente]:
     """Revelaciones cuya escena minima esta por delante de `t`.
 
     P-40: lo que todavia no se puede contar. Cubre las registradas; la que el
     borrador filtra sin que nadie la haya registrado se queda fuera.
     """
     return [
-        dict(fila)
+        schemas.RevelacionPendiente.model_validate(dict(fila))
         for fila in base.execute(
             """
             SELECT revelacion.hecho_id AS hecho_id, hecho.texto AS texto,
-                   hecho.valor AS valor, minima.posicion AS minima
+                   hecho.valor AS valor, minima.posicion AS escena_minima
             FROM revelacion
             JOIN hecho_canonico AS hecho ON hecho.id = revelacion.hecho_id
             JOIN escena_ordenada AS minima ON minima.escena_id = revelacion.escena_minima_id
