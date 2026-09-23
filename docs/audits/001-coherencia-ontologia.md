@@ -275,10 +275,12 @@ el registro en una crónica de lo que debería haber pasado.
 
 ### Diferido
 
+Dos de los cuatro se cerraron después; se dejan tachados para que el rastro no se pierda.
+
 | Hallazgo | A qué tarea | Por qué |
 | --- | --- | --- |
-| **D5** · Las nueve features de `CLAUDE.md` frente a las siete de `architecture.md` | Regeneración de `docs/architecture.md` | La tabla clase → feature se rehace entera allí; corregirla aquí sería escribirla dos veces |
-| **B1** · `architecture.md:760-761` sigue prohibiendo editar la semilla | Regeneración de `docs/architecture.md` | Ídem |
+| ~~**D5**~~ | — | **Cerrado.** `architecture.md` rehizo la tabla clase → feature con las nueve features (RI-004) y `CLAUDE.md` se reconcilió con ella (RI-005) |
+| ~~**B1**~~ | — | **Cerrado.** El texto de documentos vivos y reexportación desapareció con la reescritura de `architecture.md` (RI-004) |
 | **Transversal** · Las ~44 referencias a `AGENTS.md` en `architecture.md` y `verification.md` | Regeneración de ambos | Ídem |
 | **Puntero falso de `CLAUDE.md:207`** · `verification.md` no contiene scores ni puntos de ejecución | Regeneración de `docs/verification.md` | El puntero será cierto cuando ese fichero se convierta en la tabla de validadores |
 

@@ -923,24 +923,38 @@ este genera código.
 
 ### 1. Actualizar la documentación de `docs/`
 
-Es la entrada del ciclo y lo único que no necesita spec. `definitions.md`,
-`domain-knowledge.md` y este documento **se editan aquí, en el repositorio**: no hay
-documento vivo externo ni nada que reexportar (`trade-offs.md` TO-001). Un cambio de
-ontología deja entrada en `docs/registro-iteraciones.md` y va en su propio commit con el
-registro actualizado en él.
+`/docs` y `config/` son el paso 1 y se actualizan **sin plan aprobado**: la puerta gobierna
+el código, no lo que lo especifica. `definitions.md`, `domain-knowledge.md` y este documento
+**se editan aquí, en el repositorio**: no hay documento vivo externo ni nada que reexportar
+(`trade-offs.md` TO-001).
+
+La regla de los **dos rastros** —`trade-offs.md` y el registro de iteraciones, en el mismo
+commit que el cambio— está en `CLAUDE.md` § Contexto semilla, y no se repite aquí. Lo que sí
+es de este documento es **qué entra en cada uno**: en `trade-offs.md`, una entrada con
+problema, tabla de opciones, criterio, elección y consecuencias, numerada `TO-NNN` y sin
+huecos; en el registro, una entrada `RI-NNN` con causa, qué cambió y efecto, que nombra los
+ficheros que la materializan. Una decisión sin las dos es una decisión que dentro de un mes
+nadie sabrá reconstruir.
 
 ### 2. Crear o actualizar una spec
 
-Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa. Una spec no se
-adivina: es el punto del ciclo donde el agente interroga al desarrollador hasta que no queda
-ambigüedad. Contenido mínimo: problema, comportamiento esperado, criterios de aceptación
-verificables, fuera de alcance, impacto en ontología, esquema y API, y las preguntas de
-competencia afectadas.
+Una carpeta por cambio: `docs/specs/NNN-slug/spec.md`, numeración correlativa.
+
+**El interrogatorio previo se hace con la skill `grill-me`**, que recorre el árbol de
+decisiones por rondas y no deja rama sin visitar; el catálogo de § Skills dice cuándo
+cargarla. Preguntar de una en una deja huecos que solo aparecen al implementar, y una spec
+con huecos no pasa a plan.
+
+**La spec nace en `borrador`.** Solo el desarrollador la mueve a `aprobada`; un agente nunca
+se aprueba a sí mismo. Contenido mínimo: problema, comportamiento esperado, criterios de
+aceptación verificables, fuera de alcance, impacto en ontología, esquema y API, y las
+preguntas de competencia afectadas.
 
 ### 3. Plan de implementación
 
 `docs/specs/NNN-slug/plan.md`. **No se crea si la spec no está `aprobada`**, y se comprueba
-leyendo su frontmatter, no de memoria. Contenido: pasos ordenados, features y ficheros que se
+leyendo su frontmatter, no de memoria. **Nace en `borrador`** y necesita la aprobación del
+desarrollador, igual que la spec. Contenido: pasos ordenados, features y ficheros que se
 tocan, migraciones necesarias, **la lista de pruebas que se van a escribir** y en qué orden,
 riesgos y criterio de terminado. Un plan que no se puede probar no es un plan.
 
@@ -948,6 +962,17 @@ riesgos y criterio de terminado. Un plan que no se puede probar no es un plan.
 
 **No se escribe código si el plan no está `aprobado`.** TDD sin excepciones: la prueba
 primero, se comprueba que falla por la razón correcta, luego el código mínimo que la pasa.
-Al cerrar: si el comportamiento resultó distinto del aprobado, se actualiza la spec y vuelve
-a aprobación; si cambió la estructura, se actualiza este documento. El commit que cierra un
-plan nombra su carpeta.
+
+**Qué se actualiza al cerrar**, y las cuatro cosas van en el commit que cierra el plan, que
+nombra su carpeta:
+
+| Artefacto | Cuándo |
+| --- | --- |
+| La spec | Si el comportamiento resultó distinto del aprobado. Vuelve a aprobación |
+| Los documentos de `docs/` afectados | Si cambió la estructura o el vocabulario |
+| `docs/verification.md` | **Si cambió algún validador**: su tipo, su punto de ejecución, su score o qué pasa si falla |
+| `docs/registro-iteraciones.md` | Siempre: qué cambió, qué lo provocó y qué efecto tuvo |
+
+Las excepciones que quedan fuera de las tres puertas —erratas, formateo, renombrados sin
+cambio de comportamiento y el arreglo de un bug con prueba previa— están en `CLAUDE.md`
+§ Ciclo de cambio y se nombran en el mensaje del commit.

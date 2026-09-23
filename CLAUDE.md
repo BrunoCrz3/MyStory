@@ -3,8 +3,8 @@
 Fuente canónica y única de instrucciones para cualquier agente que trabaje en este
 repositorio. `AGENTS.md` no contiene reglas: solo apunta aquí.
 
-Aquí vive **la regla**. El detalle vive en `docs/architecture.md` y en las skills de
-`.claude/skills/`; si alguno choca con este archivo, manda este archivo.
+Aquí vive **la regla**; el detalle, en `docs/architecture.md` y en las skills. Si alguno
+choca con este archivo, manda este archivo.
 
 **Qué construye este repositorio.** Un sistema agéntico que genera novelas personalizadas
 para regalar: un entrevistador recoge los datos del destinatario, un planificador fija el
@@ -25,23 +25,21 @@ automática de principio a fin: **no hay autor humano en el bucle**.
 | --- | --- | --- |
 | Backend | FastAPI (Python 3.12) | API asíncrona, Pydantic v2 para todo contrato de datos |
 | Frontend | React 18 + TypeScript | Vite como bundler, sin framework de servidor |
-| Persistencia | SQLite | Un único fichero `data/storymaker.db`. `sqlite-vec` es **opcional**: la recuperación funciona con filtro relacional y la similitud vectorial solo la ordena |
-| Modelo | Ventana declarada en `config/thresholds.yaml` (`contexto.total`) | Límite duro: ningún prompt puede superarlo |
+| Persistencia | SQLite | Un único fichero `data/storymaker.db`. **`sqlite-vec` no se usa en v1** (`trade-offs.md` TO-015): la novela entera cabe en la capa Recuperado, así que basta el filtro relacional |
+| Modelo | `id` y `effort` por rol en `config/models.yaml` | Tope por petición en `contexto.total`. **No es la ventana del proveedor**, que es mayor: es un límite nuestro, y ningún prompt lo supera |
 
 **Dependencias que el alcance exige** y que la regla 6 bloquearía si no estuvieran aquí:
-SDK de **Langfuse** para trazas y scores; **Lean 4** con `lake` para la verificación formal
-de la cronología; **TLA+ tools** con TLC para la del harness; **Playwright** para el browser
-MCP y para exportar el PDF. Ninguna añade infraestructura de servidor. El PDF sale de
-Playwright y no de una librería de PDF: como la lectura es web, se exporta del mismo render
-que los validadores acaban de comprobar, y usar otro motor sería validar uno y entregar
-otro (`docs/trade-offs.md` TO-003). Excluido explícitamente: Postgres, pgvector, Pinecone,
-Chroma, Django, Flask, Next.js, Vue, Redis, Celery y cualquier ORM que oculte el SQL.
+SDK de **Langfuse**; **Lean 4** con `lake` para verificar la cronología; **TLA+ tools** con
+TLC para el harness; **Playwright** para el browser MCP y el PDF. Ninguna añade
+infraestructura de servidor. El PDF sale de Playwright y no de una librería de PDF: como la
+lectura es web, se exporta del render que los validadores acaban de comprobar, y otro motor
+sería validar uno y entregar otro (`trade-offs.md` TO-003). Excluido: Postgres, pgvector,
+Pinecone, Chroma, Django, Flask, Next.js, Vue, Redis, Celery y todo ORM que oculte el SQL.
 
 **Alcance de instancia: varias novelas, un solo usuario.** Toda tabla de dominio lleva
 `novel_id` desde la primera migración. **No hay multiusuario ni autenticación en v1**:
-ninguna tabla lleva `user_id` ni `tenant_id`, y el login opcional del alcance se añadiría
-después como migración, nunca por adelantado. Si una tarea parece requerir cuentas, detente
-y pregunta.
+ninguna tabla lleva `user_id` ni `tenant_id`, y el login opcional se añadiría después como
+migración. Si una tarea parece requerir cuentas, detente y pregunta.
 
 ## Presupuesto de contexto
 
@@ -54,7 +52,8 @@ nunca se roba presupuesto a otra ni se supera el total.
 
 Las **siete capas** —Invariante, Estructural, Estado, Local, Recuperado, Estilo y
 Anticontexto— más el **Margen**, con su fuente y su presupuesto: skill
-`presupuesto-de-contexto`.
+`presupuesto-de-contexto`. **La capa Invariante se compone y se presupuesta por rol**: no
+todos cargan las mismas skills de runtime, así que no todos tienen el mismo sitio libre.
 
 **Política de degradación.** Cuando el ensamblado no cabe se comprime en el orden
 Recuperado → Estilo → Local → Estado, parando en cuanto quepa. La capa Invariante y la
@@ -87,17 +86,21 @@ backend/app/            ▸ previsto · main.py monta los routers de cada featur
   policy/               Capa 5  · policy engine, decisiones, audit log
   versioning/           Capa 5  · versiones, solicitud de cambio, regeneración
   commons/              db, migraciones, modelo, tokens, errores, Langfuse
+  mcp_server/           adaptador del servidor MCP · no es feature
+  skills/               skills de runtime que cargan los roles · no es feature
 frontend/src/           ▸ previsto · FSD v2.1: app/, pages/, shared/
 formal/lean/            ▸ previsto · cronología e invariantes de la historia
 formal/tla/             ▸ previsto · especificación del harness y el .cfg de TLC
 docs/                   contexto semilla y documentación de proceso (ver tabla abajo)
 docs/specs/NNN-slug/    spec.md y plan.md, ambos con frontmatter
 config/thresholds.yaml  fuente única de cifras y umbrales
+config/models.yaml      ▸ previsto · id y effort de modelo por rol
 data/storymaker.db      ▸ previsto · base de datos, no versionada
 ejemplos/               ▸ previsto · novela-ejemplo.pdf
 presentacion/           ▸ previsto · vídeo de demo
 .env.example            ▸ previsto · plantilla de secretos, nunca los secretos
-.claude/skills/         skills de agente (ver docs/architecture.md)
+.claude/skills/         skills de desarrollo (ver docs/architecture.md § Skills)
+.claude/agents/         ▸ previsto · agente de seguridad
 .claude/commands/       ▸ previsto · comandos propios
 .claude/mcp.json        ▸ previsto · browser MCP para la validación visual
 skills-lock.json        origen y hash de las skills instaladas
@@ -106,45 +109,35 @@ skills-lock.json        origen y hash de las skills instaladas
 **▸ previsto** es lo que el layout reserva y todavía no existe: no hay código hasta que su
 plan esté aprobado (ver «Ciclo de cambio»), y una ruta que apunte ahí es destino.
 
-**`guardrail/` es feature y no parte de `quality/`** porque corre en otro hook y tiene
-suite propia; **la observabilidad va en `commons/` y no es feature** porque la usan todas y
-sus clases viven en Langfuse, no en SQLite.
-
 ## Persistencia, backend y frontend
 
 El detalle operativo está en la skill que nombra cada bloque, y cargarla **antes** de
 escribir no es opcional.
 
-**Base de datos** — skills `sqlite-relacional` y, si se usa `vec0`, `sqlite-vec`. Un solo
-fichero, SQL explícito, sin servidor y sin ORM. Migraciones numeradas en
-`backend/app/commons/db/migrations/`, aplicadas en orden y **nunca editadas** una vez
+**Base de datos** — skill `sqlite-relacional`; `sqlite-vec` solo si algún día se reactiva
+el vector. Un solo fichero, SQL explícito, sin servidor y sin ORM. Migraciones numeradas en
+`backend/app/commons/db/migrations/` ▸ previsto, aplicadas en orden y **nunca editadas** una vez
 commiteadas. `WAL` activado; escrituras a la story bible siempre en transacción. **Toda
 tabla de dominio lleva `novel_id`.** La recuperación filtra por las entidades del brief de
-capítulo **y luego** ordena por similitud: nunca similitud sola, que devuelve fragmentos de
-tono parecido y estado irrelevante.
+capítulo antes de ordenar: nunca similitud sola.
 
 **Backend** — skill `backend-feature-slice`. Una feature por carpeta, rodaja vertical
-completa (`router.py`, `schemas.py`, `models.py`, `service.py`, `repository.py`); la
-feature es la unidad de cambio. La lógica en `service.py`, el SQL en `repository.py`, el
-router solo traduce HTTP. `commons/` únicamente para lo que usan dos o más features, y nada
-de dominio entra ahí. Una feature importa de `commons/` y del `service.py` de otra, **nunca
-de su `repository.py`**, y sin ciclos. Todo contrato es Pydantic: sin `dict` sueltos
-cruzando capas. Escrituras a la story bible **idempotentes por `novel_id` + `chapter_id` +
-`version`**. Llamadas al modelo asíncronas y con timeout explícito. Errores de dominio a
-HTTP en un handler central.
+completa, y la feature es la unidad de cambio; la anatomía y la regla de importación están
+en `docs/architecture.md` § Anatomía de una feature. Todo contrato es Pydantic: sin `dict`
+sueltos cruzando capas. Escrituras a la story bible **idempotentes por `novel_id` +
+`chapter_id` + `version`**. Llamadas al modelo asíncronas y con timeout explícito. Errores
+de dominio a HTTP en un handler central.
 
 **Frontend** — skill `feature-sliced-design`. React con TypeScript estricto, sin `any`;
-estado de servidor con TanStack Query. FSD v2.1: importaciones solo hacia capas inferiores
-y cada slice se consume por su `index.ts`. Empezamos con `app/`, `pages/` y `shared/`;
-`features/` y `entities/` se crean al extraer, no por adelantado, y **`widgets/` no se
-usa**. El cliente tipado vive en `frontend/src/shared/api/` y se deriva del OpenAPI de
-FastAPI: los tipos no se escriben a mano dos veces. Sin lógica de dominio en el frontend:
-la story bible se decide en el backend.
+estado de servidor con TanStack Query. FSD v2.1, empezando por `app/`, `pages/` y
+`shared/`, y **`widgets/` no se usa**. El cliente tipado vive en
+`frontend/src/shared/api/` ▸ previsto y se deriva del OpenAPI: los tipos no se escriben a mano dos
+veces. Sin lógica de dominio en el frontend: la story bible se decide en el backend.
 
 **Dos páginas.** `entrevista` recoge los datos del destinatario y señala faltantes y
-contradicciones. `lectura` es la novela: índice navegable, ficha de personajes y lugares
-enlazada a sus capítulos, portada con dedicatoria, petición de cambio desde la propia
-página y marca de los capítulos modificados respecto a la versión anterior.
+contradicciones. `lectura` es la novela: índice, ficha de personajes y lugares enlazada a
+sus capítulos, portada con dedicatoria, petición de cambio en página y marca de los
+capítulos modificados.
 
 ## Comandos
 
@@ -156,6 +149,8 @@ uv run ruff check . && uv run ruff format .
 npm run dev && npm run test && npm run typecheck   # frontend
 lake build                                         # formal/lean/ · cronología
 tlc -config formal/tla/harness.cfg formal/tla/harness.tla   # formal/tla/ · harness
+uv run python -m app.prompts.sync                  # publica prompts en Langfuse, idempotente
+uv run python -m app.versioning.export <version>   # PDF de una versión ya publicada
 ```
 
 ## Contexto semilla
@@ -170,10 +165,13 @@ este repositorio deriva de ellos. Son lectura obligatoria antes de tocar código
 
 **Canonicidad.** El repositorio es la fuente canónica de la ontología: manda lo que está en
 esos dos ficheros. No hay documento vivo externo ni nada que reexportar; los cambios de
-ontología se hacen aquí, igual que `docs/architecture.md`. Todo cambio deja **entrada en
-`docs/registro-iteraciones.md`** —qué cambió, qué lo provocó y qué efecto tuvo— y va en su
-propio commit con el registro actualizado en él, porque el historial de git es la evidencia
-del registro. La decisión que cerró esta política está en `docs/trade-offs.md`.
+ontología se hacen aquí, igual que `docs/architecture.md`, y van en su propio commit.
+
+**Todo cambio de decisión deja dos rastros**, no uno: el **porqué** en
+`docs/trade-offs.md` —opciones, criterio y elección— y el **qué cambió, qué lo provocó y qué
+efecto tuvo** en `docs/registro-iteraciones.md`. Los dos van en el mismo commit que el
+cambio, porque el historial de git es la evidencia de ambos. No es solo para la ontología:
+vale para cualquier decisión que este repositorio tome sobre sí mismo.
 
 Qué sección responde a qué pregunta y cómo se usan al escribir código:
 `docs/architecture.md` § Frontera con el contexto semilla.
@@ -187,12 +185,12 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
   y marca de cambio entre versiones. No hay unidad por debajo.
 - El brief de capítulo es mínimo: estado de entrada más **restricción de destino**. Un
   capítulo descubre *cómo*, no *hacia dónde*; cambiar el destino exige replanificar.
-- Los hechos se **extraen** tras aceptar el capítulo, no se declaran antes. Entran como
-  `propuesto` y quien los adopta es el **policy engine**, con la decisión en el audit log.
-- El retcon es operación rutinaria: marca `obsoleto` a los capítulos que **usan** el hecho
-  —no solo al que lo estableció— y encola su reescritura, sin tocar el resto.
+- Los hechos se **extraen** tras aceptar el capítulo. Entran como `propuesto` y quien los
+  adopta es el **policy engine**, con la decisión en el audit log.
+- El retcon marca `obsoleto` a los capítulos que **usan** el hecho —no solo al que lo
+  estableció— y encola su reescritura, sin tocar el resto.
 - La replanificación se dispara cuando el canon invalida una restricción pendiente, nunca
-  por cadencia ni en mitad de un capítulo, y solo toca capítulos aún no escritos.
+  por cadencia ni en mitad de un capítulo, y solo toca capítulos no escritos.
 
 ## Dónde está cada cosa
 
@@ -201,8 +199,9 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Alcance y requisitos del proyecto | `docs/requerimientos/alcance-proyecto.md` |
 | Clases, atributos, relaciones, preguntas de competencia | `docs/definitions.md` |
 | Jerarquías, grafos y máquinas de estado | `docs/domain-knowledge.md` |
-| Sistema, agentes, skills, orquestación y ciclo de cambio | `docs/architecture.md` |
+| Sistema, agentes, hooks, proceso de producción y ciclo de cambio | `docs/architecture.md` |
 | Qué feature es dueña de cada clase | `docs/architecture.md` § Anatomía de una feature |
+| Identificador y effort de modelo por rol | `config/models.yaml` ▸ previsto |
 | Qué tabla corresponde a cada clase | `docs/definitions.md` § Mapeo a la story bible |
 | Qué valida cada validador, dónde corre y con qué score | `docs/verification.md` |
 | **Todos los números**: presupuesto por capa y umbrales | `config/thresholds.yaml` |
@@ -213,7 +212,7 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Un concepto del curso por fichero | `docs/explainers/` ▸ previsto |
 | Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md`, `docs/browser-mcp.md` ▸ previsto |
 | Specs y planes de implementación | `docs/specs/NNN-slug/` |
-| Skills de agente instaladas y cuándo cargarlas | `.claude/skills/`, listadas en `docs/architecture.md` |
+| Skills: las de runtime que cargan los roles y las de desarrollo | `docs/architecture.md` § Skills |
 | Contrato de la API | `http://localhost:8000/openapi.json` |
 | Story bible viva (solo vía servicios de `canon/`) | `data/storymaker.db` ▸ previsto |
 
@@ -231,17 +230,22 @@ Cada corchete es una **puerta**, no una recomendación: sin el artefacto anterio
 no se empieza el siguiente. Quien aprueba es siempre el desarrollador.
 
 **Estado de un artefacto.** Toda spec y todo plan abren con frontmatter —`estado`
-(`borrador` | `en-revision` | `aprobada`), `aprobada-por` y `fecha`—. El agente lo lee
-antes de continuar; si el estado no es `aprobada`, se detiene y lo dice.
+(`borrador` | `en-revision` | `aprobada`), `aprobada-por` y `fecha`—. **Nacen en `borrador`
+y solo el desarrollador los mueve a `aprobada`**; un agente nunca se aprueba a sí mismo. El
+agente lee el estado antes de continuar y, si no es `aprobada`, se detiene y lo dice.
+
+**Antes de escribir una spec, pregunta.** No se adivina: carga la skill `grill-me` e
+interroga al desarrollador hasta que no quede ambigüedad. Una spec con huecos no pasa a plan.
+
+**Al cerrar un plan** se actualizan la spec si el comportamiento resultó distinto, los
+documentos de `docs/` afectados, **`verification.md` si cambió un validador** y el registro.
 
 **Qué queda fuera de la cadena.** Erratas, formateo, renombrados sin cambio de
 comportamiento y el arreglo de un bug con prueba previa que lo reproduce; la excepción se
 nombra en el commit. También `docs/` y `config/`, que son el paso 1 y no el paso 4: la
 puerta gobierna el código, no lo que lo especifica. Todo lo demás —comportamiento, esquema,
-contrato de API u ontología— pasa por las tres puertas.
-
-Qué contiene cada artefacto y qué se actualiza al cerrar: `docs/architecture.md` § Ciclo de
-cambio del repositorio.
+contrato de API u ontología— pasa por las tres puertas. Qué contiene cada artefacto:
+`docs/architecture.md` § Ciclo de cambio del repositorio.
 
 ## Reglas para todos los agentes
 
@@ -288,9 +292,8 @@ decide en producción es el policy engine.)
 ## Mantenimiento de este archivo
 
 Este es el único archivo de instrucciones: `AGENTS.md` solo apunta aquí, así que toda
-decisión compartida se escribe en este fichero y ningún agente se queda fuera.
+decisión compartida se escribe aquí y ningún agente se queda fuera.
 
 **Mantenlo por debajo de 300 líneas.** Por encima consume contexto y baja la adherencia.
 Si crece, mueve el detalle a `docs/architecture.md` o a la skill que corresponda y deja
-aquí la regla y el enlace. Lo que queda no está duplicado en ningún otro sitio: es lo que
-un agente necesita **antes** de abrir otro documento.
+aquí la regla y el enlace. Lo que queda no está duplicado en ningún otro sitio.

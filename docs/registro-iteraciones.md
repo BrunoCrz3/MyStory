@@ -375,3 +375,66 @@ reserva.
 de la story bible y separación del judge— no estaban en la lista de trece que la tarea pedía
 cerrar: salieron de tirar del hilo de las que sí estaban. Un interrogatorio por rondas
 encuentra lo que una lista de preguntas no tiene.
+
+---
+
+## RI-005 — `CLAUDE.md` se reconcilia con `architecture.md`
+
+**Fecha:** 2026-09-23 · **Ficheros:** `CLAUDE.md`, `docs/architecture.md`
+
+### Causa
+
+`CLAUDE.md` se escribió **antes** que `architecture.md` y, por tanto, antes del grill que
+cerró dieciocho decisiones nuevas. Nada de lo que decía era falso, pero describía un
+repositorio que ya no era el acordado: le faltaban tres rutas, dos comandos y un fichero de
+configuración, y dos afirmaciones se habían quedado imprecisas.
+
+Es el mismo patrón que la auditoría 001 encontró tres veces: **un cambio correcto aplicado
+sin barrer lo que arrastraba**. Aquí la deuda se pagó antes de que la encontrara otra
+auditoría, porque el rediseño de la arquitectura terminó con la lista de divergencias hecha.
+
+### Qué cambió
+
+**Diez divergencias**, seis ya listadas al cerrar la arquitectura y cuatro del repaso:
+
+| Qué decía `CLAUDE.md` | Qué dice ahora |
+| --- | --- |
+| El layout no reservaba `mcp_server/`, `skills/`, `.claude/agents/` ni `config/models.yaml` | Los cuatro, con su marca ▸ previsto donde toca |
+| § Comandos no tenía ni sincronización de prompts ni export de PDF | Los dos |
+| `sqlite-vec` era «opcional» | **No se usa en v1** (TO-015), con el porqué: la novela entera cabe en la capa Recuperado |
+| «Ventana declarada en `config/thresholds.yaml`» | **No es la ventana del proveedor**, que es mayor: es un tope nuestro (TO-019) |
+| «Sistema, agentes, skills, **orquestación** y ciclo de cambio» | `architecture.md` ya no tiene § Orquestación: se repartió entre § Proceso de producción y § Hooks y policy engine |
+| `.claude/skills/` eran «las skills» | Hay **dos bloques**: runtime en `backend/app/skills/` y desarrollo en `.claude/skills/` (TO-021) |
+| El presupuesto de contexto no distinguía por rol | **La capa Invariante se compone y se presupuesta por rol**, porque no todos cargan las mismas skills de runtime |
+
+**El ciclo de cambio gana cuatro reglas que le faltaban**: spec y plan **nacen en
+`borrador`** y solo el desarrollador los mueve a `aprobada`; el interrogatorio previo a una
+spec se hace con la skill **`grill-me`**; al cerrar un plan se actualizan también
+**`verification.md` si cambió un validador** y el registro; y la obligación de dejar rastro
+se generaliza de «todo cambio de **ontología**» a **todo cambio de decisión**, con entrada en
+`trade-offs.md` **y** en el registro.
+
+**Y se quitó una duplicación que acababa de introducir yo**: la regla de los dos rastros
+llegó a estar escrita entera en los dos ficheros. La regla se quedó en `CLAUDE.md` y
+`architecture.md` pasó a apuntarla y a aportar solo lo suyo: qué contiene cada entrada.
+
+### Efecto
+
+**`CLAUDE.md` se mantiene por debajo de 300 líneas: 299.** Entraron unas catorce líneas, así
+que salieron otras tantas, y todas las que salieron estaban **duplicadas**: la justificación
+de `guardrail/` como feature, la enumeración de la rodaja vertical y la regla de importación,
+que viven en `architecture.md` § Anatomía de una feature y en la skill `backend-feature-slice`.
+El límite hizo su trabajo: obligó a mirar qué sobraba en vez de dejar crecer el fichero.
+
+**Comprobado**: las siete citas `§` cruzadas entre los dos documentos resuelven; ninguna ruta
+se cita como existente sin serlo; las dieciséis reglas siguen numeradas sin saltos; no hay
+cifras nuevas fuera de `config/thresholds.yaml`; y cada una de las reglas del ciclo aparece
+**una sola vez** entre los dos ficheros.
+
+**`AGENTS.md` no se tocó**, y es la comprobación de que TO-002 funciona: un stub sin reglas no
+tiene con qué divergir.
+
+**Se cierran los dos hallazgos que la auditoría 001 dejó diferidos.** D5 —las nueve features
+de `CLAUDE.md` frente a las siete de `architecture.md`— y B1 —la prohibición de editar el
+contexto semilla— quedaban a medias desde RI-004: la arquitectura ya se había rehecho, pero
+faltaba el lado de `CLAUDE.md`. Ahora los dos están cerrados por los dos lados.
