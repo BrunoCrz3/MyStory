@@ -24,9 +24,12 @@ from app.commons.config import Umbrales, cargar_umbrales, verificar_arranque
 from app.commons.db import migraciones
 from app.commons.db.conexion import crear_conexion
 from app.commons.http import registrar_manejadores
+from app.commons.tokens.en_vuelo import PoolEnVuelo
 from app.context import service as contexto
 from app.context.router import router as router_de_context
 from app.novel.router import router as router_de_novel
+from app.process.orquestador import CerrojoDeGeneracion
+from app.process.router import router as router_de_process
 from app.quality.router import router as router_de_quality
 
 HOST_POR_DEFECTO = "127.0.0.1"
@@ -53,6 +56,12 @@ async def ciclo_de_vida(aplicacion: FastAPI) -> AsyncIterator[None]:
 
     aplicacion.state.umbrales = umbrales
     aplicacion.state.conexion = conexion
+    # Los dos semaforos del proceso. Viven en la instancia y no en un modulo:
+    # un singleton global los compartiria entre aplicaciones, y RNF-13 dice que
+    # el pool no se coordina con nada externo --tampoco con otra app del mismo
+    # interprete--.
+    aplicacion.state.pool_en_vuelo = PoolEnVuelo(umbrales.en_vuelo.total)
+    aplicacion.state.cerrojo_de_generacion = CerrojoDeGeneracion()
     try:
         yield
     finally:
@@ -69,6 +78,7 @@ app.include_router(router_de_novel)
 app.include_router(router_de_canon)
 app.include_router(router_de_context)
 app.include_router(router_de_quality)
+app.include_router(router_de_process)
 
 
 @app.get("/salud")

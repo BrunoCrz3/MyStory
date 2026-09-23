@@ -156,3 +156,45 @@ class DimensionSinValidador(ErrorDeArranque):
     """
 
     codigo_por_defecto = "dimension_sin_validador"
+
+
+class AceptacionSoloDelAutor(ErrorDeDominio):
+    """RF-PROC-07, P-19. El autor humano es el unico que acepta una escena.
+
+    Es 403 y no 422: lo que falla no es la forma de la peticion sino quien la
+    hace. Es el ultimo cortafuegos de la resistencia a inyeccion, y por eso no
+    se relaja para agilizar nada.
+    """
+
+    http = 403
+    codigo_por_defecto = "aceptacion_solo_del_autor"
+
+
+class PlanCambiadoSinHito(ConflictoDeEstado):
+    """RF-PROC-13. El conjunto de restricciones futuras cambio y nadie lo
+    registro: sin motivo no hay etiqueta con la que calibrar la deriva, y el
+    acumulado pierde su ancla."""
+
+    codigo_por_defecto = "plan_cambiado_sin_hito"
+
+
+class DerivaSoloDeEscenaAceptada(ConflictoDeEstado):
+    """RF-PROC-08. La deriva se mide contra el canon en `t`, y el canon solo
+    existe tras consolidar una escena aceptada."""
+
+    codigo_por_defecto = "deriva_solo_de_escena_aceptada"
+
+
+class EscenaSeAdelantaAlPlan(ReglaDelDominioIncumplida):
+    """P-41, RF-PROC-11. La escena descubre *como*, no *hacia donde*: satisfacer
+    el destino de un brief posterior es cambiar el plan desde dentro de una
+    escena, que es justo lo que la replanificacion existe para hacer fuera."""
+
+    codigo_por_defecto = "escena_se_adelanta_al_plan"
+
+
+class BriefSinRestriccionDeDestino(ReglaDelDominioIncumplida):
+    """RF-PROC-01. Un brief sin destino no acota nada: la escena descubriria
+    tambien hacia donde va, y la deriva se quedaria sin denominador."""
+
+    codigo_por_defecto = "brief_sin_restriccion_de_destino"

@@ -1,14 +1,22 @@
 ---
-estado: propuesta
-aprobada-por:
-fecha: 2026-09-22
+estado: aprobada
+aprobada-por: Bruno Cruz
+fecha: 2026-09-23
 ---
 
 # Propuesta — la medida de `Deriva`
 
-Cierra la pregunta abierta #1 de `verification.md` y desbloquea `RF-PROC-08` antes de H6.
-**Es una propuesta, no un cambio**: `definitions.md` y `domain-knowledge.md` los edita el
-autor desde el documento vivo (`AGENTS.md` § Canonicidad y sincronía). Aquí no se toca
+Cerró la pregunta abierta #1 de `verification.md` y desbloqueó `RF-PROC-08` antes de H6.
+
+> **Estado: aprobada** el 2026-09-23 por el autor. El texto de «Medida de la deriva» ya
+> está exportado a `definitions.md` desde el documento vivo, y de ahí se propagó a
+> `spec.md` (RF-PROC-08, RF-PROC-12, RF-PROC-13), a `plan.md` (H6 y migración 006), a
+> `config/thresholds.yaml` (los tres umbrales por componente y la densidad de
+> declaración) y a `verification.md` (`P-52`, `P-53`, `A-52`). Este documento se conserva
+> como el razonamiento que llevó a la decisión, no como una propuesta viva.
+
+**No era un cambio de ontología**: `definitions.md` y `domain-knowledge.md` los edita el
+autor desde el documento vivo (`AGENTS.md` § Canonicidad y sincronía). Aquí no se tocó
 ningún otro fichero.
 
 ---

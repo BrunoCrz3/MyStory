@@ -82,7 +82,25 @@ async def leer_escena(escena_id: int, base: Base) -> models.Escena:
 async def transicionar_escena(
     escena_id: int, datos: schemas.NuevaTransicion, base: Base
 ) -> models.Escena:
+    """Toda transicion del diagrama menos una.
+
+    `aceptada` no sale por aqui: tiene su propia puerta en `process/`, que es
+    donde el autor firma la aceptacion y donde se recoge lo que la acompana
+    --si edito el texto, que version acepta--. Pedirla aqui responde 403.
+    """
     return service.transicionar_escena(base, escena_id, datos.destino)
+
+
+@router.post("/hilos/{hilo_id}/estado")
+async def transicionar_hilo(
+    hilo_id: int, datos: schemas.NuevoEstadoDeHilo, base: Base
+) -> models.HiloDeTrama:
+    return service.transicionar_hilo(base, hilo_id, datos.destino)
+
+
+@router.get("/hilos/abiertos")
+async def hilos_abiertos(base: Base) -> list[models.HiloDeTrama]:
+    return service.hilos_abiertos(base)
 
 
 @router.post("/beats", status_code=CREADO)

@@ -239,6 +239,19 @@ def informes_de(base: Conexion, escena_id: int) -> list[InformeDeCritica]:
     return repository.informes_de(base, escena_id)
 
 
+def ultima_critica(base: Conexion, escena_id: int) -> schemas.Critica | None:
+    """El informe vigente de la escena, con sus puntuaciones y sus defectos.
+
+    Lo lee el orquestador para elegir el siguiente paso. Se expone aqui y no se
+    reconstruye alli porque el contrato entre features es el `service.py`: el
+    orquestador no tiene por que saber en que tablas vive un informe.
+    """
+    informes = repository.informes_de(base, escena_id)
+    if not informes:
+        return None
+    return _leer(base, informes[-1].id)
+
+
 def comparar_con_anterior(base: Conexion, escena_id: int, version: int) -> list[schemas.Regresion]:
     """A-50, RF-QUA-08: ninguna correccion empeora lo que ya pasaba.
 

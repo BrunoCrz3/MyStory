@@ -13,13 +13,14 @@ from __future__ import annotations
 
 from app.commons.db.conexion import Conexion
 from app.commons.errores import (
+    AceptacionSoloDelAutor,
     ActoIncompleto,
     NovumSinLimites,
     NovumSinRegla,
     TransicionInvalida,
 )
 from app.novel import models, repository, schemas
-from app.novel.models import EstadoDeEscena
+from app.novel.models import EstadoDeEscena, EstadoDeHilo, ModoDeAceptacion
 
 
 def obtener[E: models.Entidad](base: Conexion, modelo: type[E], identificador: int) -> E:
@@ -64,13 +65,31 @@ def obtener_escena(base: Conexion, escena_id: int) -> models.Escena:
     return repository.obtener(base, models.Escena, escena_id)
 
 
-def transicionar_escena(base: Conexion, escena_id: int, destino: EstadoDeEscena) -> models.Escena:
-    """A-29, RF-NOVEL-04. Ninguna transicion fuera del diagrama."""
+def transicionar_escena(
+    base: Conexion,
+    escena_id: int,
+    destino: EstadoDeEscena,
+    *,
+    modo_de_aceptacion: ModoDeAceptacion = ModoDeAceptacion.AUTOMATICA,
+) -> models.Escena:
+    """A-29, RF-NOVEL-04. Ninguna transicion fuera del diagrama.
+
+    Y una que el diagrama dibuja pero nadie automatico puede dar: la de
+    `aceptada` (RF-PROC-07, P-19). El guardarrail vive aqui, en la unica puerta
+    que escribe el estado de una escena, y no en el orquestador: una regla que
+    solo se cumple en el camino que alguien se acordo de pasar no es un
+    guardarrail, es una costumbre.
+    """
     escena = obtener_escena(base, escena_id)
     if destino not in models.TRANSICIONES[escena.estado]:
         raise TransicionInvalida(
             f"la escena {escena_id} esta en '{escena.estado.value}' y el diagrama no "
             f"dibuja una transicion a '{destino.value}'"
+        )
+    if destino is EstadoDeEscena.ACEPTADA and modo_de_aceptacion is not ModoDeAceptacion.HUMANA:
+        raise AceptacionSoloDelAutor(
+            f"la escena {escena_id} solo pasa a 'aceptada' por decision del autor humano: "
+            "ningun agente ni el orquestador pueden darla"
         )
     return repository.actualizar_estado_de_escena(base, escena_id, destino)
 
@@ -96,6 +115,26 @@ def crear_arco(base: Conexion, datos: schemas.NuevoArco) -> models.Arco:
 
 def crear_hilo_de_trama(base: Conexion, datos: schemas.NuevoHiloDeTrama) -> models.HiloDeTrama:
     return repository.insertar_hilo_de_trama(base, datos)
+
+
+def transicionar_hilo(base: Conexion, hilo_id: int, destino: EstadoDeHilo) -> models.HiloDeTrama:
+    """Abre o cierra un hilo de trama.
+
+    No hay maquina de estados que comprobar: la ontologia no dibuja ninguna para
+    `Hilo de trama`, asi que se admite cualquiera de los dos valores en cualquier
+    orden. Un hilo se puede reabrir, y eso es una decision del autor.
+    """
+    repository.obtener(base, models.HiloDeTrama, hilo_id)
+    return repository.actualizar_estado_de_hilo(base, hilo_id, destino)
+
+
+def hilos_abiertos(base: Conexion) -> list[models.HiloDeTrama]:
+    """Los que `canon_huerfano` cuenta. Sin `estado` declarado cuenta abierto."""
+    return [
+        hilo
+        for hilo in repository.listar(base, models.HiloDeTrama)
+        if hilo.estado != EstadoDeHilo.CERRADO.value
+    ]
 
 
 def crear_lugar(base: Conexion, datos: schemas.NuevoLugar) -> models.Lugar:

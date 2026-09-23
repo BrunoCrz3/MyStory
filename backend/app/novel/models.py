@@ -27,6 +27,37 @@ class EstadoDeEscena(StrEnum):
     OBSOLETA = "obsoleta"
 
 
+class ModoDeAceptacion(StrEnum):
+    """Como se llego a `aceptada`. RF-PROC-07, P-19.
+
+    Lo que hay que poder distinguir no es *quien* acepto --hay un solo autor por
+    instancia-- sino **como**: aceptacion humana frente a automatica. De esa
+    distincion depende entera la utilidad de `training_samples`, y ademas es el
+    ultimo cortafuegos de la resistencia a inyeccion: ningun agente acepta.
+
+    El defecto es `AUTOMATICA`, y es deliberado. Un defecto permisivo dejaria
+    que cualquier llamada que se olvide del argumento aceptara una escena.
+    """
+
+    HUMANA = "humana"
+    AUTOMATICA = "automatica"
+
+
+class EstadoDeHilo(StrEnum):
+    """Situacion de un `Hilo de trama`.
+
+    La ontologia da a `Hilo de trama` el atributo `estado` **sin enumerar sus
+    valores**, igual que hace con `Hecho canonico.tipo`. Se enumera aqui con el
+    mismo riesgo asumido y la misma consecuencia escrita: `canon_huerfano`
+    necesita saber que hilos siguen abiertos, y sin un valor de cierre la
+    medida no podria bajar nunca al cerrar uno. Un hilo sin `estado` cuenta como
+    abierto: no declarar no es cerrar.
+    """
+
+    ABIERTO = "abierto"
+    CERRADO = "cerrado"
+
+
 # La maquina de estados, tal cual la dibuja el diagrama. Las transiciones no van
 # al esquema: SQLite no las expresa y un trigger las esconderia del sitio donde
 # se leen las reglas.

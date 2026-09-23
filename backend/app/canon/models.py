@@ -49,6 +49,12 @@ class TipoDeHecho(StrEnum):
     DESCRIPTIVO = "descriptivo"
 
 
+# El valor de un hecho `estado_vital` que saca a un personaje del mundo. Vive
+# aqui y no en cada consulta porque `process/` lo necesita para saber si una
+# restriccion de destino se volvio imposible, y dos copias de la misma cadena se
+# separan el dia que alguien cambie una.
+VALOR_VITAL_MUERTO = "muerto"
+
 # Tipos cuyo hecho describe un estado que otro hecho posterior puede cerrar. Un
 # hecho `descriptivo` no cierra a nadie: no se sabe de que habla.
 TIPOS_DE_ESTADO = frozenset(

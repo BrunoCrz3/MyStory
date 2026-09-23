@@ -21,6 +21,7 @@ from app.commons.db.migraciones import aplicar_migraciones
 from app.novel import schemas as novel_schemas
 from app.novel import service as novel
 from app.novel.models import EstadoDeEscena
+from tests.novel.fabrica import transicionar
 
 CAMINO_DEL_HECHO = {
     EstatusDeHecho.PROVISIONAL: (),
@@ -139,7 +140,7 @@ class Mundo:
             EstadoDeEscena.EN_REVISION,
             EstadoDeEscena.ACEPTADA,
         ):
-            novel.transicionar_escena(self._base, escena_id, paso)
+            transicionar(self._base, escena_id, paso)
 
         canon.consolidar_escena(
             self._base,
@@ -299,4 +300,4 @@ def aceptar(base: Conexion, escena_id: int) -> None:
         EstadoDeEscena.EN_REVISION,
         EstadoDeEscena.ACEPTADA,
     ):
-        novel.transicionar_escena(base, escena_id, paso)
+        transicionar(base, escena_id, paso)

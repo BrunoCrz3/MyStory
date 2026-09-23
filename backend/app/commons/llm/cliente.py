@@ -19,7 +19,7 @@ no de briefs ni de canon.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from anthropic import AsyncAnthropic, omit
 
@@ -34,6 +34,19 @@ class RespuestaDelModelo:
     modelo: str
     tokens_de_entrada: int
     tokens_de_salida: int
+
+
+class Generador(Protocol):
+    """Lo unico que `process/` necesita saber del proveedor.
+
+    Existe para que la puerta que registra cada generacion dependa del contrato
+    y no de la clase concreta: `commons/` no sabe que es una escena, y `process/`
+    no tiene por que saber que hay un SDK detras.
+    """
+
+    async def generar(
+        self, mensajes: list[dict[str, Any]], sistema: str | None = None
+    ) -> RespuestaDelModelo: ...
 
 
 class ClienteDelModelo:

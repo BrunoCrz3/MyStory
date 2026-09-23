@@ -16,9 +16,9 @@ from app.canon import schemas, service
 from app.canon.models import EstatusDeHecho, TipoDeHecho
 from app.commons import errores
 from app.commons.db.conexion import Conexion
-from app.novel import service as novel
 from app.novel.models import EstadoDeEscena
 from tests.canon import fabrica
+from tests.novel import fabrica as fabrica_novel
 
 SIN_PLAZO = settings(max_examples=25, deadline=None)
 
@@ -62,7 +62,7 @@ def test_un_borrador_rechazado_no_deja_rastro_en_el_canon(
         mundo = fabrica.mundo(base)
         escena_id = mundo.escena(0)
         for paso in CAMINO_HASTA[estado]:
-            novel.transicionar_escena(base, escena_id, paso)
+            fabrica_novel.transicionar(base, escena_id, paso)
 
         antes = service.inventario_del_canon(base)
         assert antes == dict.fromkeys(antes, 0), "la base de partida no tenia canon"

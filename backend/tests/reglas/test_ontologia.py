@@ -82,8 +82,10 @@ def test_los_nombres_de_las_clases_coinciden_con_la_ontologia() -> None:
 
 def test_ningun_modelo_inventa_una_clase_que_la_ontologia_no_tiene() -> None:
     # Tipos auxiliares que no son clases del dominio: enumerados de estado y
-    # esquemas de escritura. Van con sufijo para que se distingan de un vistazo.
-    auxiliares = re.compile(r"^(Estado|Tipo|Alcance|Nueva?|Nuevo)[A-Z]")
+    # esquemas de escritura. Van con prefijo para que se distingan de un vistazo.
+    # `Modo` entro con `ModoDeAceptacion` (RF-PROC-07): distingue como se llego a
+    # `aceptada`, que es una propiedad de la transicion y no una clase.
+    auxiliares = re.compile(r"^(Estado|Tipo|Alcance|Modo|Nueva?|Nuevo)[A-Z]")
 
     for capa, fichero in MODELOS_POR_CAPA.items():
         de_la_ontologia = _clases_de_la_capa(capa)
@@ -117,7 +119,7 @@ NO_SON_CLASES = {
 }
 
 # Features ya implementadas. Las que faltan entran con su hito.
-IMPLEMENTADAS = {"novel/", "canon/", "quality/"}
+IMPLEMENTADAS = {"novel/", "canon/", "quality/", "process/"}
 
 
 def _duenas() -> dict[str, set[str]]:

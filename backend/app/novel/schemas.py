@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from app.novel.models import EstadoDeEscena
+from app.novel.models import EstadoDeEscena, EstadoDeHilo
 
 
 class _Nuevo(BaseModel):
@@ -167,3 +167,7 @@ class NuevoObjetivo(_Nuevo):
 
 class NuevaTransicion(_Nuevo):
     destino: EstadoDeEscena
+
+
+class NuevoEstadoDeHilo(_Nuevo):
+    destino: EstadoDeHilo

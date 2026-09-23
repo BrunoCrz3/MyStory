@@ -21,7 +21,7 @@ from app.commons import errores
 from app.commons.db.conexion import Conexion
 from app.novel import service
 from app.novel.models import TRANSICIONES, EstadoDeEscena
-from tests.novel.fabrica import ObraDePrueba, obra_minima, otra_escena
+from tests.novel.fabrica import ObraDePrueba, obra_minima, otra_escena, transicionar
 
 # La tabla del diagrama de `docs/domain-knowledge.md`, escrita a mano aqui: si
 # se leyera de la misma constante que implementa el codigo, la prueba solo
@@ -85,16 +85,16 @@ def test_la_escena_no_admite_transiciones_fuera_del_diagrama(base: Conexion) -> 
         par = (origen.value, destino.value)
 
         if par in DIAGRAMA:
-            service.transicionar_escena(base, escena_id, destino)
+            transicionar(base, escena_id, destino)
             assert service.obtener_escena(base, escena_id).estado is destino
         else:
             with pytest.raises(errores.TransicionInvalida):
-                service.transicionar_escena(base, escena_id, destino)
+                transicionar(base, escena_id, destino)
             assert service.obtener_escena(base, escena_id).estado is origen
 
 
 def _escena_en(base: Conexion, obra: ObraDePrueba, estado: EstadoDeEscena) -> int:
     escena_id = otra_escena(base, obra)
     for paso in CAMINO_HASTA[estado]:
-        service.transicionar_escena(base, escena_id, paso)
+        transicionar(base, escena_id, paso)
     return escena_id

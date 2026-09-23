@@ -19,7 +19,12 @@ import unicodedata
 from datetime import UTC, datetime
 
 from app.canon import models, repository, schemas
-from app.canon.models import EstadoDePromesa, EstatusDeHecho, TipoDeHecho
+from app.canon.models import (
+    VALOR_VITAL_MUERTO,
+    EstadoDePromesa,
+    EstatusDeHecho,
+    TipoDeHecho,
+)
 from app.commons.db.conexion import Conexion
 from app.commons.errores import (
     CanonSoloAlAceptar,
@@ -307,7 +312,7 @@ def snapshot_en(base: Conexion, escena_id: int) -> schemas.SnapshotDerivado:
         escena_id=escena_id,
         fecha_ficcional=None if guardado is None else guardado.fecha_ficcional,
         personajes_vivos=sorted(
-            personaje for personaje, estado in vivos.items() if estado != "muerto"
+            personaje for personaje, estado in vivos.items() if estado != VALOR_VITAL_MUERTO
         ),
         ubicaciones=ubicaciones,
         posesiones=posesiones,
@@ -394,7 +399,7 @@ def detectar_contradicciones(base: Conexion) -> list[models.Contradiccion]:
     muertos = {
         hecho.sujeto_personaje_id: hecho
         for hecho in vigentes
-        if hecho.tipo is TipoDeHecho.ESTADO_VITAL and hecho.valor == "muerto"
+        if hecho.tipo is TipoDeHecho.ESTADO_VITAL and hecho.valor == VALOR_VITAL_MUERTO
     }
     for hecho in vigentes:
         muerte = muertos.get(hecho.sujeto_personaje_id)

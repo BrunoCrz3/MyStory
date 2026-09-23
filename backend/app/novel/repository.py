@@ -146,6 +146,18 @@ def actualizar_estado_de_escena(
     return obtener(base, models.Escena, escena_id)
 
 
+def actualizar_estado_de_hilo(
+    base: Conexion, hilo_id: int, destino: models.EstadoDeHilo
+) -> models.HiloDeTrama:
+    with transaccion(base):
+        _ejecutar(
+            base,
+            "UPDATE hilo_de_trama SET estado = :estado WHERE id = :id",
+            {"estado": destino.value, "id": hilo_id},
+        )
+    return obtener(base, models.HiloDeTrama, hilo_id)
+
+
 def insertar_beat(base: Conexion, datos: schemas.NuevoBeat) -> models.Beat:
     return _insertar(
         base,

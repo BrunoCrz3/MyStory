@@ -6,8 +6,25 @@ from dataclasses import dataclass
 from itertools import count
 
 from app.commons.db.conexion import Conexion
+from app.novel import models, service
 
 _orden = count(1)
+
+
+def transicionar(base: Conexion, escena_id: int, destino: models.EstadoDeEscena) -> models.Escena:
+    """Transiciona la escena, haciendo de autor cuando toca aceptar.
+
+    RF-PROC-07 pone un guardarrail en `aceptada`: solo la da el autor humano, y
+    el defecto de `transicionar_escena` es `AUTOMATICA` para que nadie la de por
+    olvido. Las fixtures ocupan el sitio del autor a proposito, y lo dicen aqui
+    una vez en vez de relajar el guardarrail en cada prueba.
+    """
+    modo = (
+        models.ModoDeAceptacion.HUMANA
+        if destino is models.EstadoDeEscena.ACEPTADA
+        else models.ModoDeAceptacion.AUTOMATICA
+    )
+    return service.transicionar_escena(base, escena_id, destino, modo_de_aceptacion=modo)
 
 
 @dataclass(frozen=True)
