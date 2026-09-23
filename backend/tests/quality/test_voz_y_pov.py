@@ -101,3 +101,19 @@ def test_sin_corpus_suficiente_la_distintividad_no_se_puntua(base: Conexion) -> 
 
     assert medida.evaluados == 0
     assert medida.acierto is None
+
+
+def test_una_escena_sin_personajes_declarados_no_intenta_clasificar(base: Conexion) -> None:
+    """Regresion. Con la lista vacia --o con una sola voz-- no hay a quien
+    confundir, y antes se entraba igual al recuento hasta dividir por cero.
+
+    Decir 0.0 seria decir que las voces no se distinguen; lo cierto es que no
+    hay dos voces que comparar, y eso es lo que se reporta.
+    """
+    mundo = fabrica.mundo_criticable(base)
+    mundo.sembrar_dialogo_distinguible()
+
+    for presentes in ([], [mundo.ilia]):
+        medida = muestreo.clasificacion_ciega(base, presentes, mundo.escena_id)
+        assert medida.evaluados == 0
+        assert medida.acierto is None

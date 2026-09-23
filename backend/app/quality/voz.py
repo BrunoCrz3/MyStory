@@ -219,6 +219,12 @@ def clasificacion_ciega(base: Conexion, personajes: list[int], escena_id: int) -
         for fragmento in contexto.muestras_de_voz(base, [personaje], escena_id, cuantas=50):
             muestras.append((personaje, Counter(_palabras(fragmento.texto))))
 
+    # Con menos de dos voces no hay a quien confundir, asi que no hay nada que
+    # clasificar: sin este corte, una escena sin personajes presentes declarados
+    # entra en el bucle con la lista vacia y la division final revienta.
+    if len(personajes) < 2:
+        return MedidaDeVoz(evaluados=0, aciertos=0, acierto=None, azar=azar)
+
     por_voz = Counter(personaje for personaje, _ in muestras)
     if any(por_voz[personaje] < MUESTRAS_MINIMAS_POR_VOZ for personaje in personajes):
         return MedidaDeVoz(evaluados=0, aciertos=0, acierto=None, azar=azar)
