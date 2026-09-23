@@ -1,7 +1,9 @@
 ---
-estado: borrador
+estado: archivada
 aprobada-por:
 fecha: 2026-09-22
+archivada-el: 2026-09-23
+archivada-porque: describe el sistema anterior (escenas, autor humano, deriva). No se implementa.
 ---
 
 # Plan de implementación — Backend v1

@@ -92,7 +92,7 @@ frontend/src/           ▸ previsto · FSD v2.1: app/, pages/, shared/
 formal/lean/            ▸ previsto · cronología e invariantes de la historia
 formal/tla/             ▸ previsto · especificación del harness y el .cfg de TLC
 docs/                   contexto semilla y documentación de proceso (ver tabla abajo)
-docs/specs/NNN-slug/    spec.md y plan.md, ambos con frontmatter
+specs/                  specN.md y planN.md de v1, ambos con frontmatter
 config/thresholds.yaml  fuente única de cifras y umbrales
 config/models.yaml      id y effort de modelo por rol
 data/storymaker.db      ▸ previsto · base de datos, no versionada
@@ -211,7 +211,7 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Qué se decidió construir, antes de escribir código | `docs/spec-inicial.md` ▸ previsto |
 | Un concepto del curso por fichero | `docs/explainers/` ▸ previsto |
 | Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md`, `docs/browser-mcp.md` ▸ previsto |
-| Specs y planes de implementación | `docs/specs/NNN-slug/` |
+| Specs y planes de implementación | `specs/` · lo archivado, en `docs/specs/_archivo/` |
 | Skills: las de runtime que cargan los roles y las de desarrollo | `docs/architecture.md` § Skills |
 | Contrato de la API | `http://localhost:8000/openapi.json` |
 | Story bible viva (solo vía servicios de `canon/`) | `data/storymaker.db` ▸ previsto |
@@ -222,17 +222,17 @@ Cómo se cambia **este repositorio**. No confundir con el ciclo de producción d
 (Capa 5 de la ontología, feature `process/`): aquel genera capítulos, este genera código.
 
 ```
-docs/*.md  →  docs/specs/NNN-slug/spec.md  →  docs/specs/NNN-slug/plan.md  →  código
-              [aprobada]                      [aprobado]                      [TDD]
+docs/*.md  →  specs/specN.md  →  specs/planN.md  →  código
+              [aprobada]       [aprobado]        [TDD]
 ```
 
 Cada corchete es una **puerta**, no una recomendación: sin el artefacto anterior aprobado
 no se empieza el siguiente. Quien aprueba es siempre el desarrollador.
 
 **Estado de un artefacto.** Toda spec y todo plan abren con frontmatter —`estado`
-(`borrador` | `en-revision` | `aprobada`), `aprobada-por` y `fecha`—. **Nacen en `borrador`
-y solo el desarrollador los mueve a `aprobada`**; un agente nunca se aprueba a sí mismo. El
-agente lee el estado antes de continuar y, si no es `aprobada`, se detiene y lo dice.
+(`borrador` | `en-revision` | `aprobada` | `archivada`), `aprobada-por` y `fecha`—. Nacen en
+`borrador` y solo el desarrollador los mueve a `aprobada`; un agente nunca se aprueba a sí
+mismo y se detiene si no lo está. `archivada` **no se implementa**: vive en `docs/specs/_archivo/`.
 
 **Antes de escribir una spec, pregunta.** No se adivina: carga la skill `grill-me` e
 interroga al desarrollador hasta que no quede ambigüedad. Una spec con huecos no pasa a plan.
