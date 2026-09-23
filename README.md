@@ -1,4 +1,4 @@
-# MyStory1 — generador de novelas cortas de ciencia ficción
+# MyStory — generador de novelas cortas de ciencia ficción
 
 Sistema de escritura asistida que funciona dentro de Claude Code en VS Code.
 Sin claves de API y sin base de datos.
