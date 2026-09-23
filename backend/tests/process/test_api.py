@@ -59,16 +59,6 @@ def test_el_ciclo_de_una_escena_se_recorre_por_la_api(cliente: TestClient) -> No
             ],
         },
     )
-    _crear(cliente, "/process/esquema", {"motivo": "plan inicial del primer acto"})
-    esquema = cliente.get("/process/esquema").json()
-    assert esquema["restricciones_futuras"] == 1
-    assert esquema["coincide_con_el_hito"] is True
-
-    # La escena en curso: el orquestador dice que toca, el autor escribe y firma.
-    assert cliente.get(f"/process/escenas/{escrita}/paso").json()["paso"] == "redactor"
-    for destino in ("en_borrador", "en_revision"):
-        cliente.post(f"/novel/escenas/{escrita}/transicion", json={"destino": destino})
-
     _crear(
         cliente,
         "/process/briefs",
@@ -84,6 +74,16 @@ def test_el_ciclo_de_una_escena_se_recorre_por_la_api(cliente: TestClient) -> No
             ],
         },
     )
+    _crear(cliente, "/process/esquema", {"motivo": "plan inicial del primer acto"})
+    esquema = cliente.get("/process/esquema").json()
+    assert esquema["restricciones_futuras"] == 2
+    assert esquema["coincide_con_el_hito"] is True
+
+    # La escena en curso: el orquestador dice que toca, el autor escribe y firma.
+    assert cliente.get(f"/process/escenas/{escrita}/paso").json()["paso"] == "redactor"
+    for destino in ("en_borrador", "en_revision"):
+        cliente.post(f"/novel/escenas/{escrita}/transicion", json={"destino": destino})
+
     _crear(
         cliente,
         f"/process/escenas/{escrita}/versiones",

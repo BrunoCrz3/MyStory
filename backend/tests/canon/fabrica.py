@@ -103,6 +103,9 @@ class Mundo:
         }
         self._escenas: list[int] = [self._escena_nueva() for _ in range(escenas)]
         self._consumidas = 0
+        # La prosa con la que se consolido cada escena. En produccion la guarda
+        # la memoria episodica; aqui hace falta porque el extractor la lee.
+        self.textos: dict[int, str] = {}
 
     # --- escenas ----------------------------------------------------------
 
@@ -142,12 +145,13 @@ class Mundo:
         ):
             transicionar(self._base, escena_id, paso)
 
+        self.textos[escena_id] = self._texto_para(hechos, promesas or [])
         canon.consolidar_escena(
             self._base,
             canon_schemas.Consolidacion(
                 escena_id=escena_id,
                 version=1,
-                texto=self._texto_para(hechos, promesas or []),
+                texto=self.textos[escena_id],
                 fecha_ficcional=fecha_ficcional,
                 hechos=hechos,
                 promesas=[

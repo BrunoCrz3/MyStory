@@ -119,7 +119,7 @@ NO_SON_CLASES = {
 }
 
 # Features ya implementadas. Las que faltan entran con su hito.
-IMPLEMENTADAS = {"novel/", "canon/", "quality/", "process/"}
+IMPLEMENTADAS = {"novel/", "canon/", "quality/", "process/", "findings/"}
 
 
 def _duenas() -> dict[str, set[str]]:

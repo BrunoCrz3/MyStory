@@ -211,6 +211,21 @@ def restricciones_de_escenas_planificadas(base: Conexion) -> list[RestriccionDeD
     ]
 
 
+def todas_las_restricciones(base: Conexion) -> list[RestriccionDeDestino]:
+    """El plan entero, escrito o no. Es lo que identifica al plan.
+
+    No se filtra por estado de la escena a proposito: si la huella dependiera de
+    que queda por escribir, **avanzar** la moveria igual que replanificar, y la
+    distincion entre las dos cosas es justo lo que el hito de plan existe para
+    guardar. Lo que si mira solo lo no escrito es la **medida**, que es otra
+    pregunta.
+    """
+    return [
+        RestriccionDeDestino.model_validate(dict(fila))
+        for fila in base.execute("SELECT * FROM restriccion_destino ORDER BY id")
+    ]
+
+
 def restricciones_posteriores_a(base: Conexion, escena_id: int) -> list[RestriccionDeDestino]:
     """Las de los briefs que vienen despues en el discurso (P-41, RF-PROC-11)."""
     return [

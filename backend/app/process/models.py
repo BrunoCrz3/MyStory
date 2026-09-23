@@ -58,9 +58,9 @@ class ComponenteDeDeriva(StrEnum):
 class TipoDeElemento(StrEnum):
     """Que clase de cosa entro en una cuenta de la deriva.
 
-    `HALLAZGO` esta declarado y en v1 no lo produce nadie: `findings/` llega en
-    H7. Cuando llegue, los hallazgos adoptados desde el ultimo hito de plan
-    entran en `canon_huerfano` sin tocar ni el esquema ni esta enumeracion.
+    Los cuatro cuentan. `HALLAZGO` son los adoptados por el autor: un hallazgo
+    `propuesto` no es canon todavia, asi que no hay canon huerfano que contar
+    hasta que alguien decida que la novela dice eso.
     """
 
     RESTRICCION_DESTINO = "restriccion_destino"

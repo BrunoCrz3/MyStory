@@ -52,6 +52,7 @@ from app.canon import service as canon
 from app.canon.models import VALOR_VITAL_MUERTO, EstatusDeHecho
 from app.commons.config import Umbrales
 from app.commons.db.conexion import Conexion
+from app.findings import service as findings
 from app.novel import service as novel
 from app.process import repository
 from app.process.models import (
@@ -114,11 +115,18 @@ class Medida:
 
 
 def huella_del_plan(restricciones: list[RestriccionDeDestino]) -> str:
-    """Huella del conjunto de restricciones de destino aun no escritas.
+    """Huella del conjunto de restricciones de destino que el esquema declara.
 
     Es el ancla del acumulado y el detector de edicion manual del plan: en v1
     editar el esquema a mano es la unica forma de replanificar, asi que cuando
     esta huella cambia es que alguien replanifico (RF-PROC-13).
+
+    **Entran todas, escritas o no**, y no es un descuido. La propuesta hablaba
+    del «conjunto de restricciones aun no escritas», pero ese conjunto se encoge
+    por el simple hecho de escribir: con esa definicion, aceptar una escena
+    moveria la huella igual que replanificar, y el hito dejaria de distinguir
+    avanzar de cambiar de plan --que es lo unico para lo que sirve--. Lo que si
+    mira solo lo no escrito es la medida, que es otra pregunta.
 
     No entra el `id`: lo que identifica al plan es lo que declara, no en que
     orden se insertaron sus filas. Asi, reescribir una restriccion identica no
@@ -266,13 +274,14 @@ def _canon_huerfano(
 ) -> Proporcion:
     """Canon abierto que el plan vigente no puede estar recogiendo.
 
-    Denominador: todo el canon abierto en `t` --hilos de trama abiertos y
-    promesas narrativas pendientes--. Numerador: los que se abrieron **despues**
-    del ultimo hito de plan, que son los unicos de los que se puede afirmar con
-    certeza que ninguna restriccion futura recoge.
+    Denominador: todo el canon abierto en `t` --hilos de trama abiertos,
+    promesas narrativas pendientes y hallazgos adoptados--. Numerador: los que
+    aparecieron **despues** del ultimo hito de plan, que son los unicos de los
+    que se puede afirmar con certeza que ninguna restriccion futura recoge.
 
-    `Hallazgo` entra en el denominador y en el numerador cuando llegue
-    `findings/` (H7). Hasta entonces la cuenta va sin ellos, y esta escrito.
+    Un hallazgo adoptado cuenta desde la escena que lo revelo, no desde el dia
+    en que el autor lo adopto: lo que el plan no pudo prever es que la escena lo
+    descubriera, y adoptarlo tarde no lo vuelve previsible.
     """
     abiertos: list[tuple[TipoDeElemento, int, int]] = [
         (TipoDeElemento.HILO_DE_TRAMA, hilo.id, repository.apertura_de_hilo(base, hilo.id))
@@ -285,6 +294,14 @@ def _canon_huerfano(
             repository.apertura_de_promesa(base, promesa.id),
         )
         for promesa in canon.promesas_abiertas_en(base, escena_id)
+    ]
+    abiertos += [
+        (
+            TipoDeElemento.HALLAZGO,
+            hallazgo.id,
+            repository.posicion_de(base, hallazgo.escena_id),
+        )
+        for hallazgo in findings.adoptados(base)
     ]
 
     numerador = 0

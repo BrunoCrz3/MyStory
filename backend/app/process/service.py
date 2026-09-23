@@ -70,10 +70,9 @@ def fijar_hito(base: Conexion, datos: schemas.NuevoHito) -> models.Esquema:
     componente de deriva sera el valor que mejor separe «replanifico en las
     siguientes k escenas» de «no lo hizo». Sin motivo no hay etiqueta.
     """
-    futuras = repository.restricciones_de_escenas_planificadas(base)
     return repository.insertar_hito(
         base,
-        plan_hash=deriva.huella_del_plan(futuras),
+        plan_hash=deriva.huella_del_plan(repository.todas_las_restricciones(base)),
         motivo=datos.motivo,
         posicion=repository.ultima_posicion_aceptada(base),
     )
@@ -86,7 +85,7 @@ def hitos(base: Conexion) -> list[models.Esquema]:
 def esquema_declarado(base: Conexion) -> schemas.EsquemaDeclarado:
     """Que declara hoy el plan del futuro, y si alguien lo movio sin decirlo."""
     futuras = repository.restricciones_de_escenas_planificadas(base)
-    huella = deriva.huella_del_plan(futuras)
+    huella = deriva.huella_del_plan(repository.todas_las_restricciones(base))
     hito = repository.ultimo_hito(base)
     return schemas.EsquemaDeclarado(
         plan_hash=huella,
@@ -508,7 +507,7 @@ def medir_deriva(base: Conexion, umbrales: Umbrales, escena_id: int) -> schemas.
             "no hay ningun hito de plan fijado: sin el, «desde la ultima replanificacion» "
             "no tiene ancla y la deriva no se puede acumular"
         )
-    huella = deriva.huella_del_plan(repository.restricciones_de_escenas_planificadas(base))
+    huella = deriva.huella_del_plan(repository.todas_las_restricciones(base))
     if huella != hito.plan_hash:
         raise PlanCambiadoSinHito(
             "el conjunto de restricciones de destino no coincide con el del ultimo hito: "

@@ -101,7 +101,7 @@ def test_la_huella_del_plan_no_depende_del_orden_de_insercion(base: Conexion) ->
     mundo = fabrica.mundo_del_ciclo(base)
     mundo.encargar([fabrica.posicion(mundo.ilia, mundo.orilla)])
     mundo.encargar([fabrica.revelacion()])
-    declaradas = repository.restricciones_de_escenas_planificadas(base)
+    declaradas = repository.todas_las_restricciones(base)
 
     assert deriva.huella_del_plan(declaradas) == deriva.huella_del_plan(list(reversed(declaradas)))
 

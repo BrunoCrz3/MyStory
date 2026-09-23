@@ -198,3 +198,30 @@ class BriefSinRestriccionDeDestino(ReglaDelDominioIncumplida):
     tambien hacia donde va, y la deriva se quedaria sin denominador."""
 
     codigo_por_defecto = "brief_sin_restriccion_de_destino"
+
+
+class ExtraccionSinConsolidar(ConflictoDeEstado):
+    """RF-FIND-04. La extraccion ocurre **dentro** del punto unico de promocion
+    a memoria larga, y ese punto es la consolidacion. Extraer de una escena que
+    nadie consolido seria el segundo punto de promocion que la regla prohibe."""
+
+    codigo_por_defecto = "extraccion_sin_consolidar"
+
+
+class AdopcionSoloDelAutor(ErrorDeDominio):
+    """RF-FIND-02, RF-FIND-05, P-21.
+
+    Ningun hallazgo llega al canon sin adopcion explicita del autor, **incluido
+    el que provenga de texto con instrucciones inyectadas**. Es el ultimo
+    cortafuegos, y por eso no se relaja «para agilizar» la adopcion.
+    """
+
+    http = 403
+    codigo_por_defecto = "adopcion_solo_del_autor"
+
+
+class AdopcionSinDestino(ReglaDelDominioIncumplida):
+    """Un hallazgo adoptado dice **como que** se adopta: un hecho canonico, una
+    promesa, un motivo o un personaje. Sin eso seria una nota al margen."""
+
+    codigo_por_defecto = "adopcion_sin_destino"

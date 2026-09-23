@@ -27,6 +27,7 @@ from app.commons.http import registrar_manejadores
 from app.commons.tokens.en_vuelo import PoolEnVuelo
 from app.context import service as contexto
 from app.context.router import router as router_de_context
+from app.findings.router import router as router_de_findings
 from app.novel.router import router as router_de_novel
 from app.process.orquestador import CerrojoDeGeneracion
 from app.process.router import router as router_de_process
@@ -79,6 +80,7 @@ app.include_router(router_de_canon)
 app.include_router(router_de_context)
 app.include_router(router_de_quality)
 app.include_router(router_de_process)
+app.include_router(router_de_findings)
 
 
 @app.get("/salud")
