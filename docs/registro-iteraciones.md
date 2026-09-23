@@ -516,3 +516,186 @@ completa hasta que alguien intenta dibujarla.
 
 **Sigue pendiente**: `docs/verification.md`, que tiene 36 referencias a `AGENTS.md`, sigue
 hablando de escenas y deriva, y ahora además carga la sección aparcada que debe consumir.
+
+---
+
+## RI-007 — `docs/verification.md` se regenera sobre el alcance de storyMaker
+
+**Fecha:** 2026-09-23 · **Ficheros:** `docs/verification.md`,
+`.claude/skills/plan-de-verificacion/SKILL.md`, `docs/trade-offs.md`,
+`docs/audits/001-coherencia-ontologia.md`
+
+### Causa
+
+`verification.md` era el último documento del sistema anterior. Sus 105 filas hablaban de
+escenas, de deriva, de novum y de un autor humano que decidía; tenía **36 referencias a
+secciones de `AGENTS.md`** que dejaron de existir con TO-002; y cargaba desde RI-006 la
+sección «Entrada para la regeneración», con los nombres de score y de span que la ontología
+soltó al quedarse solo con el vocabulario.
+
+Además arrastraba el segundo hallazgo diferido de la auditoría 001: `CLAUDE.md` prometía que
+este fichero dice «qué valida cada validador, dónde corre y con qué score», y el fichero
+tenía **cero** apariciones de «score», «punto de ejecución», «Langfuse» y «hook de».
+
+### Qué cambió
+
+**El documento pasa de 105 filas a 228, repartidas en cuatro niveles.** Artefacto 97,
+Proceso 47, **Obra** 64 y **Entregables** 20; 163 obligatorias, 64 recomendadas y una
+exploratoria. Los dos niveles nuevos y la enmienda a la skill que los admite son TO-029.
+
+**Cada fila gana cuatro columnas**: punto de ejecución —los cinco de la Capa 4 más
+`CI/desarrollo`—, score en Langfuse, prioridad y coste. Y el documento abre con un **índice
+de validadores con nombre** que apunta a las filas sin copiarlas: es la tabla de validadores
+con su punto de ejecución que pide el alcance §5, y es la que `architecture.md` enlaza en vez
+de duplicar (TO-018).
+
+**Se conservan 44 filas de artefacto y 12 de proceso**, reescritas con la ontología nueva
+—capítulo en vez de escena, `novel_id`, Comprador y Lector, story bible—. Once se
+transforman y cambian de identificador porque cambian de significado, y **treinta y siete se
+retiran**, cada una con su motivo trazado: la deriva entera (TO-006), el novum, el sentido de
+la maravilla, `training_samples` y todo lo que presuponía un autor humano en producción.
+
+**Lo que no tiene criterio de aprobado no desaparece: baja a § Lo que no se puede
+verificar.** Mostrar frente a contar, carga expositiva y originalidad van ahí enteras;
+curva de tensión y causalidad se quedan en las tablas con un proxy estructural —promesas
+pendientes e hilos que avanzan— y solo su residuo estético baja. La consistencia epistémica
+sobrevive como `O-33`, **sin parte programática**, porque la ontología no modela qué sabe
+cada personaje: es una de las tres inconsistencias de personaje que el comprador nombra.
+
+**El punto ciego del acuerdo crítico–autor se convierte en fila.** `P-85` mide el acuerdo
+entre el `judge` y el `Revisor humano` criterio a criterio, y como los dos puntúan **por
+capítulo**, una novela da diez parejas por criterio en vez de una. El residuo que queda
+declarado es que las diez salen del mismo texto: miden acuerdo en esta novela, no en el
+sistema.
+
+**Cuatro validadores nuevos entran con score provisional** y dos más aparecieron al
+generar: `invencion_destinatario` y `temas_excluidos` como obligatorios, `reglas_mundo` y
+`legibilidad` como recomendados, y `estructura_edicion` y `regeneracion_fiel` porque seis
+filas obligatorias del alcance —diez capítulos, títulos únicos, y las tres de la
+regeneración— emitían un score que no existía. Los seis van marcados ⚠ y **su nombre no se
+escribe en código** hasta que la ontología los ratifique: son PO-1 a PO-3 y PO-7 a PO-9 de
+§ Propuestas de cambio.
+
+**«Filas pendientes de ontología» deja de existir como sección.** Decía que
+`definitions.md` lo edita otro y que este repositorio exporta; desde TO-001 eso es falso. En
+su lugar hay **propuestas de cambio**, que es lo que son: cambios que este documento no hace
+por su cuenta porque tocar la ontología lleva su propia entrada y su propio commit.
+
+**La sección «Entrada para la regeneración» se consumió y se borró.** Los veinte nombres de
+score están en el índice y en la columna Score; los catorce de span y traza, en las filas de
+observabilidad `P-68` a `P-73`.
+
+### Efecto
+
+**Comprobado sobre el fichero generado**: las 228 referencias cruzadas de «Cubierto por» y
+«Punto ciego» resuelven a una fila existente; los cuatro `NADIE` están los cuatro en
+§ Puntos ciegos sin cubrir; cada requisito del alcance de la tabla de trazabilidad tiene al
+menos una fila `obligatorio`; y no queda ningún término de la ontología antigua fuera del
+sitio donde el término **es el sujeto** —la lista cerrada de `E-15` y la explicación de por
+qué la spec 001 está obsoleta—.
+
+**Las referencias a `AGENTS.md` pasan de 36 a una**, y esa una es legítima por el mismo
+criterio que la auditoría 001 fijó para `trade-offs.md` y el registro: está en § Pendientes,
+diciendo que la spec 001 cita `AGENTS.md` entre sus documentos de referencia. Es el sujeto
+del que se habla, no un puntero.
+
+**Los dos hallazgos que la auditoría 001 difirió a esta tarea quedan cerrados**, y el
+puntero de `CLAUDE.md` § Dónde está cada cosa —«qué valida cada validador, dónde corre y con
+qué score»— pasa a ser cierto.
+
+**Lo que enseña este cambio.** Las dos dimensiones que más valen del documento nuevo no
+salieron de barrer la ontología sino de leer lo que el cliente teme: `invencion_destinatario`
+—un hecho personal inventado sobre una persona real, que la consistencia fáctica **no
+detecta porque el canon lo absorbió al extraerlo**— y el reparto de los elementos
+personalizados. Ninguna de las dos estaba en la Capa 4. Una ontología completa describe el
+sistema que se diseñó; el catálogo de modos de fallo describe el que se va a usar.
+
+**Sigue pendiente**: `docs/specs/001-backend-v1/` está `aprobada` y obsoleta, y el
+frontmatter del ciclo de cambio **no tiene un estado para eso**. Hay que archivarla o añadir
+el estado antes de escribir la primera línea de código, que es cuando la puerta se consulta.
+
+---
+
+## RI-008 — El repositorio se prepara para la spec del backend
+
+**Fecha:** 2026-09-23 · **Ficheros:** `CLAUDE.md`, `docs/architecture.md`,
+`docs/definitions.md`, `docs/domain-knowledge.md`, `docs/verification.md`,
+`docs/requerimientos/alcance-proyecto.md`, `config/thresholds.yaml`, `.env.example`,
+`.gitignore`, `specs/`, `docs/specs/_archivo/`
+
+### Causa
+
+La demo de backend y frontend es en dos días, y para escribir la spec había tres cosas que
+estorbaban. Una spec `aprobada` que describe el sistema anterior y que cualquier agente
+tomaría por trabajo pendiente. Una configuración con veintiocho umbrales en `null`, que
+hace fallar el arranque en voz alta en cuanto alguien pida uno para cerrar el paso. Y doce
+propuestas de ontología que `verification.md` había levantado sin aplicar, seis de ellas
+sosteniendo filas obligatorias con un nombre de score que no existía.
+
+### Qué cambió
+
+**Las specs de v1 viven en `specs/`, y lo obsoleto no se borra.** La convención pasa de
+`docs/specs/NNN-slug/spec.md` a `specs/specN.md` con su `planN.md` al lado, sin carpetas.
+`docs/specs/001-backend-v1/` se movió a `docs/specs/_archivo/` con **`estado: archivada`**,
+un cuarto estado del frontmatter que `CLAUDE.md` § Ciclo de cambio declara **no
+implementable**. No se borró: el registro y `trade-offs.md` la citan, y borrarla dejaría sin
+contexto a entradas que explican por qué el sistema es como es. `CLAUDE.md` se queda en
+**299 líneas** absorbiendo el cambio en el párrafo del frontmatter, sin mover detalle.
+
+**Diez de las doce propuestas de ontología se aplican.** `definitions.md` Capa 4 gana seis
+dimensiones —`invencion_destinatario`, `temas_excluidos`, `reglas_mundo`, `legibilidad`,
+`estructura_edicion` y `regeneracion_fiel`— y dos clases, `Defecto inyectado` y `Brief de
+prueba`, con **dos preguntas de competencia nuevas** para que no nazcan huérfanas: las
+preguntas pasan de 33 a 35. El `alcance` de una `Restricción de destino` deja de ser texto
+libre y pasa a ser la lista explícita de entidades, promesas e hilos que toca, que es lo que
+hace resoluble por consulta la invalidación. `architecture.md` declara que el backend escucha
+solo en la interfaz local mientras no haya autenticación, y los dos mapas de validadores
+—ontología y arquitectura— recogen los seis scores nuevos.
+
+**PO-11 y PO-12 no se aplican y se dicen.** El coste de desplazamiento entre `Lugar` y el
+estado epistémico de un personaje no son cambios mecánicos: cada uno decide qué dato entra
+por el brief y qué extrae el extractor, y cada uno ensancha Lean o la extracción. Aplicarlos
+a ojo para vaciar la lista habría sido peor que dejarlos abiertos.
+
+**La configuración deja de tener umbrales en `null`.** Cuarenta y tres claves —las quince
+nuevas y las veintiocho que estaban vacías— reciben valor, **todas marcadas
+`[provisional — calibrar tras la demo]` y con el criterio con que se eligieron escrito al
+lado**. Se fija además algo que faltaba y sin lo cual ningún umbral significaba nada: la
+escala de los scores semánticos es 0.00–1.00. `legibilidad` es la excepción declarada, que
+usa el índice INFLESZ y sube su exigencia con destinatarios menores de doce años.
+
+**Quedan tres `null`, y ninguno cierra el paso.** `embeddings.version` y
+`embeddings.dimension` están inactivos en v1 (C-1, TO-015) y no los lee nadie.
+`formal.lean_timeout_segundos` sigue bloqueado porque **el gate de Lean queda fuera de la
+demo**: no hay toolchain instalada, así que entra `formal.gate_activo: false`. La
+consecuencia se declara en el propio fichero y en `verification.md`: con el gate apagado,
+`lean_cronologia`, `lean_ubicacion` y `lean_edad` no se ejecutan y la demo publica versiones
+sin demostración de cronología.
+
+**C-1, C-2 y C-3 aplicadas.** El bloque de embeddings queda marcado inactivo, la cabecera de
+`config/thresholds.yaml` deja de apuntar a `AGENTS.md`, y el alcance también.
+
+**Secretos.** Se barrió el historial completo —179 commits— con los patrones de clave de
+Anthropic, OpenAI, GitHub, AWS, Slack, Stripe, JWT y bloques PEM: **cero coincidencias
+reales**. Lo único que aparece es `TU_CLAVE_AQUI` y referencias `${{ secrets.* }}` en un
+`BUILD_SPEC.md` de la etapa anterior del repositorio. Se crean `.env.example` con los
+**nombres** de las siete variables que el sistema leerá y sin un solo valor, y `.gitignore`,
+que ignora `.env` y versiona la plantilla. Comprobado con `git check-ignore`.
+
+### Efecto
+
+**Comprobado**: `config/thresholds.yaml` parsea, las siete capas más el margen siguen
+sumando `contexto.total`, y el invariante de arranque se cumple —`margen` = 6000 es mayor o
+igual que el `max_tokens` de los seis roles, con el redactor y el editor justo en el límite—.
+`.env` está ignorado y `.env.example` no. `CLAUDE.md` sigue en 299 líneas. Las marcas ⚠ de
+`verification.md` desaparecen: eran seis y ahora son cero.
+
+**Lo que enseña este cambio.** Las dos propuestas que no se aplicaron son las dos que
+nacieron de un punto ciego y no de un requisito: `O-14` y `O-33` seguirán descubiertas
+después de la demo, y eso está bien dicho en su fila. Las diez que sí se aplicaron eran
+todas consecuencia de que el alcance pedía algo que la ontología no nombraba. Una ontología
+se queda corta por donde el encargo aprieta, no por donde el diseño es elegante.
+
+**Sigue pendiente**: PO-11 y PO-12; encender el gate de Lean cuando haya toolchain; y
+calibrar los cuarenta y tres umbrales provisionales con el primer corpus, que es lo que
+`medicion.cerrar_el_paso: false` está esperando.

@@ -1,6 +1,6 @@
 # Fuente única de números del sistema.
 #
-# Los documentos (AGENTS.md, docs/) describen las capas, las dimensiones y la política
+# Los documentos (CLAUDE.md, docs/) describen las capas, las dimensiones y la política
 # de degradación. Las cifras viven aquí y solo aquí: si un número aparece a la vez en un
 # documento y en este fichero, el documento está mal.
 #
@@ -81,7 +81,9 @@ contexto:
   # Ventana deslizante del anticontexto, en capítulos. Cuánto se recuerda antes de
   # olvidar. Con diez capítulos el valor tiene poco recorrido, pero la regla se mantiene:
   # un anticontexto que recuerda la novela entera acaba vetando su propio vocabulario.
-  anticontexto_ventana_capitulos: null   # [histórico]
+  anticontexto_ventana_capitulos: 3      # [provisional — calibrar tras la demo] con diez capítulos,
+                                         # recordar los tres últimos evita que la novela acabe
+                                         # vetando su propio vocabulario
 
 # ---------------------------------------------------------------------------
 # Presupuesto en vuelo
@@ -126,8 +128,8 @@ orquestacion:
   max_intentos_capitulo: 3         # [decisión] TO-014 · contador acumulativo; peor caso 4 generaciones
   max_intentos_trabajo: 3          # [decisión] TO-014 · fallo de infraestructura; no gasta del anterior
   backoff:
-    base_segundos: null           # [decisión]
-    factor: null                  # [decisión]
+    base_segundos: 2              # [provisional — calibrar tras la demo] 2s, 4s, 8s con jitter;
+    factor: 2                     # con max_intentos_trabajo=3 el peor caso son ~14s de espera
     jitter: true
 
 # ---------------------------------------------------------------------------
@@ -183,22 +185,85 @@ medicion:
 #
 # Aquí solo están las dimensiones que necesitan un NÚMERO. Las que deciden por sí o por
 # no —`schema_valido`, `palabras_prohibidas`, `nombres_exactos`, `elementos_obligatorios`,
-# `lean_cronologia`, `lean_ubicacion`, `lean_edad`, `render_visual`— no tienen entrada:
-# un booleano no se calibra. `longitud` tampoco: su rango está en `capitulo`, arriba.
+# `reglas_mundo`, `estructura_edicion`, `regeneracion_fiel`, `lean_cronologia`,
+# `lean_ubicacion`, `lean_edad`, `render_visual`— no tienen entrada: un booleano no se
+# calibra. `longitud` tampoco: su rango está en `capitulo`, arriba.
 #
-# Las programáticas son [mutación]; las semánticas esperan a que haya distribución.
+# TODOS LOS VALORES DE ESTA SECCIÓN SON [provisional — calibrar tras la demo]. Ninguno
+# sale de una medición: salen de decidir con qué error prefiere fallar el sistema mientras
+# no haya corpus. El criterio va clave a clave, porque un número sin criterio no se puede
+# revisar después: solo se puede volver a inventar.
+#
+# La escala es 0.00–1.00 para todo score semántico y para los programáticos que puntúan
+# en vez de contar. Se fija aquí porque la rúbrica no la declaraba y sin ella los umbrales
+# no significan nada.
 
 calidad:
-  consistencia_factica: null        # [mutación]
-  calidad_prosa: null               # [mutación]
-  integridad_pov: null              # [mutación]
-  cumplimiento_brief: null          # [mutación]
-  personalizacion_natural: null     # [histórico] semántica, con rúbrica
-  reconocibilidad: null             # [histórico] semántica, contrastada con revisión humana
-  adecuacion_tono: null             # [histórico] semántica
-  coherencia_personajes: null       # [histórico] semántica
-  ritmo: null                       # [histórico] semántica
-  cierre_arco: null                 # [histórico] parte semántica; la programática es exacta
+  # [provisional — calibrar tras la demo] Casi booleana: una contradicción con el canon es
+  # un defecto, no una cuestión de grado. Alto a propósito, y el falso positivo es barato
+  # porque la corrección la hace el editor sin intervención.
+  consistencia_factica: 0.90
+
+  # [provisional — calibrar tras la demo] Tolerante: es un agregado de ecos, muletillas y
+  # clichés, y en la demo interesa más que la novela salga que apurar la prosa. Las
+  # métricas finas viven en `prosa`, abajo.
+  calidad_prosa: 0.70
+
+  # [provisional — calibrar tras la demo] Alta pero no máxima: la persona y el tiempo
+  # verbal se detectan sobre la narración y el diálogo los mezcla legítimamente, así que
+  # un 1.00 suspendería capítulos correctos con mucho diálogo.
+  integridad_pov: 0.85
+
+  # [provisional — calibrar tras la demo] Los tres tipos de restricción de destino se
+  # cotejan contra el snapshot; se deja margen para el capítulo que cumple su destino por
+  # una vía que el cotejo no reconoce.
+  cumplimiento_brief: 0.80
+
+  # [provisional — calibrar tras la demo] Semántica, sin distribución todavía. Se sitúa
+  # justo por encima del punto medio: por debajo de 0.70 la personalización se nota
+  # pegada, y exigir más sin corpus produciría reescrituras en cadena.
+  personalizacion_natural: 0.70
+
+  # [provisional — calibrar tras la demo] Mismo criterio, y además es la dimensión que el
+  # revisor humano contrasta: conviene que el judge no sea más exigente que la persona
+  # mientras no se haya medido el acuerdo.
+  reconocibilidad: 0.70
+
+  # [provisional — calibrar tras la demo] Algo más alto que las dos anteriores porque el
+  # tono inadecuado para la edad o la ocasión es el fallo que más se nota en un regalo, y
+  # el nivel `perfil` del guardrail solo cubre su parte léxica.
+  adecuacion_tono: 0.75
+
+  # [provisional — calibrar tras la demo] El comprador lo nombra explícitamente como
+  # inconsistencia inaceptable; por encima de la media, por debajo de lo casi booleano,
+  # porque la coherencia de un personaje admite grados y el juicio es de modelo.
+  coherencia_personajes: 0.75
+
+  # [provisional — calibrar tras la demo] El más bajo de los semánticos: el judge puntúa
+  # el ritmo capítulo a capítulo y el ritmo es una propiedad de la obra entera, así que su
+  # lectura es la menos fiable de las seis. Suspender por ella sería suspender por ruido.
+  ritmo: 0.65
+
+  # [provisional — calibrar tras la demo] Solo la mitad semántica. La programática es
+  # exacta y vive en `continuidad.promesas_pendientes_al_cerrar`, que es cero.
+  cierre_arco: 0.80
+
+  # [provisional — calibrar tras la demo] PO-1. Cuenta hechos, no puntúa: CERO hechos
+  # personales sobre el destinatario que no vengan del brief o del texto libre. Es el
+  # fallo más grave del sistema en un regalo y no admite umbral blando.
+  invencion_destinatario: 0
+
+  # [provisional — calibrar tras la demo] PO-2. Cuenta apariciones: cero. Un tema que el
+  # comprador vetó no aparece «poco».
+  temas_excluidos: 0
+
+  # [provisional — calibrar tras la demo] PO-7. NO es 0–1: es el índice INFLESZ para
+  # español, donde más alto es más fácil de leer. 60 es «normal», el registro de una
+  # novela adulta. El validador SUBE la exigencia a 80 —«bastante fácil»— cuando
+  # `destinatario.edad` es menor de 12, que es el único caso en que la legibilidad decide
+  # si el regalo se puede leer.
+  legibilidad_inflesz_minimo: 60
+  legibilidad_inflesz_minimo_infantil: 80
 
 # ---------------------------------------------------------------------------
 # Continuidad y estructura
@@ -208,22 +273,114 @@ calidad:
 
 continuidad:
   promesas_pendientes_al_cerrar: 0      # [alcance] «sin final abrupto»: cero, no un umbral
-  capitulos_sin_avanzar_arco: null      # [histórico]
-  capitulos_sin_avanzar_hilo: null      # [histórico]
-  similitud_capitulo_duplicado: null    # [mutación]
-  repeticion_descripcion_entidad: null  # [mutación] medida al consolidar
-  deriva_estilo_vs_linea_base: null     # [mutación]
+
+  # [provisional — calibrar tras la demo] Con diez capítulos, un arco que pasa tres sin
+  # avanzar se ha comido el 30 % de la novela. Dos deja margen a un capítulo de respiro.
+  capitulos_sin_avanzar_arco: 2
+
+  # [provisional — calibrar tras la demo] Uno más que el arco: un hilo secundario puede
+  # esperar más que la trayectoria del protagonista sin que el lector lo note.
+  capitulos_sin_avanzar_hilo: 3
+
+  # [provisional — calibrar tras la demo] Similitud coseno entre capítulos. Por encima de
+  # 0.85 dos capítulos de la misma novela, con los mismos personajes y el mismo tono,
+  # están contando lo mismo. Por debajo, el parecido es de familia y no de copia.
+  similitud_capitulo_duplicado: 0.85
+
+  # [provisional — calibrar tras la demo] Se mide al consolidar, comparando la descripción
+  # nueva de una entidad con las ya registradas. Más estricto que el duplicado de capítulo
+  # porque re-describir a un personaje con las mismas palabras cansa antes.
+  repeticion_descripcion_entidad: 0.80
+
+  # [provisional — calibrar tras la demo] Distancia máxima al estilo de los capítulos ya
+  # aceptados. 0.25 tolera que la novela evolucione y caza el capítulo que parece de otro
+  # libro. Ojo con el sesgo declarado: si la novela empezó floja, premia seguir floja.
+  deriva_estilo_vs_linea_base: 0.25
+
+  # [provisional — calibrar tras la demo] PO/O-17. Fracción mínima de capítulos que
+  # contienen al menos un elemento personalizado. 0.60 son seis de diez: por debajo, la
+  # personalización está concentrada y el resto de la novela podría ser de cualquiera.
+  dispersion_elementos_personalizados: 0.60
+
+  # [provisional — calibrar tras la demo] Coeficiente de variación máximo de la longitud
+  # entre capítulos. Con el rango de 1.000–1.500 palabras, 0.20 es holgado: sirve para
+  # cazar el capítulo que se quedó a medias, no para uniformar la novela.
+  varianza_longitud_entre_capitulos: 0.20
+
+# ---------------------------------------------------------------------------
+# Prosa
+# ---------------------------------------------------------------------------
+# Los linters de prosa que alimentan `calidad.calidad_prosa`. Todos son
+# [provisional — calibrar tras la demo]: ninguno sale de medir el corpus, porque no hay
+# corpus. Las densidades van por cada 1.000 palabras, que es entre dos tercios y un
+# capítulo entero.
+
+prosa:
+  # Repeticiones admitidas de un mismo 5-grama entre capítulos distintos. Dos tolera la
+  # coletilla de un personaje; tres ya es el modelo repitiéndose.
+  repeticion_ngramas: 2
+
+  # Muletillas por cada 1.000 palabras, contra lista cerrada. Tres deja pasar el tic de
+  # voz y caza el relleno.
+  densidad_muletillas: 3.0
+
+  # Clichés y giros típicos de texto generado por cada 1.000 palabras. Más estricto que
+  # las muletillas: un cliché no es voz de nadie.
+  densidad_cliches: 2.0
+
+  # Adverbios en -mente por cada 1.000 palabras. Ocho es generoso para el español, donde
+  # son más naturales que en inglés; el objetivo es el abuso, no el uso.
+  densidad_adverbios: 8.0
+
+  # Coeficiente de variación MÍNIMO de la longitud de frase. Es el único umbral que se
+  # exige por abajo: la prosa mecánica se reconoce porque todas las frases miden igual.
+  varianza_longitud_frase: 0.40
 
 # ---------------------------------------------------------------------------
 # Medida de los validadores
 # ---------------------------------------------------------------------------
-# Mínimos que ha de alcanzar cada validador sobre el corpus de defectos inyectados. Es
-# el umbral que hace que los demás umbrales signifiquen algo: un validador por debajo de
-# esto no aprueba ni suspende, adivina.
+# Mínimos que ha de alcanzar cada validador sobre el corpus de `Defecto inyectado`. Es el
+# umbral que hace que los demás umbrales signifiquen algo: un validador por debajo de esto
+# no aprueba ni suspende, adivina.
 
 validadores:
-  precision_minima: null                # [decisión]
-  cobertura_minima: null                # [decisión]
+  # [provisional — calibrar tras la demo] Un falso positivo cuesta una reescritura; un
+  # falso negativo se va en la novela. Por eso la precisión se exige más alta que la
+  # cobertura: es preferible reescribir de más a publicar un defecto.
+  precision_minima: 0.80
+  cobertura_minima: 0.70
+
+  # [provisional — calibrar tras la demo] Cobertura de la suite de pruebas. 0.70 es lo que
+  # se puede sostener en dos días sin escribir pruebas de adorno para subir el número.
+  cobertura_tests_minima: 0.70
+
+  # [provisional — calibrar tras la demo] Correlación de Spearman entre el judge y el
+  # revisor humano, criterio a criterio, sobre las diez parejas que da una novela. 0.60 es
+  # acuerdo moderado: por debajo, el judge y la persona no están midiendo lo mismo. Con
+  # n=10 y una sola novela es un indicio, no una medida.
+  acuerdo_minimo_judge_humano: 0.60
+
+  # [provisional — calibrar tras la demo] Desviación máxima del judge ante la misma
+  # entrada, en la escala 0–1. Por encima de 0.10 la puntuación depende más del muestreo
+  # que del capítulo, y ningún umbral de `calidad` significa nada.
+  tolerancia_estabilidad_judge: 0.10
+
+# ---------------------------------------------------------------------------
+# Coste y latencia
+# ---------------------------------------------------------------------------
+# Topes por novela completa. No cierran el paso de un capítulo: detienen la generación y
+# lo informan, como cualquier otro límite de `CLAUDE.md` regla 14.
+
+coste:
+  # [provisional — calibrar tras la demo] Treinta minutos para diez capítulos en serie más
+  # el gate. Sale de la demo, no de una medición: por encima de eso no se puede enseñar en
+  # directo. Se revisa con la primera novela real cronometrada.
+  latencia_maxima_novela: 1800
+
+  # [provisional — calibrar tras la demo] Dólares por novela. Diez capítulos con el
+  # redactor en el modelo alto, más judge y editor, más reintentos. Es un tope de
+  # seguridad para que un bucle caro se detenga solo, no una estimación del coste real.
+  coste_maximo_novela: 8.0
 
 # ---------------------------------------------------------------------------
 # Salida del modelo por rol
@@ -236,15 +393,19 @@ validadores:
 # max_tokens, así que el margen solo cubre la respuesta si esa desigualdad se cumple. Si
 # no se cumple, el arranque falla en voz alta: un margen corto no da un error claro, da
 # respuestas truncadas a mitad de capítulo que parecen un problema de calidad.
+#
+# Todos son [provisional — calibrar tras la demo] y NINGUNO supera `margen` = 6000. El
+# criterio común: un capítulo de 1.500 palabras en español ronda los 2.100 tokens, así que
+# lo que sobra hasta el tope es espacio de razonamiento.
 
 modelo:
   max_tokens_por_rol:
-    entrevistador: null   # [decisión] pendiente de fijar junto con el margen
-    planificador: null    # [decisión]
-    redactor: null        # [decisión] el mayor de los seis: escribe el capítulo entero
-    editor: null          # [decisión]
-    judge: null           # [decisión] solo puntuaciones y justificaciones
-    extractor: null       # [decisión]
+    entrevistador: 2000   # [provisional] turnos de conversación y el brief estructurado; nunca prosa larga
+    planificador: 4000    # [provisional] diez briefs de capítulo con su restricción de destino, de una vez
+    redactor: 6000        # [provisional] el mayor de los seis: 2.100 de capítulo más razonamiento. Igual al margen
+    editor: 6000          # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
+    judge: 3000           # [provisional] seis puntuaciones con su justificación, sin prosa
+    extractor: 3000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto
 
 # ---------------------------------------------------------------------------
 # Verificación formal
@@ -252,14 +413,20 @@ modelo:
 # TO-016. El gate es lo único que bloquea; el chequeo incremental por capítulo es un
 # aviso temprano y no detiene nada.
 #
-# El timeout está en null a propósito y no por olvido: NO HAY TOOLCHAIN LEAN en la
-# máquina de desarrollo, así que el coste está estimado y no medido. Se fija midiendo,
-# no decidiendo. Restricción de diseño que lo condiciona: el fichero .lean generado no
-# importa Mathlib, que es lo que mantiene el build en segundos.
+# EL GATE DE LEAN QUEDA FUERA DE LA DEMO. No hay toolchain Lean instalada, así que el
+# coste de una demostración sigue sin medir y el timeout sigue sin fijar: se fija
+# midiendo, no decidiendo. Con `gate_activo: false` el sistema no lo pide, y por eso
+# `lean_timeout_segundos` puede seguir en null sin bloquear nada.
+#
+# Consecuencia que hay que decir en voz alta: con el gate apagado, `lean_cronologia`,
+# `lean_ubicacion` y `lean_edad` NO se ejecutan y NO cierran el paso, así que la demo
+# publica versiones sin demostración de cronología. Volver a `true` es la primera tarea
+# después de instalar la toolchain.
 
 formal:
+  gate_activo: false             # [provisional — calibrar tras la demo] sin toolchain Lean instalada
   lean_incremental: true         # [decisión] TO-016 · aviso por capítulo, no bloqueante
-  lean_timeout_segundos: null    # [bloqueado] TO-016 · falta medirlo con la toolchain instalada
+  lean_timeout_segundos: null    # [bloqueado] TO-016 · falta medirlo; irrelevante mientras gate_activo sea false
 
 # ---------------------------------------------------------------------------
 # Export a PDF
@@ -270,7 +437,10 @@ formal:
 # web y el paginado del PDF por guionado y saltos.
 
 export:
-  tolerancia_recuento_palabras: null   # [decisión] TO-025 · desviación admitida por capítulo
+  # [provisional — calibrar tras la demo] 2 % por capítulo. Sobre 1.000 palabras son
+  # veinte: suficiente para absorber guionado y saltos de página, poco para que se cuele
+  # un párrafo perdido en el export.
+  tolerancia_recuento_palabras: 0.02
 
 # ---------------------------------------------------------------------------
 # Comprobación del modelo del harness
@@ -285,15 +455,22 @@ modelo_formal:
   reintentos: 2     # [alcance] §5d
 
 # ---------------------------------------------------------------------------
-# Recuperación y embeddings
+# Recuperación
 # ---------------------------------------------------------------------------
-# Modelo multilingüe local. Que un cambio de modelo o de versión obligue a reindexar no
-# es configurable: es una regla, no un ajuste.
-
-embeddings:
-  modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
-  version: null           # versión concreta del modelo; se fija al elegir el artefacto
-  dimension: null         # debe coincidir con la declarada en la tabla vec0
+# C-1. LA BÚSQUEDA VECTORIAL NO SE USA EN v1 (TO-015): la novela entera cabe en el
+# presupuesto de la capa Recuperado, así que la recuperación es un filtro relacional por
+# las entidades del brief de capítulo y nada más. El bloque `embeddings` se conserva
+# porque el día que vuelva el índice vectorial estas son las claves que hay que fijar, y
+# borrarlo obligaría a redescubrirlas; **en v1 no lo lee nadie**.
 
 recuperacion:
-  max_fragmentos: null    # [decisión] tope antes de ordenar por similitud
+  # [provisional — calibrar tras la demo] Tope de fragmentos que la capa Recuperado
+  # ensambla tras filtrar por entidades. Doce cubre con holgura las entidades de un
+  # capítulo sin acercarse al presupuesto de la capa, que es el que manda de verdad.
+  max_fragmentos: 12
+
+embeddings:
+  # INACTIVO EN v1 (C-1, TO-015). No se lee; se conserva como plantilla.
+  modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
+  version: null           # [inactivo en v1] versión concreta del modelo
+  dimension: null         # [inactivo en v1] debe coincidir con la declarada en la tabla vec0

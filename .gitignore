@@ -1,0 +1,35 @@
+# Secretos: solo se versiona la plantilla
+.env
+.env.*
+!.env.example
+
+# Base de datos y datos generados
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node y frontend
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Lean y TLA+
+formal/lean/.lake/
+formal/lean/build/
+formal/tla/states/
+*.toolbox/
+
+# Salidas locales que no son entregable
+.DS_Store
+*.log

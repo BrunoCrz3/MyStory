@@ -2,7 +2,7 @@
 
 > Documento de producto, transcrito literalmente del encargo del autor humano.
 >
-> No es un artefacto del ciclo de cambio (`AGENTS.md` § Ciclo de cambio): no lleva
+> No es un artefacto del ciclo de cambio (`CLAUDE.md` § Ciclo de cambio): no lleva
 > frontmatter ni requiere aprobación para usarse como contexto. La numeración de
 > secciones se conserva tal cual para que otros documentos puedan citarla por número.
 
