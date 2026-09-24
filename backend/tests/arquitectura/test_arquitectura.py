@@ -131,3 +131,15 @@ def test_meta_ejecucion_caza_eval_os_system_y_procesos(tmp_path: Path) -> None:
     ]
     (raiz / "quality" / "malo.py").write_text("\n".join(codigo), encoding="utf-8")
     assert len(c.violaciones_ejecucion(raiz)) == 3
+
+
+def test_solo_lectura_py_conoce_los_selectores_de_la_lectura() -> None:
+    """P46: el contrato de lectura es un único dato; ningún otro módulo de `app/` escribe
+    `data-testid`."""
+    fuera = [
+        f.relative_to(c.RAIZ_APP).as_posix()
+        for f in c.RAIZ_APP.rglob("*.py")
+        if "data-testid" in f.read_text(encoding="utf-8")
+        and f.relative_to(c.RAIZ_APP).as_posix() != "versioning/lectura.py"
+    ]
+    assert fuera == []

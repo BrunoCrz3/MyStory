@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P46 · Contrato de lectura como dato |
+| Paso actual | P47 · `render_visual` con Playwright MCP |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P45 |
+| Último commit de paso | P46 |
 
 ## Coste real
 
@@ -83,10 +83,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P43** — Camino `Regenerando` del orquestador: fila nueva en la versión objetivo solo para los afectados (la vieja se queda `Obsoleto`), canon de la fila vieja retirado desde esa versión salvo lo que usa un no afectado, aviso del cambio al redactor, `CerrarRegeneracion`, gate y publicación; snapshot derivado por versión; `regeneracion_fiel` en el gate desde la versión 2 (cambian exactamente los obsoletos y la anterior conserva su hash); la solicitud queda `aplicada` con su versión; `versioning/huella.py`; 410 pruebas
 - **P44** — Cierre de F4: `tests/e2e/test_f4.py` («el perro se llama Nala» por HTTP: versión 2 con los capítulos 2 y 7 reescritos, los otros ocho idénticos byte a byte, la 1 entera con su hash y su hecho viejo, solicitud `aplicada`); `es_terminal` según la cola (A-109); `tests/humo/test_regeneracion_real.py`; TO-044 y RI-017; bloque § 4.5 con N = 4 en verde (413 pruebas, cobertura 96,4 %); F4 subida. La regeneración real sobre la novela del humo se detuvo una vez por el contexto del extractor (arreglado aparte, A-110) y se relanzó sobre la base restaurada: su resultado se anota aparte
 - **P45** — `versioning/ficha.py` (personajes y lugares con los capítulos donde aparecen en esa versión, por eventos, POV y lugar del capítulo; descripción de rol y deseo o de atmósfera y geografía) y `portada.py` (título de la versión, dedicatoria, destinatario, ocasión); `novel.apariciones`; `obtenerFicha` y `obtenerPortada` fuera de PENDIENTES; la ficha de la versión 1 y la de la 2 difieren tras una regeneración; 416 pruebas
+- **P46** — `versioning/lectura.py`: ruta, estados de `data-estado` y los 14 selectores de CL-03 como un único dato, comparado con la tabla de la spec leída del fichero; `url()` y `selector()`; prueba de arquitectura: `data-testid` solo en `lectura.py`; `tests/fixtures/lectura/pagina.py` genera la página de prueba desde una versión publicada (con `@media print` y opciones para romperla); `STORYMAKER_LECTURA_URL` en `.env.example`; 420 pruebas
 
 ## Pendiente
 
-- Siguiente: **P46 · Contrato de lectura como dato**, y después el resto hasta el P49 en orden.
+- Siguiente: **P47 · `render_visual` con Playwright MCP**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -286,14 +287,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P45 cerrado, siguiente P46**. Rama `backend-v1`,
-suite en verde (416 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P46 cerrado, siguiente P47**. Rama `backend-v1`,
+suite en verde (420 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 416 pruebas en verde al cerrar P45
+uv run pytest -q          # 420 pruebas en verde al cerrar P46
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
