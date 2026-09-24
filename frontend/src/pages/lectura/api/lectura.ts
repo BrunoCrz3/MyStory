@@ -34,3 +34,13 @@ export function usePortada(novelId: string, version: number) {
     ...INMUTABLE,
   })
 }
+
+export function useFicha(novelId: string, version: number) {
+  const cliente = useCliente()
+  return useQuery({
+    queryKey: ['ficha', novelId, version],
+    queryFn: () =>
+      exigir(cliente.GET('/novelas/{novel_id}/versiones/{version}/ficha', { params: ruta(novelId, version) })),
+    ...INMUTABLE,
+  })
+}
