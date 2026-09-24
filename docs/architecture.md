@@ -146,11 +146,14 @@ canon/
 La tabla es exhaustiva sobre las clases de `definitions.md`. Si una clase de la ontología no
 aparece aquí, es un hueco de este documento, no una clase sin dueña.
 
-**Dos excepciones declaradas, y se declaran para que la regla no se erosione por costumbre.**
-`mcp_server/` y `skills/` viven junto a las features y **no son features**: no tienen
-`models.py` ni `repository.py` y no son dueñas de ninguna clase. El primero expone por otro
-protocolo lo que los `service.py` ya resuelven; el segundo es contenido que los roles
-cargan. Cualquier carpeta nueva que quiera esta excepción tiene que justificarla aquí.
+**Tres excepciones declaradas, y se declaran para que la regla no se erosione por costumbre.**
+`mcp_server/`, `skills/` y `prompts/` viven junto a las features y **no son features**: no
+tienen `models.py` ni `repository.py` y no son dueñas de ninguna clase. El primero expone por
+otro protocolo lo que los `service.py` ya resuelven; el segundo es contenido que los roles
+cargan; el tercero guarda **un prompt por rol** y el comando `sync` que los publica en
+Langfuse (TO-024), porque los prompts son memoria procedural que se versiona con git y no
+pertenecen a una sola feature (TO-036, D-09, aceptada por el desarrollador). Cualquier
+carpeta nueva que quiera esta excepción tiene que justificarla aquí.
 
 **Tres clases que no son tabla de nadie.** Las tres memorias —episódica, semántica,
 procedural— son la lectura por tipo de lo que ya está en `data/storymaker.db` y en el repo
@@ -187,10 +190,24 @@ flowchart LR
   MCP[mcp_server/] --> CAN
   MCP --> NOV
   MCP --> VER
+  NOV --> INT
+  NOV --> GRD
+  CTX --> INT
+  CTX --> GRD
+  QUA --> INT
+  VER --> INT
 ```
 
 `process/` es la única que depende de casi todas, y es correcto: es el orquestador. Nadie
 depende de `process/` salvo `versioning/`, que necesita encolar una regeneración.
+
+**Las seis aristas hacia `intake/` y `guardrail/`** salieron del plan 1 (TO-036, D-08,
+aceptada por el desarrollador): `novel/` sirve `/novelas` y guarda el brief y las palabras
+de nivel `novela`; `context/` necesita el brief para la capa Invariante y las palabras
+vetadas para el Anticontexto; `quality/`, el brief y el texto libre para
+`invencion_destinatario`; `versioning/`, la dedicatoria para la portada. **No pueden crear
+un ciclo mientras `intake/` y `guardrail/` solo importen de `commons/`**, y eso es lo que
+comprueba la prueba de importaciones del plan.
 
 ---
 

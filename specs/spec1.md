@@ -3,6 +3,7 @@ estado: aprobada
 aprobada-por: Bruno Cruz
 fecha: 2026-09-24
 contrato-aprobado-con-ella: specs/openapi.yaml
+modificada: 2026-09-24 · TO-037 · cambio aprobado por el desarrollador
 ---
 
 # SRS 1 — Backend v1 de storyMaker
@@ -19,6 +20,11 @@ contrato de interfaz, datos, fases de construcción y trazabilidad.
 >
 > Falta `specs/plan1.md`, que nace en `borrador`: **no se escribe código hasta que ese plan
 > esté aprobado** (`CLAUDE.md` § Ciclo de cambio).
+>
+> **Modificada el 2026-09-24, con el cambio aprobado por el desarrollador** (TO-037): el
+> contrato pasa a la versión 1.1.0 con `BriefNovelaParcial` para la validación del brief
+> (RF-INTAKE-01, § 4.1), y se añade el contrato de lectura con el frontend (§ 4.4). Los dos
+> cambios salieron de revisar el plan 1 y los pidió el desarrollador; no son del agente.
 
 ---
 
@@ -46,7 +52,9 @@ TLA+ y su test de correspondencia, el servidor MCP, el agente de seguridad y las
 propuestas de ontología que quedaron abiertas (PO-11 y PO-12).
 
 **El frontend no se especifica aquí.** Se construye en paralelo desde hoy contra
-`specs/openapi.yaml`, que es lo que hace posible el paralelismo.
+`specs/openapi.yaml`, que es lo que hace posible el paralelismo. Lo único del frontend que
+esta spec fija es el **contrato de lectura** de § 4.4: la ruta, los selectores y la hoja de
+impresión que el backend necesita para validar el render y exportarlo.
 
 ### 1.3 Definiciones
 
@@ -137,14 +145,19 @@ aceptación en Dado / Cuando / Entonces. Agrupados por la feature de
 
 ### 3.1 `intake/` — encargo
 
-**RF-INTAKE-01 [demo]** · Cuando llega un brief a validar, el sistema deberá comprobarlo
-contra su schema y devolver los `Dato faltante`, las `Contradicción de brief`, los
-`Fragmento sospechoso` y los hechos extraídos del texto libre, **sin crear nada**.
+**RF-INTAKE-01 [demo]** · Cuando llega un brief a validar, el sistema deberá aceptarlo como
+**`BriefNovelaParcial`** —todos los campos opcionales— y devolver los `Dato faltante`, las
+`Contradicción de brief`, los `Fragmento sospechoso` y los hechos extraídos del texto libre,
+**sin crear nada**. Un `Dato faltante` es todo campo obligatorio en `BriefNovela` que no
+llega o llega vacío. **Crear la novela exige el `BriefNovela` completo** (TO-037).
 
 > *Dado* un brief sin `destinatario.nombre`, *cuando* se envía a validar, *entonces* la
 > respuesta es `200` con `valido: false` y un `Dato faltante` para ese campo con su
 > pregunta de reintento. **El sistema repregunta; no rellena el hueco** (`CLAUDE.md`
 > regla 4).
+>
+> *Dado* el mismo brief, *cuando* se envía a crear la novela, *entonces* la respuesta es
+> `422 peticion-invalida` y no se crea nada: el brief parcial solo lo acepta la validación.
 
 **RF-INTAKE-02 [demo]** · Cuando el brief contenga dos datos incompatibles, el sistema
 deberá registrar una `Contradicción de brief` con su tipo, mediante **reglas
@@ -505,6 +518,7 @@ depende de que el backend esté escrito.
 | Errores | **RFC 9457 `application/problem+json`** con `type` de catálogo cerrado | Da un `type` discriminable en vez de prosa, y admite contexto —`novel_id`, `capitulo`, `intentos_restantes`— |
 | Petición repetida cara | `POST /generaciones` duplicado → **409** con el id vivo | Encolar dos gasta tokens dos veces; un `202` silencioso esconde que no se lanzó nada |
 | Idempotencia | **Sin `Idempotency-Key`** | Ya vive donde importa: la escritura a la story bible por `novel_id` + `chapter_id` + `version` |
+| Brief en dos formas | **`BriefNovelaParcial`** para `validarBrief`, todos los campos opcionales; **`BriefNovela`** completo para `crearNovela` (TO-037) | La validación tiene que poder decir qué falta sin rechazar la petición, y la creación no puede aceptar un brief al que le falte algo. Un solo schema obligaba a elegir entre las dos |
 
 ### 4.2 Endpoints y a qué requisito responden
 
@@ -542,6 +556,54 @@ depende de que el backend esté escrito.
 **El 422 de validación de FastAPI se sobrescribe** para que también sea `problem+json`:
 toda respuesta de error tiene la misma forma, y **el test de conformidad lo cubre**. Un
 catálogo abierto degenera en un campo de texto que nadie puede discriminar.
+
+### 4.4 Contrato de lectura
+
+Lo que `render_visual` y el export a PDF necesitan de la página `lectura` del frontend. Es
+el **segundo contrato** entre backend y frontend, y el único que no está en
+`specs/openapi.yaml`, porque no es HTTP sino DOM (TO-037). **El frontend implementa esta
+lista tal cual**; cambiarla es cambiar esta spec, igual que cambiar el OpenAPI.
+
+**CL-01 · Ruta.** La lectura de una versión vive en la ruta del frontend
+**`/novelas/{novel_id}/versiones/{version}`**, sobre la URL base que declara
+`STORYMAKER_LECTURA_URL`. Esa ruta pinta **la versión entera en un solo documento**: portada,
+índice, ficha y los diez capítulos están en el DOM a la vez, aunque en pantalla se plieguen.
+Es lo que permite validar y exportar un único render.
+
+**CL-02 · Señal de carga.** El elemento raíz `lectura` lleva `data-estado` con `cargando`,
+`lista` o `error`. Playwright espera a `lista` antes de afirmar o de exportar: esperar a un
+tiempo fijo es una prueba que falla según la máquina.
+
+**CL-03 · Selectores `data-testid` estables.** Todos los `data-*` numéricos son el entero
+del contrato OpenAPI —número de capítulo o versión—, sin ceros a la izquierda.
+
+| `data-testid` | Cuántos | Dentro de | Atributos y contenido |
+| --- | --- | --- | --- |
+| `lectura` | 1 | — | `data-estado`, `data-novel-id`, `data-version` |
+| `portada` | 1 | `lectura` | — |
+| `portada-titulo` | 1 | `portada` | Texto: `Portada.titulo` |
+| `portada-dedicatoria` | 1 | `portada` | Texto: `Dedicatoria.texto` |
+| `indice` | 1 | `lectura` | — |
+| `indice-entrada` | Uno por capítulo, en orden | `indice` | `data-capitulo`; contiene un enlace a `#capitulo-{n}` |
+| `ficha` | 1 | `lectura` | — |
+| `ficha-personaje` | Uno por entrada de `Ficha.personajes` | `ficha` | `data-nombre` |
+| `ficha-lugar` | Uno por entrada de `Ficha.lugares` | `ficha` | `data-nombre` |
+| `ficha-enlace-capitulo` | Uno por capítulo de cada entrada | `ficha-personaje` o `ficha-lugar` | `data-capitulo`; enlace a `#capitulo-{n}` |
+| `capitulo` | Uno por capítulo, en orden | `lectura` | `data-capitulo`, `id="capitulo-{n}"` |
+| `capitulo-titulo` | 1 por capítulo | `capitulo` | Texto: `Capitulo.titulo` |
+| `capitulo-texto` | 1 por capítulo | `capitulo` | Texto: `Capitulo.texto`, sin añadidos, porque sobre él se cuentan las palabras de `paridad_pdf_web` |
+| `capitulo-modificado` | 0 o 1 | `indice-entrada` y `capitulo` | Presente **solo** si `modificado` es `true` |
+
+**CL-04 · Hoja de estilos de impresión.** La lectura tiene reglas `@media print`. Con los
+medios en `print`: todos los `capitulo` son visibles aunque en pantalla estén plegados, cada
+`capitulo` empieza en página nueva, y los controles interactivos —la petición de cambio,
+la navegación— no se imprimen. El export emula `print` antes de `page.pdf()`.
+
+**CL-05 · Qué comprueba el backend.** `render_visual` y `paridad_pdf_web` solo usan estos
+selectores y estos atributos. Un selector que falte es un fallo del gate con el nombre del
+selector, y se enruta como dice `docs/architecture.md` § `render_visual` en el gate: si el
+dato está en la story bible y no se pinta, es un bug de maquetación y **no gasta intentos de
+capítulo**.
 
 ---
 
@@ -685,11 +747,15 @@ afectados reescritos, **el resto idénticos byte a byte** y la versión 1 consul
 ### F5 — Salida
 
 Ficha de personajes y lugares, portada con dedicatoria, `render_visual` con el browser MCP
-y **export a PDF con Playwright**, con `paridad_pdf_web`.
+y **export a PDF con Playwright**, con `paridad_pdf_web`, todo contra el **contrato de
+lectura** de § 4.4. Hasta que el frontend tenga la página `lectura`, las pruebas del backend
+usan una página de prueba que cumple ese contrato.
 
 *Criterio de terminado*: `ejemplos/novela-ejemplo.pdf` generado desde una versión
-publicada. **El export es entregable obligatorio del alcance**: si hay que recortar, se
-recorta su pulido, nunca el export. El gate de Lean entra si sobra tiempo y hay toolchain.
+publicada contra la página `lectura` real. **El export es entregable obligatorio del
+alcance**: si hay que recortar, se recorta su pulido, nunca el export. Si la página `lectura`
+todavía no existe al cerrar F5, el PDF queda **pendiente del paso de integración**, nunca
+descartado. El gate de Lean entra si sobra tiempo y hay toolchain.
 
 ### Post-demo
 
@@ -704,7 +770,7 @@ la revisión humana; el gate de Lean; SSE para el progreso; y PO-11 y PO-12.
 
 | Requisito | Alcance § | Decisión | Filas de `docs/verification.md` |
 | --- | --- | --- | --- |
-| RF-INTAKE-01, 02 | §1 | TO-027 | P-65, P-66, O-01 |
+| RF-INTAKE-01, 02 | §1 | TO-027, **TO-037** | P-65, P-66, O-01 |
 | RF-INTAKE-03 | §1 | — | P-67, P-20, A-11, A-97 |
 | RF-INTAKE-04, 05 | §1, §7 | — | O-01, O-05 |
 | RF-INTAKE-06 | §1 | TO-027 | P-65 |
@@ -739,6 +805,7 @@ la revisión humana; el gate de Lean; SSE para el progreso; y PO-11 y PO-12.
 | RF-VER-08 | §2 | TO-011, TO-028 | P-62, P-64, O-61 |
 | RF-VER-09 | §2 | **TO-032** | — |
 | RF-EXP-01, 02 | §2 | TO-003, TO-025, TO-026 | O-16, A-103, A-105 |
+| § 4.4 contrato de lectura, CL-01…05 | §2, §5a | **TO-037** | O-09, O-10, O-16, O-59, O-60 |
 | RF-EXP-03 | §5c | TO-016 | O-13, O-14, O-15, P-81, P-82 |
 | RF-OBS-01…05 | §6 | TO-024 | P-68…P-73, A-45, A-71 |
 | RF-META-01 | §6 | — | P-84 |
@@ -757,6 +824,9 @@ están **aprobadas por el desarrollador**, no decididas por el agente.
 grill está marcado así en `docs/trade-offs.md` **TO-035**: la forma concreta de los
 recursos y sus nombres, la paginación de `GET /novelas`, que `listarCapitulos` no pagine,
 que el export sea `POST` más `GET` sobre la misma ruta, y la tabla de trabajos de RD-06.
+
+**Cambio de contrato aprobado por el desarrollador**, **TO-037**: el brief parcial para la
+validación, con el contrato OpenAPI en 1.1.0, y el contrato de lectura de § 4.4.
 
 ---
 

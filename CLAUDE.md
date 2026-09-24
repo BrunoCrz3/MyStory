@@ -87,7 +87,7 @@ backend/app/            ▸ previsto · main.py monta los routers de cada featur
   versioning/           Capa 5  · versiones, solicitud de cambio, regeneración
   commons/              db, migraciones, modelo, tokens, errores, Langfuse
   mcp_server/           adaptador del servidor MCP · no es feature
-  skills/               skills de runtime que cargan los roles · no es feature
+  skills/ · prompts/    skills de runtime y un prompt por rol · no son features
 frontend/src/           ▸ previsto · FSD v2.1: app/, pages/, shared/
 formal/lean/            ▸ previsto · cronología e invariantes de la historia
 formal/tla/             ▸ previsto · especificación del harness y el .cfg de TLC
@@ -150,7 +150,7 @@ npm run dev && npm run test && npm run typecheck   # frontend
 lake build                                         # formal/lean/ · cronología
 tlc -config formal/tla/harness.cfg formal/tla/harness.tla   # formal/tla/ · harness
 uv run python -m app.prompts.sync                  # publica prompts en Langfuse, idempotente
-uv run python -m app.versioning.export <version>   # PDF de una versión ya publicada
+uv run python -m app.versioning.export <novel_id> <version>   # PDF de una versión publicada
 ```
 
 ## Contexto semilla

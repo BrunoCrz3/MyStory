@@ -766,3 +766,94 @@ contrato deja de ser `1.0.0-borrador` y pasa a `1.0.0`.
 **Sigue pendiente**: `specs/plan1.md`, que nace en `borrador` y sin el cual no se escribe
 una línea de código; y revisar TO-035, en particular si la tabla de trabajos es dominio o
 materialización.
+
+---
+
+## RI-010 — El plan maestro del backend, de F0 a F5
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/plan1.md`, `specs/progreso.md`,
+`docs/trade-offs.md`
+
+### Causa
+
+Con la spec 1 y su contrato aprobados, faltaba la tercera puerta del ciclo de cambio: sin
+plan aprobado no se escribe código. Y el plan tenía que poder ejecutarlo un agente solo, de
+principio a fin, reanudándose si la sesión se corta.
+
+### Qué cambió
+
+**Existe `specs/plan1.md`, en `borrador`**: 48 pasos numerados en seis fases, cada uno con
+los requisitos que cubre, sus ficheros, la skill que se carga, las pruebas que se escriben
+primero y un criterio de terminado ejecutable. Cada fase cierra con suite completa,
+cobertura, `ruff`, `mypy`, conformidad con el contrato y una prueba de extremo a extremo; la
+F1 añade el humo real opt-in con el brief de ejemplo.
+
+**El test de conformidad nace en el primer paso** y tiene tres partes: comparación
+estructural normalizada, una lista de operaciones pendientes que el último paso exige vacía,
+y validación de cada respuesta de la suite contra el schema aprobado. Una meta-prueba de
+mutaciones comprueba que la comparación puede fallar.
+
+**Cuatro condiciones de parada, y solo cuatro**: falta la credencial al llegar al humo, una
+decisión contradice la spec o el contrato, tres rojos seguidos en un paso, o el coste real
+acumulado pasaría de 40 USD. Todo lo demás lo decide el agente y lo deja en
+`specs/progreso.md` y, si es de diseño, con sus dos rastros.
+
+**Existe `specs/progreso.md`**, el fichero de reanudación, y **TO-036** recoge las
+veinticuatro decisiones de implementación del plan, marcadas para revisar.
+
+### Efecto
+
+**El plan destapó un choque entre la spec y el contrato**, que es lo más útil que ha dado:
+RF-INTAKE-01 pide `200 valido:false` para un brief sin `destinatario.nombre`, y el schema
+aprobado de `BriefNovela` hace ese campo obligatorio, así que el contrato obliga a un `422`.
+El plan propone una lectura (D-01) y la deja **pendiente del desarrollador**: si no se
+acepta, el P35 se detiene por la condición 2.
+
+**Sigue pendiente**: aprobar el plan, decidir D-01 y revisar TO-035 y TO-036.
+
+---
+
+## RI-011 — El contrato cambia a 1.1.0 y la lectura tiene contrato
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/openapi.yaml`, `specs/spec1.md`,
+`specs/plan1.md`, `specs/progreso.md`, `docs/architecture.md`, `docs/trade-offs.md`,
+`CLAUDE.md`
+
+### Causa
+
+La revisión del plan 1 por el desarrollador. D-01 destapó que RF-INTAKE-01 no se podía
+cumplir con el contrato aprobado —la sesión del frontend encontró el mismo fallo por su
+lado—, y el plan dejaba en sus propias manos un contrato con el frontend que tenía que estar
+en la spec.
+
+### Qué cambió
+
+**El contrato pasa a 1.1.0** (TO-037): `validarBrief` recibe un `BriefNovelaParcial` con
+todos los campos opcionales y siete schemas nuevos; `crearNovela` sigue con el `BriefNovela`
+completo; el ejemplo de `brief-invalido` deja de mostrar un dato faltante que el schema ya
+no permite. Quedan 20 operaciones y 38 schemas, sin ningún `$ref` roto.
+
+**La spec gana RF-INTAKE-01 reescrito**, con un segundo criterio —el mismo brief a crear da
+`422`— y **§ 4.4, el contrato de lectura**: ruta, señal de carga, catorce selectores
+`data-testid` con su cardinalidad y la hoja de impresión.
+
+**El plan gana un paso, el P46**, que lleva ese contrato como dato comparado con la spec; el
+P35 se reescribe sobre el brief parcial; el P49 pasa a ser el paso de integración con la
+lectura real. Son 49 pasos.
+
+**Las decisiones revisadas quedan escritas donde viven**: D-08 en el grafo de importación de
+`architecture.md` —con cinco aristas más hacia `intake/` y `guardrail/` que la comprobación
+destapó, todas sin ciclo—, D-09 en § Anatomía y en el layout de `CLAUDE.md`, D-22 en su
+comando, y D-14 en la lista post-demo de `specs/progreso.md`.
+
+### Efecto
+
+**Comprobar el ciclo que pedía el desarrollador sacó más de lo que se buscaba.** La arista
+`novel → intake` no creaba ciclo, pero al recorrer el plan paso a paso aparecieron cinco
+dependencias más que el grafo no tenía: la capa Invariante necesita el brief, el Anticontexto
+las palabras vetadas, la portada la dedicatoria. Sin la comprobación, la prueba de
+importaciones del P02 habría fallado a mitad de la F1 por una arista que nadie había
+decidido.
+
+**Sigue pendiente**: aprobar el plan 1.
+
