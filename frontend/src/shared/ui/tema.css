@@ -1,0 +1,71 @@
+/* Tokens de diseño: dirección «encuadernación clásica». Único sitio de colores, tipografía,
+   espaciado, radios y sombras; las páginas solo leen estas variables.
+   Contrastes sobre --color-papel (WCAG): tinta 14,2:1, tinta suave 7,7:1, burdeos 8,4:1,
+   error 8,4:1, borde de control 3,7:1. El dorado viejo es solo filete y adorno: nunca texto
+   ni borde de control. */
+
+:root {
+  /* Papel y tinta */
+  --color-papel: #f8f3ea;
+  --color-papel-hondo: #efe6d6;
+  --color-hoja: #fffdf8;
+  --color-tinta: #2b2118;
+  --color-tinta-suave: #5a4a3c;
+
+  /* Acentos */
+  --color-burdeos: #7a2e2e;
+  --color-burdeos-hondo: #5e2020;
+  --color-burdeos-velo: #f3e6e1;
+  --color-oro: #b08d4a;
+  --color-oro-claro: #e9dcbc;
+
+  /* Bordes: el de control cumple 3:1 sobre la hoja (WCAG 1.4.11) */
+  --color-borde: #8c7a66;
+  --color-borde-suave: #ddd1bf;
+
+  /* Estados */
+  --color-error: #8a1c14;
+  --color-error-velo: #f8e5df;
+  --color-aviso: #5c4400;
+  --color-aviso-velo: #f6ebc6;
+  --color-exito: #34502a;
+  --color-exito-velo: #e7eedb;
+  --color-deshabilitado: #ddd3c4;
+
+  /* Tipografía: serifa del sistema en todo, sin fuentes externas */
+  --fuente-texto: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
+  --texto-pequeno: 0.9375rem;
+  --texto-base: 1.0625rem;
+  --texto-lectura: 1.1875rem;
+  --texto-h3: 1.25rem;
+  --texto-h2: 1.5rem;
+  --texto-h1: 2.25rem;
+  --interlineado: 1.6;
+  --interlineado-lectura: 1.75;
+  --espaciado-versalitas: 0.06em;
+
+  /* Espaciado */
+  --espacio-1: 0.25rem;
+  --espacio-2: 0.5rem;
+  --espacio-3: 0.75rem;
+  --espacio-4: 1rem;
+  --espacio-5: 1.5rem;
+  --espacio-6: 2rem;
+  --espacio-7: 3rem;
+
+  /* Medidas: la de lectura ronda los 65 caracteres por línea */
+  --ancho-pagina: 46rem;
+  --ancho-lectura: 38rem;
+
+  /* Radios: de tapa dura, casi rectos */
+  --radio-pequeno: 2px;
+  --radio: 4px;
+
+  /* Sombras */
+  --sombra-hoja: 0 1px 2px rgb(43 33 24 / 8%), 0 10px 24px -14px rgb(43 33 24 / 30%);
+  --sombra-flotante: 0 -6px 20px -8px rgb(43 33 24 / 25%);
+
+  /* Foco: visible en todo control, sobre papel y sobre hoja */
+  --foco-anillo: 0 0 0 3px var(--color-papel), 0 0 0 5px var(--color-burdeos);
+  --foco-contorno: 2px solid var(--color-burdeos);
+}

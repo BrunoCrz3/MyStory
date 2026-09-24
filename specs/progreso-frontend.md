@@ -76,6 +76,42 @@ el canal `chrome` y en esta máquina no hay Google Chrome, pero sí Microsoft Ed
 decisión del desarrollador se añade `--browser msedge` a los argumentos (opción válida en la
 0.0.82, comprobado con `--help`). No descarga ningún navegador.
 
+**Rediseño visual, dirección 1 «encuadernación clásica»** (elegida por el desarrollador).
+Tokens en `src/shared/ui/tema.css`, importado desde `app/estilos.css`. Lo decorativo global
+va en `@media screen`, para que la impresión, y con ella el PDF, no cambie. Sin backend, las
+respuestas de `/api` se interceptaron solo en el navegador del MCP (`page.route`), con
+datos de prueba, para ver los estados que pinta el contrato. Nada de eso entra en el código.
+Capturas en `.playwright-mcp/`, sin versionar.
+
+*Entrevista*, a 1280×900 y a 390×844:
+
+- **Inspeccionado:** formulario vacío; «Validar» y la lista de novelas con el proxy caído
+  (`500`, `AvisoProblema`); validación con datos faltantes, contradicción, fragmento
+  descartado y hecho extraído; filas de elemento personalizado y de texto libre; foco con
+  teclado en campo y botón; ancho del documento en móvil.
+- **Detectado antes:**
+  - El enlace de la cabecera usaba el azul del navegador.
+  - Los `fieldset`, los botones y los controles eran los del sistema, sin foco propio.
+  - Todos los campos iban a una columna de 46rem en escritorio.
+  - El dato faltante solo se distinguía por el color del texto.
+- **Detectado durante:**
+  - El fondo de la `legend` tapaba el papel por encima del filete y dejaba una muesca
+    clara. Se quitó, porque el navegador ya corta el borde detrás de la leyenda.
+  - El `input` con dato faltante no se teñía y el `select` sí, porque ganaba el estilo
+    global por orden de carga. Se subió la especificidad.
+- **Cambiado:**
+  - Cabecera en versalitas burdeos sobre doble filete dorado, y título con fleurón
+    decorativo (`content: '❦' / ''`, sin texto para el lector de pantalla).
+  - Cada grupo es una hoja con filete superior burdeos, y en escritorio los campos cortos
+    van a dos columnas.
+  - Dato faltante con barra lateral y campo marcado. Resultado de la validación por colores
+    de estado.
+  - «Validar» y «Crear y generar» rellenos; los botones secundarios, con filete burdeos.
+  - En móvil, acciones a todo el ancho.
+  - Sin desbordamiento horizontal a 390 px.
+  - Contrastes medidos: texto de 7,6:1 a 14,2:1; borde de control, 3,7:1. El dorado
+    (2,8:1) solo aparece en filetes y adornos.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e

@@ -1,24 +1,217 @@
+@import '../shared/ui/tema.css';
+
+/* Base común a pantalla e impresión. Lo decorativo va en `@media screen` para que el PDF,
+   que sale de emular `print` (CL-04), no cambie. */
+
 :root {
-  font-family: Georgia, 'Times New Roman', serif;
-  line-height: 1.6;
-  color: #1f1b16;
-  background: #fbf8f3;
+  font-family: var(--fuente-texto);
+  font-size: 100%;
+  line-height: var(--interlineado);
+  color: var(--color-tinta);
+  background: var(--color-papel);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0 auto;
-  max-width: 46rem;
-  padding: 1rem;
+  max-width: var(--ancho-pagina);
+  padding: var(--espacio-4);
 }
 
 .cabecera {
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #d8cfc2;
-  margin-bottom: 1rem;
+  padding: var(--espacio-2) 0;
+  border-bottom: 1px solid var(--color-borde-suave);
+  margin-bottom: var(--espacio-4);
 }
 
 .aviso-problema {
-  border-left: 4px solid #b3261e;
-  padding: 0.5rem 1rem;
-  background: #fdecea;
+  border-left: 4px solid var(--color-error);
+  padding: var(--espacio-2) var(--espacio-4);
+  background: var(--color-error-velo);
+}
+
+@media screen {
+  body {
+    padding: var(--espacio-4) var(--espacio-4) var(--espacio-7);
+    font-size: var(--texto-base);
+  }
+
+  h1,
+  h2,
+  h3 {
+    line-height: 1.25;
+    font-weight: normal;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--texto-h1);
+  }
+
+  h2 {
+    font-size: var(--texto-h2);
+  }
+
+  ::selection {
+    background: var(--color-oro-claro);
+    color: var(--color-tinta);
+  }
+
+  /* Cabecera: el nombre como un lomo, en versalitas, sobre doble filete dorado. */
+  .cabecera {
+    padding: var(--espacio-4) 0 var(--espacio-3);
+    margin-bottom: var(--espacio-6);
+    border-bottom: 3px double var(--color-oro);
+    text-align: center;
+  }
+
+  .cabecera a {
+    font-size: 1.375rem;
+    font-variant-caps: small-caps;
+    letter-spacing: 0.12em;
+    color: var(--color-burdeos);
+    text-decoration: none;
+  }
+
+  .cabecera a:hover {
+    color: var(--color-burdeos-hondo);
+  }
+
+  main > h1 {
+    margin: 0 0 var(--espacio-6);
+    text-align: center;
+    color: var(--color-tinta);
+  }
+
+  /* Fleurón bajo el título de página: adorno, sin texto para el lector de pantalla. */
+  main > h1::after {
+    display: block;
+    margin-top: var(--espacio-2);
+    font-size: 1.25rem;
+    color: var(--color-oro);
+    content: '❦';
+    content: '❦' / '';
+  }
+
+  h2 {
+    color: var(--color-burdeos);
+  }
+
+  a {
+    color: var(--color-burdeos);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+  }
+
+  a:hover {
+    color: var(--color-burdeos-hondo);
+    text-decoration-thickness: 2px;
+  }
+
+  :focus-visible {
+    outline: var(--foco-contorno);
+    outline-offset: 3px;
+    border-radius: var(--radio-pequeno);
+  }
+
+  /* Controles: serifa como el resto, bordes finos y foco en anillo. */
+  input,
+  textarea,
+  select,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+
+  input:not([type='checkbox']):not([type='radio']),
+  textarea,
+  select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: var(--espacio-2) var(--espacio-3);
+    font-size: max(1rem, var(--texto-base));
+    background: var(--color-hoja);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio);
+  }
+
+  textarea {
+    min-height: 5.5rem;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+    border-color: var(--color-burdeos);
+    box-shadow: var(--foco-anillo);
+  }
+
+  input[type='checkbox'] {
+    width: 1.125rem;
+    height: 1.125rem;
+    accent-color: var(--color-burdeos);
+    vertical-align: -0.15em;
+  }
+
+  /* Botón secundario por defecto: filete burdeos sobre papel. */
+  button {
+    min-height: 2.75rem;
+    padding: var(--espacio-2) var(--espacio-4);
+    background: transparent;
+    color: var(--color-burdeos);
+    border: 1px solid var(--color-burdeos);
+    border-radius: var(--radio);
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--color-burdeos-velo);
+  }
+
+  button:disabled {
+    background: var(--color-deshabilitado);
+    border-color: var(--color-deshabilitado);
+    color: var(--color-tinta-suave);
+    cursor: not-allowed;
+  }
+
+  code {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 0.875em;
+    padding: 0 var(--espacio-1);
+    background: var(--color-papel-hondo);
+    border-radius: var(--radio-pequeno);
+  }
+
+  .aviso-problema {
+    margin: var(--espacio-4) 0;
+    padding: var(--espacio-3) var(--espacio-4);
+    border-radius: 0 var(--radio) var(--radio) 0;
+    color: var(--color-tinta);
+  }
+
+  .aviso-problema p {
+    margin: var(--espacio-1) 0;
+  }
+
+  .aviso-problema strong {
+    color: var(--color-error);
+  }
+
+  /* Estados de espera: los pinta `Cargando` en shared/ui. */
+  p[role='status'][aria-live='polite'] {
+    font-style: italic;
+    color: var(--color-tinta-suave);
+  }
+}
+
+@media screen and (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }
