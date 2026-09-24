@@ -49,6 +49,8 @@ __all__ = [
     "listar_hechos",
     "promesas_de",
     "promesas_pendientes_al_cierre",
+    "retcon_de",
+    "retirar_capitulo",
     "snapshot_de",
 ]
 
@@ -175,9 +177,42 @@ def capitulos_que_usan(
 def snapshot_de(
     con: sqlite3.Connection, *, novel_id: str, version: int, capitulo_id: str
 ) -> Snapshot | None:
-    return repository.leer_snapshot(
+    """El snapshot al cierre de un capítulo **visto desde `version`** (D-12).
+
+    Presentes y ubicaciones son los que se guardaron al aceptar el capítulo; los hechos se
+    derivan de nuevo por vigencia en la versión pedida. Un capítulo no afectado por una
+    regeneración conserva su fila, pero en la versión nueva su snapshot ya no dice el hecho
+    retconeado sino el que lo sustituye (P43).
+    """
+    guardado = repository.leer_snapshot(
         con, novel_id=novel_id, version=version, capitulo_id=capitulo_id
     )
+    if guardado is None:
+        return None
+    hechos = [
+        h.enunciado
+        for h in hechos_vigentes(
+            con, novel_id=novel_id, version=version, hasta_numero=guardado.numero
+        )
+        if h.estado != "propuesto"
+    ]
+    return guardado.model_copy(update={"hechos": hechos})
+
+
+def retirar_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, version: int
+) -> None:
+    """Antes de reescribir un capítulo en `version`, lo que su fila vieja usaba deja de estar
+    en uso desde `version`, y lo que establecía se cierra si nadie más lo usa. Lo que siga
+    usando un capítulo no afectado se queda abierto: su texto no cambia (A-102)."""
+    repository.retirar_capitulo(con, novel_id=novel_id, capitulo_id=capitulo_id, version=version)
+
+
+def retcon_de(
+    con: sqlite3.Connection, *, novel_id: str, solicitud_id: str
+) -> tuple[str, str] | None:
+    """`(enunciado viejo, enunciado nuevo)` del retcon que aplicó una solicitud."""
+    return repository.leer_retcon(con, novel_id=novel_id, solicitud_id=solicitud_id)
 
 
 def promesas_de(

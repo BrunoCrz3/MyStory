@@ -313,3 +313,14 @@ def actualizar_solo_estado_capitulo(
         "UPDATE capitulo SET estado = ? WHERE novel_id = ? AND id = ?",
         (estado, novel_id, capitulo_id),
     )
+
+
+def leer_capitulo_anterior(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
+) -> str | None:
+    fila = con.execute(
+        "SELECT id FROM capitulo WHERE novel_id = ? AND numero = ? AND version < ?"
+        " ORDER BY version DESC LIMIT 1",
+        (novel_id, numero, version),
+    ).fetchone()
+    return None if fila is None else str(fila["id"])

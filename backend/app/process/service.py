@@ -23,6 +23,7 @@ __all__ = [
     "VeredictoGate",
     "aplicar",
     "encolar",
+    "solicitud_de_trabajo",
     "trabajo_vivo",
 ]
 
@@ -60,3 +61,11 @@ def trabajo_vivo(con: sqlite3.Connection, *, novel_id: str) -> str | None:
     """El trabajo pendiente o en curso de la novela, si lo hay: con él no se admite otro
     (RF-PROC-03) ni una solicitud de cambio (RF-VER-06)."""
     return repository.trabajo_vivo(con, novel_id=novel_id)
+
+
+def solicitud_de_trabajo(con: sqlite3.Connection, *, novel_id: str, trabajo_id: str) -> str | None:
+    """La solicitud de cambio que encoló un trabajo dirigido, si la hay."""
+    fila = repository.leer_trabajo(con, novel_id=novel_id, trabajo_id=trabajo_id)
+    if fila is None or fila["solicitud_id"] is None:
+        return None
+    return str(fila["solicitud_id"])

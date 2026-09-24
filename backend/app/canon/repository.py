@@ -14,6 +14,10 @@ from typing import Any
 
 from app.canon.models import Hecho, HechoNuevo, Promesa, PromesaNueva, Snapshot
 
+# Consultas que cruzan versiones a propósito (A-02, RD-02): el retcon de una solicitud
+# nombra dos hechos por su id, el viejo y el nuevo, que viven en versiones distintas.
+CONSULTAS_TRANSVERSALES = {"leer_retcon"}
+
 
 def _vigente(alias: str) -> str:
     return (
@@ -250,3 +254,32 @@ def existe_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> b
         "SELECT 1 FROM version_novela WHERE novel_id = ? AND version = ?", (novel_id, version)
     ).fetchone()
     return fila is not None
+
+
+def retirar_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, version: int
+) -> None:
+    con.execute(
+        "UPDATE hecho_capitulo SET version_hasta = ?"
+        " WHERE novel_id = ? AND capitulo_id = ? AND version_hasta IS NULL",
+        (version, novel_id, capitulo_id),
+    )
+    con.execute(
+        "UPDATE hecho SET version_hasta = ?"
+        " WHERE novel_id = ? AND capitulo_establece_id = ? AND version_hasta IS NULL"
+        " AND NOT EXISTS (SELECT 1 FROM hecho_capitulo u WHERE u.hecho_id = hecho.id"
+        "   AND u.novel_id = hecho.novel_id AND u.version_hasta IS NULL)",
+        (version, novel_id, capitulo_id),
+    )
+
+
+def leer_retcon(
+    con: sqlite3.Connection, *, novel_id: str, solicitud_id: str
+) -> tuple[str, str] | None:
+    fila = con.execute(
+        "SELECT v.enunciado AS viejo, n.enunciado AS nuevo FROM retcon r"
+        " JOIN hecho v ON v.id = r.hecho_viejo_id JOIN hecho n ON n.id = r.hecho_nuevo_id"
+        " WHERE r.novel_id = ? AND r.solicitud_id = ?",
+        (novel_id, solicitud_id),
+    ).fetchone()
+    return None if fila is None else (str(fila["viejo"]), str(fila["nuevo"]))

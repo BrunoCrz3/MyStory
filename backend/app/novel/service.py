@@ -402,3 +402,10 @@ def cambiar_estado_capitulo(
     repository.actualizar_solo_estado_capitulo(
         con, novel_id=novel_id, capitulo_id=capitulo_id, estado=estado
     )
+
+
+def capitulo_vigente(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
+) -> str | None:
+    """La fila del capítulo `numero` que leía la novela antes de `version` (D-05)."""
+    return repository.leer_capitulo_anterior(con, novel_id=novel_id, numero=numero, version=version)

@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P43 · Regeneración dirigida y publicación de la versión nueva |
+| Paso actual | P44 · Cierre de F4 |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 (el P42 cerró con 1) |
+| Intentos fallidos en el paso actual | 0 de 3 (el P43 cerró con 2) |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P42 |
+| Último commit de paso | P43 |
 
 ## Coste real
 
@@ -29,6 +29,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P27 | Humo 3, **verde**: novela publicada como versión 1, diez capítulos, 25 llamadas, 1.647 s (`coste_usd` de la generación, nominal) | 5,06 | 7,42 |
 | 2026-09-24 | P38 | Humo adversarial opcional (base temporal): **ninguna de las 18 peticiones llevó la instrucción inyectada**, pero la novela se detuvo en el capítulo 1 porque el judge se truncaba con `max_tokens` 3000 (A-92) | 1,55 | 8,97 |
 | 2026-09-24 | P38 | Humo adversarial 2 (judge calibrado): otra vez ninguna petición con la instrucción; se detuvo en el capítulo 1 por `limite-de-intentos-agotado`. La base temporal se perdió en la rotación de pytest; sospecha fundada: `invencion_destinatario` sin la edad, la ocasión ni la relación del comprador en su soporte (arreglado, A-98) | 2,39 | 11,36 |
+| 2026-09-24 | P38 | Humo adversarial 3 (con el soporte del brief entero): sin la instrucción en ninguna petición, y otra vez detenido en el capítulo 1; el informe muestra que `invencion_destinatario` marca paráfrasis de los rasgos del brief y detalles de trama (se arregla aparte, A-108) | 2,79 | 14,15 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -78,10 +79,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P40** — Migración 0012 (`solicitud_cambio`, `analisis_impacto`, `retcon`); `versioning/solicitud.py` e `impacto.py`: la solicitud por hecho se registra con su análisis (capítulos que usan el hecho más el que lo estableció; hechos derivados de esos capítulos) sin crear trabajo ni llamar al modelo; 409 con generación viva, 404 `hecho-no-encontrado`; `NuevaSolicitudCambio` con su `oneOf`; router `regeneracion` aparte; `crearSolicitudCambio` y `obtenerSolicitudCambio` fuera de PENDIENTES; 398 pruebas
 - **P41** — `versioning/candidato.py` (Jaccard sobre tokens normalizados contra el `fragmento_soporte` de los hechos que usa el capítulo de origen; a igual similitud, el establecido antes); `regeneracion.similitud_hecho_candidato: 0.5` provisional y sección `regeneracion` obligatoria; la solicitud por fragmento guarda el candidato, su análisis y queda pendiente de confirmación; sin candidato no propone nada; 402 pruebas
 - **P42** — `canon/retcon.py` (cierra usos y hecho viejo en v+1, abre el nuevo en v+1, fila de `retcon`); `versioning/confirmar.py`: en una transacción, retcon, `Obsoletar` solo los capítulos del análisis en la versión publicada, `encolar` una generación `dirigida` con `capitulos_a_regenerar` y solicitud `confirmada`; `POST …/confirmacion` 202 con Location; confirmar dos veces es 409; `Detener` desde `Regenerando` en diagrama, tabla y código; el orquestador entra en `Regenerando` y se detiene hasta el P43; 406 pruebas
+- **P43** — Camino `Regenerando` del orquestador: fila nueva en la versión objetivo solo para los afectados (la vieja se queda `Obsoleto`), canon de la fila vieja retirado desde esa versión salvo lo que usa un no afectado, aviso del cambio al redactor, `CerrarRegeneracion`, gate y publicación; snapshot derivado por versión; `regeneracion_fiel` en el gate desde la versión 2 (cambian exactamente los obsoletos y la anterior conserva su hash); la solicitud queda `aplicada` con su versión; `versioning/huella.py`; 410 pruebas
 
 ## Pendiente
 
-- Siguiente: **P43 · Regeneración dirigida y publicación de la versión nueva**, y después el resto hasta el P49 en orden.
+- Siguiente: **P44 · Cierre de F4** (antes, arreglar `invencion_destinatario`, A-108), y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -208,6 +210,11 @@ registrada.
 | A-99 | P42 | El hecho nuevo del retcon nace `adoptado` con `origen: brief` y sin fragmento; la fila de `retcon` dice de dónde viene | Lo pide el comprador, como el brief, y `origen` no admite otro valor sin tocar la ontología | TO-044 |
 | A-100 | P42 | Transición `Detener` desde `Regenerando`, en `domain-knowledge.md`, `architecture.md` y la tabla | Una regeneración que agota un capítulo tiene que poder detenerse (regla 14, RF-PROC-08); no es un estado ni un nombre nuevo, como A-39 | TO-044 |
 | A-101 | P42 | El retcon cierra en v+1 los usos abiertos del hecho viejo antes de cerrarlo | RD-05: un uso no puede sobrevivir a su hecho; en v+1 los capítulos reescritos usarán el nuevo | TO-044 |
+| A-102 | P43 | Antes de reescribir un capítulo, su fila vieja deja de usar hechos desde la versión nueva y cierra los que estableció si ninguna otra fila abierta los usa | Lo que siga usando un capítulo no afectado no puede cerrarse (RD-05) ni debe: su texto no cambia | TO-044 |
+| A-103 | P43 | La regeneración crea una fila nueva en la versión objetivo; la de la versión publicada se queda `Obsoleto` y `Reencolar` no se usa | D-05 y la inmutabilidad: reencolar la fila vieja sería reescribir un capítulo publicado | TO-044 |
+| A-104 | P43 | El snapshot se deriva siempre para la versión que se lee: presentes y ubicaciones guardados, hechos por vigencia | D-12 ya lo define como derivado; sin esto, la reescritura del 7 leería el hecho retconeado en el snapshot del 6 | TO-044 |
+| A-105 | P43 | El redactor de un capítulo reescrito recibe en la tarea qué hecho cambió (viejo y nuevo) | El contexto lleva el nuevo en el snapshot, pero sin el aviso el capítulo no sabe qué debe cambiar | TO-044 |
+| A-106 | P43 | `regeneracion_fiel`: la versión nueva cambia exactamente los capítulos que la anterior tiene `Obsoleto`, y el hash de la anterior se recalcula igual | Es comprobable sin saber qué trabajo publica, y cubre las dos promesas de F4: nada más cambia y nada se pierde | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -272,14 +279,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P42 cerrado, siguiente P43**. Rama `backend-v1`,
-suite en verde (406 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P43 cerrado, siguiente P44**. Rama `backend-v1`,
+suite en verde (410 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 406 pruebas en verde al cerrar P42
+uv run pytest -q          # 410 pruebas en verde al cerrar P43
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

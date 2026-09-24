@@ -8,8 +8,6 @@ contenido es lo que hace comprobable que después no cambia (RNF-07).
 
 from __future__ import annotations
 
-import hashlib
-import json
 import sqlite3
 from functools import partial
 from typing import Any
@@ -20,8 +18,10 @@ from app.commons.errores import NovelaNoEncontrada, VersionNoEncontrada
 from app.commons.tiempo import ahora
 from app.intake.service import leer_brief
 from app.novel import service as novel
+from app.process import service as process
 from app.process.service import VeredictoGate
 from app.versioning import gate, repository
+from app.versioning.huella import contenido, hash_contenido, hash_de_version
 from app.versioning.schemas import Capitulo, CapituloIndice, Version, VersionResumen
 
 __all__ = [
@@ -37,7 +37,7 @@ __all__ = [
 ]
 
 
-def _candidatos(con: sqlite3.Connection, *, novel_id: str, version: int) -> dict[int, str]:
+def candidatos(con: sqlite3.Connection, *, novel_id: str, version: int) -> dict[int, str]:
     """Qué fila de capítulo leerá cada número en la versión que se va a publicar.
 
     Los aceptados de esta versión; para los que no se reescribieron, la fila que ya leía la
@@ -50,34 +50,6 @@ def _candidatos(con: sqlite3.Connection, *, novel_id: str, version: int) -> dict
     return {**anteriores, **{n: str(f["id"]) for n, f in nuevos.items()}}
 
 
-def _hash(titulo: str | None, capitulos: list[dict[str, Any]]) -> str:
-    """SHA-256 del contenido canónico: título de la obra y, en orden, número, título y texto."""
-    canonico = {
-        "titulo": titulo,
-        "capitulos": [
-            {"numero": c["numero"], "titulo": c["titulo"], "texto": c["texto"]}
-            for c in sorted(capitulos, key=lambda c: int(c["numero"]))
-        ],
-    }
-    datos = json.dumps(canonico, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(datos.encode("utf-8")).hexdigest()
-
-
-def _contenido(con: sqlite3.Connection, *, novel_id: str, ids: list[str]) -> list[dict[str, Any]]:
-    return list(repository.contenido_de_capitulos(con, novel_id=novel_id, ids=ids).values())
-
-
-def hash_de_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> str:
-    """Recalcula el hash de una versión publicada desde lo que lee hoy."""
-    fila = repository.leer_version(con, novel_id=novel_id, version=version)
-    if fila is None:
-        raise VersionNoEncontrada(
-            f"la novela {novel_id} no tiene la versión {version}", novel_id=novel_id
-        )
-    ids = list(repository.vinculos(con, novel_id=novel_id, version=version).values())
-    return _hash(fila["titulo"], _contenido(con, novel_id=novel_id, ids=ids))
-
-
 class Publicacion:
     """Implementación del puerto `Publicador` de `process/`."""
 
@@ -85,13 +57,20 @@ class Publicacion:
         self.config = config
 
     def gate(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> list[VeredictoGate]:
-        ids = list(_candidatos(con, novel_id=novel_id, version=version).values())
-        capitulos = _contenido(con, novel_id=novel_id, ids=ids)
-        return [
+        filas = candidatos(con, novel_id=novel_id, version=version)
+        ids = list(filas.values())
+        capitulos = contenido(con, novel_id=novel_id, ids=ids)
+        veredictos = [
             gate.estructura_edicion(con, novel_id=novel_id, capitulos=capitulos),
             gate.elementos_obligatorios(con, novel_id=novel_id, ids=ids),
             gate.cierre_arco(self.config, con, novel_id=novel_id, version=version, ids=ids),
         ]
+        if version > 1:
+            # D-17: desde la segunda versión, el gate comprueba que la regeneración fue fiel.
+            veredictos.append(
+                gate.regeneracion_fiel(con, novel_id=novel_id, version=version, candidatos=filas)
+            )
+        return veredictos
 
     def publicar(
         self,
@@ -102,7 +81,7 @@ class Publicacion:
         generacion_id: str,
         motivo: str | None,
     ) -> str:
-        candidatos = _candidatos(con, novel_id=novel_id, version=version)
+        filas = candidatos(con, novel_id=novel_id, version=version)
         anterior = (
             repository.leer_version(con, novel_id=novel_id, version=version - 1)
             if version > 1
@@ -112,7 +91,7 @@ class Publicacion:
             repository.vinculos(con, novel_id=novel_id, version=version - 1) if anterior else {}
         )
         titulo = novel.titulo_de_obra(con, novel_id=novel_id)
-        huella = _hash(titulo, _contenido(con, novel_id=novel_id, ids=list(candidatos.values())))
+        huella = hash_contenido(titulo, contenido(con, novel_id=novel_id, ids=list(filas.values())))
         repository.insertar_version(
             con,
             novel_id=novel_id,
@@ -124,7 +103,7 @@ class Publicacion:
             generacion_id=generacion_id,
             ahora=ahora(),
         )
-        for numero, capitulo_id in sorted(candidatos.items()):
+        for numero, capitulo_id in sorted(filas.items()):
             repository.insertar_vinculo(
                 con,
                 novel_id=novel_id,
@@ -133,6 +112,14 @@ class Publicacion:
                 capitulo_id=capitulo_id,
                 # D-05: un capítulo no reescrito es la misma fila; cambió si la fila es otra.
                 modificado=anterior is not None and previos.get(numero) != capitulo_id,
+            )
+        # Una regeneración dirigida cierra la solicitud que la pidió (RF-VER-08).
+        solicitud_id = process.solicitud_de_trabajo(
+            con, novel_id=novel_id, trabajo_id=generacion_id
+        )
+        if solicitud_id is not None:
+            repository.aplicar_solicitud(
+                con, novel_id=novel_id, solicitud_id=solicitud_id, version_resultante=version
             )
         return huella
 

@@ -230,3 +230,24 @@ def fijar_estado_solicitud(
         "UPDATE solicitud_cambio SET estado = ? WHERE novel_id = ? AND id = ?",
         (estado, novel_id, solicitud_id),
     )
+
+
+def aplicar_solicitud(
+    con: sqlite3.Connection, *, novel_id: str, solicitud_id: str, version_resultante: int
+) -> None:
+    con.execute(
+        "UPDATE solicitud_cambio SET estado = 'aplicada', version_resultante = ?"
+        " WHERE novel_id = ? AND id = ?",
+        (version_resultante, novel_id, solicitud_id),
+    )
+
+
+def estados_de_capitulos(
+    con: sqlite3.Connection, *, novel_id: str, ids: list[str]
+) -> dict[str, str]:
+    marcas = ", ".join("?" for _ in ids)
+    filas = con.execute(
+        f"SELECT id, estado FROM capitulo WHERE novel_id = ? AND id IN ({marcas})",
+        (novel_id, *ids),
+    ).fetchall()
+    return {str(f["id"]): str(f["estado"]) for f in filas}

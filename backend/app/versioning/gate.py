@@ -1,9 +1,10 @@
 """Validadores del gate de publicación (RF-QUA-03, D-17). No llaman al modelo.
 
-F1 corre `estructura_edicion` y `elementos_obligatorios`; F2 añade `cierre_arco` en su mitad
-programática (D-15): ninguna promesa puede seguir pendiente al cerrar el último capítulo. La
+F1 corre `estructura_edicion` y `elementos_obligatorios`. F2 añade `cierre_arco` en su mitad
+programática (D-15): ninguna promesa puede seguir pendiente al cerrar el último capítulo; la
 mitad semántica es el criterio «arco» del judge, que puntúa cada capítulo y, con la medición
-cerrada, suspende el último antes de que llegue aquí.
+cerrada, suspende el último antes de que llegue aquí. F4 añade `regeneracion_fiel` desde la
+segunda versión.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from app.commons.config import Config
 from app.novel import service as novel
 from app.process.service import VeredictoGate
 from app.versioning import repository
+from app.versioning.huella import contenido, hash_contenido
 
 
 def estructura_edicion(
@@ -72,4 +74,36 @@ def cierre_arco(
         detalle="ninguna promesa pendiente al cerrar"
         if not pendientes
         else "promesas pendientes al cerrar: " + "; ".join(p.enunciado for p in pendientes),
+    )
+
+
+def regeneracion_fiel(
+    con: sqlite3.Connection, *, novel_id: str, version: int, candidatos: dict[int, str]
+) -> VeredictoGate:
+    """O-61…O-64: la versión nueva cambia **exactamente** los capítulos que la anterior
+    marcó `Obsoleto`, y la anterior sigue consultable con su hash intacto (regla 15)."""
+    problemas: list[str] = []
+    anterior = repository.leer_version(con, novel_id=novel_id, version=version - 1)
+    if anterior is None:
+        problemas.append(f"la versión {version - 1} no es consultable")
+    else:
+        previos = repository.vinculos(con, novel_id=novel_id, version=version - 1)
+        ids = list(previos.values())
+        recalculado = hash_contenido(anterior["titulo"], contenido(con, novel_id=novel_id, ids=ids))
+        if recalculado != anterior["hash"]:
+            problemas.append(f"el hash de la versión {version - 1} ya no cuadra")
+        estados = repository.estados_de_capitulos(con, novel_id=novel_id, ids=ids)
+        obsoletos = {n for n, cid in previos.items() if estados.get(cid) == "Obsoleto"}
+        cambiados = {n for n in candidatos if candidatos[n] != previos.get(n)}
+        if sorted(candidatos) != sorted(previos):
+            problemas.append("la versión nueva no tiene los mismos capítulos que la anterior")
+        if infieles := sorted(cambiados - obsoletos):
+            problemas.append(f"cambian capítulos no afectados: {infieles}")
+        if pendientes := sorted(obsoletos - cambiados):
+            problemas.append(f"capítulos obsoletos sin reescribir: {pendientes}")
+    return VeredictoGate(
+        nombre="regeneracion_fiel",
+        pasa=not problemas,
+        valor=0.0 if problemas else 1.0,
+        detalle="; ".join(problemas) or "solo cambian los capítulos afectados",
     )

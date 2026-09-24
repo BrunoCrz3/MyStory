@@ -7,12 +7,14 @@ Cada generación es una traza de Langfuse dentro de la sesión de su novela (RF-
 
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from datetime import UTC, datetime
 from functools import partial
 from typing import Any
 
+from app.canon import service as canon
 from app.commons.errores import ErrorDominio, LimiteDeIntentosAgotado
 from app.commons.llm import ErrorModelo
 from app.commons.llm.llamar import Consumo, acumular_en
@@ -176,14 +178,86 @@ class Orquestador:
         return normalizados
 
     async def _dirigida(self, t: dict[str, Any], consumo: Consumo) -> None:
-        """Regeneración dirigida (RF-VER-08). El camino `Regenerando` llega con el P43: hasta
-        entonces la novela entra en `Regenerando` y se detiene en voz alta, sin tocar nada de
-        la versión publicada."""
-        estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=t["novel_id"]))
+        """Regeneración dirigida (RF-VER-08, D-05): reescribe **solo** los capítulos del análisis
+        de impacto y publica la versión nueva; la anterior no se toca.
+
+        Cada capítulo afectado tiene una fila nueva en la versión objetivo; la de la versión
+        publicada se queda `Obsoleto` e intacta, y los no afectados son la misma fila en las dos
+        versiones. Antes de reescribir, lo que la fila vieja establecía o usaba se retira del
+        canon desde la versión nueva, y el redactor recibe el cambio como aviso. Reanudable:
+        los capítulos ya aceptados en la versión objetivo se saltan.
+        """
+        novel_id, version = t["novel_id"], t["version_objetivo"]
+        await self.estado_inicial(novel_id, version)
+        estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=novel_id))
         if estado == "Publicada":
             await self._mover_novela(t, "Regenerar")
-        raise GeneracionDetenida(
-            "error-interno", "la regeneración dirigida todavía no está implementada (P43)"
+        aviso = await self._aviso(t)
+        afectados: list[int] = json.loads(t["capitulos_a_regenerar"] or "[]")
+        for numero in afectados:
+            cap = await self.r.db.ejecutar(
+                partial(novel.capitulo_en_curso, novel_id=novel_id, numero=numero, version=version)
+            )
+            if cap is not None and cap.estado == "Aceptado":
+                continue
+            if cap is None:
+                await self.r.db.en_transaccion(
+                    partial(
+                        self._preparar_reescritura,
+                        novel_id=novel_id,
+                        numero=numero,
+                        version=version,
+                    )
+                )
+            await self._actualizar(t, capitulo_actual=numero)
+            resultado = await ciclo_capitulo(
+                self.r, novel_id=novel_id, version=version, numero=numero, aviso=aviso
+            )
+            if resultado.accion != "aceptar":
+                raise GeneracionDetenida(
+                    resultado.detenida_por or "limite-de-intentos-agotado",
+                    f"el capítulo {numero} no convergió al reescribirlo ({resultado.accion})",
+                )
+            await aceptar(
+                self.r,
+                novel_id=novel_id,
+                version=version,
+                numero=numero,
+                resultado=resultado,
+                generacion_id=t["id"],
+            )
+            await self._guardar_consumo(t, consumo)
+            self._comprobar_topes(t, consumo)
+
+        estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=novel_id))
+        if estado == "Regenerando":
+            await self._mover_novela(t, "CerrarRegeneracion")
+        await self._cerrar(t)
+
+    @staticmethod
+    def _preparar_reescritura(
+        con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
+    ) -> None:
+        """La fila nueva del capítulo en la versión objetivo, y el canon de la vieja retirado
+        desde esa versión, en una transacción."""
+        anterior = novel.capitulo_vigente(con, novel_id=novel_id, numero=numero, version=version)
+        if anterior is not None:
+            canon.retirar_capitulo(con, novel_id=novel_id, capitulo_id=anterior, version=version)
+        novel.crear_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+
+    async def _aviso(self, t: dict[str, Any]) -> str | None:
+        if not t["solicitud_id"]:
+            return None
+        cambio = await self.r.db.ejecutar(
+            partial(canon.retcon_de, novel_id=t["novel_id"], solicitud_id=t["solicitud_id"])
+        )
+        if cambio is None:
+            return None
+        viejo, nuevo = cambio
+        return (
+            "Este capítulo se reescribe porque el lector cambió un hecho de la novela: "
+            f"ahora es verdad que «{nuevo}», en lugar de «{viejo}». Cuenta el capítulo con el "
+            "hecho nuevo y conserva todo lo demás: su destino, sus personajes y su lugar."
         )
 
     async def _inicial(self, t: dict[str, Any], consumo: Consumo) -> None:

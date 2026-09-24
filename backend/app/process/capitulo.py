@@ -183,12 +183,14 @@ def _decidir_y_registrar(
     return decision
 
 
-def _tarea(r: Recursos, numero: int, informe: list[str]) -> str:
+def _tarea(r: Recursos, numero: int, informe: list[str], aviso: str | None = None) -> str:
     cap = r.config.umbrales.capitulo
     tarea = (
         f"Escribe el capítulo {numero} completo, de {cap.longitud_min_palabras} a "
         f"{cap.longitud_max_palabras} palabras, y devuelve su título y su texto."
     )
+    if aviso:
+        tarea += "\n\n" + aviso
     if informe:
         tarea += (
             "\n\nEl borrador anterior no pasó la validación. Escríbelo de nuevo corrigiendo:\n"
@@ -198,8 +200,10 @@ def _tarea(r: Recursos, numero: int, informe: list[str]) -> str:
 
 
 async def ciclo_capitulo(
-    r: Recursos, *, novel_id: str, version: int, numero: int
+    r: Recursos, *, novel_id: str, version: int, numero: int, aviso: str | None = None
 ) -> ResultadoCapitulo:
+    """Escribe y valida el capítulo `numero` de `version`. `aviso` es lo que el redactor tiene
+    que saber además de su contexto: en una regeneración dirigida, qué hecho cambió."""
     config = r.config
     motor = PolicyEngine(config)
     ensamblador = context.Ensamblador(config, context.ContadorProveedor(r.llamador))
@@ -302,7 +306,7 @@ async def ciclo_capitulo(
             ensamblado = await ensamblador.ensamblar(
                 "redactor",
                 piezas,
-                tarea=_tarea(r, numero, informe),
+                tarea=_tarea(r, numero, informe, aviso),
                 esquema_salida=ESQUEMA_BORRADOR,
             )
             salida, error = None, None
