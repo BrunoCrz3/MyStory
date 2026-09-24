@@ -6,6 +6,7 @@ import { CapituloLeido } from './CapituloLeido'
 import { Ficha } from './Ficha'
 import { Indice } from './Indice'
 import { Portada } from './Portada'
+import { SelectorVersion } from './SelectorVersion'
 
 /**
  * La versión entera en un solo documento (spec1.md § 4.4, CL-01): portada, índice, ficha y
@@ -26,6 +27,7 @@ export function LecturaPage() {
 
   return (
     <article data-testid="lectura" data-estado={estado} data-novel-id={novelId} data-version={versionTexto}>
+      <SelectorVersion novelId={novelId} version={version} />
       {fallida && <AvisoProblema problema={problemaDe(fallida.error)} novelId={novelId} />}
       {portada.isSuccess && <Portada portada={portada.data} />}
       {datosVersion.isSuccess && <Indice capitulos={datosVersion.data.capitulos} />}

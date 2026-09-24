@@ -1,5 +1,6 @@
 import type { Esquemas } from '@/shared/api'
 import { rutas } from '@/shared/config'
+import { MarcaModificado } from './MarcaModificado'
 
 export function Indice({ capitulos }: { capitulos: Esquemas['CapituloIndice'][] }) {
   return (
@@ -9,7 +10,8 @@ export function Indice({ capitulos }: { capitulos: Esquemas['CapituloIndice'][] 
         {capitulos.map((capitulo) => (
           <li key={capitulo.numero} data-testid="indice-entrada" data-capitulo={capitulo.numero}>
             {/* Ancla del propio documento, no ruta del router: CL-01 pide un solo documento. */}
-            <a href={rutas.capitulo(capitulo.numero)}>{capitulo.titulo ?? `Capítulo ${capitulo.numero}`}</a>
+            <a href={rutas.capitulo(capitulo.numero)}>{capitulo.titulo ?? `Capítulo ${capitulo.numero}`}</a>{' '}
+            <MarcaModificado modificado={capitulo.modificado} />
           </li>
         ))}
       </ol>

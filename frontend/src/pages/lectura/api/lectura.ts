@@ -44,3 +44,12 @@ export function useFicha(novelId: string, version: number) {
     ...INMUTABLE,
   })
 }
+
+export function useVersiones(novelId: string) {
+  const cliente = useCliente()
+  // No es inmutable: una regeneración añade versiones.
+  return useQuery({
+    queryKey: ['versiones', novelId],
+    queryFn: () => exigir(cliente.GET('/novelas/{novel_id}/versiones', { params: { path: { novel_id: novelId } } })),
+  })
+}

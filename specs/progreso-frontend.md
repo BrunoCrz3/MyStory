@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F09 | pendiente | 0 |
+| F10 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -34,6 +34,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F06 | Progreso que sondea al `intervalo_sondeo_segundos` del recurso y para por `es_terminal`; enlace a la versión resultante; `detenida_por` tal cual |
 | F07 | Raíz `lectura` con `data-estado`/`data-novel-id`/`data-version`, portada, índice con anclas y los diez capítulos en un solo documento, con los `data-testid` de CL-03 |
 | F08 | Ficha de personajes y lugares con `ficha-personaje`/`ficha-lugar` y un `ficha-enlace-capitulo` por capítulo; la lectura solo está `lista` con la ficha cargada |
+| F09 | `capitulo-modificado` en índice y cabecera solo si el backend dice `modificado`; selector de versión con `motivo` y capítulos cambiados, que abre la anterior entera |
 
 ## Para la sesión del backend
 
