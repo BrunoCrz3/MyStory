@@ -20,10 +20,12 @@ from app.commons.errores import LimiteDeIntentosAgotado, NovelaNoEncontrada
 from app.commons.llm import SalidaInvalida, SalidaTruncada
 from app.commons.llm.esquema import esquema_de_salida
 from app.commons.recursos import Recursos
+from app.commons.tiempo import ahora
 from app.context import service as context
 from app.intake import service as intake
 from app.novel import service as novel
 from app.policy.service import PolicyEngine
+from app.process import repository
 from app.process.capitulo import ResultadoCapitulo
 from app.process.schemas import Extraccion
 from app.process.transiciones import aplicar
@@ -150,6 +152,7 @@ def _consolidar(
     texto: str,
     extraccion: Extraccion,
     conocido: _Conocido,
+    generacion_id: str | None,
 ) -> canon.ResultadoConsolidacion:
     destino = aplicar("Capitulo", capitulo.estado, "Aceptar")
     novel.guardar_texto_aceptado(
@@ -237,11 +240,22 @@ def _consolidar(
         capitulo_id=capitulo.capitulo_id,
         enunciados=extraccion.elementos_presentes,
     )
+    if generacion_id is not None:
+        # El checkpoint entra en la misma transacción: aceptado y checkpoint van juntos.
+        repository.guardar_checkpoint(
+            con, novel_id=novel_id, trabajo_id=generacion_id, ultimo=numero, ahora=ahora()
+        )
     return resultado
 
 
 async def aceptar(
-    r: Recursos, *, novel_id: str, version: int, numero: int, resultado: ResultadoCapitulo
+    r: Recursos,
+    *,
+    novel_id: str,
+    version: int,
+    numero: int,
+    resultado: ResultadoCapitulo,
+    generacion_id: str | None = None,
 ) -> canon.ResultadoConsolidacion:
     if resultado.accion != "aceptar" or resultado.borrador is None:
         raise ValueError("solo se acepta un capítulo que el policy engine ha aceptado")
@@ -275,5 +289,6 @@ async def aceptar(
                 texto=borrador.texto,
                 extraccion=extraccion,
                 conocido=conocido,
+                generacion_id=generacion_id,
             )
         )

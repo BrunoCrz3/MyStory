@@ -57,6 +57,7 @@ TRANSICIONES: tuple[Transicion, ...] = (
         "orquestador.cerrar_regeneracion",
     ),
     Transicion("Detener", "Novela", "Escribiendo", "Detenida", "orquestador.detener"),
+    Transicion("Detener", "Novela", "Planificando", "Detenida", "orquestador.detener"),
 )
 
 _INDICE: dict[tuple[Maquina, str | None, str], str] = {

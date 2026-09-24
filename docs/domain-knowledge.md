@@ -412,6 +412,7 @@ stateDiagram-v2
   Planificando --> Escribiendo: esquema fijado
   Escribiendo --> Validando: todos los capítulos aceptados
   Escribiendo --> Detenida: un capítulo agotado
+  Planificando --> Detenida: el planificador agota sus intentos
   Validando --> Publicando: gate en verde
   Validando --> Escribiendo: falla el gate, vuelve al editor
   Publicando --> Publicada: versión conservada

@@ -23,6 +23,8 @@ class Recursos:
     llamador: LlamadorModelo
     # Lo registra `main`: `commons/` no importa `process/`, que es quien conoce la cola.
     contar_cola: Callable[[], Awaitable[int]] | None = None
+    # Lo registra `main`: despierta al worker cuando se encola un trabajo.
+    avisar_trabajo: Callable[[], None] | None = None
 
 
 def recursos(request: Request) -> Recursos:

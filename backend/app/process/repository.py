@@ -27,7 +27,12 @@ def hay_esquema(con: sqlite3.Connection, *, novel_id: str) -> bool:
 
 
 # Reclamar el siguiente trabajo y contar la cola miran todas las novelas a la vez (A-02).
-CONSULTAS_TRANSVERSALES = {"reclamar_siguiente", "contar_en_cola", "trabajos_huerfanos"}
+CONSULTAS_TRANSVERSALES = {
+    "reclamar_siguiente",
+    "contar_en_cola",
+    "trabajos_huerfanos",
+    "leer_trabajo_por_id",
+}
 
 
 def trabajo_vivo(con: sqlite3.Connection, *, novel_id: str) -> str | None:
@@ -147,3 +152,9 @@ def guardar_checkpoint(
         " ultimo_capitulo = excluded.ultimo_capitulo, actualizado_en = excluded.actualizado_en",
         (trabajo_id, novel_id, ultimo, ahora),
     )
+
+
+def leer_trabajo_por_id(con: sqlite3.Connection, trabajo_id: str) -> dict[str, Any] | None:
+    """Lo usa el worker: reclama un trabajo por id sin saber de qué novela es."""
+    fila = con.execute("SELECT * FROM trabajo WHERE id = ?", (trabajo_id,)).fetchone()
+    return None if fila is None else dict(fila)

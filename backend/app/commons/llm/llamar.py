@@ -7,10 +7,43 @@ con el `ClienteModelo` directamente: lo comprueba la prueba de arquitectura.
 
 from __future__ import annotations
 
+import contextvars
+from collections.abc import Iterator
+from contextlib import contextmanager
+from dataclasses import dataclass
+
 from app.commons.config import Config
 from app.commons.llm.pool import PoolEnVuelo
 from app.commons.llm.protocolo import ClienteModelo, ErrorModelo, Peticion, Respuesta
 from app.commons.observabilidad.protocolo import Trazador
+
+
+@dataclass
+class Consumo:
+    """Tokens, coste y llamadas de un trabajo, acumulados por cada llamada que se hace dentro
+    de `acumular_en()` (RF-OBS-04). Va en una variable de contexto: dos novelas que generan
+    a la vez no se mezclan las cuentas."""
+
+    tokens_entrada: int = 0
+    tokens_salida: int = 0
+    coste_usd: float = 0.0
+    llamadas: int = 0
+
+    @property
+    def tokens(self) -> int:
+        return self.tokens_entrada + self.tokens_salida
+
+
+_consumo: contextvars.ContextVar[Consumo | None] = contextvars.ContextVar("consumo", default=None)
+
+
+@contextmanager
+def acumular_en(consumo: Consumo) -> Iterator[Consumo]:
+    ficha = _consumo.set(consumo)
+    try:
+        yield consumo
+    finally:
+        _consumo.reset(ficha)
 
 
 class ContextoNoCabe(ErrorModelo):
@@ -47,4 +80,10 @@ class LlamadorModelo:
                     observacion.error(e)
                     raise
                 observacion.registrar(respuesta)
+        consumo = _consumo.get()
+        if consumo is not None:
+            consumo.tokens_entrada += respuesta.tokens_entrada
+            consumo.tokens_salida += respuesta.tokens_salida
+            consumo.coste_usd += respuesta.coste_usd
+            consumo.llamadas += 1
         return respuesta

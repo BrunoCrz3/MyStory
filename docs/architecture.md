@@ -439,12 +439,17 @@ en silencio.
 | `Regenerar` | Novela | `Publicada` | `Regenerando` | `orquestador.regenerar` · solicitud de cambio confirmada |
 | `CerrarRegeneracion` | Novela | `Regenerando` | `Validando` | `orquestador.cerrar_regeneracion` · afectados reescritos |
 | `Detener` | Novela | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
+| `Detener` | Novela | `Planificando` | `Detenida` | `orquestador.detener` · el planificador agota sus intentos (D-23) |
 
 `Escribiendo` y `Validando` existen en las dos máquinas con sentidos distintos, y por eso la
 tabla dice de qué máquina es cada fila. Las seis acciones de la novela que el diagrama de
 `domain-knowledge.md` dibujaba sin nombre —de `FijarEsquema` a `CerrarRegeneracion`— se
 nombraron al implementar la tabla del orquestador (plan 1, P13; TO-039), y la prueba de
 `process/` compara esta tabla y los dos diagramas con el dato del código.
+
+`Detener` desde `Planificando` materializa D-23, aprobada con el plan 1: un planificador
+que agota sus intentos detiene la novela. El diagrama de `domain-knowledge.md` no la
+dibujaba y se añadió allí primero (plan 1, P22; TO-039).
 
 ### Checkpoint y reanudación
 

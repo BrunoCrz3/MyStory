@@ -129,13 +129,16 @@ async def lanzar_generacion(r: Recursos, novel_id: str) -> Generacion:
         )
 
     try:
-        return await r.db.en_transaccion(escribir)
+        generacion = await r.db.en_transaccion(escribir)
     except sqlite3.IntegrityError as e:
         # Dos lanzamientos a la vez: el índice único de trabajos vivos dejó entrar a uno.
         vivo = await r.db.ejecutar(partial(repository.trabajo_vivo, novel_id=novel_id))
         raise GeneracionEnCurso(
             "consulta su progreso en lugar de lanzar otra", novel_id=novel_id, generacion_id=vivo
         ) from e
+    if r.avisar_trabajo is not None:
+        r.avisar_trabajo()
+    return generacion
 
 
 async def obtener_generacion(r: Recursos, novel_id: str, generacion_id: str) -> Generacion:
