@@ -471,20 +471,21 @@ modelo:
 # TO-016. El gate es lo único que bloquea; el chequeo incremental por capítulo es un
 # aviso temprano y no detiene nada.
 #
-# EL GATE DE LEAN QUEDA FUERA DE LA DEMO. No hay toolchain Lean instalada, así que el
-# coste de una demostración sigue sin medir y el timeout sigue sin fijar: se fija
-# midiendo, no decidiendo. Con `gate_activo: false` el sistema no lo pide, y por eso
-# `lean_timeout_segundos` puede seguir en null sin bloquear nada.
+# EL GATE DE LEAN QUEDA FUERA DE LA DEMO. La toolchain ya está instalada (Lean 4, I-03 del
+# plan 1): un `lake build` mínimo sin Mathlib, desde cero, tarda 2,6 s, y el timeout se fija
+# a unas diez veces eso. Lo que falta no es la toolchain sino el generador del fichero Lean
+# desde la story bible, que es RF-EXP-03 [post-demo]: sin él no hay nada que demostrar, y
+# por eso `gate_activo` sigue en false.
 #
 # Consecuencia que hay que decir en voz alta: con el gate apagado, `lean_cronologia`,
 # `lean_ubicacion` y `lean_edad` NO se ejecutan y NO cierran el paso, así que la demo
 # publica versiones sin demostración de cronología. Volver a `true` es la primera tarea
-# después de instalar la toolchain.
+# después de implementar RF-EXP-03.
 
 formal:
-  gate_activo: false             # [provisional — calibrar tras la demo] sin toolchain Lean instalada
+  gate_activo: false             # [provisional — calibrar tras la demo] sin generador Lean (RF-EXP-03, post-demo)
   lean_incremental: true         # [decisión] TO-016 · aviso por capítulo, no bloqueante
-  lean_timeout_segundos: null    # [bloqueado] TO-016 · falta medirlo; irrelevante mientras gate_activo sea false
+  lean_timeout_segundos: 26      # [provisional — calibrar tras la demo] I-03 · ~10 × 2,6 s de un lake build mínimo
 
 # ---------------------------------------------------------------------------
 # render_visual

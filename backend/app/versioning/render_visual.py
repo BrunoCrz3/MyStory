@@ -414,17 +414,28 @@ def _resultado_json(texto: str) -> object:
     return json.loads(cuerpo)
 
 
+# El navegador pide el favicon por su cuenta; su 404 no es un error de la lectura (A-124).
+_RUIDO_CONSOLA = re.compile(r"status of 404 .*/favicon\.ico")
+
+
 def _errores_consola(texto: str) -> list[str]:
-    """Los errores de `browser_console_messages` con `level = error`. La cabecera dice cuántos
-    hay; cada entrada empieza en una línea sin sangría (las siguientes son su pila). Una
-    excepción no capturada sale sin prefijo, así que no se filtra por él."""
-    cuerpo = texto.split("### Result", 1)[-1].split("\n### ", 1)[0]
+    """Los errores de `browser_console_messages` con `level = error`. La cabecera —una o dos
+    líneas— dice cuántos hay y termina en una línea en blanco; cada entrada empieza en una
+    línea sin sangría (las siguientes son su pila). Una excepción no capturada sale sin
+    prefijo, así que no se filtra por él (A-118)."""
+    cuerpo = texto.split("### Result", 1)[-1].split("\n### ", 1)[0].strip()
     cuantos = re.search(r"Errors:\s*(\d+)", cuerpo)
     if cuantos is None or int(cuantos.group(1)) == 0:
         return []
-    lineas = [linea for linea in cuerpo.strip().splitlines()[1:] if linea.strip()]
-    entradas = [linea.strip() for linea in lineas if not linea[:1].isspace()]
-    return entradas or [f"{cuantos.group(1)} errores de consola"]
+    _, _, mensajes = cuerpo.partition("\n\n")
+    entradas = [
+        linea.strip()
+        for linea in mensajes.splitlines()
+        if linea.strip() and not linea[:1].isspace()
+    ]
+    if not entradas:
+        return [f"{cuantos.group(1)} errores de consola"]
+    return [e for e in entradas if not _RUIDO_CONSOLA.search(e)]
 
 
 class RenderVisualMCP:

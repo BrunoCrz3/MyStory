@@ -25,6 +25,7 @@ from app.versioning.render_visual import (
     LecturaEsperada,
     RenderVisualMCP,
     SinNavegador,
+    _errores_consola,
     cardinalidades,
     evaluar,
 )
@@ -307,3 +308,35 @@ def test_produccion_elige_el_render_segun_el_entorno(monkeypatch: pytest.MonkeyP
         render = c.app.state.worker.orquestador.publicador.render  # type: ignore[attr-defined]
         assert isinstance(render, RenderVisualMCP)
         assert render.lectura_url == "http://127.0.0.1:5173"
+
+
+def test_los_errores_de_consola_se_leen_tras_la_cabecera() -> None:
+    """A-118, A-124: la cabecera puede tener una o dos líneas; una excepción no capturada sale
+    sin prefijo; el 404 del favicon no es un error de la lectura."""
+    salto = chr(10)
+    solo_errores = salto.join(
+        [
+            "### Result",
+            "Total messages: 1 (Errors: 1, Warnings: 0)",
+            "",
+            "TypeError: Cannot read properties of null (reading 'x')",
+            "    at http://127.0.0.1:1/:1:102",
+        ]
+    )
+    assert _errores_consola(solo_errores) == [
+        "TypeError: Cannot read properties of null (reading 'x')"
+    ]
+    con_avisos = salto.join(
+        [
+            "### Result",
+            "Total messages: 6 (Errors: 2, Warnings: 2)",
+            'Returning 2 messages for level "error"',
+            "",
+            "[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found)"
+            " @ http://127.0.0.1:5173/favicon.ico:0",
+            "[ERROR] Uncaught ReferenceError: x is not defined",
+        ]
+    )
+    assert _errores_consola(con_avisos) == ["[ERROR] Uncaught ReferenceError: x is not defined"]
+    sin_errores = salto.join(["### Result", "Total messages: 3 (Errors: 0, Warnings: 3)"])
+    assert _errores_consola(sin_errores) == []

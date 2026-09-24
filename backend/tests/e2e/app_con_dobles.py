@@ -4,7 +4,8 @@
 `RegistroTrazas` detrás de `uvicorn`, igual que el lanzador: interfaz local y un worker. Así
 una prueba puede matar el proceso de verdad a mitad de novela y rearrancarlo sobre la misma
 base. `STORYMAKER_E2E_RETARDO_S` hace que cada llamada al doble tarde lo que diga, para que
-haya tiempo de matarlo en el capítulo que se quiere.
+haya tiempo de matarlo en el capítulo que se quiere. Con `STORYMAKER_E2E_RENDER=real`,
+`render_visual` es el de producción (servidor MCP y página de lectura del entorno) y no el doble.
 """
 
 from __future__ import annotations
@@ -39,8 +40,12 @@ def crear() -> FastAPI:
     cfg = cargar_config()
     modelo = ModeloConRetardo(cfg, float(os.environ.get("STORYMAKER_E2E_RETARDO_S", "0")))
     guion_completo(modelo)
+    real = os.environ.get("STORYMAKER_E2E_RENDER") == "real"
     return crear_app(
-        cfg, cliente_modelo=modelo, trazador=RegistroTrazas(), render_visual=RenderGuionizado()
+        cfg,
+        cliente_modelo=modelo,
+        trazador=RegistroTrazas(),
+        render_visual=None if real else RenderGuionizado(),
     )
 
 

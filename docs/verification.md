@@ -1017,15 +1017,22 @@ veintiocho que estaban en `null` llevan valor desde RI-008, todas marcadas
 provisional no es un umbral calibrado: hasta que haya corpus, lo que dicen es con qué error
 se prefiere fallar, no dónde está la frontera real.
 
-**El gate de Lean está apagado** (`formal.gate_activo: false`) porque no hay toolchain
-instalada. Con él apagado, `O-13`, `O-14` y `O-15` no se ejecutan y la demo publica
-versiones sin demostración de cronología. Volver a encenderlo es la primera tarea después
-de instalar Lean, y entonces `formal.lean_timeout_segundos` deja de poder seguir en `null`.
+**El gate de Lean está apagado** (`formal.gate_activo: false`). La toolchain ya está instalada
+y `formal.lean_timeout_segundos` tiene valor provisional (I-03 del plan 1), pero falta el
+generador del fichero Lean desde la story bible, que es RF-EXP-03 `[post-demo]`. Con el gate
+apagado, `O-13`, `O-14` y `O-15` no se ejecutan y la demo publica versiones sin demostración de
+cronología. Volver a encenderlo es la primera tarea después de implementar RF-EXP-03.
+
+**`render_visual` y `paridad_pdf_web` ya se ejecutan** (plan 1, P47b y P48). `render_visual`
+corre en el gate sobre la versión candidata con el servidor Playwright MCP (`O-09`, `O-10`,
+`O-59`, `O-60`, `A-80`, `A-106`), y `paridad_pdf_web` en cada export (`O-16`, `A-103`,
+`A-105`). Los dos pasaron contra la página `lectura` real del frontend al cerrar el plan; qué
+tool sostiene cada aserción y qué queda sin cubrir está en `docs/browser-mcp.md`.
 
 **La revisión humana necesita un revisor.** `O-12` y `P-85` son obligatorias y ninguna la
 ejecuta un proceso: alguien tiene que puntuar diez capítulos con la rúbrica del judge. Sin
 esa persona, el punto ciego #2 no se estrecha, se queda entero.
 
-**`docs/red-team.md`, `docs/browser-mcp.md`, `formal/`, `ejemplos/` y `.claude/mcp.json` no
-existen.** Doce filas apuntan ahí. Están reservados en el layout de `CLAUDE.md` y marcados
+**`docs/red-team.md`, `formal/` y `.claude/mcp.json` no existen.** `docs/browser-mcp.md` y
+`ejemplos/novela-ejemplo.pdf` existen desde el cierre del plan 1. Doce filas apuntan ahí. Están reservados en el layout de `CLAUDE.md` y marcados
 **▸ previsto**; las filas describen su destino, no su estado.

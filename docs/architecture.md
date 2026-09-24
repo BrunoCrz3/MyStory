@@ -1063,7 +1063,9 @@ Bajo demanda, **una vez por versión** y **solo de una versión `publicada`** (T
 del mismo render con `page.pdf()` de Playwright (TO-003), de modo que el PDF entregado es lo
 que el gate acaba de validar; con otro motor se validaría uno y se entregaría otro. En ese
 momento corre `paridad_pdf_web`, que comprueba recuento y títulos de capítulos, presencia de
-dedicatoria e índice, y recuento de palabras dentro de tolerancia.
+dedicatoria e índice, y recuento de palabras dentro de tolerancia. Un PDF sin paridad **no se
+sirve**: el export queda `fallido`, el PDF se guarda para el diagnóstico (A-121) y el siguiente
+`POST` lo relanza (A-119).
 `ejemplos/novela-ejemplo.pdf` ▸ previsto se genera así una vez y se commitea.
 
 ---

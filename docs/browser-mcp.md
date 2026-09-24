@@ -56,8 +56,12 @@ detalle del score y en el audit log.
 - `browser_console_messages` da una cabecera con el total de errores; una excepción no
   capturada sale **sin** el prefijo `[ERROR]` que llevan los `console.error`. Filtrar por el
   prefijo la dejaba pasar: se cuenta por la cabecera.
-- Una página sin favicon provoca un 404 a `/favicon.ico` que sale como error de consola. La
-  página de prueba declara `<link rel="icon" href="data:,">`; el frontend tiene el suyo.
+- La cabecera de `browser_console_messages` tiene una línea o dos («Total messages…» y, si hay
+  avisos, «Returning N messages…») y acaba en una línea en blanco: las entradas son lo que va
+  detrás.
+- El navegador pide `/favicon.ico` por su cuenta, y si no existe el 404 sale como error de
+  consola. No es un error de la lectura ni está en el contrato, así que no cuenta (A-124); la
+  página de prueba declara `<link rel="icon" href="data:,">` igualmente.
 
 ## Residuo declarado
 
@@ -71,9 +75,24 @@ Lo que ninguna aserción del gate caza y por qué:
   el texto de un capítulo no se mide visualmente; se comprueba que está en el DOM, y el export
   a PDF, con medios `print`, lo compara palabra a palabra (`paridad_pdf_web`).
 
+## Integración con la página real (P49)
+
+Con el backend sobre la base de la novela del humo, el frontend en `http://127.0.0.1:5173`
+(`npm run dev`) y el servidor MCP en marcha, `render_visual` corrió contra la versión 1:
+
+1. **Primera pasada, en rojo** por la consola: el frontend no sirve favicon, y el parser tomaba
+   la segunda línea de cabecera por un mensaje. Se corrigió el parser y se declaró A-124; el
+   frontend no cambió.
+2. **Segunda pasada, en verde**: las siete aserciones. Es la prueba de integración de que el
+   frontend cumple la spec § 4.4.
+
+De la misma página salió `ejemplos/novela-ejemplo.pdf` con la CLI de D-22 —el PDF lo pinta el
+Chromium de Playwright, no el navegador del servidor MCP (A-123)—: 49 páginas, 10 capítulos,
+124 enlaces internos que resuelven y `paridad_pdf_web` en verde.
+
 ## Inspección en desarrollo
 
-Pendiente del paso de integración P49: se hace con Claude Code contra el mismo servidor y la
-página `lectura` real del frontend, y aquí se anota qué se inspeccionó, qué se detectó y qué
-cambió. Hasta entonces, las pruebas de `tests/versioning/test_render_visual.py` pintan la
-página de prueba de `tests/fixtures/lectura/`, que cumple el contrato.
+La inspección exploratoria —Claude Code contra el servidor MCP, mirando lo que ninguna
+aserción prevé— es del frontend, que guarda sus capturas en `frontend/docs/capturas-browser-mcp/`
+de la rama `frontend-demo`. El plan 1 del backend no la repitió: sus pruebas pintan la página de
+prueba de `tests/fixtures/lectura/`, y la integración de arriba, la página real.

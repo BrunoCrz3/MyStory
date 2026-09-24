@@ -1644,3 +1644,32 @@ rechazada` y la vigente leída de las `publicadas`.
   volvían a cambiar.
 - **Hasta el P47b ninguna versión se publica en producción**: el humo real no puede cerrar F1
   otra vez sin el servidor MCP. Las pruebas con dobles inyectan un `render_visual` propio.
+
+---
+
+## TO-046 — Decisiones menores del agente al ejecutar la F5 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/versioning/{ficha.py,render_visual.py,export.py,paridad.py}`, `backend/app/commons/db/migrations/0014_exportacion.sql`, `config/thresholds.yaml` § `render_visual`, `export` y `formal`, `docs/browser-mcp.md`
+
+Las decisiones del cambio de contrato (A-112…A-115) están en TO-045. Estas son las del resto de
+la fase.
+
+| Id | Paso | Decisión | Por qué |
+| --- | --- | --- | --- |
+| A-111 | P45 | Un personaje aparece en un capítulo si participa en un evento que narra o es su POV; un lugar, si lo es de un evento o del capítulo | El planificador fija POV y lugar aunque el extractor no los cite en un evento |
+| A-116 | P47b | Un hallazgo de datos y uno de maquetación detienen igual la generación; la clase, el rol dueño y la tool van en el detalle del score y en el audit log | Todo gate en rojo detiene (A-47, A-79, A-113) y el gate no reescribe capítulos, así que ninguno gasta intentos |
+| A-117 | P47b | Las pruebas contra el servidor MCP real se saltan, diciendo por qué, si no está en marcha; `evaluar` se prueba entero sin navegador | La suite no depende de un proceso externo; el paso se cerró con el servidor en marcha |
+| A-118 | P47b | Playwright MCP fijado a 0.0.82; los errores de consola se leen tras la cabecera, no por el prefijo `[ERROR]` | El formato de texto de las tools es el contrato del harness; una excepción no capturada sale sin prefijo |
+| A-119 | P48 | Un export `fallido` se relanza con el siguiente `POST`; uno `disponible` no se rehace nunca | Un fallo es de infraestructura o de paridad, no del contenido publicado |
+| A-120 | P48 | Un export `en-curso` que sobrevive a un reinicio pasa a `fallido` al arrancar | Corre en segundo plano en el mismo proceso: si el proceso cae, nadie lo termina |
+| A-121 | P48 | Un PDF sin paridad queda `fallido` y no se sirve; se guarda para el diagnóstico | Servirlo sería validar uno y entregar otro (TO-003) |
+| A-122 | P48 | El export corre como tarea de fondo de la petición, fuera de la cola de trabajos | No llama al modelo ni consume presupuesto en vuelo; la cola es de generaciones |
+| A-123 | P48 | El PDF sale del Chromium de Playwright y `render_visual` usa el navegador del servidor MCP: misma página y mismo motor, dos procesos | `paridad_pdf_web` compara el PDF con el DOM del render del que sale |
+| A-124 | P49 | El 404 de `/favicon.ico` no cuenta como error de consola en `render_visual` | El navegador lo pide por su cuenta y el contrato de lectura no lo incluye; la página real del frontend no sirve favicon |
+
+### Consecuencias
+
+- **El gate de Lean sigue apagado** con la toolchain instalada y el timeout fijado (I-03): falta
+  RF-EXP-03, `[post-demo]`.
+- **`render_visual` depende de dos procesos externos** —el servidor MCP y la página de
+  lectura—; sin cualquiera de los dos, ninguna versión se publica (A-114).

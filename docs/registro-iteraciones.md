@@ -1071,3 +1071,33 @@ Playwright MCP).
 
 La parada se resuelve sin retirar nada publicado: una versión que no pinta nunca llega a ser la
 vigente, y la que se publica es la que el gate acaba de ver.
+
+---
+
+## RI-019 — F5 del plan 1: la salida
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/versioning/`, `backend/app/commons/db/migrations/0013_estado_version.sql`,
+`backend/app/commons/db/migrations/0014_exportacion.sql`, `config/thresholds.yaml`,
+`docs/browser-mcp.md`, `docs/verification.md`, `docs/architecture.md`, `specs/spec1.md`,
+`docs/trade-offs.md` (TO-045, TO-046), `ejemplos/novela-ejemplo.pdf`
+
+### Causa
+
+Sexta y última fase del plan 1: que la novela publicada se lea —ficha, portada, lectura web— y
+se entregue en PDF, con la validación visual en el gate.
+
+### Qué cambió
+
+Ficha y portada por versión (P45); el contrato de lectura como dato (P46); el estado de versión
+y el gate sobre la candidata tras la parada del P47 (TO-045, P47a); `render_visual` como cliente
+guionizado del servidor Playwright MCP (P47b); el export a PDF con `paridad_pdf_web` (P48); y el
+e2e de F5 con `render_visual` real, más la integración con la página `lectura` del frontend
+(P49). Por el camino, la integración destapó que el parser de consola leía mal la cabecera y
+que el frontend no sirve favicon (A-118, A-124).
+
+### Efecto
+
+Una generación con dobles llega por HTTP hasta el PDF: el gate pinta la candidata en un
+navegador real, la publica, y el export sale con paridad. Contra el frontend real,
+`render_visual` pasa y el PDF de la novela del humo —49 páginas, 124 enlaces internos— queda en
+`ejemplos/novela-ejemplo.pdf`. La conformidad no tiene operaciones pendientes.

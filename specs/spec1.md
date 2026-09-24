@@ -865,6 +865,30 @@ que el export sea `POST` más `GET` sobre la misma ruta, y la tabla de trabajos 
 **Cambio de contrato aprobado por el desarrollador**, **TO-037**: el brief parcial para la
 validación, con el contrato OpenAPI en 1.1.0, y el contrato de lectura de § 4.4.
 
+**Cambio de contrato aprobado por el desarrollador**, **TO-045**: la versión nace `candidata`
+y solo se publica con el gate completo en verde, `render_visual` incluido (RF-QUA-03, RNF-19),
+con el contrato OpenAPI en 1.2.0.
+
+### 8.1 Estado al cerrar el plan 1
+
+El plan 1 (`specs/plan1.md`) implementa los requisitos `[demo]` según su tabla de cobertura, y
+la suite los comprueba: pruebas por feature, conformidad con el contrato 1.2.0 sin ninguna
+operación pendiente y un e2e por fase, el de F5 con `render_visual` real contra el servidor
+Playwright MCP. `render_visual` pasó además contra la página `lectura` real del frontend, y de
+ella salió `ejemplos/novela-ejemplo.pdf` con `paridad_pdf_web` en verde.
+
+**Lo que resultó distinto de lo escrito**, y dónde se decidió:
+
+- **RF-QUA-03**: el gate corre sobre una versión `candidata` (TO-045), ya reescrito arriba.
+- **RF-EXP-02**: un PDF sin paridad no se sirve —queda `fallido` y se guarda para el
+  diagnóstico (A-121)—, y un export `fallido` se relanza con el siguiente `POST` (A-119).
+- **`render_visual`** no cuenta como error de consola el 404 del favicon, que el navegador pide
+  por su cuenta y el contrato de lectura no incluye (A-124).
+
+**Sin implementar, por ser `[post-demo]`**: RF-INTAKE-06, RF-CANON-05, RF-QUA-08 y RF-EXP-03.
+Sin este último no hay fichero Lean que demostrar, así que el gate de Lean sigue apagado
+aunque la toolchain ya está instalada (`config/thresholds.yaml` § `formal`).
+
 ---
 
 ## 9. Fuera de alcance

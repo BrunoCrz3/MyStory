@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P49 · Cierre de F5 e integración con la lectura |
-| Estado del paso | sin empezar; P48 cerrado |
+| Paso actual | — (plan cerrado: P49 fue el último) |
+| Estado del paso | **plan 1 cerrado**: F0 a F5 hechas, `PENDIENTES` vacía y `ejemplos/novela-ejemplo.pdf` commiteado |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P48 |
+| Último commit de paso | P49 |
 
 ## Coste real
 
@@ -90,15 +90,18 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P47a** — contrato 1.2.0 (TO-045): migración `0013_estado_version.sql` (`estado` con `CHECK`, existentes `publicada`, trigger que solo admite `candidata → publicada | rechazada`); `Version.estado`; `novel.version_vigente` y `listarVersiones` solo con publicadas; puerto `Publicador` con `proponer`, `gate`, `render_visual`, `publicar` y `rechazar`; `versioning/render_visual.py` con el puerto y `SinNavegador` (A-114); el orquestador escribe la candidata, corre el gate completo sobre ella y publica o rechaza en la transacción que detiene; `crear_app(render_visual=…)`; doble `tests/dobles/render.py`; `VERSION_API` 1.2.0; 428 pruebas
 - **P47b** — `versioning/render_visual.py`: cliente guionizado del servidor Playwright MCP (0.0.82, `--headless --isolated --browser msedge`, URL con `localhost`) sobre la candidata: navega, sondea `data-estado`, extrae el DOM con una llamada a `browser_evaluate` usando los selectores de `lectura.py` y lee `browser_console_messages`; `evaluar` puro con siete aserciones (`ASERCIONES`, cada una con su tool), clasificación datos/maquetación consultando la story bible; `render_de_entorno` elige `RenderVisualMCP` o `SinNavegador`; umbrales `render_visual.*`; `docs/browser-mcp.md`; dependencia `mcp`; 449 pruebas (5 contra el servidor MCP real)
 - **P48** — migración `0014_exportacion.sql` (una fila por versión; `disponible` inmutable por trigger); `versioning/export.py`: `page.pdf()` de Playwright (Chromium) sobre la lectura tras esperar a `lista` y emular `print`, del mismo render se lee el DOM para la paridad; `POST …/export` → `202` y generación en segundo plano, `200` si ya existe; `GET` → PDF o `404 export-no-disponible`; solo versiones `publicadas`; saneo al arrancar; CLI `python -m app.versioning.export <novel_id> <version>` (D-22); `versioning/paridad.py` con `pypdf`: capítulos y títulos por página, dedicatoria e índice antes del primero, palabras por capítulo dentro de tolerancia y enlaces internos (A-103), con su score; `export.timeout_segundos`; `PENDIENTES` vacía; dependencias `playwright` y `pypdf`; 459 pruebas
+- **P49** — `tests/e2e/test_f5.py`: backend como proceso con dobles y `render_visual` real (servidor MCP y una página de lectura que lee la API al pedirla, como el frontend): el gate pinta la candidata y la publica; ficha y portada por HTTP; export con paridad; `test_conformidad_completa` (`PENDIENTES` vacía). Integración con la página `lectura` real del frontend (rama `frontend-demo`, `npm run dev`): `render_visual` en verde tras corregir el parser de consola y declarar A-124; `ejemplos/novela-ejemplo.pdf` con la CLI sobre la novela del humo (49 páginas, 124 enlaces, paridad en verde). I-03: `lean_timeout_segundos` = 26. Documentos de cierre: spec § 8.1, `verification.md`, `architecture.md`, `browser-mcp.md`, TO-046, RI-019; 462 pruebas
 ## Pendiente
 
-- **P47 partido en P47a y P47b** por el cambio de contrato TO-045 que resuelve la parada; después, P48 y P49 en orden.
-- **Hueco conocido de F4, visto en real**: una regeneración dirigida reescribe capítulos que abren promesas nuevas; los capítulos no afectados pagaban las promesas de las filas viejas, así que al cerrar quedan pendientes y `cierre_arco` detiene la versión nueva. A-102 retira hechos y usos de la fila vieja pero no reconcilia promesas. Propuesta para decidir: al reescribir, cerrar las promesas abiertas por la fila vieja solo si ninguna fila no afectada las paga, y ofrecer al extractor del capítulo reescrito las promesas vivas por su alias para que las reabra en vez de duplicarlas el resto hasta el P49 en orden.
+- **Hueco conocido de F4, visto en real**: una regeneración dirigida reescribe capítulos que abren promesas nuevas; los capítulos no afectados pagaban las promesas de las filas viejas, así que al cerrar quedan pendientes y `cierre_arco` detiene la versión nueva. A-102 retira hechos y usos de la fila vieja pero no reconcilia promesas. Propuesta para decidir: al reescribir, cerrar las promesas abiertas por la fila vieja solo si ninguna fila no afectada las paga, y ofrecer al extractor del capítulo reescrito las promesas vivas por su alias para que las reabra en vez de duplicarlas.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
-- **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
-  de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
-  al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
-  con el comando exacto, y el plan no se da por cerrado hasta que esté commiteado.
+- **Frontend** (fuera de este plan): regenerar el cliente desde el contrato 1.2.0 (I-10). Servir un favicon quitaría el único ruido de consola que `render_visual` tiene que ignorar (A-124), aunque no es necesario.
+
+### Resumen al cerrar el plan (I-08)
+
+- **Funciona**, con la suite en verde (462 pruebas, e2e por fase): entrevista y brief con datos faltantes, contradicciones y texto libre saneado; planificación, escritura, hooks, judge y editor, aceptación por el policy engine con audit log; story bible por versión con vigencia y retcon; regeneración dirigida que solo reescribe lo afectado; versión candidata con el gate completo, `render_visual` real incluido; lectura por versión con ficha y portada; export a PDF con paridad; observabilidad con spans y scores; proveedor `claude_code` sin clave de API.
+- **No funciona o no está**: el gate de Lean (falta RF-EXP-03, post-demo; toolchain y timeout listos); los casetes HTTP; el hueco de promesas en la regeneración dirigida, que puede detener una versión 2 real por `cierre_arco`.
+- **Post-demo**: la tabla de abajo y los cuatro RF `[post-demo]` de la spec (RF-INTAKE-06, RF-CANON-05, RF-QUA-08, RF-EXP-03).
 
 ## Post-demo
 
@@ -241,6 +244,7 @@ registrada.
 | A-121 | P48 | Un PDF sin paridad queda `fallido` y no se sirve; se guarda en disco para el diagnóstico | Servirlo sería validar uno y entregar otro (TO-003) | TO-046 (F5) |
 | A-122 | P48 | El export corre como tarea de fondo de la petición, fuera de la cola de trabajos | No llama al modelo ni consume presupuesto en vuelo; la cola es de generaciones | TO-046 (F5) |
 | A-123 | P48 | El PDF sale del Chromium de Playwright y `render_visual` usa el navegador del servidor MCP (Edge en esta máquina): misma página, misma URL y mismo motor Chromium, pero dos procesos | «El mismo render» se sostiene por la página y el motor; `paridad_pdf_web` compara el PDF con el DOM del render del que sale | TO-046 (F5) |
+| A-124 | P49 | El 404 de `/favicon.ico` no cuenta como error de consola en `render_visual` | El navegador lo pide por su cuenta y el contrato de lectura no lo incluye; la página real del frontend no sirve favicon | TO-046 (F5) |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -252,13 +256,13 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | --- | --- | --- | --- |
 | I-01 | **Test de humo con modelo real solo si la credencial está en el entorno.** Si lo está: apuntar aquí la ruta de la base de la novela, su coste y la URL de la traza en Langfuse. Si no: apuntarlo y **seguir con las fases siguientes**, porque la suite no depende de él. Esta instrucción sustituye a la condición de parada 1 del plan | Cierre de F1 (P26–P27) | **aplicada** con `proveedor: claude_code` (I-04): base, coste y traza en § Coste real y «Novela de humo» |
 | I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | **aplicada**: tokens por llamada en `data/humo-20260924T163649.json`; ajustes A-58 y A-61 |
-| I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
+| I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | **aplicada en lo que cabe** en el P49: `lean_timeout_segundos` = 26 `[provisional]`; `gate_activo` sigue en `false` porque falta el generador Lean (RF-EXP-03, post-demo); `lean` y `lake` responden con `~/.elan/bin` en el PATH |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
-| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F4 subidas** (F4 al cerrar el P44) |
-| I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F5 subidas** (F5 al cerrar el P49) |
+| I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | aplicada: TO-042 (F2), TO-043 (F3), TO-044 (F4), TO-045 (cambio de contrato) y TO-046 (F5) |
 | I-07 | `specs/openapi.yaml` no se modifica (salvo los cambios aprobados: 1.1.0, TO-037; 1.2.0, TO-045); si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
-| I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
-| I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | pendiente |
+| I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | **aplicada** en el P49 |
+| I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | **aplicada** en el P49 |
 | I-10 | **El frontend debe regenerar su cliente tipado desde el contrato `specs/openapi.yaml` 1.2.0** (TO-045): `Version.estado` (`candidata`, `publicada`, `rechazada`); `obtenerVersion` sirve cualquier estado; `version_vigente`, `listarVersiones` y el export, solo `publicadas`. La lectura de una candidata es la que pinta `render_visual` | Al subir el cambio de contrato; lo aplica el frontend | pendiente (del frontend) |
 
 ### I-04 · Cambio aprobado: proveedor del modelo vía Claude Code, sin clave de API
@@ -309,9 +313,10 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P48 cerrado; sigue el P49**. Rama `backend-v1`,
-suite en verde (459 pruebas). Al retomar: seguir por el P49 del plan. Para `render_visual` real, arrancar el servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
-al cerrar la F1 se vuelve a subir (I-05).
+Estado al escribir esto: **plan 1 cerrado** (P49). Rama `backend-v1`, subida a
+`origin/backend-v1`, con la suite en verde (462 pruebas). No queda paso del plan: lo siguiente
+es decidir lo de § Pendiente con el desarrollador. Para `render_visual` real, arrancar el
+servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica (A-114).
 
 ```bash
 git switch backend-v1

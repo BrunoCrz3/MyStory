@@ -10,9 +10,7 @@ controles desaparecen.
 from __future__ import annotations
 
 import html
-from typing import Any
-
-from fastapi.testclient import TestClient
+from typing import Any, Protocol
 
 from app.versioning.lectura import LISTA
 
@@ -29,7 +27,13 @@ body { font-family: Georgia, serif; max-width: 42rem; margin: 2rem auto; padding
 """
 
 
-def datos_de_version(cliente: TestClient, novela: str, version: int) -> dict[str, Any]:
+class ClienteApi(Protocol):
+    """Lo único que se pide al cliente: el `TestClient` de la suite o un cliente HTTP real."""
+
+    def get(self, url: str, /) -> Any: ...
+
+
+def datos_de_version(cliente: ClienteApi, novela: str, version: int) -> dict[str, Any]:
     base = f"/novelas/{novela}/versiones/{version}"
     return {
         "novel_id": novela,
