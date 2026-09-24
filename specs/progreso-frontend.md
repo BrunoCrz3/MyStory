@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F06 | pendiente | 0 |
+| F07 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -31,6 +31,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F03 | Ejemplos leídos de `openapi.yaml` en cada ejecución, `fetch` de prueba con registro de peticiones, render con proveedores y datos de lectura tipados con `satisfies` |
 | F04 | Guardas de CA-14 sobre `src/`: sin `any`, sin importar de `tests/`, capas hacia abajo, sin cruces entre páginas y siempre por `index.ts`. Cada regla se prueba primero contra un caso que la viola (1 intento en rojo, por escapes) |
 | F05 | Router con las cuatro rutas, redirección de `/novelas/:id`, `exigir`/`aProblema`/`ErrorDeApi` para `problem+json` y `AvisoProblema` en `shared/ui` |
+| F06 | Progreso que sondea al `intervalo_sondeo_segundos` del recurso y para por `es_terminal`; enlace a la versión resultante; `detenida_por` tal cual |
 
 ## Para la sesión del backend
 
