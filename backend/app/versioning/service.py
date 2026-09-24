@@ -21,7 +21,7 @@ from app.commons.tiempo import ahora
 from app.intake.service import leer_brief
 from app.novel import service as novel
 from app.process.service import VeredictoGate
-from app.versioning import repository
+from app.versioning import gate, repository
 from app.versioning.schemas import Capitulo, CapituloIndice, Version, VersionResumen
 
 __all__ = [
@@ -78,43 +78,6 @@ def hash_de_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> 
     return _hash(fila["titulo"], _contenido(con, novel_id=novel_id, ids=ids))
 
 
-def _estructura_edicion(
-    con: sqlite3.Connection, *, novel_id: str, capitulos: list[dict[str, Any]]
-) -> VeredictoGate:
-    """O-57 y O-58: exactamente `obra.capitulos` capítulos, con títulos únicos y no vacíos."""
-    total = novel.total_capitulos(con, novel_id=novel_id)
-    problemas = []
-    numeros = sorted(int(c["numero"]) for c in capitulos)
-    if numeros != list(range(1, total + 1)):
-        problemas.append(f"hay {len(numeros)} capítulos aceptados y la obra tiene {total}")
-    titulos = [(c["titulo"] or "").strip() for c in capitulos]
-    vacios = sorted(int(c["numero"]) for c, t in zip(capitulos, titulos, strict=True) if not t)
-    if vacios:
-        problemas.append(f"capítulos sin título: {vacios}")
-    repetidos = sorted({t for t in titulos if t and titulos.count(t) > 1})
-    if repetidos:
-        problemas.append(f"títulos repetidos: {repetidos}")
-    return VeredictoGate(
-        nombre="estructura_edicion",
-        pasa=not problemas,
-        valor=0.0 if problemas else 1.0,
-        detalle="; ".join(problemas) or "estructura correcta",
-    )
-
-
-def _elementos_obligatorios(
-    con: sqlite3.Connection, *, novel_id: str, ids: list[str]
-) -> VeredictoGate:
-    """O-04: todo elemento obligatorio aparece en al menos un capítulo de la versión."""
-    ausentes = repository.obligatorios_ausentes(con, novel_id=novel_id, capitulos=ids)
-    return VeredictoGate(
-        nombre="elementos_obligatorios",
-        pasa=not ausentes,
-        valor=0.0 if ausentes else 1.0,
-        detalle=f"obligatorios sin capítulo: {ausentes}" if ausentes else "todos presentes",
-    )
-
-
 class Publicacion:
     """Implementación del puerto `Publicador` de `process/`."""
 
@@ -125,8 +88,9 @@ class Publicacion:
         ids = list(_candidatos(con, novel_id=novel_id, version=version).values())
         capitulos = _contenido(con, novel_id=novel_id, ids=ids)
         return [
-            _estructura_edicion(con, novel_id=novel_id, capitulos=capitulos),
-            _elementos_obligatorios(con, novel_id=novel_id, ids=ids),
+            gate.estructura_edicion(con, novel_id=novel_id, capitulos=capitulos),
+            gate.elementos_obligatorios(con, novel_id=novel_id, ids=ids),
+            gate.cierre_arco(self.config, con, novel_id=novel_id, version=version, ids=ids),
         ]
 
     def publicar(

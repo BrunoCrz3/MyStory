@@ -45,9 +45,10 @@ class GeneracionDetenida(Exception):
 class GateEnRojo(GeneracionDetenida):
     """El gate de publicación no pasa: la versión no se publica (RF-QUA-03).
 
-    En F1 no hay rol editor que corrija la novela entera, así que la generación vuelve al
-    editor y se detiene con los validadores fallidos en el audit log (A-47); el P32 lo cambia
-    por la corrección.
+    El editor corrige capítulos, no la novela entera: arreglar un fallo del gate —una promesa
+    sin pagar— exige reescribir capítulos ya aceptados, y eso es el retcon de F4. Así que la
+    generación vuelve al editor y se detiene con los validadores fallidos en el audit log
+    (A-47, A-79).
     """
 
     def __init__(self, fallidos: list[VeredictoGate]) -> None:
@@ -263,9 +264,14 @@ class Orquestador:
 
         def detener(con: sqlite3.Connection) -> None:
             actual = novel.estado_de_obra(con, novel_id=t["novel_id"])
+            transiciones = []
             if devolver_al_editor:
+                # El diagrama devuelve la novela al editor (Escribiendo). Corregir la novela
+                # entera exige retcon (F4), así que por ahora se detiene ahí mismo (A-47, A-79).
                 actual = aplicar("Novela", actual, "DevolverAlEditor")
+                transiciones.append("DevolverAlEditor")
             destino = aplicar("Novela", actual, "Detener")
+            transiciones.append("Detener")
             novel.fijar_estado_obra(con, novel_id=t["novel_id"], estado=destino)
             repository.actualizar_trabajo(
                 con,
@@ -283,7 +289,7 @@ class Orquestador:
                 novel_id=t["novel_id"],
                 generacion_id=t["id"],
                 motivo=motivo,
-                detalle={"detalle": detalle[:2000]},
+                detalle={"detalle": detalle[:2000], "transiciones": transiciones},
             )
 
         await self.r.db.en_transaccion(detener)
