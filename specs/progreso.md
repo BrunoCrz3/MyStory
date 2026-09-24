@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P26 · Humo opt-in, casetes y escaneo de secretos |
+| Paso actual | P27 · Cierre de F1 |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P25 |
+| Último commit de paso | P26 |
 
 ## Coste real
 
@@ -56,10 +56,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P23** — commons/llm/llamar: reintento de fallos de infraestructura en contar y generar con retroceso exponencial y jitter (reloj y azar inyectables), max_intentos_trabajo reintentos tras la primera llamada, contador propio en Consumo.reintentos_infra que no gasta intentos del capítulo; orquestador: topes coste_maximo_novela y latencia_maxima_novela tras planificar y tras cada capítulo, fallos de infraestructura agotados y ContextoNoCabe detienen con error-interno e informe en audit log; intentos_infra en el trabajo
 - **P24** — Reanudación: el worker devuelve a `pendiente` al arrancar los trabajos `en-curso` (UPDATE … RETURNING, sin copia); `Orquestador.estado_inicial` normaliza a `Pendiente` los capítulos en Escribiendo, Validando o Reescribiendo sin tocar sus intentos; un corte entre guardar y fijar el esquema no replanifica; `CerrarEscritura` solo desde Escribiendo; propiedad con hypothesis (uno o dos cortes en redactor o extractor): aceptados en prefijo, mismo `capitulo_id`, un snapshot por capítulo, un solo trabajo; 237 pruebas
 - **P25** — Migración 0009_version (version_novela, version_capitulo, triggers de inmutabilidad también sobre título, texto y palabras de un capítulo publicado); versioning/ con gate F1 (`estructura_edicion`, `elementos_obligatorios`, score por validador), publicar con hash SHA-256 del contenido canónico y `modificado` por fila distinta (D-05), y las cuatro rutas de lectura; puerto `Publicador` en process/service.py inyectado desde el lifespan; el orquestador publica en una transacción (Publicar + Conservar) y deja `version_resultante`; gate en rojo → DevolverAlEditor + Detener; el guion del doble declara los elementos del brief; 245 pruebas
+- **P26** — `ejemplos/brief-ejemplo.json` (el `example` de `BriefNovela`, con prueba de igualdad); `tests/humo/test_novela_real.py` marcado `real` sobre `STORYMAKER_DB_PATH` que se salta con motivo si falta la credencial; `tests/herramientas/casetes.py` con `TransporteGrabador` (lista blanca de cabeceras) y `reproductor`; `tests/arquitectura/test_sin_secretos.py` sobre lo versionado y los casetes, con meta-pruebas; 254 pruebas
 
 ## Pendiente
 
-- Siguiente: **P24 · Checkpoint y reanudación**, y después el resto hasta el P49 en orden.
+- Siguiente: **P27 · Cierre de F1** (con I-04 antes del humo), y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -133,6 +134,8 @@ registrada.
 | A-47 | P25 | Gate en rojo en F1: DevolverAlEditor y Detener en la misma transacción, `detenida_por = error-interno` y los validadores fallidos en el audit log | En F1 no hay editor que corrija la novela entera y todo reintento tiene límite; el P32 lo sustituye por la corrección | TO-039 |
 | A-48 | P25 | El gate y la publicación se inyectan en el orquestador por el puerto `Publicador` de process/service.py; un capítulo inexistente en una versión responde 404 `version-no-encontrada` con `capitulo` | versioning → process ya existe y la arista inversa sería un ciclo; el catálogo de problemas es cerrado | TO-039 |
 | A-49 | P25 | `listar_versiones` va en `CONSULTAS_TRANSVERSALES` de versioning/repository.py: filtra por `novel_id` pero no por `version` | El historial mira todas las versiones a la vez | TO-039 |
+| A-50 | P26 | El barrido de secretos busca en todo fichero versionado claves con forma de clave (`sk-ant-…`, `sk-lf-…`, `pk-lf-…`) y los valores de las variables secretas de `.env.example` (nombre con KEY, SECRET, TOKEN o PASSWORD); los nombres de cabecera `x-api-key` y `authorization`, solo en los casetes | Las palabras sueltas aparecen legítimamente en el plan y en las skills, y las variables no secretas (`STORYMAKER_ENV`) tienen valores que el repo contiene | TO-039 |
+| A-51 | P26 | El grabador de casetes conserva solo una lista blanca de cabeceras (`content-type`, `anthropic-version`, `request-id`) y vive en `tests/herramientas/casetes.py` | Una lista negra dejaría pasar una cabecera de autenticación nueva del SDK | TO-039 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -147,7 +150,7 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | pendiente |
 | I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 subida; subido también hasta el P25 por el apagado del 2026-09-24; al cerrar F1 se vuelve a subir |
-| I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». **TO-038 recoge A-01…A-13. A-14…A-43 están anotadas como TO-039 pero esa entrada todavía no existe**: escribirla, con su RI, en el cierre de F1 (P27) | P27 | pendiente |
+| I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». **TO-038 recoge A-01…A-13. A-14…A-43 están anotadas como TO-039 (ya hasta A-51) pero esa entrada todavía no existe**: escribirla, con su RI, en el cierre de F1 (P27) | P27 | pendiente |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
 | I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | pendiente |
@@ -197,14 +200,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P25 cerrado, siguiente P26**. Sesión cortada por apagado de la máquina justo tras cerrar el P25: no queda ningún paso a medias, rama `backend-v1`,
-suite en verde (245 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P26 cerrado, siguiente P27**. Rama `backend-v1`,
+suite en verde (254 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 245 pruebas en verde al cerrar P25
+uv run pytest -q          # 254 pruebas en verde al cerrar P26
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
