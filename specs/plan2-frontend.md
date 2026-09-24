@@ -120,7 +120,7 @@ son `shared/`, ningún código se usa hoy desde dos páginas (skill FSD § 2).
 | F12 | PDF | `tests/pages/lectura/pdf.test.tsx` | CA-13 | hecho |
 | F13 | Contrato de lectura completo e impresión | `tests/pages/lectura/contrato-lectura.test.tsx` | CA-15, CA-16 | hecho |
 | F14 | Entrevista: formulario y crear | `tests/pages/entrevista/crear.test.tsx` | CA-04 | hecho |
-| F15 | Entrevista: resultado de validación | `tests/pages/entrevista/validacion.test.tsx` | CA-02, CA-03 | pendiente |
+| F15 | Entrevista: resultado de validación | `tests/pages/entrevista/validacion.test.tsx` | CA-02, CA-03 | hecho |
 | F16 | Arranque conjunto | `npm run build` | — | pendiente |
 
 **Desbloqueado el 2026-09-24.** Los antiguos B1 (brief parcial) y B2 (contrato de lectura)

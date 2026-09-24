@@ -7,6 +7,8 @@ import { useCrearYGenerar, useValidarBrief } from '../api/entrevista'
 import { aBriefCompleto, aBriefParcial, FORMULARIO_VACIO, type EstadoFormulario } from '../model/formulario'
 import { FormularioBrief } from './FormularioBrief'
 import { ListaNovelas } from './ListaNovelas'
+import { ResultadoValidacion } from './ResultadoValidacion'
+import '../entrevista.css'
 
 export function EntrevistaPage() {
   const [estado, setEstado] = useState<EstadoFormulario>(FORMULARIO_VACIO)
@@ -19,9 +21,17 @@ export function EntrevistaPage() {
   const parcial = aBriefParcial(estado)
   const vigente = validadoCon === JSON.stringify(parcial) ? validar.data : undefined
   const completo = vigente?.valido ? aBriefCompleto(parcial) : null
+  const problema = crear.isError ? problemaDe(crear.error) : validar.isError ? problemaDe(validar.error) : undefined
+
+  // Red de seguridad (spec 2, G1): los datos faltantes y las contradicciones se pintan
+  // vengan en la respuesta que vengan —el 200 de la validación, un 400 o un 422—.
+  const faltantes = [...(vigente?.datos_faltantes ?? []), ...(problema?.datos_faltantes ?? [])]
+  const contradicciones = [...(vigente?.contradicciones ?? []), ...(problema?.contradicciones ?? [])]
+  const preguntas = new Map(faltantes.map((dato) => [dato.campo, dato.pregunta_reintento ?? '']))
 
   function alValidar(evento: FormEvent) {
     evento.preventDefault()
+    crear.reset()
     setValidadoCon(JSON.stringify(parcial))
     validar.mutate(parcial)
   }
@@ -37,7 +47,14 @@ export function EntrevistaPage() {
     <main>
       <h1>Entrevista</h1>
       <form aria-label="Brief de la novela" onSubmit={alValidar} noValidate>
-        <FormularioBrief estado={estado} cambiar={setEstado} />
+        <div className="cabecera-formulario">{problema && <AvisoProblema problema={problema} />}</div>
+        <FormularioBrief estado={estado} cambiar={setEstado} faltantes={preguntas} />
+        <ResultadoValidacion
+          faltantes={faltantes}
+          contradicciones={contradicciones}
+          sospechosos={vigente?.fragmentos_sospechosos ?? []}
+          hechos={vigente?.hechos_extraidos ?? []}
+        />
         <div className="acciones">
           <button type="submit" disabled={validar.isPending}>
             Validar
@@ -47,8 +64,6 @@ export function EntrevistaPage() {
           </button>
         </div>
         {vigente?.valido && <p role="status">El brief está completo.</p>}
-        {validar.isError && <AvisoProblema problema={problemaDe(validar.error)} />}
-        {crear.isError && <AvisoProblema problema={problemaDe(crear.error)} />}
       </form>
       <ListaNovelas />
     </main>

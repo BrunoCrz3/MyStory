@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F15 | pendiente | 0 |
+| F16 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -40,6 +40,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F12 | «Descargar PDF» con `exportarVersion`: enlace a `descargarExport` si está disponible, «Volver a comprobar» sin sondeo si está en curso, aviso si falló, y la paridad si viene |
 | F13 | Prueba que lee la tabla CL-03 de `spec1.md` y comprueba cada fila (número, padre, atributos, contenido); `lectura.css` con `@media print` (CL-04) y los controles marcados con `data-controles` |
 | F14 | Formulario completo del brief serializado como `BriefNovelaParcial`; «Crear y generar» solo con `valido: true` vigente; `crearNovela` con el estrechamiento a `BriefNovela` y luego `lanzarGeneracion`; lista de novelas (2 intentos en rojo: tipos con `default` obligatorios y una aserción que contaba el sondeo del progreso) |
+| F15 | Datos faltantes junto a su campo y en un resumen, contradicciones, fragmentos descartados y hechos extraídos; red de seguridad para `400` y `422`, con el `detail` en la cabecera del formulario |
 
 ## Para la sesión del backend
 
