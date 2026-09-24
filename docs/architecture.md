@@ -412,20 +412,32 @@ estado` en `process/`, y el `.tla` declara las mismas acciones; **un test falla 
 (TO-020). La tabla del README se genera desde ese dato, de modo que no puede quedarse vieja
 en silencio.
 
-| Acción TLA+ | Estado origen | Estado destino | Función de código |
-| --- | --- | --- | --- |
-| `Init` | — | `Pendiente` | `orquestador.estado_inicial` · normaliza a `Pendiente` el capítulo a medias al reanudar |
-| `Planificar` | `Configurando` | `Planificando` | `orquestador.planificar` |
-| `Escribir` | `Pendiente` | `Escribiendo` | `orquestador.escribir` |
-| `Validar` | `Escribiendo` | `Validando` | `orquestador.validar` |
-| `Aceptar` | `Validando` | `Aceptado` | `orquestador.aceptar` · única que escribe en la story bible |
-| `Reescribir` | `Validando` | `Reescribiendo` | `orquestador.reescribir` · `intentos + 1` |
-| `Reintentar` | `Reescribiendo` | `Escribiendo` | `orquestador.reintentar` |
-| `Agotar` | `Reescribiendo` | `Agotado` | `orquestador.agotar` |
-| `Obsoletar` | `Aceptado` | `Obsoleto` | `orquestador.obsoletar` · lo dispara el retcon |
-| `Reencolar` | `Obsoleto` | `Pendiente` | `orquestador.reencolar` |
-| `Publicar` | `Validando` | `Publicando` | `orquestador.publicar` · exige el gate en verde |
-| `Detener` | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
+| Acción TLA+ | Máquina | Estado origen | Estado destino | Función de código |
+| --- | --- | --- | --- | --- |
+| `Init` | Capitulo | — | `Pendiente` | `orquestador.estado_inicial` · normaliza a `Pendiente` el capítulo a medias al reanudar |
+| `Escribir` | Capitulo | `Pendiente` | `Escribiendo` | `orquestador.escribir` |
+| `Validar` | Capitulo | `Escribiendo` | `Validando` | `orquestador.validar` |
+| `Aceptar` | Capitulo | `Validando` | `Aceptado` | `orquestador.aceptar` · única que escribe en la story bible |
+| `Reescribir` | Capitulo | `Validando` | `Reescribiendo` | `orquestador.reescribir` · `intentos + 1` |
+| `Reintentar` | Capitulo | `Reescribiendo` | `Escribiendo` | `orquestador.reintentar` |
+| `Agotar` | Capitulo | `Reescribiendo` | `Agotado` | `orquestador.agotar` |
+| `Obsoletar` | Capitulo | `Aceptado` | `Obsoleto` | `orquestador.obsoletar` · lo dispara el retcon |
+| `Reencolar` | Capitulo | `Obsoleto` | `Pendiente` | `orquestador.reencolar` |
+| `Planificar` | Novela | `Configurando` | `Planificando` | `orquestador.planificar` |
+| `FijarEsquema` | Novela | `Planificando` | `Escribiendo` | `orquestador.fijar_esquema` |
+| `CerrarEscritura` | Novela | `Escribiendo` | `Validando` | `orquestador.cerrar_escritura` · todos los capítulos aceptados |
+| `DevolverAlEditor` | Novela | `Validando` | `Escribiendo` | `orquestador.devolver_al_editor` · falla el gate |
+| `Publicar` | Novela | `Validando` | `Publicando` | `orquestador.publicar` · exige el gate en verde |
+| `Conservar` | Novela | `Publicando` | `Publicada` | `orquestador.conservar` · versión inmutable escrita |
+| `Regenerar` | Novela | `Publicada` | `Regenerando` | `orquestador.regenerar` · solicitud de cambio confirmada |
+| `CerrarRegeneracion` | Novela | `Regenerando` | `Validando` | `orquestador.cerrar_regeneracion` · afectados reescritos |
+| `Detener` | Novela | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
+
+`Escribiendo` y `Validando` existen en las dos máquinas con sentidos distintos, y por eso la
+tabla dice de qué máquina es cada fila. Las seis acciones de la novela que el diagrama de
+`domain-knowledge.md` dibujaba sin nombre —de `FijarEsquema` a `CerrarRegeneracion`— se
+nombraron al implementar la tabla del orquestador (plan 1, P13; TO-039), y la prueba de
+`process/` compara esta tabla y los dos diagramas con el dato del código.
 
 ### Checkpoint y reanudación
 
