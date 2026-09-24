@@ -857,3 +857,33 @@ decidido.
 
 **Sigue pendiente**: aprobar el plan 1.
 
+---
+
+## RI-012 — F0 del plan 1: la fundación del backend
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/`, `config/thresholds.yaml`, `README.md`,
+`docs/trade-offs.md` (TO-038)
+
+### Causa
+
+Primera fase del plan 1, aprobado por el desarrollador: sin fundación no hay nada sobre lo que
+probar la generación.
+
+### Qué cambió
+
+Existe `backend/` con FastAPI y su `lifespan`: carga y valida `config/` con fallo en voz alta
+nombrando la clave, aplica las migraciones con un runner que detecta una migración editada,
+toma un cerrojo de instancia única, y crea el pool en vuelo FIFO, el trazador de Langfuse y el
+cliente del modelo. Toda respuesta de error es `problem+json` del catálogo cerrado. `GET
+/salud` cumple el contrato. La suite tiene el **test de conformidad con `specs/openapi.yaml`**
+con su meta-prueba de mutaciones, las pruebas de arquitectura con las suyas y dos pruebas de
+extremo a extremo con el proceso real. `config/thresholds.yaml` gana el timeout por llamada y
+los precios por modelo.
+
+### Efecto
+
+**100 pruebas en verde, cobertura del 92 %**, `ruff` y `mypy --strict` limpios. Dos cosas que
+solo aparecieron al ejecutar: el SDK de Anthropic 1.x va sobre `httpx2`, no sobre `httpx`, y
+los casetes tienen que usar su transporte; y en Windows el proceso hijo escribe sus errores en
+cp1252, así que las pruebas de extremo a extremo fuerzan UTF-8.
+

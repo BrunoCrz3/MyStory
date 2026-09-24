@@ -1243,3 +1243,39 @@ dato en un único módulo, comparado en una prueba con la tabla de la spec, y el
 integración del plan corre `render_visual` contra la página real antes de exportar el PDF de
 ejemplo. La lectura del «campo vacío» (D-01 del borrador del plan) queda rechazada.
 
+---
+
+## TO-038 — Decisiones menores del agente al ejecutar la F0 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/commons/`, `backend/tests/`, `config/thresholds.yaml`
+
+### Problema
+
+El plan 1 deja al agente todo lo que no es condición de parada, con la obligación de
+registrarlo. Estas son las decisiones de la F0 que no estaban en el plan (`specs/progreso.md`
+§ Decisiones, A-01 a A-13).
+
+### Elección
+
+| Id | Decisión | Por qué | Alternativa descartada |
+| --- | --- | --- | --- |
+| A-01 | De otra feature solo se importa `service`; `commons/`, `prompts/` y `skills/` se importan desde cualquier feature y no importan ninguna | Es la regla de la skill `backend-feature-slice`, hecha ejecutable | Permitir también `schemas` o `models` de otra feature |
+| A-02 | Las consultas sin `novel_id` —listar novelas, reclamar trabajo— se declaran en `CONSULTAS_TRANSVERSALES` del repositorio | RD-02 no tenía excepción escrita y `GET /novelas` la necesita | Dejar que la prueba las ignore sin rastro |
+| A-03 | Los umbrales con score solo cierran el paso con `medicion.cerrar_el_paso: true` y admiten `null` en medición; los booleanos y los que cuentan hasta cero cierran siempre | `thresholds.yaml` no decía si los programáticos con score dependen de la fase de medición | Que todo umbral numérico cierre siempre, que impediría calibrar |
+| A-04 | `Problema` lleva sus propias formas de dato faltante y contradicción | `commons/` no puede importar `intake/` ni tener clases de la ontología | Importar las de `intake/` desde `commons/` |
+| A-05 | Los 404 de rutas inexistentes y los 405 siguen siendo los de Starlette | El catálogo es cerrado y ninguna operación del contrato los produce | Inventar un `type` fuera del catálogo |
+| A-06 | La tabla de control del runner, `_migracion`, es la única sin `novel_id` | RD-01 habla de tablas de dominio | — |
+| A-07 | `orquestacion.timeout_llamada_segundos: 300`, provisional | RNF-05 exige timeout explícito y RNF-14 que la cifra viva en `config/` | El timeout por defecto del SDK, de diez minutos |
+| A-08 | Salida estructurada con `output_config.format` y no con una tool forzada | Opus 5.5 rechaza `tool_choice` forzado y no deja desactivar el thinking | Tool con `tool_choice: tool` |
+| A-09 | Precios de la tabla oficial cacheada en la skill `claude-api` | D-18 pide cifras comprobadas, no de memoria | — |
+| A-10 | `xhigh` entre los effort admitidos | Los modelos actuales lo aceptan | — |
+| A-11 | Sin Langfuse, `traza_langfuse_id` es `null` y el log degradado no lleva contenido | Un id inventado haría creer que hay traza; el contenido tiene datos personales (RNF-18) | Generar un id local y publicarlo |
+| A-12 | La lista cerrada de spans añade los puntos del proceso a los agentes y tools de `architecture.md` | La arquitectura fija los de rol y tool, no los de estructura | Nombres libres |
+| A-13 | Cerrojo de instancia con una transacción `EXCLUSIVE` en un SQLite hermano de la base | El sistema operativo lo libera si el proceso muere, también en Windows | Fichero con PID, que deja cerrojos huérfanos |
+
+### Consecuencias
+
+Ninguna cambia el contrato ni la ontología. A-03 es la que más pesa: fija cuándo suspende un
+validador mientras se calibra, y al pasar `cerrar_el_paso` a `true` todos los umbrales con
+score tienen que estar rellenos o el arranque falla.
+

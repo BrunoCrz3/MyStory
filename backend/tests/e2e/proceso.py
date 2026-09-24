@@ -1,0 +1,71 @@
+"""Arranca el backend como proceso real para las pruebas de extremo a extremo."""
+
+from __future__ import annotations
+
+import os
+import socket
+import subprocess
+import sys
+import time
+from collections.abc import Iterator
+from contextlib import contextmanager
+from pathlib import Path
+
+import httpx2
+
+RAIZ_BACKEND = Path(__file__).resolve().parents[2]
+
+
+def puerto_libre() -> int:
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        puerto: int = s.getsockname()[1]
+        return puerto
+
+
+def entorno(db: Path, **extra: str) -> dict[str, str]:
+    env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "LANGFUSE_"))}
+    env["STORYMAKER_DB_PATH"] = str(db)
+    env["PYTHONUNBUFFERED"] = "1"
+    env["PYTHONUTF8"] = "1"
+    env["PYTHONIOENCODING"] = "utf-8"
+    env.update(extra)
+    return env
+
+
+@contextmanager
+def backend(
+    env: dict[str, str], *, modulo: list[str] | None = None, espera_s: float = 30.0
+) -> Iterator[tuple[str, subprocess.Popen[str]]]:
+    """Lanza el backend y espera a que `/salud` responda. Lo mata al salir."""
+    puerto = puerto_libre()
+    orden = [sys.executable, *(modulo or ["-m", "app"]), "--port", str(puerto)]
+    proceso = subprocess.Popen(
+        orden,
+        cwd=RAIZ_BACKEND,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+    )
+    base = f"http://127.0.0.1:{puerto}"
+    try:
+        limite = time.monotonic() + espera_s
+        while True:
+            if proceso.poll() is not None:
+                salida = proceso.stdout.read() if proceso.stdout else ""
+                raise RuntimeError(f"el backend terminó al arrancar:\n{salida}")
+            try:
+                if httpx2.get(f"{base}/salud", timeout=1).status_code == 200:
+                    break
+            except httpx2.HTTPError:
+                pass
+            if time.monotonic() > limite:
+                raise TimeoutError("el backend no respondió a tiempo")
+            time.sleep(0.2)
+        yield base, proceso
+    finally:
+        if proceso.poll() is None:
+            proceso.kill()
+            proceso.wait(timeout=10)
