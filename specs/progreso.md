@@ -152,8 +152,8 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 ## Cómo reanudar
 
 Estado al escribir esto: **P23 cerrado (commit `17cb8bf`), siguiente P24**, rama `backend-v1`,
-suite en verde (230 pruebas). F0 está subida; F1 (P11–P27) está en commits locales y se sube
-al cerrar la fase.
+suite en verde (230 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
