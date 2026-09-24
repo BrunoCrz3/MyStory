@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P31 · Judge: rúbrica de seis criterios |
+| Paso actual | P32 · Editor y orden completo de validación |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P30 |
+| Último commit de paso | P31 |
 
 ## Coste real
 
@@ -64,10 +64,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P28** — Migración 0010_calidad (`informe_critica`, `defecto`, `score`; sin tabla `validador`, A-62); `quality/registro.py` con los 26 validadores del índice, comprobado contra `verification.md` leído del fichero; `registrar_informe` en la transacción de la decisión del policy engine, que falla si un resultado no corre donde dice el registro; `informes_de_capitulo` y `ultimo_informe`; 296 pruebas
 - **P29** — `quality/validadores/canon.py`: `consistencia_factica` (edad en presente contra hechos vigentes y el brief, números en cifra y en letra), `cumplimiento_brief` (alcance nombrado, sin adelantar entidades que el plan presenta después) y `reglas_mundo` (exclusión de entidad por nombre, con plural; las de forma, no comprobables); `process/` les pasa hechos, reglas, alcance y previstas; la prueba de `/salud` con cola deja de ser una carrera; 307 pruebas
 - **P30** — `quality/validadores/texto.py`: `calidad_prosa` (eco de 5-gramas con los capítulos anteriores, muletillas y clichés contra listas cerradas en `quality/listas/`, adverbios, variación de longitud de frase, metatexto/markdown, truncado; cifras en null se omiten) e `integridad_pov` (persona fuera del diálogo, tiempo si se declara presente, accesos mentales de otro personaje con focalización interna); `hook_capitulo` asíncrono con los siete validadores en hilos concurrentes (`en_paralelo`), probado con una barrera de siete y con el pool a 0 durante el hook; 323 pruebas
+- **P31** — `quality/judge.py`: `SalidaJudge` (seis `Puntuacion` 0–1 con justificación, más afirmaciones sobre el destinatario y temas excluidos para el P37), `evaluar_judge` con `schema_valido` y un resultado por criterio con tipo y punto del registro; `context.piezas_judge` (borrador en Local como no confiable, temas excluidos, último capítulo marcado); `process/judge.juzgar` llama con `roles.judge` y deja un score por criterio con su justificación como comentario; 336 pruebas
 
 ## Pendiente
 
-- Siguiente: **P31 · Judge: rúbrica de seis criterios**, y después el resto hasta el P49 en orden.
+- Siguiente: **P32 · Editor y orden completo de validación**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -164,6 +165,9 @@ registrada.
 | A-69 | P30 | O-53 (ortografía), O-55 (descripciones repetidas) y O-56 (deriva de estilo) no se miden todavía | Sin diccionario en el stack cerrado y sin registro de descripciones; el plan del P30 no los pide | TO-042 |
 | A-70 | P30 | Las listas cerradas de muletillas y clichés viven en `quality/listas/` como datos versionados | Mismo criterio que las listas del guardrail (D-21): son datos, no código | TO-042 |
 | A-71 | P30 | `integridad_pov` coteja el tiempo verbal solo cuando se declara presente | Detectar presente en una narración en pasado sin analizador morfológico daría más falsos positivos que aciertos | TO-042 |
+| A-72 | P31 | El contrato y la evaluación del judge viven en `quality/judge.py`; el ensamblado y la llamada, en `process/judge.py`, con las piezas en `context.piezas_judge` | `quality/` no tiene arista a `context/`; `process/` sí, y es quien orquesta | TO-042 |
+| A-73 | P31 | El criterio «arco» emite el score `cierre_arco` en cada capítulo; el gate usará el del último (D-15) | El registro tiene un solo score para el arco y D-15 lo asigna al judge | TO-042 |
+| A-74 | P31 | Un criterio semántico sin umbral en `calidad` pasa siempre y deja su score | Sin cifra no hay con qué suspender; la fase de medición es justo para reunirla | TO-042 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -228,14 +232,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P30 cerrado, siguiente P31**. Rama `backend-v1`,
-suite en verde (323 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P31 cerrado, siguiente P32**. Rama `backend-v1`,
+suite en verde (336 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 323 pruebas en verde al cerrar P30
+uv run pytest -q          # 336 pruebas en verde al cerrar P31
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

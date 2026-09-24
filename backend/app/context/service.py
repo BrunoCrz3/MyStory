@@ -356,3 +356,79 @@ def piezas_redactor(
         "estilo": estilo,
         "anticontexto": anticontexto,
     }
+
+
+def piezas_judge(
+    con: sqlite3.Connection,
+    config: Config,
+    *,
+    novel_id: str,
+    version: int,
+    numero: int,
+    brief: BriefNovela,
+    brief_capitulo: BriefCapitulo,
+    titulo: str,
+    texto: str,
+) -> dict[str, list[Pieza]]:
+    """El contexto del judge: lo que la rúbrica necesita para puntuar un borrador.
+
+    El borrador va en Local como dato no confiable: es salida del modelo escrita sobre texto
+    del comprador, y nada de él puede cerrar una etiqueta ni pasar por instrucción.
+    """
+    bc = brief_capitulo
+    invariante = piezas_invariante(brief)
+    if brief.temas_excluidos:
+        invariante.append(
+            Pieza(
+                etiqueta="Temas excluidos",
+                texto="\n".join(f"- {t}" for t in brief.temas_excluidos),
+                prioridad=10,
+            )
+        )
+    ultimo = numero == config.umbrales.obra.capitulos
+    estructural = [
+        Pieza(
+            etiqueta=f"Brief del capítulo {numero}",
+            texto="\n".join(
+                [
+                    f"Función dramática: {bc.funcion_dramatica}",
+                    f"Punto de vista: {bc.pov}",
+                    f"Lugar: {bc.lugar}",
+                    f"Restricción de destino: [{bc.restriccion_tipo}] {bc.restriccion_enunciado}",
+                    "Es el último capítulo: el arco se cierra aquí."
+                    if ultimo
+                    else f"Capítulo {numero} de {config.umbrales.obra.capitulos}.",
+                ]
+            ),
+            prioridad=10,
+        )
+    ]
+    estado = [Pieza(etiqueta="Estado de entrada", texto=bc.estado_entrada, prioridad=10)]
+    previos = [
+        c
+        for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+        if c.numero < numero
+    ]
+    if previos:
+        snapshot = canon.snapshot_de(
+            con, novel_id=novel_id, version=version, capitulo_id=previos[-1].capitulo_id
+        )
+        if snapshot is not None:
+            estado.append(Pieza(texto=_render_snapshot(snapshot), prioridad=9))
+    local = [
+        Pieza(
+            etiqueta=f"Capítulo {numero} a evaluar: {titulo}",
+            texto=texto,
+            no_confiable=True,
+            prioridad=100,
+        )
+    ]
+    return {
+        "invariante": invariante,
+        "estructural": estructural,
+        "estado": estado,
+        "local": local,
+        "recuperado": [],
+        "estilo": [],
+        "anticontexto": [],
+    }
