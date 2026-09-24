@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import partial
 from typing import Any
 
 from app.commons.llm import Peticion
@@ -29,17 +30,22 @@ def redactar(peticion: Peticion) -> dict[str, str]:
     return borrador(titulo=f"Capítulo {n}: la travesía")
 
 
-def extraer(peticion: Peticion) -> dict[str, Any]:
-    return extraccion(capitulo_aceptado_de(peticion))
+def extraer(peticion: Peticion, elementos: list[str] | None = None) -> dict[str, Any]:
+    return extraccion(capitulo_aceptado_de(peticion), elementos=elementos)
 
 
 def guion_completo(modelo: ModeloGuionizado, brief: dict[str, Any] | None = None) -> None:
-    """Planificador, redactor y extractor responden siempre con una salida válida."""
+    """Planificador, redactor y extractor responden siempre con una salida válida.
+
+    El extractor declara presentes en cada capítulo todos los elementos del brief, para que
+    la novela pase `elementos_obligatorios` en el gate.
+    """
     brief = brief or brief_ejemplo()
+    elementos = [e["enunciado"] for e in brief["elementos_personalizados"]]
     modelo.por_defecto.update(
         {
             "planificador": lambda p: esquema_valido(brief),
             "redactor": redactar,
-            "extractor": extraer,
+            "extractor": partial(extraer, elementos=elementos),
         }
     )

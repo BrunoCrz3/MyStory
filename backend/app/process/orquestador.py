@@ -24,6 +24,7 @@ from app.process import repository
 from app.process.aceptar import aceptar
 from app.process.capitulo import ciclo_capitulo
 from app.process.planificar import planificar
+from app.process.service import Publicador, VeredictoGate
 from app.process.transiciones import aplicar
 
 _log = logging.getLogger("storymaker.orquestador")
@@ -41,9 +42,27 @@ class GeneracionDetenida(Exception):
         self.detalle = detalle
 
 
+class GateEnRojo(GeneracionDetenida):
+    """El gate de publicación no pasa: la versión no se publica (RF-QUA-03).
+
+    En F1 no hay rol editor que corrija la novela entera, así que la generación vuelve al
+    editor y se detiene con los validadores fallidos en el audit log (A-47); el P32 lo cambia
+    por la corrección.
+    """
+
+    def __init__(self, fallidos: list[VeredictoGate]) -> None:
+        super().__init__(
+            "error-interno",
+            "el gate de publicación falló: "
+            + "; ".join(f"{v.nombre}: {v.detalle}" for v in fallidos),
+        )
+        self.fallidos = fallidos
+
+
 class Orquestador:
-    def __init__(self, r: Recursos) -> None:
+    def __init__(self, r: Recursos, publicador: Publicador) -> None:
         self.r = r
+        self.publicador = publicador
 
     async def _trabajo(self, generacion_id: str) -> dict[str, Any]:
         t = await self.r.db.ejecutar(
@@ -117,6 +136,8 @@ class Orquestador:
             await self._actualizar(t, traza_langfuse_id=traza.traza_id)
             try:
                 await self._inicial(t, consumo)
+            except GateEnRojo as g:
+                await self._detener(t, g.motivo, g.detalle, devolver_al_editor=True)
             except GeneracionDetenida as d:
                 await self._detener(t, d.motivo, d.detalle)
             except LimiteDeIntentosAgotado as e:
@@ -197,14 +218,53 @@ class Orquestador:
         await self._cerrar(t)
 
     async def _cerrar(self, t: dict[str, Any]) -> None:
-        """Hasta que exista el gate de publicación (P25), la generación termina en `Validando`."""
-        await self._actualizar(t, estado_cola="terminado", terminada_en=ahora())
+        """Gate de publicación y, si pasa, la versión inmutable (RF-VER-01, RF-QUA-03).
 
-    async def _detener(self, t: dict[str, Any], motivo: str, detalle: str) -> None:
+        Publicar, escribir la versión y conservarla van en una sola transacción: una versión
+        a medio escribir no existe, y la reanudación nunca encuentra la novela en `Publicando`.
+        """
+        novel_id, version = t["novel_id"], t["version_objetivo"]
+        with self.r.trazador.span("gate_publicacion", metadata={"version": version}):
+            veredictos = await self.r.db.ejecutar(
+                partial(self.publicador.gate, novel_id=novel_id, version=version)
+            )
+            for v in veredictos:
+                self.r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
+        fallidos = [v for v in veredictos if not v.pasa]
+        if fallidos:
+            raise GateEnRojo(fallidos)
+
+        def publicar(con: sqlite3.Connection) -> None:
+            actual = novel.estado_de_obra(con, novel_id=novel_id)
+            destino = aplicar("Novela", aplicar("Novela", actual, "Publicar"), "Conservar")
+            self.publicador.publicar(
+                con, novel_id=novel_id, version=version, generacion_id=t["id"], motivo=None
+            )
+            novel.fijar_estado_obra(con, novel_id=novel_id, estado=destino)
+            repository.actualizar_trabajo(
+                con,
+                novel_id=novel_id,
+                trabajo_id=t["id"],
+                cambios={
+                    "estado": destino,
+                    "estado_cola": "terminado",
+                    "version_resultante": version,
+                    "terminada_en": ahora(),
+                },
+            )
+
+        with self.r.trazador.span("publicar", metadata={"version": version}):
+            await self.r.db.en_transaccion(publicar)
+
+    async def _detener(
+        self, t: dict[str, Any], motivo: str, detalle: str, *, devolver_al_editor: bool = False
+    ) -> None:
         motor = PolicyEngine(self.r.config)
 
         def detener(con: sqlite3.Connection) -> None:
             actual = novel.estado_de_obra(con, novel_id=t["novel_id"])
+            if devolver_al_editor:
+                actual = aplicar("Novela", actual, "DevolverAlEditor")
             destino = aplicar("Novela", actual, "Detener")
             novel.fijar_estado_obra(con, novel_id=t["novel_id"], estado=destino)
             repository.actualizar_trabajo(

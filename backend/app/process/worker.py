@@ -15,14 +15,15 @@ import logging
 from app.commons.recursos import Recursos
 from app.process import cola
 from app.process.orquestador import Orquestador
+from app.process.service import Publicador
 
 _log = logging.getLogger("storymaker.worker")
 
 
 class Worker:
-    def __init__(self, r: Recursos) -> None:
+    def __init__(self, r: Recursos, publicador: Publicador) -> None:
         self.r = r
-        self.orquestador = Orquestador(r)
+        self.orquestador = Orquestador(r, publicador)
         self._hay_trabajo = asyncio.Event()
         self._tarea: asyncio.Task[None] | None = None
         self._parar = False

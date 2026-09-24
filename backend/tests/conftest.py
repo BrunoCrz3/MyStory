@@ -22,6 +22,8 @@ from app.commons.llm.llamar import LlamadorModelo
 from app.commons.llm.pool import PoolEnVuelo
 from app.commons.recursos import Recursos
 from app.main import crear_app
+from app.process.orquestador import Orquestador
+from app.versioning.service import Publicacion
 from tests.contrato.normalizar import cargar_contrato, schema_de_respuesta
 from tests.dobles.modelo import ModeloGuionizado
 from tests.dobles.trazador import RegistroTrazas
@@ -125,6 +127,10 @@ class Entorno:
             self.recursos.db, self.recursos.config, BriefNovela.model_validate(brief)
         )
         return str(novela.novel_id)
+
+    def orquestador(self) -> Orquestador:
+        """El orquestador de producción, con la publicación de `versioning/`."""
+        return Orquestador(self.recursos, Publicacion(self.recursos.config))
 
     def consultar(self, sql: str, *parametros: Any) -> list[sqlite3.Row]:
         return self.recursos.db.ejecutar_sync(lambda con: con.execute(sql, parametros).fetchall())

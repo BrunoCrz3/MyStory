@@ -60,18 +60,13 @@ __all__ = [
     "registrar_reparto",
     "reglas_del_mundo",
     "sumar_consumo",
+    "titulo_de_obra",
     "total_capitulos",
     "version_vigente",
 ]
 
 
 def _version_vigente(con: sqlite3.Connection, *, novel_id: str) -> int | None:
-    # Hasta que exista `version_novela` (P25) ninguna novela tiene versión publicada.
-    existe = con.execute(
-        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'version_novela'"
-    ).fetchone()
-    if existe is None:
-        return None
     fila = con.execute(
         "SELECT max(version) FROM version_novela WHERE novel_id = ?", (novel_id,)
     ).fetchone()
@@ -366,6 +361,11 @@ def registrar_elementos_en_capitulo(
 def estado_de_obra(con: sqlite3.Connection, *, novel_id: str) -> str | None:
     obra = repository.leer_obra(con, novel_id=novel_id)
     return None if obra is None else str(obra["estado"])
+
+
+def titulo_de_obra(con: sqlite3.Connection, *, novel_id: str) -> str | None:
+    obra = repository.leer_obra(con, novel_id=novel_id)
+    return None if obra is None else obra["titulo"]
 
 
 def total_capitulos(con: sqlite3.Connection, *, novel_id: str) -> int:

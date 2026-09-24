@@ -23,10 +23,9 @@ from app.commons.config import Rol
 from app.commons.llm import Peticion
 from app.main import crear_app
 from app.process import cola
-from app.process.orquestador import Orquestador
 from tests.conftest import Entorno, crear_entorno
 from tests.dobles.guiones import guion_completo
-from tests.fixtures.briefs import brief_ejemplo
+from tests.fixtures.planificada import encolar_inicial
 from tests.process.test_orquestador import esperar
 
 TOTAL = 10
@@ -52,20 +51,13 @@ def cortar_en(entorno: Entorno, rol: Rol, llamada: int) -> None:
 
 
 async def lanzar(entorno: Entorno) -> tuple[str, str]:
-    r = entorno.recursos
-    novela = await entorno.crear_novela(brief_ejemplo())
-    generacion = await r.db.en_transaccion(
-        lambda con: cola.encolar(
-            con, r, novel_id=novela, tipo="inicial", accion="Planificar", version_objetivo=1
-        )
-    )
-    return novela, str(generacion.generacion_id)
+    return await encolar_inicial(entorno)
 
 
 async def ejecutar_hasta_el_corte(entorno: Entorno, gid: str) -> None:
     assert await entorno.recursos.db.ejecutar(cola.reclamar) == gid
     with pytest.raises(Corte):
-        await Orquestador(entorno.recursos).ejecutar(gid)
+        await entorno.orquestador().ejecutar(gid)
 
 
 async def reanudar(entorno: Entorno, gid: str) -> None:
@@ -73,7 +65,7 @@ async def reanudar(entorno: Entorno, gid: str) -> None:
     r = entorno.recursos
     assert await r.db.ejecutar(cola.devolver_huerfanos) == [gid]
     assert await r.db.ejecutar(cola.reclamar) == gid
-    await Orquestador(r).ejecutar(gid)
+    await entorno.orquestador().ejecutar(gid)
 
 
 def capitulos(entorno: Entorno, novela: str) -> dict[int, tuple[str, str]]:
@@ -104,7 +96,7 @@ async def test_el_capitulo_a_medias_vuelve_a_pendiente_y_sigue_por_el(entorno: E
     assert antes[5][1] == "Escribiendo"
     assert checkpoint(entorno, gid) == 4
 
-    normalizados = await Orquestador(entorno.recursos).estado_inicial(novela, 1)
+    normalizados = await entorno.orquestador().estado_inicial(novela, 1)
     assert normalizados == [5]
     assert capitulos(entorno, novela)[5][1] == "Pendiente"
     assert checkpoint(entorno, gid) == 4
@@ -117,7 +109,7 @@ async def test_el_capitulo_a_medias_vuelve_a_pendiente_y_sigue_por_el(entorno: E
     assert entorno.modelo.llamadas["redactor"] - redactados == TOTAL - 4
     assert checkpoint(entorno, gid) == TOTAL
     assert entorno.consultar("SELECT estado FROM obra WHERE novel_id = ?", novela)[0][0] == (
-        "Validando"
+        "Publicada"
     )
 
 
@@ -137,7 +129,7 @@ async def test_estado_inicial_normaliza_todo_estado_intermedio(
             (estado, novela),
         )
     )
-    assert await Orquestador(entorno.recursos).estado_inicial(novela, 1) == [3]
+    assert await entorno.orquestador().estado_inicial(novela, 1) == [3]
     fila = entorno.consultar(
         "SELECT estado, intentos FROM capitulo WHERE novel_id = ? AND numero = 3", novela
     )[0]
@@ -184,7 +176,7 @@ def test_propiedad_los_aceptados_son_un_prefijo_y_ninguno_se_acepta_dos_veces(
             base = dict(entorno.modelo.por_defecto)
             cortar_en(entorno, rol, n)
             with contextlib.suppress(Corte):
-                await Orquestador(entorno.recursos).ejecutar(gid)
+                await entorno.orquestador().ejecutar(gid)
             entorno.modelo.por_defecto.update(base)
 
             hechos = aceptados(entorno, novela)
@@ -202,7 +194,7 @@ def test_propiedad_los_aceptados_son_un_prefijo_y_ninguno_se_acepta_dos_veces(
         if entorno.consultar("SELECT estado_cola FROM trabajo WHERE id = ?", gid)[0][0] != (
             "terminado"
         ):
-            await Orquestador(entorno.recursos).ejecutar(gid)
+            await entorno.orquestador().ejecutar(gid)
         assert aceptados(entorno, novela) == list(range(1, TOTAL + 1))
         # Un snapshot por capítulo aceptado: consolidar no corrió dos veces para ninguno.
         snapshots = entorno.consultar(
