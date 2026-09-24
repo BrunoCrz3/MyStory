@@ -49,25 +49,23 @@ def _inicio_de_frase(texto: str, posicion: int) -> bool:
 def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
     """Los nombres de la story bible se escriben exactamente igual.
 
-    Caza dos formas de error: la misma palabra con otra grafía (`Tomas` por `Tomás`, `marta`
-    por `Marta`) y una palabra capitalizada a una letra de distancia de un nombre (`Martha`
-    por `Marta`) que no está al principio de frase, donde una palabra común también va en
-    mayúscula. Punto ciego declarado (O-02): un diminutivo legítimo que el brief no declaró
-    se marca como error, y un nombre ausente no se detecta.
+    Caza dos formas de error: la misma palabra con otra grafía (`Tomas` por `Tomás`) y una
+    palabra capitalizada a una letra de distancia de un nombre (`Martha` por `Marta`) que no
+    está al principio de frase, donde una palabra común también va en mayúscula.
+
+    Una diferencia **solo de mayúsculas** no es error: los nombres de una novela son a menudo
+    palabras comunes —el perro «Boya» y la boya del puerto, el «Varadero de Remedios» y el
+    varadero—, y un modelo no escribe un nombre propio en minúscula. Por lo mismo, solo son
+    forma de nombre las palabras que el nombre declarado escribe con mayúscula: en «El perro
+    de Marta», «perro» no lo es. Punto ciego declarado (O-02): un diminutivo legítimo que el
+    brief no declaró se marca como error, un nombre ausente no se detecta y un nombre escrito
+    en minúscula por error tampoco.
     """
-    # Solo son forma de nombre las palabras que el nombre declarado escribe con mayúscula: en
-    # «El perro de Marta», «perro» es una palabra común. Y una palabra que solo aparece dentro
-    # de nombres compuestos —«Varadero» en «Varadero de Remedios»— en minúscula es el nombre
-    # común, no el propio mal escrito.
     formas: dict[str, str] = {}
-    sueltas: set[str] = set()
     for nombre in nombres:
-        partes = _TOKEN.findall(nombre)
-        for parte in partes:
+        for parte in _TOKEN.findall(nombre):
             if len(parte) >= 4 and parte[0].isupper():
                 formas[parte] = plano(parte)
-                if len(partes) == 1:
-                    sueltas.add(parte)
     exactas = set(formas)
     errores: list[str] = []
     for m in _TOKEN.finditer(texto):
@@ -77,8 +75,7 @@ def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
         palabra_plana = plano(palabra)
         for forma, forma_plana in formas.items():
             if palabra_plana == forma_plana:
-                comun = palabra.islower() and palabra == forma.lower() and forma not in sueltas
-                if not comun:
+                if palabra.lower() != forma.lower():
                     errores.append(f"«{palabra}» debería escribirse «{forma}»")
                 break
             if (

@@ -76,10 +76,17 @@ def test_una_palabra_comun_dentro_de_un_nombre_compuesto_no_es_un_nombre_mal_esc
     assert r.pasa, r.detalle
 
 
-def test_los_nombres_de_una_palabra_y_las_grafias_distintas_siguen_fallando() -> None:
+def test_un_nombre_que_tambien_es_palabra_comun_puede_ir_en_minuscula() -> None:
+    # Humo real del P27: el perro se llamaba «Boya», y cada «boya» del mar suspendía el
+    # capítulo. Poner en minúscula un nombre propio no es un error que el modelo cometa;
+    # lo que comete es otra grafía o un casi-nombre, y eso se sigue cazando.
+    r = nombres_exactos("Boya ladró. Marta miró la boya roja que cabeceaba.", ["Marta", "Boya"])
+    assert r.pasa, r.detalle
+
+
+def test_las_grafias_distintas_y_los_casi_nombres_siguen_fallando() -> None:
     nombres = ["Marta", "Tomás", "Varadero de Remedios"]
     for texto, culpable in (
-        ("Aquella tarde marta volvió al puerto.", "marta"),
         ("Aquella tarde Tomas volvió al puerto.", "Tomas"),
         ("Aquella tarde fue al Baradero de Remedios con prisa.", "Baradero"),
     ):

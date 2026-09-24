@@ -146,6 +146,7 @@ registrada.
 | A-57 | P27 | Se pasa `--json-schema` y se valida después con Pydantic | Guía la forma; la garantía es `schema_valido` | TO-040 |
 | A-58 | P27 | `max_tokens_por_rol` medido (I-02): planificador 12000, redactor y editor 9000, extractor 6000; judge sin tocar hasta medirlo (P31). `contexto.capas.margen` 6000 → 12000, cediendo estado 18000 → 14000 y anticontexto 10000 → 8000; recuperado intacto | El planificador sacó 7.725 tokens y se truncaba con 4.000; el redactor 4.911. Recuperado no se toca porque TO-015 descansa en que la novela entera cabe en él | TO-041 |
 | A-59 | P27 | `coste.latencia_maxima_novela` 1800 → 3600 | 55–75 s por llamada medidos con `claude_code`; treinta minutos detendrían una novela sana | TO-041 |
+| A-60 | P27 | `nombres_exactos` no marca una diferencia solo de mayúsculas, y solo toma como forma de nombre las palabras en mayúscula del nombre declarado | El humo real suspendía capítulos por «boya» (el perro se llama Boya) y «varadero» («Varadero de Remedios»); un modelo no escribe un nombre propio en minúscula, y lo que sí hace —otra grafía, un casi-nombre— se sigue cazando. Residuo declarado en O-02 | TO-041 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes

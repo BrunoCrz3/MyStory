@@ -1430,6 +1430,15 @@ llamada.
 **Recuperado no se toca** (30.000): TO-015 descarta `sqlite-vec` porque la novela entera
 cabe en esa capa, y quitarle presupuesto rompería la premisa.
 
+**`nombres_exactos` (A-60).** El mismo humo mostró que el validador suspendía capítulos
+sanos: los nombres de una novela son a menudo palabras comunes —el perro «Boya» y la boya del
+puerto, el «Varadero de Remedios» y el varadero— y la regla que marcaba `marta` por `Marta`
+marcaba también «boya» y «varadero». Se retira la regla de solo mayúsculas y las palabras en
+minúscula de un nombre declarado («perro» en «El perro de Marta») dejan de ser forma de
+nombre. Sigue cazando otra grafía (`Tomas` por `Tomás`) y el casi-nombre (`Martha`), que son
+los errores que un modelo comete; el nombre propio escrito en minúscula por error pasa a punto
+ciego declarado.
+
 ### Consecuencias
 
 La suma sigue en `contexto.total` y el arranque sigue comprobando el margen rol por rol. El
