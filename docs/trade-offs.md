@@ -1150,3 +1150,39 @@ spec, no después de implementarla.
 Lo que más pesa es la **tabla de trabajos**: es la única pieza de persistencia que esta spec
 añade al modelo de `architecture.md`, y si se decide que es dominio y no materialización,
 entra en la ontología con su clase y su pregunta de competencia.
+
+---
+
+## TO-036 — Decisiones de implementación que fija el plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `specs/plan1.md`, `backend/`
+
+### Problema
+
+La spec 1 dice qué construir y el contrato fija la interfaz, pero dejan abiertas decisiones
+de implementación que un plan ejecutable de forma autónoma no puede dejar abiertas: si el
+agente las tomara sobre la marcha, cada una quedaría escondida en un commit de código.
+
+### Elección
+
+Las veinticuatro decisiones de `specs/plan1.md` § 3, **D-01 a D-24**, con su porqué al lado.
+No se copian aquí para no tener dos listas que se desincronicen; se nombran las que más
+pesan:
+
+| Decisión | Qué se eligió | Alternativa descartada |
+| --- | --- | --- |
+| **D-01** | Leer «Dato faltante» como campo presente pero vacío, porque el schema aprobado de `BriefNovela` hace obligatorio `destinatario.nombre` y RF-INTAKE-01 pide un `200` sin él | Cambiar el contrato o la spec: **no lo puede decidir el agente**, y por eso D-01 está pendiente del desarrollador |
+| D-05 | Una fila de `capitulo` por texto aceptado, y `version_capitulo` apunta a la fila | Copiar el texto en cada versión: los no afectados serían iguales por comparación, no por construcción |
+| D-06 | Vigencia semiabierta `[version_desde, version_hasta)` | Dejar el borde sin fijar, que es un fallo silencioso de la misma familia que olvidar `version` |
+| D-07 | La transacción de `Aceptar` la abre `process/` y la reparte entre los servicios dueños | Que `canon/` escriba en tablas de `novel/`, que rompe la anatomía |
+| D-09 | `backend/app/prompts/` como tercera excepción declarada | Prompts dentro de cada feature, con un comando `sync` que tendría que recorrerlas todas |
+| D-11 | Lanzador que exige interfaz local y un worker, más cerrojo de instancia | Solo documentarlo en el README, que no impide nada |
+| D-14 | La replanificación no se implementa: no tiene RF en la spec 1 | Construirla sin especificar |
+
+Las dependencias nuevas y su justificación están en `specs/plan1.md` § 2: todas son
+librerías de Python o toolchain de desarrollo, y ninguna añade infraestructura de servidor.
+
+### Consecuencias
+
+Aprobar el plan aprueba estas decisiones. **D-01 no se puede aprobar por omisión**: o el
+desarrollador acepta la lectura propuesta, o cambia la spec o el contrato antes del P35.

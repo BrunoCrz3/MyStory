@@ -766,3 +766,47 @@ contrato deja de ser `1.0.0-borrador` y pasa a `1.0.0`.
 **Sigue pendiente**: `specs/plan1.md`, que nace en `borrador` y sin el cual no se escribe
 una línea de código; y revisar TO-035, en particular si la tabla de trabajos es dominio o
 materialización.
+
+---
+
+## RI-010 — El plan maestro del backend, de F0 a F5
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/plan1.md`, `specs/progreso.md`,
+`docs/trade-offs.md`
+
+### Causa
+
+Con la spec 1 y su contrato aprobados, faltaba la tercera puerta del ciclo de cambio: sin
+plan aprobado no se escribe código. Y el plan tenía que poder ejecutarlo un agente solo, de
+principio a fin, reanudándose si la sesión se corta.
+
+### Qué cambió
+
+**Existe `specs/plan1.md`, en `borrador`**: 48 pasos numerados en seis fases, cada uno con
+los requisitos que cubre, sus ficheros, la skill que se carga, las pruebas que se escriben
+primero y un criterio de terminado ejecutable. Cada fase cierra con suite completa,
+cobertura, `ruff`, `mypy`, conformidad con el contrato y una prueba de extremo a extremo; la
+F1 añade el humo real opt-in con el brief de ejemplo.
+
+**El test de conformidad nace en el primer paso** y tiene tres partes: comparación
+estructural normalizada, una lista de operaciones pendientes que el último paso exige vacía,
+y validación de cada respuesta de la suite contra el schema aprobado. Una meta-prueba de
+mutaciones comprueba que la comparación puede fallar.
+
+**Cuatro condiciones de parada, y solo cuatro**: falta la credencial al llegar al humo, una
+decisión contradice la spec o el contrato, tres rojos seguidos en un paso, o el coste real
+acumulado pasaría de 40 USD. Todo lo demás lo decide el agente y lo deja en
+`specs/progreso.md` y, si es de diseño, con sus dos rastros.
+
+**Existe `specs/progreso.md`**, el fichero de reanudación, y **TO-036** recoge las
+veinticuatro decisiones de implementación del plan, marcadas para revisar.
+
+### Efecto
+
+**El plan destapó un choque entre la spec y el contrato**, que es lo más útil que ha dado:
+RF-INTAKE-01 pide `200 valido:false` para un brief sin `destinatario.nombre`, y el schema
+aprobado de `BriefNovela` hace ese campo obligatorio, así que el contrato obliga a un `422`.
+El plan propone una lectura (D-01) y la deja **pendiente del desarrollador**: si no se
+acepta, el P35 se detiene por la condición 2.
+
+**Sigue pendiente**: aprobar el plan, decidir D-01 y revisar TO-035 y TO-036.
