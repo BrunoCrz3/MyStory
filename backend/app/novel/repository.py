@@ -63,3 +63,12 @@ def leer_reglas(con: sqlite3.Connection, *, novel_id: str) -> list[ReglaMundo]:
         "SELECT enunciado, origen FROM regla_mundo WHERE novel_id = ? ORDER BY orden", (novel_id,)
     ).fetchall()
     return [ReglaMundo(enunciado=f["enunciado"], origen=f["origen"]) for f in filas]
+
+
+def insertar_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, version: int) -> str:
+    capitulo_id = str(uuid.uuid4())
+    con.execute(
+        "INSERT INTO capitulo (id, novel_id, numero, version) VALUES (?, ?, ?, ?)",
+        (capitulo_id, novel_id, numero, version),
+    )
+    return capitulo_id

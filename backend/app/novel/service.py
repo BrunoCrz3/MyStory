@@ -27,6 +27,7 @@ __all__ = [
     "EstadoCapitulo",
     "EstadoNovela",
     "ReglaMundo",
+    "crear_capitulo",
     "crear_novela",
     "listar_novelas",
     "obtener_novela",
@@ -111,3 +112,8 @@ async def listar_novelas(db: BaseDatos, *, limite: int, desplazamiento: int) -> 
 
 def reglas_del_mundo(con: sqlite3.Connection, *, novel_id: str) -> list[ReglaMundo]:
     return repository.leer_reglas(con, novel_id=novel_id)
+
+
+def crear_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, version: int) -> str:
+    """Crea la fila del capítulo `numero` para la versión `version`, en `Pendiente` (D-05)."""
+    return repository.insertar_capitulo(con, novel_id=novel_id, numero=numero, version=version)
