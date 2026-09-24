@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P18 · Planificador: el esquema de la obra |
+| Paso actual | P19 · Redactor, hook de policy y hook de capítulo mínimo |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P17 |
+| Último commit de paso | P18 |
 
 ## Coste real
 
@@ -48,10 +48,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P15** — Migraciones 0004_estructura_obra (capítulo por versión, personajes, lugares, fábula, esquema) y 0005_canon (hecho y uso con vigencia semiabierta, triggers RD-05, promesas, snapshot, resumen, índices); canon/ consolida en la transacción de quien acepta, idempotente por capítulo, con hechos propuestos que el policy decide, sin fragmento literal no se proponen; consultas por vigencia; novel/ crea filas de capítulo
 - **P16** — Migraciones 0006_audit_log (triggers que abortan UPDATE y DELETE) y 0007_coincidencia; PolicyEngine decide hechos (anclado, no vacío, no duplicado) y capítulos (aceptar, devolver, agotar, detener con el sublímite del guardrail), registra coincidencias y detenciones, una fila de audit log por decisión; entradas por Protocol para no crear aristas nuevas
 - **P17** — context/ensamblador: siete capas por piezas, conteo con el contador del proveedor antes de llamar, compresión solo de la capa que desborda (resumen y luego fuera, por prioridad), degradación total en el orden de config, Invariante y Estructural no degradables, Invariante presupuestada por rol con su skill, texto libre en etiqueta de no confiable y escape de etiquetas; context/fuentes: recuperado filtrado por entidades antes de ordenar, anticontexto de n-gramas repetidos, ContadorProveedor con caché; novel/ sirve los capítulos aceptados de una versión
+- **P18** — process/planificar: esquema estricto por output_config.format (conversor Pydantic → JSON Schema cerrado), validación de schema y de dominio (número de capítulos, destinatario exacto, POV, lugares y alcances existentes, títulos únicos, obligatorios repartidos), reintento con el motivo hasta el límite y detención, score schema_valido por intento; persiste título, reparto, restricciones, briefs de capítulo y filas Pendiente en una transacción; context/service con las piezas de Invariante y Anticontexto
 
 ## Pendiente
 
-- Siguiente: **P18 · Planificador: el esquema de la obra**, y después el resto hasta el P49 en orden.
+- Siguiente: **P19 · Redactor, hook de policy y hook de capítulo mínimo**, y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -104,6 +105,9 @@ registrada.
 | A-25 | P17 | El system de cada llamada es el prompt del rol más sus skills; todo dato de la novela va en el mensaje de usuario dentro de <capa> y el texto libre dentro de <texto_libre_no_confiable>, con < y > escapados | RNF-09 y D-18 sin ambigüedad: nada de la novela puede cerrar una etiqueta | TO-039 |
 | A-26 | P17 | El límite de entrada de una petición es contexto.total menos contexto.capas.margen | El margen es la reserva de respuesta y cubre max_tokens de todo rol (RF-CTX-05) | TO-039 |
 | A-27 | P17 | `prosa.longitud_ngrama: 5` en thresholds.yaml; el anticontexto veta los n-gramas que ya aparecen dos veces | El comentario de repeticion_ngramas hablaba de 5-gramas sin que la cifra estuviera en config | TO-039 |
+| A-28 | P18 | El conversor de salida estructurada quita longitudes, rangos y títulos y marca obligatoria toda propiedad; lo quitado se comprueba al validar con el mismo modelo Pydantic | La salida estructurada admite un subconjunto de JSON Schema; la validación posterior es schema_valido | TO-039 |
+| A-29 | P18 | La lectura de la story bible para un rol se envuelve en el span consultar_story_bible en vez de ofrecer la tool al modelo | El orquestador entrega el contexto ya ensamblado; el span deja la lectura en la traza | TO-039 |
+| A-30 | P18 | Aristas process → novel y process → intake añadidas al grafo de architecture.md | La prueba de importaciones las cazó; el orquestador crea capítulos y lee el brief, y no hay ciclo | TO-039 |
 
 ## Parada
 

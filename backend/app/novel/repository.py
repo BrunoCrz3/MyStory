@@ -88,3 +88,78 @@ def leer_capitulos_aceptados(
         {"novel_id": novel_id, "version": version},
     ).fetchall()
     return [dict(f) for f in filas]
+
+
+def fijar_titulo(con: sqlite3.Connection, *, novel_id: str, titulo: str, premisa: str) -> None:
+    con.execute(
+        "UPDATE obra SET titulo = ?, premisa = coalesce(premisa, ?) WHERE novel_id = ?",
+        (titulo, premisa, novel_id),
+    )
+
+
+def insertar_personaje(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    nombre: str,
+    deseo: str,
+    herida: str,
+    rol_narrativo: str,
+    voz: str,
+    es_destinatario: bool,
+    fecha_nacimiento: str | None,
+) -> str:
+    personaje_id = str(uuid.uuid4())
+    con.execute(
+        "INSERT INTO personaje (id, novel_id, nombre, deseo, herida, rol_narrativo, voz,"
+        " fecha_nacimiento, es_destinatario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            personaje_id,
+            novel_id,
+            nombre,
+            deseo,
+            herida,
+            rol_narrativo,
+            voz,
+            fecha_nacimiento,
+            int(es_destinatario),
+        ),
+    )
+    return personaje_id
+
+
+def insertar_lugar(
+    con: sqlite3.Connection, *, novel_id: str, nombre: str, geografia: str, atmosfera: str
+) -> str:
+    lugar_id = str(uuid.uuid4())
+    con.execute(
+        "INSERT INTO lugar (id, novel_id, nombre, geografia, atmosfera) VALUES (?, ?, ?, ?, ?)",
+        (lugar_id, novel_id, nombre, geografia, atmosfera),
+    )
+    return lugar_id
+
+
+def insertar_hilo(
+    con: sqlite3.Connection, *, novel_id: str, nombre: str, pregunta_dramatica: str
+) -> None:
+    con.execute(
+        "INSERT INTO hilo_trama (id, novel_id, nombre, pregunta_dramatica) VALUES (?, ?, ?, ?)",
+        (str(uuid.uuid4()), novel_id, nombre, pregunta_dramatica),
+    )
+
+
+def leer_personajes(con: sqlite3.Connection, *, novel_id: str) -> list[dict[str, Any]]:
+    filas = con.execute(
+        "SELECT id, nombre, deseo, herida, rol_narrativo, voz, es_destinatario, fecha_nacimiento"
+        " FROM personaje WHERE novel_id = ? ORDER BY es_destinatario DESC, nombre",
+        (novel_id,),
+    ).fetchall()
+    return [dict(f) for f in filas]
+
+
+def leer_lugares(con: sqlite3.Connection, *, novel_id: str) -> list[dict[str, Any]]:
+    filas = con.execute(
+        "SELECT id, nombre, geografia, atmosfera FROM lugar WHERE novel_id = ? ORDER BY nombre",
+        (novel_id,),
+    ).fetchall()
+    return [dict(f) for f in filas]

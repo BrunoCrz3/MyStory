@@ -20,6 +20,9 @@ from app.novel.models import (
     ESTADOS_TERMINALES_NOVELA,
     EstadoCapitulo,
     EstadoNovela,
+    HiloTrama,
+    Lugar,
+    Personaje,
     ReglaMundo,
 )
 from app.novel.schemas import ListaNovelas, Novela, NovelaResumen
@@ -29,12 +32,19 @@ __all__ = [
     "CapituloAceptado",
     "EstadoCapitulo",
     "EstadoNovela",
+    "HiloTrama",
+    "Lugar",
+    "Personaje",
     "ReglaMundo",
     "capitulos_aceptados",
     "crear_capitulo",
     "crear_novela",
+    "fijar_titulo",
     "listar_novelas",
+    "lugares",
     "obtener_novela",
+    "personajes",
+    "registrar_reparto",
     "reglas_del_mundo",
 ]
 
@@ -141,4 +151,64 @@ def capitulos_aceptados(
             capitulo_id=f["id"], numero=f["numero"], titulo=f["titulo"], texto=f["texto"]
         )
         for f in repository.leer_capitulos_aceptados(con, novel_id=novel_id, version=version)
+    ]
+
+
+def fijar_titulo(con: sqlite3.Connection, *, novel_id: str, titulo: str, premisa: str) -> None:
+    repository.fijar_titulo(con, novel_id=novel_id, titulo=titulo, premisa=premisa)
+
+
+def registrar_reparto(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    personajes: list[Personaje],
+    lugares: list[Lugar],
+    hilos: list[HiloTrama],
+) -> None:
+    for p in personajes:
+        repository.insertar_personaje(
+            con,
+            novel_id=novel_id,
+            nombre=p.nombre,
+            deseo=p.deseo or "",
+            herida=p.herida or "",
+            rol_narrativo=p.rol_narrativo or "",
+            voz=p.voz or "",
+            es_destinatario=p.es_destinatario,
+            fecha_nacimiento=p.fecha_nacimiento,
+        )
+    for lugar in lugares:
+        repository.insertar_lugar(
+            con,
+            novel_id=novel_id,
+            nombre=lugar.nombre,
+            geografia=lugar.geografia or "",
+            atmosfera=lugar.atmosfera or "",
+        )
+    for h in hilos:
+        repository.insertar_hilo(
+            con, novel_id=novel_id, nombre=h.nombre, pregunta_dramatica=h.pregunta_dramatica or ""
+        )
+
+
+def personajes(con: sqlite3.Connection, *, novel_id: str) -> list[Personaje]:
+    return [
+        Personaje(
+            nombre=f["nombre"],
+            deseo=f["deseo"],
+            herida=f["herida"],
+            rol_narrativo=f["rol_narrativo"],
+            voz=f["voz"],
+            es_destinatario=bool(f["es_destinatario"]),
+            fecha_nacimiento=f["fecha_nacimiento"],
+        )
+        for f in repository.leer_personajes(con, novel_id=novel_id)
+    ]
+
+
+def lugares(con: sqlite3.Connection, *, novel_id: str) -> list[Lugar]:
+    return [
+        Lugar(nombre=f["nombre"], geografia=f["geografia"], atmosfera=f["atmosfera"])
+        for f in repository.leer_lugares(con, novel_id=novel_id)
     ]

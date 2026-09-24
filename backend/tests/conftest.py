@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +16,11 @@ from fastapi.testclient import TestClient
 from hypothesis import settings
 
 from app.commons.config import cargar_config
+from app.commons.db import BaseDatos
+from app.commons.db.migrar import aplicar_migraciones
+from app.commons.llm.llamar import LlamadorModelo
+from app.commons.llm.pool import PoolEnVuelo
+from app.commons.recursos import Recursos
 from app.main import crear_app
 from tests.contrato.normalizar import cargar_contrato, schema_de_respuesta
 from tests.dobles.modelo import ModeloGuionizado
@@ -101,3 +107,42 @@ def validar_contra_contrato() -> ValidarContrato:
         )
 
     return validar
+
+
+@dataclass
+class Entorno:
+    """Los recursos de una instancia con los dos dobles, sin HTTP: para probar servicios."""
+
+    recursos: Recursos
+    modelo: ModeloGuionizado
+    trazas: RegistroTrazas
+
+    async def crear_novela(self, brief: dict[str, Any]) -> str:
+        from app.intake.service import BriefNovela
+        from app.novel.service import crear_novela
+
+        novela = await crear_novela(
+            self.recursos.db, self.recursos.config, BriefNovela.model_validate(brief)
+        )
+        return str(novela.novel_id)
+
+    def consultar(self, sql: str, *parametros: Any) -> list[sqlite3.Row]:
+        return self.recursos.db.ejecutar_sync(lambda con: con.execute(sql, parametros).fetchall())
+
+
+@pytest.fixture
+def entorno(tmp_path: Path) -> Entorno:
+    config = cargar_config()
+    db = BaseDatos(tmp_path / "entorno.db")
+    db.ejecutar_sync(aplicar_migraciones)
+    modelo = ModeloGuionizado(config)
+    trazas = RegistroTrazas()
+    pool = PoolEnVuelo(config.umbrales.en_vuelo.total)
+    recursos = Recursos(
+        config=config,
+        db=db,
+        pool=pool,
+        trazador=trazas,
+        llamador=LlamadorModelo(config, modelo, pool, trazas),
+    )
+    return Entorno(recursos=recursos, modelo=modelo, trazas=trazas)

@@ -196,6 +196,8 @@ flowchart LR
   CTX --> GRD
   QUA --> INT
   VER --> INT
+  PRO --> NOV
+  PRO --> INT
 ```
 
 `process/` es la única que depende de casi todas, y es correcto: es el orquestador. Nadie
@@ -208,6 +210,11 @@ vetadas para el Anticontexto; `quality/`, el brief y el texto libre para
 `invencion_destinatario`; `versioning/`, la dedicatoria para la portada. **No pueden crear
 un ciclo mientras `intake/` y `guardrail/` solo importen de `commons/`**, y eso es lo que
 comprueba la prueba de importaciones del plan.
+
+**Y dos más desde `process/`**, que aparecieron al escribir el planificador (plan 1, P18;
+TO-039): `process → novel`, porque el orquestador crea las filas de capítulo, fija el reparto
+y mueve los estados del capítulo; y `process → intake`, porque el planificador lee el brief.
+Tampoco crean ciclo: ni `novel/` ni `intake/` importan `process/`.
 
 ---
 
