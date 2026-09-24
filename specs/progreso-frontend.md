@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F11 | pendiente | 0 |
+| F12 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -36,6 +36,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F08 | Ficha de personajes y lugares con `ficha-personaje`/`ficha-lugar` y un `ficha-enlace-capitulo` por capítulo; la lectura solo está `lista` con la ficha cargada |
 | F09 | `capitulo-modificado` en índice y cabecera solo si el backend dice `modificado`; selector de versión con `motivo` y capítulos cambiados, que abre la anterior entera |
 | F10 | «Hechos de este capítulo» con `listarHechos`, panel de cambio que pide el análisis de impacto y solo regenera al confirmar; 409 con enlace a la generación viva (2 intentos en rojo: un fichero sin reescribir y una aserción ambigua) |
+| F11 | Seleccionar texto dentro de `capitulo-texto` ofrece «Pedir cambio»; envía `fragmento` y muestra el `hecho_candidato` con la misma confirmación. Una selección que se sale del texto del capítulo no cuenta |
 
 ## Para la sesión del backend
 
