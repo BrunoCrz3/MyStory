@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.commons.config import Config, cargar_config
+from app.commons.errores import registrar_errores
 
 TITULO = "storyMaker — API del backend v1"
 VERSION_API = "1.1.0"
@@ -33,13 +34,15 @@ def crear_app(config: Config | None = None) -> FastAPI:
         app.state.config = config if config is not None else cargar_config()
         yield
 
-    return FastAPI(
+    app = FastAPI(
         title=TITULO,
         version=VERSION_API,
         servers=SERVIDORES,
         openapi_tags=ETIQUETAS,
         lifespan=lifespan,
     )
+    registrar_errores(app)
+    return app
 
 
 app = crear_app()
