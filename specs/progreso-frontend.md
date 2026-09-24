@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F05 | pendiente | 0 |
+| F06 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -30,6 +30,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F02 | Tipos generados desde `openapi.yaml` 1.1.0 con `npm run gen:api`; cliente `openapi-fetch` con `fetch` inyectable y `ProveedorCliente` |
 | F03 | Ejemplos leídos de `openapi.yaml` en cada ejecución, `fetch` de prueba con registro de peticiones, render con proveedores y datos de lectura tipados con `satisfies` |
 | F04 | Guardas de CA-14 sobre `src/`: sin `any`, sin importar de `tests/`, capas hacia abajo, sin cruces entre páginas y siempre por `index.ts`. Cada regla se prueba primero contra un caso que la viola (1 intento en rojo, por escapes) |
+| F05 | Router con las cuatro rutas, redirección de `/novelas/:id`, `exigir`/`aProblema`/`ErrorDeApi` para `problem+json` y `AvisoProblema` en `shared/ui` |
 
 ## Para la sesión del backend
 
@@ -81,3 +82,4 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
   es un `uri-reference` sin base definida.
 - **FA-01** (F01, decidido por el agente — revisar): se instalan en F01 todas las dependencias aprobadas, más tres que son parte de ellas y no añaden nada: `@testing-library/dom` (dependencia par de Testing Library) y los tipos `@types/react`, `@types/react-dom` y `@types/node`.
 - **FA-02** (F02, decidido por el agente — revisar): `gen:api` usa un script propio (`scripts/generar-api.mjs`) sobre la API de `openapi-typescript` en vez de su CLI, para que la prueba de CA-01 compare con la misma función que escribe el fichero.
+- **FA-03** (F05, decidido por el agente — revisar): los constructores de ruta viven en `shared/config/rutas.ts` (la skill FSD pone ahí las constantes de ruta), para que `AvisoProblema` de `shared/ui` enlace al progreso sin importar de `app/`. Un cuerpo de error que no es `problem+json` —un proxy caído— se pinta como `error-interno` con su status real, sin inventar detalle.
