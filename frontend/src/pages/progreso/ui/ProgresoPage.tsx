@@ -4,6 +4,7 @@ import { problemaDe } from '@/shared/api'
 import { rutas } from '@/shared/config'
 import { AvisoProblema, Cargando } from '@/shared/ui'
 import { useGeneracion } from '../api/generacion'
+import '../progreso.css'
 
 function Dato({ nombre, children }: { nombre: string; children: ReactNode }) {
   return (
@@ -19,7 +20,7 @@ export function ProgresoPage() {
   const generacion = useGeneracion(novelId, generacionId)
 
   return (
-    <main>
+    <main className="pagina-progreso">
       <h1>Progreso de la generación</h1>
       {generacion.isError && <AvisoProblema problema={problemaDe(generacion.error)} novelId={novelId} />}
       {generacion.isPending && <Cargando que="la generación" />}

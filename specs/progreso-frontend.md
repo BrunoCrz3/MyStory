@@ -112,6 +112,24 @@ Capturas en `.playwright-mcp/`, sin versionar.
   - Contrastes medidos: texto de 7,6:1 a 14,2:1; borde de control, 3,7:1. El dorado
     (2,8:1) solo aparece en filetes y adornos.
 
+*Progreso*, a 1280×900 y a 390×844:
+
+- **Inspeccionado:** con el proxy caído (`AvisoProblema`), y con los ejemplos `enCurso` y
+  `detenida` de `obtenerGeneracion` de `openapi.yaml`. A `detenida` se le añadió
+  `version_resultante` para ver el enlace a la lectura.
+- **Detectado:**
+  - La página no tenía hoja propia, así que la `dl` salía con la sangría del navegador.
+  - Una hoja de página con selectores `main > …` o `fieldset` sueltos se aplica también a
+    las otras páginas, porque en la SPA el CSS sigue cargado al navegar.
+- **Cambiado:**
+  - `progreso.css` pinta los datos como un colofón: hoja con nombres en versalitas y
+    separadores punteados. Estado y capítulos aceptados van en tamaño de titular.
+  - «Leer la versión N» va como botón relleno.
+  - En móvil, cada dato va bajo su nombre.
+  - El `main` de progreso y el de la entrevista llevan una clase de página
+    (`pagina-progreso`, `pagina-entrevista`) que acota sus selectores. Es solo una clase: no
+    toca ningún `data-testid` ni ningún texto.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e

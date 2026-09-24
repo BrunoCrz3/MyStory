@@ -1,7 +1,7 @@
 /* Entrevista: cada grupo del brief es una hoja cosida al papel. Los colores y medidas salen
    de shared/ui/tema.css. */
 
-fieldset {
+.pagina-entrevista fieldset {
   margin: 0 0 var(--espacio-5);
   padding: var(--espacio-4) var(--espacio-5) var(--espacio-5);
   background: var(--color-hoja);
@@ -12,7 +12,7 @@ fieldset {
   min-width: 0;
 }
 
-legend {
+.pagina-entrevista legend {
   padding: 0 var(--espacio-2);
   margin-left: calc(-1 * var(--espacio-2));
   font-size: var(--texto-h3);
@@ -84,7 +84,7 @@ legend {
   font-size: var(--texto-pequeno);
 }
 
-fieldset > button {
+.pagina-entrevista fieldset > button {
   margin-top: var(--espacio-2);
 }
 
@@ -140,23 +140,23 @@ fieldset > button {
 }
 
 /* Acciones: la petición principal, rellena en burdeos. */
-.acciones {
+.pagina-entrevista .acciones {
   display: flex;
   flex-wrap: wrap;
   gap: var(--espacio-3);
   margin: var(--espacio-5) 0 var(--espacio-3);
 }
 
-.acciones button:not(:disabled) {
+.pagina-entrevista .acciones button:not(:disabled) {
   background: var(--color-burdeos);
   color: var(--color-hoja);
 }
 
-.acciones button:hover:not(:disabled) {
+.pagina-entrevista .acciones button:hover:not(:disabled) {
   background: var(--color-burdeos-hondo);
 }
 
-form > p[role='status'] {
+.pagina-entrevista form > p[role='status'] {
   display: inline-block;
   margin: 0 0 var(--espacio-4);
   padding: var(--espacio-2) var(--espacio-4);
@@ -204,18 +204,18 @@ form > p[role='status'] {
 
 /* Escritorio: los campos cortos a dos columnas; los de texto largo, a lo ancho. */
 @media (min-width: 42rem) {
-  fieldset {
+  .pagina-entrevista fieldset {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: var(--espacio-5);
   }
 
-  fieldset > :not(.campo),
-  fieldset > .campo:has(textarea) {
+  .pagina-entrevista fieldset > :not(.campo),
+  .pagina-entrevista fieldset > .campo:has(textarea) {
     grid-column: 1 / -1;
   }
 
-  fieldset > button {
+  .pagina-entrevista fieldset > button {
     justify-self: start;
   }
 
@@ -226,11 +226,11 @@ form > p[role='status'] {
 
 /* Móvil: hojas a sangre y acciones a lo ancho, fáciles de pulsar. */
 @media (max-width: 30rem) {
-  fieldset {
+  .pagina-entrevista fieldset {
     padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
   }
 
-  .acciones button {
+  .pagina-entrevista .acciones button {
     flex: 1 1 100%;
   }
 

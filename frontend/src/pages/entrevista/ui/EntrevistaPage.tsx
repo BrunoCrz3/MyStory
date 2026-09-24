@@ -44,7 +44,7 @@ export function EntrevistaPage() {
   }
 
   return (
-    <main>
+    <main className="pagina-entrevista">
       <h1>Entrevista</h1>
       <form aria-label="Brief de la novela" onSubmit={alValidar} noValidate>
         <div className="cabecera-formulario">{problema && <AvisoProblema problema={problema} />}</div>
