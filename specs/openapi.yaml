@@ -1,0 +1,1695 @@
+openapi: 3.1.0
+
+info:
+  title: storyMaker — API del backend v1
+  version: 1.0.0-borrador
+  summary: Genera novelas personalizadas de regalo y las sirve para su lectura web.
+  description: |
+    Contrato entre el backend FastAPI y el frontend React. **Este fichero es la fuente**:
+    el backend lo implementa y un test de conformidad compara el OpenAPI que genera
+    FastAPI con este documento; si divergen, el test falla. El frontend genera su cliente
+    tipado desde aquí y no escribe los tipos a mano.
+
+    Convenciones, todas decididas en `specs/spec1.md` § Contrato OpenAPI:
+
+    - **Rutas y `operationId` en español**, porque los nombres del código son los de la
+      ontología (`CLAUDE.md` regla 1). Los `operationId` son estables: de ellos salen los
+      nombres de las funciones del cliente del frontend.
+    - **`novel_id` es un UUID** que genera el servidor. **La versión es un entero
+      correlativo por novela**, empezando en 1.
+    - **No hay autenticación.** El alcance deja las cuentas fuera y ninguna tabla lleva
+      `user_id`. Quien conoce el UUID de una novela la lee; por eso la instancia escucha
+      solo en la interfaz local (`docs/architecture.md` § Seguridad).
+    - **Todo error es `application/problem+json`** (RFC 9457) con un `type` de catálogo
+      cerrado, incluidos los 422 de validación de FastAPI.
+    - **El progreso se consulta por sondeo.** El recurso `Generacion` lleva su propio
+      intervalo recomendado y dice si su estado es terminal.
+
+    Las cifras que aparecen como ejemplo en este fichero son ilustrativas. Las de verdad
+    viven en `config/thresholds.yaml`, que es la fuente única.
+  contact:
+    name: storyMaker
+  license:
+    name: UNLICENSED
+
+servers:
+  - url: http://127.0.0.1:8000
+    description: |
+      Instancia local. No hay otra: sin autenticación, el backend se niega a escuchar
+      fuera de la interfaz local.
+
+tags:
+  - name: novelas
+    description: Crear una novela a partir de un brief y consultarla.
+  - name: intake
+    description: Validación del brief antes de crear la novela.
+  - name: generacion
+    description: Lanzar una generación y seguir su progreso.
+  - name: lectura
+    description: Versiones, capítulos, ficha y portada.
+  - name: canon
+    description: Hechos de la story bible, por versión.
+  - name: regeneracion
+    description: Solicitud de cambio del lector y regeneración dirigida.
+  - name: export
+    description: Export a PDF del mismo render que se validó.
+  - name: meta
+    description: Salud de la instancia.
+
+paths:
+
+  /salud:
+    get:
+      operationId: obtenerSalud
+      tags: [meta]
+      summary: Estado de la instancia
+      description: |
+        Responde a RF-META-01. Sirve para que el frontend sepa, sin adivinar, si el gate
+        de Lean está activo y cuánto presupuesto en vuelo queda libre.
+      responses:
+        '200':
+          description: La instancia responde.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Salud'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /briefs/validacion:
+    post:
+      operationId: validarBrief
+      tags: [intake]
+      summary: Valida un brief sin crear la novela
+      description: |
+        Responde a RF-INTAKE-01, RF-INTAKE-02 y RF-INTAKE-03. El formulario llama aquí
+        antes de crear nada: devuelve los `Dato faltante`, las `Contradicción de brief`
+        detectadas por reglas deterministas entre campos, los `Fragmento sospechoso`
+        hallados en el texto libre y los hechos que de él se extraen.
+
+        El texto libre es **contenido no confiable**: entra marcado como datos y lo que
+        parece una instrucción al sistema se registra y se descarta, nunca se obedece.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BriefNovela'
+      responses:
+        '200':
+          description: |
+            El brief se ha analizado. `valido` en `false` **no** es un error de la
+            petición: es el resultado normal de un brief incompleto, y por eso va en un
+            200 y no en un 400.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultadoValidacionBrief'
+        '422':
+          $ref: '#/components/responses/PeticionInvalida'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas:
+    get:
+      operationId: listarNovelas
+      tags: [novelas]
+      summary: Lista las novelas de la instancia
+      description: Responde a RF-NOVEL-02.
+      parameters:
+        - $ref: '#/components/parameters/Limite'
+        - $ref: '#/components/parameters/Desplazamiento'
+      responses:
+        '200':
+          description: Listado, de la más reciente a la más antigua.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/NovelaResumen'
+                  total:
+                    type: integer
+                    minimum: 0
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+    post:
+      operationId: crearNovela
+      tags: [novelas]
+      summary: Crea una novela a partir de un brief validado
+      description: |
+        Responde a RF-NOVEL-01. Valida el brief contra su schema y lo persiste; **no**
+        lanza la generación, que es una operación aparte y cara.
+
+        Si el brief no pasa la validación de dominio —falta un campo obligatorio, dos
+        campos se contradicen— responde `400` con `brief-invalido` y el detalle en las
+        extensiones del problema, no un `422`: la petición estaba bien formada.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BriefNovela'
+      responses:
+        '201':
+          description: Novela creada, en estado `Configurando`.
+          headers:
+            Location:
+              description: URI de la novela creada.
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Novela'
+        '400':
+          $ref: '#/components/responses/BriefInvalido'
+        '422':
+          $ref: '#/components/responses/PeticionInvalida'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+    get:
+      operationId: obtenerNovela
+      tags: [novelas]
+      summary: Devuelve una novela con su estado y su versión vigente
+      description: Responde a RF-NOVEL-03.
+      responses:
+        '200':
+          description: La novela.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Novela'
+        '404':
+          $ref: '#/components/responses/NovelaNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/generaciones:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+    get:
+      operationId: listarGeneraciones
+      tags: [generacion]
+      summary: Historial de generaciones de una novela
+      description: |
+        Responde a RF-PROC-04. Incluye la inicial y todas las regeneraciones dirigidas,
+        que es lo que permite reconstruir el coste total de la novela.
+      responses:
+        '200':
+          description: Generaciones, de la más reciente a la más antigua.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Generacion'
+        '404':
+          $ref: '#/components/responses/NovelaNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+    post:
+      operationId: lanzarGeneracion
+      tags: [generacion]
+      summary: Encola la generación completa de la novela
+      description: |
+        Responde a RF-PROC-01. Devuelve `202` en cuanto el trabajo queda encolado: la
+        generación de diez capítulos dura minutos y el worker la ejecuta fuera de la
+        petición. El progreso se sigue con `obtenerGeneracion`.
+
+        **Un segundo `POST` mientras hay una generación o una regeneración en curso
+        devuelve `409` con `generacion-en-curso`** y el identificador de la que ya corre,
+        en vez de encolar otra o de devolver la existente en silencio. Encolar dos sería
+        gastar tokens dos veces; devolver un `202` silencioso escondería que no se ha
+        lanzado nada nuevo, que es justo lo que hay que saber antes de esperar diez
+        minutos.
+
+        Si la estimación del trabajo supera el presupuesto en vuelo, falla al encolarse
+        con `trabajo-no-cabe-en-pool`: esperar un hueco que no va a existir nunca no es
+        esperar, es colgarse.
+      responses:
+        '202':
+          description: Trabajo encolado.
+          headers:
+            Location:
+              description: URI del recurso de progreso.
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generacion'
+        '404':
+          $ref: '#/components/responses/NovelaNoEncontrada'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/TrabajoNoCabe'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/generaciones/{generacion_id}:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/GeneracionId'
+    get:
+      operationId: obtenerGeneracion
+      tags: [generacion]
+      summary: Progreso de una generación
+      description: |
+        Responde a RF-PROC-05. Es el recurso que el frontend sondea.
+
+        **Cuándo dejar de sondear**: cuando `es_terminal` es `true`. En ese caso
+        `intervalo_sondeo_segundos` viene a `null`. Los estados terminales son
+        `Publicada` y `Detenida`; cualquier otro es transitorio. El cliente no debe
+        deducir la terminalidad del nombre del estado: para eso está el booleano.
+      responses:
+        '200':
+          description: Estado actual de la generación.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generacion'
+              examples:
+                enCurso:
+                  summary: Escribiendo el capítulo 4
+                  value:
+                    generacion_id: 8f1c0b6e-4f6a-4c8e-9a1e-2b7d5f0c3a11
+                    novel_id: 3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+                    tipo: inicial
+                    estado: Escribiendo
+                    es_terminal: false
+                    intervalo_sondeo_segundos: 3
+                    capitulo_actual: 4
+                    capitulos_aceptados: 3
+                    total_capitulos: 10
+                    intentos_capitulo_actual: 0
+                    checkpoint: 3
+                    tokens_consumidos: 214300
+                    coste_usd: 1.42
+                    traza_langfuse_id: tr-7d21
+                    detenida_por: null
+                    iniciada_en: '2026-09-23T10:04:11Z'
+                    terminada_en: null
+                detenida:
+                  summary: Detenida al agotar los intentos del capítulo 6
+                  value:
+                    generacion_id: 8f1c0b6e-4f6a-4c8e-9a1e-2b7d5f0c3a11
+                    novel_id: 3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+                    tipo: inicial
+                    estado: Detenida
+                    es_terminal: true
+                    intervalo_sondeo_segundos: null
+                    capitulo_actual: 6
+                    capitulos_aceptados: 5
+                    total_capitulos: 10
+                    intentos_capitulo_actual: 3
+                    checkpoint: 5
+                    tokens_consumidos: 390100
+                    coste_usd: 2.61
+                    traza_langfuse_id: tr-7d21
+                    detenida_por: limite-de-intentos-agotado
+                    iniciada_en: '2026-09-23T10:04:11Z'
+                    terminada_en: '2026-09-23T10:19:48Z'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+    get:
+      operationId: listarVersiones
+      tags: [lectura]
+      summary: Historial de versiones de una novela
+      description: |
+        Responde a RF-VER-01. Cada entrada dice a qué versión sucede y cuántos capítulos
+        cambiaron respecto a ella, que es lo que la lectura marca.
+      responses:
+        '200':
+          description: Versiones, de la más reciente a la más antigua.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VersionResumen'
+        '404':
+          $ref: '#/components/responses/NovelaNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: obtenerVersion
+      tags: [lectura]
+      summary: Una versión con su índice de capítulos
+      description: |
+        Responde a RF-VER-02. Es lo que alimenta el índice navegable: número, título y la
+        marca `modificado` de cada capítulo respecto a la versión anterior.
+
+        **La versión anterior sigue siendo consultable entera** (`CLAUDE.md` regla 15):
+        pedir la versión 1 después de publicar la 3 devuelve la 1 tal como se publicó.
+      responses:
+        '200':
+          description: La versión.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Version'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/capitulos:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: listarCapitulos
+      tags: [lectura]
+      summary: Capítulos de una versión, con su texto
+      description: |
+        Responde a RF-NOVEL-05. Devuelve la novela entera de esa versión. Con diez
+        capítulos de 1.500 palabras la respuesta es de unos pocos cientos de kilobytes,
+        así que no se pagina: paginar obligaría al lector a esperar entre capítulos.
+      responses:
+        '200':
+          description: Capítulos en orden de lectura.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Capitulo'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/capitulos/{numero}:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+      - $ref: '#/components/parameters/NumeroCapitulo'
+    get:
+      operationId: obtenerCapitulo
+      tags: [lectura]
+      summary: Un capítulo de una versión
+      description: Responde a RF-NOVEL-05.
+      responses:
+        '200':
+          description: El capítulo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capitulo'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/ficha:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: obtenerFicha
+      tags: [lectura]
+      summary: Ficha de personajes y lugares de una versión
+      description: |
+        Responde a RF-VER-04. Se genera desde la story bible de **esa** versión, no de la
+        vigente, y cada entrada trae los capítulos donde aparece para que la lectura
+        enlace a ellos.
+      responses:
+        '200':
+          description: La ficha.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ficha'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/portada:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: obtenerPortada
+      tags: [lectura]
+      summary: Portada con la dedicatoria
+      description: Responde a RF-VER-05.
+      responses:
+        '200':
+          description: La portada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Portada'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/hechos:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    get:
+      operationId: listarHechos
+      tags: [canon]
+      summary: Hechos vigentes en una versión
+      description: |
+        Responde a RF-CANON-03. Es lo que permite al lector elegir un hecho concreto
+        cuando pide un cambio, en vez de seleccionar un fragmento y esperar que el
+        sistema adivine.
+
+        **Se resuelve por vigencia, nunca por estatus** (TO-028): en la versión 1, un
+        hecho que hoy está `retconeado` seguía siendo verdad, y filtrar por estatus lo
+        dejaría fuera.
+      parameters:
+        - name: capitulo
+          in: query
+          required: false
+          description: Devuelve solo los hechos que **usa** ese capítulo.
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Hechos vigentes en la versión pedida.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Hecho'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/solicitudes-cambio:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+    post:
+      operationId: crearSolicitudCambio
+      tags: [regeneracion]
+      summary: El lector pide un cambio sobre un hecho o un fragmento
+      description: |
+        Responde a RF-VER-06 y RF-VER-07. **No regenera nada**: calcula el
+        `Análisis de impacto` —los capítulos que **usan** el hecho, no solo el que lo
+        estableció— y lo devuelve para que el lector lo confirme.
+
+        Si se envía `fragmento` en vez de `hecho_id`, el sistema propone un
+        `hecho_candidato` y la solicitud queda `pendiente-de-confirmacion`: la selección
+        de fragmento **nunca regenera sola** (TO-011).
+
+        Devuelve `409 generacion-en-curso` si la novela tiene una generación o una
+        regeneración en marcha.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaSolicitudCambio'
+            examples:
+              porHecho:
+                summary: El lector selecciona un hecho del canon
+                value:
+                  hecho_id: 2f9a7c10-5b3e-4d21-9f84-1c6a0e5b2d77
+                  enunciado_nuevo: El perro se llama Nala
+                  capitulo_origen: 3
+              porFragmento:
+                summary: El lector selecciona un fragmento de la lectura
+                value:
+                  fragmento: el perro, que se llamaba Luna, corrió hacia ella
+                  enunciado_nuevo: El perro se llama Nala
+                  capitulo_origen: 3
+      responses:
+        '201':
+          description: Solicitud registrada, con su análisis de impacto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitudCambio'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/PeticionInvalida'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/solicitudes-cambio/{solicitud_id}:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/SolicitudId'
+    get:
+      operationId: obtenerSolicitudCambio
+      tags: [regeneracion]
+      summary: Una solicitud de cambio con su análisis de impacto
+      description: Responde a RF-VER-06.
+      responses:
+        '200':
+          description: La solicitud.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolicitudCambio'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/solicitudes-cambio/{solicitud_id}/confirmacion:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/SolicitudId'
+    post:
+      operationId: confirmarSolicitudCambio
+      tags: [regeneracion]
+      summary: Confirma la solicitud y encola la regeneración dirigida
+      description: |
+        Responde a RF-VER-08. Aplica el retcon —cierra el hecho viejo por vigencia y abre
+        el nuevo—, marca `Obsoleto` los capítulos afectados y encola una regeneración que
+        reescribe **solo** esos. El resultado es una versión nueva; la anterior se
+        conserva entera.
+
+        Devuelve `202` con la `Generacion` dirigida, que se sondea igual que la inicial.
+      responses:
+        '202':
+          description: Regeneración encolada.
+          headers:
+            Location:
+              description: URI del recurso de progreso.
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Generacion'
+        '404':
+          $ref: '#/components/responses/NoEncontrado'
+        '409':
+          $ref: '#/components/responses/Conflicto'
+        '422':
+          $ref: '#/components/responses/TrabajoNoCabe'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+  /novelas/{novel_id}/versiones/{version}/export:
+    parameters:
+      - $ref: '#/components/parameters/NovelId'
+      - $ref: '#/components/parameters/Version'
+    post:
+      operationId: exportarVersion
+      tags: [export]
+      summary: Genera el PDF de una versión
+      description: |
+        Responde a RF-EXP-01. Sale del **mismo render** que la lectura web, con
+        `page.pdf()` de Playwright: con otro motor se validaría uno y se entregaría otro.
+
+        Se genera **una vez por versión**, porque las versiones son inmutables (TO-025).
+        Un segundo `POST` sobre una versión ya exportada devuelve `200` con el export que
+        ya existe en vez de rehacerlo.
+      responses:
+        '200':
+          description: La versión ya estaba exportada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+        '202':
+          description: Export encolado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exportacion'
+        '404':
+          $ref: '#/components/responses/VersionNoEncontrada'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+    get:
+      operationId: descargarExport
+      tags: [export]
+      summary: Descarga el PDF de una versión
+      description: |
+        Responde a RF-EXP-02. Devuelve `404 export-no-disponible` si todavía no se ha
+        generado o si sigue en curso; el estado se consulta con `exportarVersion`.
+      responses:
+        '200':
+          description: El PDF.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '404':
+          $ref: '#/components/responses/ExportNoDisponible'
+        '500':
+          $ref: '#/components/responses/ErrorInterno'
+
+components:
+
+  parameters:
+
+    NovelId:
+      name: novel_id
+      in: path
+      required: true
+      description: Identificador de la novela. Lo genera el servidor.
+      schema:
+        type: string
+        format: uuid
+      example: 3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+
+    GeneracionId:
+      name: generacion_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SolicitudId:
+      name: solicitud_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    Version:
+      name: version
+      in: path
+      required: true
+      description: Entero correlativo por novela, empezando en 1.
+      schema:
+        type: integer
+        minimum: 1
+      example: 2
+
+    NumeroCapitulo:
+      name: numero
+      in: path
+      required: true
+      description: Número de capítulo dentro de la obra, empezando en 1.
+      schema:
+        type: integer
+        minimum: 1
+      example: 4
+
+    Limite:
+      name: limite
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    Desplazamiento:
+      name: desplazamiento
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+
+    PeticionInvalida:
+      description: |
+        La petición está mal formada o no cumple el schema. Es el 422 de FastAPI,
+        reescrito como `problem+json` para que **toda** respuesta de error tenga la misma
+        forma.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/peticion-invalida
+            title: La petición no cumple el schema
+            status: 422
+            detail: 'destinatario.edad: debe ser un entero mayor o igual que 0'
+            instance: /novelas
+
+    BriefInvalido:
+      description: |
+        La petición está bien formada, pero el brief no es válido como encargo: falta un
+        campo obligatorio o dos campos se contradicen.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/brief-invalido
+            title: El brief no está completo
+            status: 400
+            detail: Faltan 1 dato obligatorio y hay 1 contradicción sin resolver.
+            instance: /novelas
+            datos_faltantes:
+              - campo: destinatario.nombre
+                pregunta_reintento: ¿Cómo se llama la persona a quien va dirigida?
+            contradicciones:
+              - campos: [destinatario.edad, tono]
+                tipo: edad-vs-tono
+                explicacion: El tono «adulto irónico» no encaja con una edad de 7 años.
+
+    NovelaNoEncontrada:
+      description: No existe una novela con ese `novel_id`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/novela-no-encontrada
+            title: Novela no encontrada
+            status: 404
+            instance: /novelas/3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+
+    VersionNoEncontrada:
+      description: La novela existe, pero no tiene esa versión.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/version-no-encontrada
+            title: Versión no encontrada
+            status: 404
+            novel_id: 3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+
+    NoEncontrado:
+      description: |
+        El recurso no existe. El `type` concreto dice cuál: `novela-no-encontrada`,
+        `version-no-encontrada` o `hecho-no-encontrado`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+
+    Conflicto:
+      description: |
+        La operación choca con el estado actual. `generacion-en-curso` cuando ya hay una
+        generación o una regeneración viva para esa novela; `transicion-invalida` cuando
+        se pide algo que la máquina de estados no permite;
+        `limite-de-intentos-agotado` y `palabra-prohibida-persistente` cuando la
+        generación se detuvo y no se puede continuar sin intervención.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/generacion-en-curso
+            title: Ya hay una generación en curso para esta novela
+            status: 409
+            detail: Consulta su progreso en lugar de lanzar otra.
+            novel_id: 3a7b1e42-9c33-4f51-8a2d-6e0b9c4d7f18
+            generacion_id: 8f1c0b6e-4f6a-4c8e-9a1e-2b7d5f0c3a11
+
+    TrabajoNoCabe:
+      description: |
+        La estimación del trabajo supera el presupuesto en vuelo total
+        (`config/thresholds.yaml` § `en_vuelo.total`), así que nunca habrá hueco. Falla al
+        encolarse en vez de esperar para siempre.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/trabajo-no-cabe-en-pool
+            title: El trabajo no cabe en el presupuesto en vuelo
+            status: 422
+            detail: Es un error de diseño del ensamblado, no una espera.
+
+    ExportNoDisponible:
+      description: La versión no tiene PDF generado, o su export sigue en curso.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/export-no-disponible
+            title: El PDF de esta versión no está disponible
+            status: 404
+
+    ErrorInterno:
+      description: |
+        Fallo no previsto. El cuerpo **nunca** incluye trazas ni detalles internos: lleva
+        el identificador de la traza de Langfuse para poder diagnosticarlo.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problema'
+          example:
+            type: /problemas/error-interno
+            title: Error interno
+            status: 500
+            traza_langfuse_id: tr-7d21
+
+  schemas:
+
+    Problema:
+      title: Problema
+      description: |
+        Cuerpo de error según RFC 9457. **Toda** respuesta de error de esta API usa este
+        schema y el tipo de medio `application/problem+json`, incluidos los 422 de
+        validación.
+
+        El catálogo de `type` es **cerrado**. Un catálogo abierto degenera en un campo de
+        texto que nadie puede discriminar.
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          description: Identificador estable del tipo de problema.
+          enum:
+            - /problemas/peticion-invalida
+            - /problemas/brief-invalido
+            - /problemas/novela-no-encontrada
+            - /problemas/version-no-encontrada
+            - /problemas/hecho-no-encontrado
+            - /problemas/generacion-en-curso
+            - /problemas/transicion-invalida
+            - /problemas/trabajo-no-cabe-en-pool
+            - /problemas/limite-de-intentos-agotado
+            - /problemas/palabra-prohibida-persistente
+            - /problemas/export-no-disponible
+            - /problemas/error-interno
+        title:
+          type: string
+          description: Resumen legible, estable para un mismo `type`.
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: Explicación de **esta** ocurrencia.
+        instance:
+          type: string
+          format: uri-reference
+        novel_id:
+          type: [string, 'null']
+          format: uuid
+        generacion_id:
+          type: [string, 'null']
+          format: uuid
+        capitulo:
+          type: [integer, 'null']
+          minimum: 1
+        intentos_restantes:
+          type: [integer, 'null']
+          minimum: 0
+        traza_langfuse_id:
+          type: [string, 'null']
+        datos_faltantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatoFaltante'
+        contradicciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContradiccionBrief'
+
+    EstadoNovela:
+      title: EstadoNovela
+      description: |
+        Los estados de `domain-knowledge.md` § Estados, uno a uno y sin añadidos. Si el
+        código necesita uno que no está aquí, se actualiza antes la ontología.
+      type: string
+      enum:
+        - Configurando
+        - Planificando
+        - Escribiendo
+        - Validando
+        - Publicando
+        - Publicada
+        - Regenerando
+        - Detenida
+
+    EstadoCapitulo:
+      title: EstadoCapitulo
+      type: string
+      enum:
+        - Pendiente
+        - Escribiendo
+        - Validando
+        - Aceptado
+        - Reescribiendo
+        - Agotado
+        - Obsoleto
+
+    Comprador:
+      title: Comprador
+      description: |
+        Quien encarga, paga y configura. **`identificador` es opaco**: nunca un correo ni
+        un nombre. No hay autenticación, así que esto es un dato del brief y no un
+        principal.
+      type: object
+      required: [identificador]
+      properties:
+        identificador:
+          type: string
+          minLength: 1
+          maxLength: 64
+          description: Cadena opaca elegida por quien integra. No es PII.
+          example: comprador-0042
+        relacion_con_destinatario:
+          type: string
+          maxLength: 120
+          example: hermana
+
+    Destinatario:
+      title: Destinatario
+      description: Persona a quien va dirigida la novela.
+      type: object
+      required: [nombre, edad]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+        edad:
+          type: integer
+          minimum: 0
+          maximum: 120
+        rasgos:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+        recuerdos:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+        fecha_nacimiento:
+          type: [string, 'null']
+          format: date
+          description: Alimenta el invariante Lean de coherencia de edad, cuando el gate está activo.
+
+    Ocasion:
+      title: Ocasion
+      type: object
+      required: [tipo]
+      properties:
+        tipo:
+          type: string
+          enum: [cumpleanos, boda, aniversario, jubilacion, nacimiento, otra]
+        fecha:
+          type: [string, 'null']
+          format: date
+        tono_esperado:
+          type: [string, 'null']
+          maxLength: 120
+
+    Dedicatoria:
+      title: Dedicatoria
+      type: object
+      required: [texto]
+      properties:
+        texto:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        firma:
+          type: [string, 'null']
+          maxLength: 120
+
+    ElementoPersonalizado:
+      title: ElementoPersonalizado
+      description: |
+        Detalle del destinatario que la novela debe integrar. **`obligatorio` no es un
+        matiz**: uno obligatorio que no aparece en ningún capítulo impide publicar.
+      type: object
+      required: [enunciado, obligatorio]
+      properties:
+        enunciado:
+          type: string
+          minLength: 1
+          maxLength: 500
+        obligatorio:
+          type: boolean
+        origen:
+          type: string
+          enum: [formulario, texto-libre]
+          default: formulario
+
+    TextoLibre:
+      title: TextoLibre
+      description: |
+        Anécdota o carta que el comprador pega sin estructura. **Contenido no confiable**:
+        entra marcado como datos, nunca en la posición de las instrucciones, y lo que
+        parece una orden al sistema se registra como `Fragmento sospechoso` y se descarta.
+      type: object
+      required: [contenido]
+      properties:
+        contenido:
+          type: string
+          minLength: 1
+          maxLength: 20000
+        procedencia:
+          type: string
+          maxLength: 120
+          example: carta de su hermana
+
+    VozNarrativa:
+      title: VozNarrativa
+      type: object
+      properties:
+        persona:
+          type: string
+          enum: [primera, segunda, tercera]
+          default: tercera
+        tiempo_verbal:
+          type: string
+          enum: [presente, pasado]
+          default: pasado
+        focalizacion:
+          type: string
+          enum: [interna, externa, cero]
+          default: interna
+
+    BriefNovela:
+      title: BriefNovela
+      description: |
+        Salida estructurada y validada de la entrevista. En la demo lo produce el
+        formulario; el entrevistador conversacional produce este mismo objeto.
+      type: object
+      required: [comprador, destinatario, ocasion, genero, tono, dedicatoria]
+      properties:
+        comprador:
+          $ref: '#/components/schemas/Comprador'
+        destinatario:
+          $ref: '#/components/schemas/Destinatario'
+        ocasion:
+          $ref: '#/components/schemas/Ocasion'
+        genero:
+          type: string
+          minLength: 1
+          maxLength: 80
+          example: aventura costumbrista
+        tono:
+          type: string
+          minLength: 1
+          maxLength: 80
+          example: cálido y con humor
+        dedicatoria:
+          $ref: '#/components/schemas/Dedicatoria'
+        premisa:
+          type: [string, 'null']
+          maxLength: 2000
+        elementos_personalizados:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizado'
+        temas_excluidos:
+          type: array
+          description: Temas que no deben aparecer, aunque ninguna palabra los nombre.
+          items:
+            type: string
+            maxLength: 200
+        palabras_prohibidas:
+          type: array
+          description: Nivel `novela` del guardrail. Los niveles `global` y `perfil` los pone el sistema.
+          items:
+            type: string
+            maxLength: 80
+        reglas_mundo:
+          type: array
+          description: Restricciones que el texto no puede violar, del tipo «el abuelo nunca aparece».
+          items:
+            type: string
+            maxLength: 300
+        textos_libres:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextoLibre'
+        voz_narrativa:
+          $ref: '#/components/schemas/VozNarrativa'
+      example:
+        comprador:
+          identificador: comprador-0042
+          relacion_con_destinatario: hermana
+        destinatario:
+          nombre: Marta
+          edad: 34
+          rasgos: [tozuda, le encanta el mar]
+          recuerdos: [el verano en que aprendió a navegar]
+          fecha_nacimiento: '1992-04-18'
+        ocasion:
+          tipo: cumpleanos
+          fecha: '2026-10-02'
+          tono_esperado: celebratorio
+        genero: aventura costumbrista
+        tono: cálido y con humor
+        dedicatoria:
+          texto: Para Marta, que siempre vuelve al mar.
+          firma: Tu hermana
+        elementos_personalizados:
+          - enunciado: Aprendió a navegar en un barco llamado Alondra
+            obligatorio: true
+          - enunciado: Tiene un perro
+            obligatorio: false
+        temas_excluidos: [enfermedad]
+        palabras_prohibidas: [Luis]
+        reglas_mundo: [El abuelo nunca aparece]
+        textos_libres:
+          - contenido: Aquel verano se empeñó en soltar amarras sin ayuda de nadie.
+            procedencia: carta de su hermana
+
+    DatoFaltante:
+      title: DatoFaltante
+      type: object
+      required: [campo]
+      properties:
+        campo:
+          type: string
+          example: destinatario.nombre
+        pregunta_reintento:
+          type: string
+          description: Lo que el formulario vuelve a preguntar. El sistema repregunta; nunca rellena el hueco.
+
+    ContradiccionBrief:
+      title: ContradiccionBrief
+      description: |
+        Conflicto entre dos datos del comprador, detectado por reglas deterministas entre
+        campos. El alcance exige al menos un tipo; `edad-vs-tono` es el obligatorio.
+      type: object
+      required: [campos, tipo]
+      properties:
+        campos:
+          type: array
+          items:
+            type: string
+        tipo:
+          type: string
+          enum: [edad-vs-tono, edad-vs-genero, fecha-vs-edad, otra]
+        explicacion:
+          type: string
+
+    FragmentoSospechoso:
+      title: FragmentoSospechoso
+      description: Parte del texto libre marcada como intento de instrucción al sistema. Se registra y se descarta.
+      type: object
+      required: [fragmento, motivo]
+      properties:
+        fragmento:
+          type: string
+        motivo:
+          type: string
+          example: Parece una instrucción dirigida al sistema
+
+    ResultadoValidacionBrief:
+      title: ResultadoValidacionBrief
+      type: object
+      required: [valido, datos_faltantes, contradicciones, fragmentos_sospechosos, hechos_extraidos]
+      properties:
+        valido:
+          type: boolean
+        datos_faltantes:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatoFaltante'
+        contradicciones:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContradiccionBrief'
+        fragmentos_sospechosos:
+          type: array
+          items:
+            $ref: '#/components/schemas/FragmentoSospechoso'
+        hechos_extraidos:
+          type: array
+          description: Hechos que el sistema ha leído del texto libre. Entran como propuestos.
+          items:
+            type: object
+            required: [enunciado]
+            properties:
+              enunciado:
+                type: string
+              origen:
+                type: string
+                enum: [texto-libre]
+
+    NovelaResumen:
+      title: NovelaResumen
+      type: object
+      required: [novel_id, titulo, estado, creada_en]
+      properties:
+        novel_id:
+          type: string
+          format: uuid
+        titulo:
+          type: [string, 'null']
+          description: Lo fija el planificador. Es `null` hasta que hay esquema.
+        estado:
+          $ref: '#/components/schemas/EstadoNovela'
+        version_vigente:
+          type: [integer, 'null']
+          minimum: 1
+        creada_en:
+          type: string
+          format: date-time
+
+    Novela:
+      title: Novela
+      type: object
+      required: [novel_id, estado, creada_en, brief]
+      properties:
+        novel_id:
+          type: string
+          format: uuid
+        titulo:
+          type: [string, 'null']
+        estado:
+          $ref: '#/components/schemas/EstadoNovela'
+        version_vigente:
+          type: [integer, 'null']
+          minimum: 1
+        total_capitulos:
+          type: integer
+          description: Sale de `config/thresholds.yaml` § `obra.capitulos`.
+        creada_en:
+          type: string
+          format: date-time
+        brief:
+          $ref: '#/components/schemas/BriefNovela'
+
+    Generacion:
+      title: Generacion
+      description: |
+        Una generación completa: la inicial o una regeneración dirigida. Es el recurso que
+        el frontend sondea.
+      type: object
+      required:
+        - generacion_id
+        - novel_id
+        - tipo
+        - estado
+        - es_terminal
+        - intervalo_sondeo_segundos
+        - capitulos_aceptados
+        - total_capitulos
+        - iniciada_en
+      properties:
+        generacion_id:
+          type: string
+          format: uuid
+        novel_id:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum: [inicial, dirigida]
+        estado:
+          $ref: '#/components/schemas/EstadoNovela'
+        es_terminal:
+          type: boolean
+          description: |
+            `true` cuando no va a cambiar más. **El cliente deja de sondear aquí** y no
+            deduce la terminalidad del nombre del estado.
+        intervalo_sondeo_segundos:
+          type: [integer, 'null']
+          minimum: 1
+          description: Cada cuánto conviene volver a preguntar. `null` si `es_terminal`.
+        capitulo_actual:
+          type: [integer, 'null']
+          minimum: 1
+        capitulos_aceptados:
+          type: integer
+          minimum: 0
+        total_capitulos:
+          type: integer
+          minimum: 1
+        capitulos_a_regenerar:
+          type: array
+          description: "Solo en las dirigidas: los capítulos que **usan** el hecho cambiado."
+          items:
+            type: integer
+            minimum: 1
+        intentos_capitulo_actual:
+          type: integer
+          minimum: 0
+        checkpoint:
+          type: [integer, 'null']
+          minimum: 0
+          description: Último capítulo completado. Es desde donde se reanuda.
+        tokens_consumidos:
+          type: integer
+          minimum: 0
+        coste_usd:
+          type: number
+          minimum: 0
+        traza_langfuse_id:
+          type: [string, 'null']
+        detenida_por:
+          type: [string, 'null']
+          description: Cuando el estado es `Detenida`, el `type` del problema que la detuvo.
+        version_resultante:
+          type: [integer, 'null']
+          minimum: 1
+        iniciada_en:
+          type: string
+          format: date-time
+        terminada_en:
+          type: [string, 'null']
+          format: date-time
+
+    Capitulo:
+      title: Capitulo
+      type: object
+      required: [numero, estado]
+      properties:
+        numero:
+          type: integer
+          minimum: 1
+        titulo:
+          type: [string, 'null']
+        estado:
+          $ref: '#/components/schemas/EstadoCapitulo'
+        texto:
+          type: [string, 'null']
+          description: Es `null` mientras el capítulo no está aceptado.
+        palabras:
+          type: [integer, 'null']
+          minimum: 0
+        resumen:
+          type: [string, 'null']
+        gancho_cierre:
+          type: [string, 'null']
+        pov:
+          type: [string, 'null']
+          description: Nombre del personaje desde el que se narra.
+        lugar:
+          type: [string, 'null']
+        funcion_dramatica:
+          type: [string, 'null']
+        intentos:
+          type: integer
+          minimum: 0
+        modificado:
+          type: boolean
+          default: false
+          description: |
+            Si cambió respecto a la versión anterior. Es atributo del vínculo entre
+            versión y capítulo, y es lo que la lectura marca.
+
+    CapituloIndice:
+      title: CapituloIndice
+      description: Entrada del índice navegable. Sin texto.
+      type: object
+      required: [numero, modificado]
+      properties:
+        numero:
+          type: integer
+          minimum: 1
+        titulo:
+          type: [string, 'null']
+        palabras:
+          type: [integer, 'null']
+        modificado:
+          type: boolean
+
+    VersionResumen:
+      title: VersionResumen
+      type: object
+      required: [version, publicada_en, capitulos_modificados]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        publicada_en:
+          type: string
+          format: date-time
+        version_anterior:
+          type: [integer, 'null']
+          minimum: 1
+        capitulos_modificados:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+        motivo:
+          type: [string, 'null']
+          description: En una regeneración, el enunciado de la solicitud de cambio.
+
+    Version:
+      title: Version
+      type: object
+      required: [version, novel_id, publicada_en, capitulos]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        novel_id:
+          type: string
+          format: uuid
+        titulo:
+          type: [string, 'null']
+        publicada_en:
+          type: string
+          format: date-time
+        version_anterior:
+          type: [integer, 'null']
+          minimum: 1
+        hash:
+          type: [string, 'null']
+          description: Hash del contenido. Es lo que hace comprobable que una versión publicada no cambia.
+        dedicatoria:
+          $ref: '#/components/schemas/Dedicatoria'
+        capitulos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CapituloIndice'
+
+    Portada:
+      title: Portada
+      type: object
+      required: [titulo, dedicatoria]
+      properties:
+        titulo:
+          type: string
+        dedicatoria:
+          $ref: '#/components/schemas/Dedicatoria'
+        destinatario:
+          type: string
+        ocasion:
+          type: [string, 'null']
+
+    EntradaFicha:
+      title: EntradaFicha
+      type: object
+      required: [nombre, capitulos]
+      properties:
+        nombre:
+          type: string
+        descripcion:
+          type: [string, 'null']
+        capitulos:
+          type: array
+          description: Capítulos donde aparece, para que la ficha enlace a ellos.
+          items:
+            type: integer
+            minimum: 1
+
+    Ficha:
+      title: Ficha
+      description: Personajes y lugares de una versión, generados desde la story bible de esa versión.
+      type: object
+      required: [personajes, lugares]
+      properties:
+        personajes:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntradaFicha'
+        lugares:
+          type: array
+          items:
+            $ref: '#/components/schemas/EntradaFicha'
+
+    Hecho:
+      title: Hecho
+      description: Enunciado verdadero en el mundo ficcional, vigente en la versión consultada.
+      type: object
+      required: [hecho_id, enunciado, estado, capitulos_usan]
+      properties:
+        hecho_id:
+          type: string
+          format: uuid
+        enunciado:
+          type: string
+        estado:
+          type: string
+          enum: [propuesto, adoptado, descartado, retconeado, refutado]
+        origen:
+          type: string
+          enum: [brief, texto-libre, extraccion]
+        capitulo_establece:
+          type: [integer, 'null']
+          minimum: 1
+        capitulos_usan:
+          type: array
+          description: |
+            Capítulos que se apoyan en el hecho. **Es lo que decide el análisis de
+            impacto**: un hecho establecido en el 2 y mencionado en el 7 obliga a
+            reescribir los dos.
+          items:
+            type: integer
+            minimum: 1
+        fragmento_soporte:
+          type: [string, 'null']
+          description: Fragmento literal del capítulo que sostiene el hecho.
+
+    NuevaSolicitudCambio:
+      title: NuevaSolicitudCambio
+      description: |
+        El lector pide un cambio. **Exactamente uno** de `hecho_id` o `fragmento`: con
+        `hecho_id` el cambio es directo; con `fragmento` el sistema propone un hecho
+        candidato y espera confirmación.
+      type: object
+      required: [enunciado_nuevo, capitulo_origen]
+      properties:
+        hecho_id:
+          type: [string, 'null']
+          format: uuid
+        fragmento:
+          type: [string, 'null']
+          maxLength: 2000
+        enunciado_nuevo:
+          type: string
+          minLength: 1
+          maxLength: 500
+        capitulo_origen:
+          type: integer
+          minimum: 1
+          description: Desde qué capítulo de la lectura se pidió.
+      oneOf:
+        - required: [hecho_id]
+        - required: [fragmento]
+
+    AnalisisImpacto:
+      title: AnalisisImpacto
+      type: object
+      required: [capitulos_afectados]
+      properties:
+        capitulos_afectados:
+          type: array
+          description: Capítulos que **usan** el hecho. Se calcula sobre `usa`, no sobre `establece`.
+          items:
+            type: integer
+            minimum: 1
+        hechos_derivados:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    SolicitudCambio:
+      title: SolicitudCambio
+      type: object
+      required: [solicitud_id, novel_id, enunciado_nuevo, estado, capitulo_origen]
+      properties:
+        solicitud_id:
+          type: string
+          format: uuid
+        novel_id:
+          type: string
+          format: uuid
+        enunciado_nuevo:
+          type: string
+        capitulo_origen:
+          type: integer
+          minimum: 1
+        estado:
+          type: string
+          enum: [pendiente-de-confirmacion, confirmada, aplicada, descartada]
+        hecho_afectado:
+          $ref: '#/components/schemas/Hecho'
+        hecho_candidato:
+          type: [string, 'null']
+          description: |
+            Cuando la solicitud llegó por fragmento: el hecho que el sistema propone. El
+            lector lo confirma antes de que se regenere nada.
+        analisis_impacto:
+          $ref: '#/components/schemas/AnalisisImpacto'
+        version_resultante:
+          type: [integer, 'null']
+          minimum: 1
+
+    Exportacion:
+      title: Exportacion
+      type: object
+      required: [version, estado]
+      properties:
+        version:
+          type: integer
+          minimum: 1
+        estado:
+          type: string
+          enum: [en-curso, disponible, fallido]
+        url_descarga:
+          type: [string, 'null']
+          format: uri-reference
+        generado_en:
+          type: [string, 'null']
+          format: date-time
+        paridad_pdf_web:
+          type: [boolean, 'null']
+          description: Resultado del validador que compara el PDF con la lectura web.
+
+    Salud:
+      title: Salud
+      type: object
+      required: [estado, version_api, gate_lean_activo, cerrar_el_paso]
+      properties:
+        estado:
+          type: string
+          enum: [ok, degradado]
+        version_api:
+          type: string
+        gate_lean_activo:
+          type: boolean
+          description: |
+            `config/thresholds.yaml` § `formal.gate_activo`. Con el gate apagado no corren
+            las tres demostraciones de cronología y la lectura debe decirlo.
+        cerrar_el_paso:
+          type: boolean
+          description: |
+            `config/thresholds.yaml` § `medicion.cerrar_el_paso`. Con `false`, los
+            validadores semánticos puntúan y no suspenden.
+        tokens_en_vuelo:
+          type: integer
+          minimum: 0
+        tokens_en_vuelo_total:
+          type: integer
+          minimum: 0
+        trabajos_en_cola:
+          type: integer
+          minimum: 0

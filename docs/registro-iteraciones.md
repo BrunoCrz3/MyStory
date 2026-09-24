@@ -699,3 +699,65 @@ se queda corta por donde el encargo aprieta, no por donde el diseño es elegante
 **Sigue pendiente**: PO-11 y PO-12; encender el gate de Lean cuando haya toolchain; y
 calibrar los cuarenta y tres umbrales provisionales con el primer corpus, que es lo que
 `medicion.cerrar_el_paso: false` está esperando.
+
+---
+
+## RI-009 — La spec del backend v1 y su contrato, escritos contrato primero
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/spec1.md`, `specs/openapi.yaml`,
+`docs/trade-offs.md`
+
+### Causa
+
+Dos días para tener backend y frontend en pie. Con la spec 001 archivada, no había
+especificación vigente que un plan pudiera ejecutar, y el frontend no tenía contra qué
+construirse: cualquier trabajo que empezara antes de la spec habría que rehacerlo.
+
+### Qué cambió
+
+**Existe `specs/openapi.yaml`, y es la fuente.** Un OpenAPI 3.1 con **20 operaciones y 31
+schemas**, con los campos, los códigos de error y los ejemplos. No es documentación que
+sale del código: el backend lo implementa y **un test compara el OpenAPI que genera FastAPI
+con este fichero**; si divergen, falla. El frontend genera su cliente tipado desde él, y por
+eso puede empezar hoy sin esperar a una sola línea de backend.
+
+**Existe `specs/spec1.md`**, una SRS inspirada en ISO/IEC/IEEE 29148 con **62 requisitos
+funcionales en formato EARS**, cada uno con criterios Dado/Cuando/Entonces y marcado
+**[demo]** o **[post-demo]**, agrupados por la feature que es dueña de sus clases; seis
+requisitos de datos; dieciocho no funcionales; y **seis fases de construcción** que el plan
+seguirá en orden, cada una con su criterio de terminado.
+
+**Un grill de ocho preguntas cerró lo que `/docs` no resolvía**, y de ahí salen cinco
+decisiones aprobadas por el desarrollador: **TO-030** worker asíncrono único en proceso con
+la cola en SQLite; **TO-031** sondeo en vez de SSE; **TO-032** errores RFC 9457 con catálogo
+cerrado y 409 sin `Idempotency-Key`; **TO-033** ninguna identidad, y las tres reglas de
+privacidad que se derivan de que el brief lleva datos personales reales; y **TO-034** el
+cliente del modelo probado con un `Protocol` cuyo doble vive en `tests/`.
+
+**Y una sexta, TO-035, marcada «decidido por el agente — revisar»** con lo que se fijó sin
+preguntar: la forma de los recursos, la paginación, el export como `POST` más `GET`, el
+endpoint de validación de brief y la **tabla de trabajos**, que es la única pieza de
+persistencia que la spec añade al modelo de `architecture.md`.
+
+### Efecto
+
+**Comprobado sobre el contrato**: parsea como YAML, las 20 operaciones tienen
+`operationId` único, no hay ni un `$ref` roto, los 31 schemas están todos referenciados,
+ningún parámetro de ruta queda sin declarar y no hay un solo `nullable:` —que es de
+OpenAPI 3.0 y en 3.1 se escribe `type: [string, 'null']`—.
+
+**La demo queda definida por exclusión, que es la parte útil**: entran F0 a F5 con la
+regeneración dirigida completa y el export a PDF; sale el entrevistador conversacional, que
+se recorta a formulario **conservando** la detección de datos faltantes y la contradicción
+`edad-vs-tono` por reglas deterministas. El entrevistador sigue siendo requisito obligatorio
+del alcance (RF-INTAKE-06), no un descarte.
+
+**Lo que enseña este cambio.** La pregunta que más movió el diseño no fue ninguna de las de
+arquitectura sino la de identidad: al responder «no hay ninguna» apareció que el brief lleva
+datos personales reales a los prompts y a las trazas, que es un requisito de privacidad que
+no estaba en ningún documento y que nadie había pedido. Preguntar quién llama obligó a
+mirar qué viaja.
+
+**Sigue pendiente**: que el desarrollador apruebe la spec y el contrato —los dos están en
+`borrador` y sin eso no se escribe `specs/plan1.md` ni una línea de código—, y revisar
+TO-035, en particular si la tabla de trabajos es dominio o materialización.

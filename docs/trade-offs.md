@@ -917,3 +917,236 @@ mirar cómo se produjo, es Proceso.
 Y la skill queda con un método que otro proyecto puede no necesitar entero. Se declara ahí
 mismo: los dos niveles nuevos son condicionales, y un sistema que no entrega nada a un
 tercero sigue teniendo un plan de dos tablas.
+
+---
+
+## TO-030 — Un worker asíncrono único en proceso, con la cola en SQLite
+
+**Fecha:** 2026-09-24 · **Estado:** decidida · **Afecta a:** `specs/spec1.md` RF-PROC-01 a RF-PROC-03, feature `process/`
+
+### Problema
+
+Generar diez capítulos en serie dura minutos, no segundos, así que no cabe dentro de una
+petición HTTP. Y el stack está cerrado: no hay Redis ni Celery, y añadirlos sería
+renegociar `CLAUDE.md` § Requisitos técnicos por comodidad.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| `BackgroundTasks` de FastAPI | Una línea | Muere con la respuesta. No hay nada que reanudar ni nada que consultar |
+| `asyncio.create_task` suelto | Sobrevive a la respuesta | Muere con el proceso y no deja estado: la reanudación de TO-023 sería imposible |
+| **Worker asíncrono único en proceso, con tabla de trabajos en SQLite** | Sobrevive al reinicio, da el checkpoint gratis y serializa por novela | Hay que escribirlo, y obliga a prohibir más de un worker de uvicorn |
+
+### Criterio
+
+Lo que decide no es la elegancia sino la reanudación: el alcance §4 exige checkpoint por
+capítulo y TO-023 la modela en el predicado `Init`. Una cola que no sobrevive al proceso
+convierte ese requisito en literatura.
+
+### Elección
+
+**Worker asíncrono único**, arrancado en el `lifespan`, que reclama trabajos con una
+actualización condicional atómica —un solo `UPDATE ... WHERE estado = 'pendiente'` que gana
+un único consumidor—. Al arrancar, `orquestador.estado_inicial` lee el checkpoint y reanuda.
+
+### Consecuencias
+
+**Arrancar con más de un worker de uvicorn queda prohibido y documentado en el README.** No
+es una recomendación: el pool de `en_vuelo.total` es un semáforo **en proceso**, y dos
+procesos lo duplicarían en silencio sin que ninguna métrica lo delatara. Es el punto ciego
+#5 de `verification.md` visto desde el otro lado.
+
+La prueba que lo cierra es concreta y va en F1: **matar el proceso a mitad del capítulo 5
+—incluido un reinicio por `--reload`— y comprobar que al rearrancar continúa por el 5**, sin
+duplicar ni perder capítulos.
+
+Y se gana algo que no se buscaba: la serialización por novela de TO-019 sale del diseño en
+vez de tener que imponerse, porque un consumidor único no puede escribir dos capítulos a la
+vez.
+
+---
+
+## TO-031 — El progreso se consulta por sondeo, no por eventos del servidor
+
+**Fecha:** 2026-09-24 · **Estado:** decidida · **Afecta a:** `specs/openapi.yaml`, `specs/spec1.md` RF-PROC-05
+
+### Problema
+
+Una generación de minutos necesita que el frontend muestre progreso. Las dos formas
+habituales son sondear un recurso o abrir un `text/event-stream`, y la elección tiene que
+poder expresarse en el contrato, porque de ahí sale el cliente tipado.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| **Sondeo de un recurso `Generacion`** | Tipado por el generador de cliente sin escribir nada a mano; trivial de servir | Latencia de hasta un intervalo; peticiones que no traen novedad |
+| SSE | Empuje inmediato, sin peticiones vacías | OpenAPI 3.1 lo **describe**, pero ningún generador produce de ahí un cliente útil |
+| Las dos | Lo mejor de cada una | Dos caminos que mantener en la semana en que hay dos días |
+
+### Criterio
+
+`CLAUDE.md` § Persistencia, backend y frontend dice que el cliente tipado se deriva del
+OpenAPI y que **los tipos no se escriben a mano dos veces**. SSE obliga a escribir el
+parseo de eventos a mano, así que rompe la regla justo en la parte del frontend que más
+cambia.
+
+### Elección
+
+**Sondeo**, y SSE a post-demo. El recurso `Generacion` lleva **su propio
+`intervalo_sondeo_segundos`** en vez de un `Retry-After` en un 200, y un booleano
+**`es_terminal`** que dice cuándo dejar de preguntar.
+
+### Consecuencias
+
+El cliente **no deduce la terminalidad del nombre del estado**, que es la forma habitual de
+que un frontend se quede sondeando para siempre cuando se añade un estado nuevo. El
+contrato lo dice y el backend lo calcula.
+
+El coste del sondeo es irrelevante aquí y conviene decir por qué, para que no se lea como
+descuido: una instancia, un usuario, un intervalo de segundos y una generación de minutos.
+En otro contexto la cuenta saldría al revés.
+
+---
+
+## TO-032 — Errores RFC 9457 con catálogo cerrado, y 409 sin `Idempotency-Key`
+
+**Fecha:** 2026-09-24 · **Estado:** decidida · **Afecta a:** `specs/openapi.yaml`, `commons/` handler central
+
+### Problema
+
+`verification.md` `A-36` exige un handler central de errores, pero nadie había fijado qué
+devuelve. Y `POST /generaciones` es la petición cara del sistema: la que más fácil se
+dispara dos veces y la que peor se perdona.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| **RFC 9457 `problem+json`, catálogo cerrado** | `type` discriminable, campos de contexto, estándar | Hay que sobrescribir el 422 de FastAPI |
+| `{"detail": "..."}` de FastAPI | Cero trabajo | El frontend acaba parseando prosa para decidir |
+| Envoltorio propio | Control total | Reinventa un estándar que ya existe |
+
+### Elección
+
+**RFC 9457 con catálogo cerrado de doce tipos**, y **el 422 de validación de FastAPI
+sobrescrito** para que también sea `problem+json`: toda respuesta de error tiene la misma
+forma, sin excepciones, y el test de conformidad lo cubre.
+
+Para la petición repetida, **409 `generacion-en-curso`** con el `generacion_id` vivo en el
+cuerpo, **sin cabecera `Idempotency-Key`**. Una solicitud de cambio que llegue con una
+generación en curso devuelve el mismo 409 con el mismo tipo.
+
+### Consecuencias
+
+El catálogo va **cerrado** a propósito: uno abierto degenera en un campo de texto en dos
+semanas, y entonces vuelve a no poder discriminarse.
+
+Se rechaza `Idempotency-Key` porque la idempotencia del sistema ya está donde los documentos
+la ponen —la escritura a la story bible por `novel_id` + `chapter_id` + `version`— y esa es
+la que protege del trabajo duplicado de verdad. Añadir una segunda en HTTP sería un
+mecanismo nuevo para un problema que una instancia de un usuario no tiene.
+
+Y se prefiere 409 a devolver un `202` con la generación en curso, que parecería más amable:
+un `202` silencioso ante un segundo clic esconde que no se ha lanzado nada, y «no se ha
+lanzado nada nuevo» es justo lo que hay que saber antes de esperar diez minutos.
+
+---
+
+## TO-033 — No hay identidad, y el brief lleva datos personales
+
+**Fecha:** 2026-09-24 · **Estado:** decidida · **Afecta a:** `specs/openapi.yaml`, `specs/spec1.md` § 2.2 y § 6.1
+
+### Problema
+
+`Comprador` y `Lector` son clases de la ontología con identificador, pero TO-004 deja las
+cuentas fuera y `A-53` prohíbe `user_id` en cualquier tabla. ¿De dónde sale la identidad de
+quien llama?
+
+### Opciones
+
+| Opción | En contra |
+| --- | --- |
+| **De ningún sitio: el `Comprador` es un dato del brief** | Quien conoce el UUID lee la novela |
+| Cabecera `X-Comprador-Id` | Autenticación a medias: da apariencia de aislamiento sin la garantía |
+| Cookie de sesión | Igual, y además mete por la puerta de atrás el `user_id` prohibido |
+
+### Elección
+
+**Ninguna identidad.** El `Lector` ya está definido como «un papel, no una persona
+distinta», así que no hay principal que autenticar; y `Comprador.identificador` entra en el
+cuerpo del brief como dato. Quien conoce el UUID de la novela la lee, y eso es la
+consecuencia declarada de no tener cuentas, no un descuido: lo contiene el arranque en la
+interfaz local de PO-4.
+
+### Consecuencias, que son de privacidad
+
+**El brief contiene datos personales reales del destinatario** —nombre, edad, rasgos,
+recuerdos— y esos datos **viajan en los prompts y quedan en las trazas de Langfuse**. Tres
+reglas salen de ahí, y van a la spec como RNF-16 a RNF-18:
+
+1. `Comprador.identificador` es una cadena **opaca**: nunca un correo ni un nombre.
+2. Todos los briefs de ejemplo, de prueba y de documentación usan **datos ficticios**.
+3. **La retención de las trazas queda como pregunta abierta** post-demo. Declararla es lo
+   que impide que se convierta en una decisión por omisión.
+
+---
+
+## TO-034 — El cliente del modelo se prueba con un `Protocol` y un doble que vive en `tests/`
+
+**Fecha:** 2026-09-24 · **Estado:** decidida · **Afecta a:** `commons/llm/`, `tests/`
+
+### Problema
+
+`CLAUDE.md` regla 8 prohíbe mocks en `backend/app/`, «ni siquiera temporales». Y el
+redactor no se puede llamar de verdad en cada prueba: cuesta dinero, tarda y no es
+determinista.
+
+### Elección, en tres capas
+
+1. **Costura por `Protocol`** en `commons/llm/`, con **una sola** implementación de
+   producción. El doble vive en **`tests/dobles/`** y se inyecta con el override de
+   dependencias de FastAPI. No hay mock en el código de producción porque el doble no está
+   en él: la regla se cumple por dónde vive el fichero, no por cómo se llama.
+2. **Casetes grabados** de respuestas reales, que cubren la serialización y el conteo de
+   tokens —que es donde un doble escrito a mano miente—.
+3. **Un test en vivo** marcado `@pytest.mark.real`, **excluido de CI**, para pasarlo a mano
+   antes de una demo.
+
+### Consecuencias
+
+Los casetes **se graban solo si la credencial está en el entorno**; si no está, esa capa
+queda pendiente y **no bloquea** al resto, que es lo que permite que alguien clone el repo y
+tenga la suite verde sin credenciales.
+
+Y se graban **con las cabeceras de autenticación eliminadas**, pasando el escaneo de
+secretos antes de cualquier commit. Un casete es una respuesta HTTP grabada: es exactamente
+el sitio por donde una clave entra en un repositorio sin que nadie la escriba a mano.
+
+---
+
+## TO-035 — Decisiones de la API tomadas por el agente al escribir la spec 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `specs/openapi.yaml`, `specs/spec1.md`
+
+### Qué se decidió sin preguntar
+
+El grill de la spec 1 se limitó a ocho preguntas por la restricción de tiempo. Lo que sigue
+se fijó eligiendo la opción recomendada, y se marca para que se revise antes de aprobar la
+spec, no después de implementarla.
+
+| Decisión | Qué se eligió | Por qué |
+| --- | --- | --- |
+| Forma de los recursos | `/novelas/{novel_id}` como raíz, con `generaciones`, `versiones`, `versiones/{n}/capitulos`, `ficha`, `portada`, `hechos`, `solicitudes-cambio` y `export` colgando | Sigue las relaciones de contención de la ontología: todo cuelga de la novela porque nada existe sin ella |
+| Paginación | `GET /novelas` pagina con `limite` y `desplazamiento`; **`listarCapitulos` no pagina** | Paginar los capítulos obligaría al lector a esperar entre uno y otro. Diez capítulos son unos cientos de kilobytes |
+| Export | `POST` para generar y `GET` para descargar, en la misma ruta | Un `GET` que tarda diez segundos y genera un fichero miente sobre lo que es. El `POST` repetido devuelve `200` con lo que ya hay, porque las versiones son inmutables |
+| Validación del brief | Endpoint propio `POST /briefs/validacion` que **no crea nada** | El formulario necesita validar antes de decidir si crea. Y `valido: false` va en un `200`, porque un brief incompleto es el resultado normal de la primera pasada, no un error de la petición |
+| Tabla de trabajos | Se añade una tabla de trabajos que no está en `architecture.md` § Story bible | La exige TO-030. Es materialización del `Checkpoint`, no una clase nueva de la ontología, y por eso no toca `definitions.md` |
+| Estado de la generación | `Generacion.estado` reutiliza `EstadoNovela` en vez de un enum propio | Un enum paralelo tendría que mantenerse sincronizado con la máquina de estados y se desincronizaría |
+
+### Qué hay que revisar
+
+Lo que más pesa es la **tabla de trabajos**: es la única pieza de persistencia que esta spec
+añade al modelo de `architecture.md`, y si se decide que es dominio y no materialización,
+entra en la ontología con su clase y su pregunta de competencia.
