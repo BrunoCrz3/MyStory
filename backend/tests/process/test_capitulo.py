@@ -10,6 +10,7 @@ import pytest
 from app.process.capitulo import ciclo_capitulo
 from app.quality.validadores import basicos
 from tests.conftest import Entorno
+from tests.dobles.guiones import corregido
 from tests.fixtures.borradores import borrador
 from tests.fixtures.planificada import novela_planificada
 
@@ -42,21 +43,32 @@ async def test_un_borrador_valido_queda_listo_para_aceptar(entorno: Entorno) -> 
         "reglas_mundo",
         "calidad_prosa",
         "integridad_pov",
+        # El judge, con su propio schema_valido y los seis criterios (P32).
+        "schema_valido",
+        "consistencia_factica",
+        "adecuacion_tono",
+        "cierre_arco",
+        "coherencia_personajes",
+        "ritmo",
+        "personalizacion_natural",
     ]
     cierran = {"schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"}
     assert all(s.valor == 1.0 for s in entorno.trazas.scores if s.nombre in cierran)
     assert entorno.trazas.scores_de("reglas_mundo")[0].valor == 1.0
-    assert entorno.trazas.nombres("generacion")[-1] == "writer"
+    assert entorno.trazas.nombres("generacion")[-2:] == ["writer", "judge"]
 
 
 @pytest.mark.anyio
 async def test_capitulo_corto_vuelve_al_redactor_con_el_informe(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
     entorno.modelo.encolar("redactor", borrador(500), borrador())
+    # Un editor que tampoco llega a la longitud: el capítulo vuelve al redactor.
+    entorno.modelo.encolar("editor", corregido(500))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
     assert _estado(entorno, novela) == ("Validando", 1)
-    segunda = entorno.modelo.peticiones[-1].mensajes[0].contenido
+    ultima = [p for p in entorno.modelo.peticiones if p.rol == "redactor"][-1]
+    segunda = ultima.mensajes[0].contenido
     assert "500 palabras" in segunda
 
 
@@ -64,9 +76,10 @@ async def test_capitulo_corto_vuelve_al_redactor_con_el_informe(entorno: Entorno
 async def test_nombre_mal_escrito_vuelve_al_redactor(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
     malo = borrador(extra="Aquella tarde su hermana llamó a Martha desde el muelle.")
-    entorno.modelo.encolar("redactor", malo, borrador())
+    entorno.modelo.encolar("redactor", malo)
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
+    # El editor corrige el nombre y su versión vuelve a pasar el hook.
     assert [s.valor for s in entorno.trazas.scores_de("nombres_exactos")] == [0.0, 1.0]
 
 
@@ -100,6 +113,7 @@ async def test_dos_pasadas_con_palabra_vetada_detienen_sin_tercer_intento(entorn
 async def test_agotar_los_intentos(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
     entorno.modelo.encolar("redactor", *[borrador(300)] * (LIMITE + 1))
+    entorno.modelo.encolar("editor", *[corregido(300)] * (LIMITE + 1))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "agotar"
     assert r.detenida_por == "limite-de-intentos-agotado"
@@ -113,7 +127,8 @@ async def test_salida_del_redactor_sin_schema_falla_schema_valido(entorno: Entor
     entorno.modelo.encolar("redactor", {"titulo": "Sin texto"}, borrador())
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
-    assert [s.valor for s in entorno.trazas.scores_de("schema_valido")][-2:] == [0.0, 1.0]
+    # Borrador sin schema, borrador válido y el schema del judge sobre este último.
+    assert [s.valor for s in entorno.trazas.scores_de("schema_valido")] == [0.0, 1.0, 1.0]
 
 
 @pytest.mark.anyio
@@ -121,7 +136,7 @@ async def test_el_contexto_del_redactor_lleva_su_brief_de_capitulo(entorno: Ento
     novela = await novela_planificada(entorno)
     entorno.modelo.encolar("redactor", borrador())
     await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
-    peticion = entorno.modelo.peticiones[-1]
+    peticion = next(p for p in entorno.modelo.peticiones if p.rol == "redactor")
     usuario = peticion.mensajes[0].contenido
     estructural = usuario.split('<capa nombre="estructural">', 1)[1].split("</capa>", 1)[0]
     assert "está más cerca del mar" in estructural

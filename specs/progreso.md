@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P32 · Editor y orden completo de validación |
+| Paso actual | P33 · `cierre_arco` en el gate |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 |
+| Intentos fallidos en el paso actual | 0 de 3 (el P32 cerró con 1) |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P31 |
+| Último commit de paso | P32 |
 
 ## Coste real
 
@@ -65,10 +65,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P29** — `quality/validadores/canon.py`: `consistencia_factica` (edad en presente contra hechos vigentes y el brief, números en cifra y en letra), `cumplimiento_brief` (alcance nombrado, sin adelantar entidades que el plan presenta después) y `reglas_mundo` (exclusión de entidad por nombre, con plural; las de forma, no comprobables); `process/` les pasa hechos, reglas, alcance y previstas; la prueba de `/salud` con cola deja de ser una carrera; 307 pruebas
 - **P30** — `quality/validadores/texto.py`: `calidad_prosa` (eco de 5-gramas con los capítulos anteriores, muletillas y clichés contra listas cerradas en `quality/listas/`, adverbios, variación de longitud de frase, metatexto/markdown, truncado; cifras en null se omiten) e `integridad_pov` (persona fuera del diálogo, tiempo si se declara presente, accesos mentales de otro personaje con focalización interna); `hook_capitulo` asíncrono con los siete validadores en hilos concurrentes (`en_paralelo`), probado con una barrera de siete y con el pool a 0 durante el hook; 323 pruebas
 - **P31** — `quality/judge.py`: `SalidaJudge` (seis `Puntuacion` 0–1 con justificación, más afirmaciones sobre el destinatario y temas excluidos para el P37), `evaluar_judge` con `schema_valido` y un resultado por criterio con tipo y punto del registro; `context.piezas_judge` (borrador en Local como no confiable, temas excluidos, último capítulo marcado); `process/judge.juzgar` llama con `roles.judge` y deja un score por criterio con su justificación como comentario; 336 pruebas
+- **P32** — Ciclo por intento: redactor → hook de policy (si falla, se decide sin judge ni editor) → hook de capítulo → judge → si falla algo que cierra, `process/editor.corregir` (contrato en `quality/editor.py`, piezas en `context.piezas_editor` con informe y anticontexto) → el corregido vuelve a pasar policy, capítulo y judge → decisión; defecto sistémico del editor al audit log (`defecto-sistemico-como-local`, D-14); prompt del editor con la clasificación; dobles con judge y editor por defecto (`guion_revision`); 343 pruebas
 
 ## Pendiente
 
-- Siguiente: **P32 · Editor y orden completo de validación**, y después el resto hasta el P49 en orden.
+- Siguiente: **P33 · `cierre_arco` en el gate**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -168,6 +169,10 @@ registrada.
 | A-72 | P31 | El contrato y la evaluación del judge viven en `quality/judge.py`; el ensamblado y la llamada, en `process/judge.py`, con las piezas en `context.piezas_judge` | `quality/` no tiene arista a `context/`; `process/` sí, y es quien orquesta | TO-042 |
 | A-73 | P31 | El criterio «arco» emite el score `cierre_arco` en cada capítulo; el gate usará el del último (D-15) | El registro tiene un solo score para el arco y D-15 lo asigna al judge | TO-042 |
 | A-74 | P31 | Un criterio semántico sin umbral en `calidad` pasa siempre y deja su score | Sin cifra no hay con qué suspender; la fase de medición es justo para reunirla | TO-042 |
+| A-75 | P32 | El editor se llama cuando falla algo que cierra el paso, venga del hook de capítulo o del judge; el corregido vuelve a pasar los tres puntos, judge incluido, y es lo que decide el policy engine | La prueba del plan (el editor arregla la longitud) exige que corrija defectos del hook; «todos los validadores» incluye al judge | TO-042 |
+| A-76 | P32 | Si el hook de policy falla no corren ni judge ni editor | Lo barato primero: no se paga un juicio sobre un borrador sin schema o con una palabra vetada, y el guardrail tiene su propio sublímite | TO-042 |
+| A-77 | P32 | Los defectos que solo puntúan (fase de medición) quedan en el informe pero no provocan llamada al editor | RF-QUA-07: puntúan y no suspenden; una corrección por cada defecto sin umbral calibrado multiplicaría las llamadas | TO-042 |
+| A-78 | P32 | Un informe por intento con los resultados del borrador que se decide (el corregido si hubo editor); la traza guarda también los del borrador antes de corregir | La tabla no admite otra decisión que aceptar, devolver, agotar o detener, y la migración 0010 ya está commiteada | TO-042 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -232,14 +237,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P31 cerrado, siguiente P32**. Rama `backend-v1`,
-suite en verde (336 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P32 cerrado, siguiente P33**. Rama `backend-v1`,
+suite en verde (343 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 336 pruebas en verde al cerrar P31
+uv run pytest -q          # 343 pruebas en verde al cerrar P32
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

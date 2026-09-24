@@ -147,10 +147,12 @@ def test_agotar_los_reintentos_de_infraestructura_detiene_e_informa() -> None:
 
 
 def test_un_capitulo_que_no_converge_detiene_con_limite_agotado() -> None:
+    from tests.dobles.guiones import corregido
     from tests.fixtures.borradores import borrador
 
     def preparar(m: ModeloGuionizado) -> None:
         m.encolar("redactor", *[borrador(200)] * 10)
+        m.encolar("editor", *[corregido(200)] * 10)
 
     g, _, cliente = _ejecutar(_config(), preparar)
     try:

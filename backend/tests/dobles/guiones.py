@@ -12,6 +12,7 @@ from tests.fixtures.borradores import borrador
 from tests.fixtures.briefs import brief_ejemplo
 from tests.fixtures.esquemas import esquema_valido
 from tests.fixtures.extracciones import extraccion
+from tests.fixtures.judge import salida_judge
 
 
 def numero_de_la_tarea(peticion: Peticion) -> int:
@@ -34,12 +35,25 @@ def extraer(peticion: Peticion, elementos: list[str] | None = None) -> dict[str,
     return extraccion(capitulo_aceptado_de(peticion), elementos=elementos)
 
 
+def corregido(palabras: int = 1200, **kw: str) -> dict[str, Any]:
+    """Salida del editor: un borrador y la clasificación de los defectos que corrige."""
+    return {**borrador(palabras, **kw), "clasificacion": []}
+
+
+def guion_revision(modelo: ModeloGuionizado) -> None:
+    """Judge y editor por defecto: el judge aprueba los seis criterios y el editor devuelve un
+    borrador válido. Una prueba que necesite otra cosa la encola antes."""
+    modelo.por_defecto.setdefault("judge", lambda p: salida_judge())
+    modelo.por_defecto.setdefault("editor", lambda p: corregido())
+
+
 def guion_completo(modelo: ModeloGuionizado, brief: dict[str, Any] | None = None) -> None:
     """Planificador, redactor y extractor responden siempre con una salida válida.
 
     El extractor declara presentes en cada capítulo todos los elementos del brief, para que
     la novela pase `elementos_obligatorios` en el gate.
     """
+    guion_revision(modelo)
     brief = brief or brief_ejemplo()
     elementos = [e["enunciado"] for e in brief["elementos_personalizados"]]
     modelo.por_defecto.update(

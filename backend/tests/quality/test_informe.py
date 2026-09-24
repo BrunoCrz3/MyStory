@@ -9,6 +9,7 @@ from app.process.capitulo import ciclo_capitulo
 from app.quality import service as quality
 from app.quality.registro import validador
 from tests.conftest import Entorno
+from tests.dobles.guiones import corregido
 from tests.fixtures.borradores import borrador
 from tests.fixtures.planificada import novela_planificada
 
@@ -22,6 +23,14 @@ VALIDADORES_DEL_CICLO = [
     "reglas_mundo",
     "calidad_prosa",
     "integridad_pov",
+    # El judge: su schema_valido y los seis criterios.
+    "schema_valido",
+    "consistencia_factica",
+    "adecuacion_tono",
+    "cierre_arco",
+    "coherencia_personajes",
+    "ritmo",
+    "personalizacion_natural",
 ]
 
 
@@ -39,6 +48,7 @@ def _informes(entorno: Entorno, novela: str, capitulo_id: str) -> list[quality.I
 async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
     entorno.modelo.encolar("redactor", borrador(500), borrador())
+    entorno.modelo.encolar("editor", corregido(500))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
 
@@ -51,11 +61,12 @@ async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entor
     assert "longitud" not in [d.dimension for d in segundo.defectos]
     for informe in (primero, segundo):
         assert [s.validador for s in informe.scores] == VALIDADORES_DEL_CICLO
-    assert _que_cierran(primero) == [True, True, False, True, True]
+    assert _que_cierran(primero) == [True, True, False, True, True, True]
     assert all(_que_cierran(segundo))
-    # Un score por validador ejecutado, igual en la base que en la traza (RF-OBS-03).
-    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 18
-    assert len(entorno.trazas.scores) == 18
+    # El informe guarda lo que decidió cada intento: el borrador corregido por el editor en el
+    # primero. La traza tiene además los scores del borrador antes de corregir (RF-OBS-03).
+    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 32
+    assert len(entorno.trazas.scores) == 48
 
 
 @pytest.mark.anyio
@@ -65,6 +76,7 @@ async def test_el_informe_del_ultimo_intento_de_un_capitulo_agotado_es_consultab
     novela = await novela_planificada(entorno)
     limite = entorno.recursos.config.umbrales.orquestacion.max_intentos_capitulo
     entorno.modelo.encolar("redactor", *[borrador(500)] * (limite + 1))
+    entorno.modelo.encolar("editor", *[corregido(500)] * (limite + 1))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "agotar"
 

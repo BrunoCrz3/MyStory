@@ -25,6 +25,7 @@ from app.main import crear_app
 from app.process.orquestador import Orquestador
 from app.versioning.service import Publicacion
 from tests.contrato.normalizar import cargar_contrato, schema_de_respuesta
+from tests.dobles.guiones import guion_revision
 from tests.dobles.modelo import ModeloGuionizado
 from tests.dobles.trazador import RegistroTrazas
 
@@ -85,6 +86,7 @@ class Instancia:
 def instancia() -> Iterator[Instancia]:
     config = cargar_config()
     modelo = ModeloGuionizado(config)
+    guion_revision(modelo)
     trazas = RegistroTrazas()
     app = crear_app(config, cliente_modelo=modelo, trazador=trazas)
     with TestClient(app) as c:
@@ -147,6 +149,7 @@ def crear_entorno(ruta: Path) -> Entorno:
     db = BaseDatos(ruta)
     db.ejecutar_sync(aplicar_migraciones)
     modelo = ModeloGuionizado(config)
+    guion_revision(modelo)
     trazas = RegistroTrazas()
     pool = PoolEnVuelo(config.umbrales.en_vuelo.total)
     recursos = Recursos(

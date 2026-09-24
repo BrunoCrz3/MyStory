@@ -198,6 +198,27 @@ class PolicyEngine:
         )
         return decision
 
+    def registrar_defecto_sistemico(
+        self,
+        con: sqlite3.Connection,
+        *,
+        novel_id: str,
+        capitulo_id: str,
+        intento: int,
+        defecto: str,
+    ) -> None:
+        """D-14: sin replanificación en la demo, un defecto sistémico se reescribe como local,
+        y la clasificación queda en el audit log para cuando haya replanificación."""
+        self._registrar(
+            con,
+            novel_id=novel_id,
+            sujeto="capitulo",
+            sujeto_id=capitulo_id,
+            regla="defecto-sistemico-como-local",
+            entrada={"defecto": defecto, "clasificacion": "sistémico", "intento": intento},
+            resultado="reescribir",
+        )
+
     def registrar_coincidencias(
         self,
         con: sqlite3.Connection,

@@ -327,7 +327,7 @@ flowchart LR
   ACP --> GT[Gate de publicación]
   GT --> PUB[Versión publicada]
   HP -.->|falla| REW[Reescribir · intentos + 1]
-  HC -.->|falla| REW
+  ED -.->|el corregido vuelve a pasar HP, HC y judge| HP
   ED -.->|defecto local| REW
   ED -.->|defecto sistémico| RPL[Replanificar pendientes]
   GT -.->|falla| ED
@@ -338,8 +338,15 @@ flowchart LR
 | --- | --- | --- | --- |
 | Hook de policy | `policy/` | Conformidad de schema y guardrail de palabras prohibidas | Determinista, sin modelo |
 | Hook de capítulo | `quality/` | Los validadores programáticos de continuidad y prosa, **en paralelo** | Determinista, sin modelo |
-| Rol editor | `quality/` | El `judge` puntúa la rúbrica; el `editor` corrige | Dos llamadas al modelo |
+| Rol editor | `quality/` | El `judge` puntúa la rúbrica; si algo que cierra el paso falla —en los hooks o en el judge—, el `editor` corrige y su versión vuelve a pasar **todos** los validadores, judge incluido | Una llamada, o tres si el editor corrige |
 | Gate de publicación | `versioning/` | Lean, elementos obligatorios, cierre del arco y render visual | Subprocesos, sin modelo |
+
+**Orden dentro de un intento** (P32). Si el hook de policy falla, el intento se decide ahí:
+no se paga un juicio ni una corrección sobre un borrador sin schema o con una palabra vetada.
+Si falla el hook de capítulo, el judge corre igualmente, porque su crítica es parte del informe
+que recibe el editor. Lo que el policy engine decide es el resultado del **borrador
+corregido**; si sigue sin pasar, vuelve al redactor con `intentos + 1`. Un defecto que el
+editor clasifica como sistémico se trata como local (D-14) y queda en el audit log.
 
 **El policy engine es lo que sustituyó al autor humano.** Adopta o descarta un `Hecho`
 propuesto, acepta o devuelve un capítulo y detiene la generación. Cada decisión deja fila en

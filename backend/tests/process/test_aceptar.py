@@ -73,7 +73,7 @@ async def test_el_extractor_corre_despues_de_aceptar_y_nunca_antes(entorno: Ento
     novela = await novela_planificada(entorno)
     await _capitulo_aceptado(entorno, novela)
     generaciones = entorno.trazas.nombres("generacion")
-    assert generaciones[-2:] == ["writer", "extractor"]
+    assert generaciones[-3:] == ["writer", "judge", "extractor"]
     spans = entorno.trazas.nombres("span")
     assert spans.index("hook_capitulo") < spans.index("consolidar")
 

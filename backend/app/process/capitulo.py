@@ -14,6 +14,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from functools import partial
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
@@ -28,6 +29,8 @@ from app.intake.service import BriefNovela, leer_brief
 from app.novel import service as novel
 from app.policy.service import DecisionCapitulo, PolicyEngine, Veredicto
 from app.process import hooks
+from app.process.editor import corregir
+from app.process.judge import juzgar
 from app.process.schemas import BorradorCapitulo
 from app.process.transiciones import aplicar
 from app.quality import service as quality
@@ -220,6 +223,74 @@ async def ciclo_capitulo(
     informe: list[str] = []
     reescrituras_por_guardrail = 0
 
+    async def validar(
+        salida: dict[str, Any] | None, error: str | None, cid: str, intento: int
+    ) -> tuple[list[quality.ResultadoValidador], BorradorCapitulo | None]:
+        """Hook de policy, hook de capítulo y judge, en ese orden, con un score por validador.
+
+        Si el hook de policy falla, nada más corre —no se paga un juicio sobre un borrador que
+        no cumple su schema o lleva una palabra vetada— y no se devuelve borrador.
+        """
+        nonlocal reescrituras_por_guardrail
+        with r.trazador.span("hook_policy"):
+            v_schema, borrador = hooks.schema_valido(salida, error)
+            resultados = [v_schema]
+            if borrador is not None:
+                v_palabras, coincidencias = hooks.palabras_prohibidas(
+                    config, borrador, palabras_novela=datos.palabras, perfil=perfil
+                )
+                resultados.append(v_palabras)
+                if coincidencias:
+                    reescrituras_por_guardrail += 1
+                    await r.db.en_transaccion(
+                        partial(
+                            motor.registrar_coincidencias,
+                            novel_id=novel_id,
+                            capitulo_id=cid,
+                            intento=intento,
+                            coincidencias=coincidencias,
+                        )
+                    )
+                else:
+                    reescrituras_por_guardrail = 0
+        if borrador is None or not all(v.pasa for v in resultados):
+            for v in resultados:
+                r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
+            # Sin borrador que corregir: el editor no se llama y la decisión es del policy.
+            return resultados, None
+        with r.trazador.span("hook_capitulo"):
+            voz = datos.brief.voz_narrativa
+            resultados += await quality.hook_capitulo(
+                config,
+                quality.EntradaHookCapitulo(
+                    titulo=borrador.titulo,
+                    texto=borrador.texto,
+                    nombres=datos.nombres,
+                    hechos=datos.hechos,
+                    reglas_mundo=datos.brief.reglas_mundo,
+                    alcance=datos.brief_capitulo.alcance,
+                    previstas=datos.previstas,
+                    anteriores=datos.anteriores,
+                    persona=voz.persona,
+                    tiempo_verbal=voz.tiempo_verbal,
+                    focalizacion=voz.focalizacion,
+                    pov=datos.brief_capitulo.pov,
+                    personajes=datos.personajes,
+                ),
+            )
+        for v in resultados:
+            r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
+        # El judge deja sus propios scores, con la justificación de cada criterio.
+        juicio = await juzgar(
+            r,
+            novel_id=novel_id,
+            version=version,
+            numero=numero,
+            titulo=borrador.titulo,
+            texto=borrador.texto,
+        )
+        return [*resultados, *juicio.todos], borrador
+
     with r.trazador.span("capitulo", metadata={"numero": numero, "version": version}):
         while True:
             accion = "Escribir" if capitulo.estado == "Pendiente" else "Reintentar"
@@ -252,50 +323,31 @@ async def ciclo_capitulo(
                 error = str(e)
             capitulo = await mover(r, novel_id=novel_id, capitulo=capitulo, accion="Validar")
 
-            with r.trazador.span("hook_policy"):
-                v_schema, borrador = hooks.schema_valido(salida, error)
-                resultados = [v_schema]
-                if borrador is not None:
-                    v_palabras, coincidencias = hooks.palabras_prohibidas(
-                        config, borrador, palabras_novela=datos.palabras, perfil=perfil
-                    )
-                    resultados.append(v_palabras)
-                    if coincidencias:
-                        reescrituras_por_guardrail += 1
-                        await r.db.en_transaccion(
-                            partial(
-                                motor.registrar_coincidencias,
-                                novel_id=novel_id,
-                                capitulo_id=cid,
-                                intento=capitulo.intentos,
-                                coincidencias=coincidencias,
-                            )
+            resultados, borrador = await validar(salida, error, cid, capitulo.intentos)
+            if borrador is not None and quality.defectos_que_cierran(resultados):
+                # El editor corrige lo que cierra el paso, y su versión vuelve a pasar todo.
+                correccion = await corregir(
+                    r,
+                    novel_id=novel_id,
+                    version=version,
+                    numero=numero,
+                    titulo=borrador.titulo,
+                    texto=borrador.texto,
+                    informe=quality.informe_para_editor(resultados),
+                )
+                for defecto in correccion.sistemicos:
+                    await r.db.en_transaccion(
+                        partial(
+                            motor.registrar_defecto_sistemico,
+                            novel_id=novel_id,
+                            capitulo_id=cid,
+                            intento=capitulo.intentos,
+                            defecto=defecto,
                         )
-                    else:
-                        reescrituras_por_guardrail = 0
-            if borrador is not None and all(v.pasa for v in resultados):
-                with r.trazador.span("hook_capitulo"):
-                    voz = datos.brief.voz_narrativa
-                    resultados += await quality.hook_capitulo(
-                        config,
-                        quality.EntradaHookCapitulo(
-                            titulo=borrador.titulo,
-                            texto=borrador.texto,
-                            nombres=datos.nombres,
-                            hechos=datos.hechos,
-                            reglas_mundo=datos.brief.reglas_mundo,
-                            alcance=datos.brief_capitulo.alcance,
-                            previstas=datos.previstas,
-                            anteriores=datos.anteriores,
-                            persona=voz.persona,
-                            tiempo_verbal=voz.tiempo_verbal,
-                            focalizacion=voz.focalizacion,
-                            pov=datos.brief_capitulo.pov,
-                            personajes=datos.personajes,
-                        ),
                     )
-            for v in resultados:
-                r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
+                resultados, borrador = await validar(
+                    correccion.datos, correccion.error, cid, capitulo.intentos
+                )
 
             decision = await r.db.en_transaccion(
                 partial(

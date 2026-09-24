@@ -432,3 +432,70 @@ def piezas_judge(
         "estilo": [],
         "anticontexto": [],
     }
+
+
+def piezas_editor(
+    con: sqlite3.Connection,
+    config: Config,
+    *,
+    novel_id: str,
+    version: int,
+    numero: int,
+    brief: BriefNovela,
+    brief_capitulo: BriefCapitulo,
+    palabras_novela: list[str],
+    titulo: str,
+    texto: str,
+    informe: list[str],
+) -> dict[str, list[Pieza]]:
+    """El contexto del editor: el del judge, más el informe de crítica y el anticontexto.
+
+    El informe cita fragmentos del borrador, así que va igual que él: como dato no confiable.
+    """
+    piezas = piezas_judge(
+        con,
+        config,
+        novel_id=novel_id,
+        version=version,
+        numero=numero,
+        brief=brief,
+        brief_capitulo=brief_capitulo,
+        titulo=titulo,
+        texto=texto,
+    )
+    piezas["local"] = [
+        Pieza(
+            etiqueta=f"Capítulo {numero} a corregir: {titulo}",
+            texto=texto,
+            no_confiable=True,
+            prioridad=100,
+        )
+    ]
+    piezas["estructural"].append(
+        Pieza(
+            etiqueta="Informe de crítica: defectos que corregir",
+            texto="\n".join(f"- {d}" for d in informe),
+            no_confiable=True,
+            prioridad=10,
+        )
+    )
+    cap = config.umbrales.capitulo
+    piezas["estructural"].append(
+        Pieza(
+            etiqueta="Longitud",
+            texto=f"De {cap.longitud_min_palabras} a {cap.longitud_max_palabras} palabras.",
+            prioridad=10,
+        )
+    )
+    anteriores = [
+        c.texto
+        for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+        if c.numero < numero
+    ]
+    piezas["anticontexto"] = piezas_anticontexto(
+        config,
+        brief,
+        palabras_novela=palabras_novela,
+        textos_recientes=anteriores[-config.umbrales.contexto.anticontexto_ventana_capitulos :],
+    )
+    return piezas

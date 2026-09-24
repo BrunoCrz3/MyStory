@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.commons.config import Config
 from app.commons.tiempo import ahora
 from app.quality import repository
+from app.quality.editor import SalidaEditor, defectos_que_cierran, informe_para_editor
 from app.quality.judge import ResultadoJudge, SalidaJudge, evaluar_judge
 from app.quality.models import Defecto, InformeCritica, ResultadoValidador, Score
 from app.quality.registro import comprobar
@@ -41,11 +42,14 @@ __all__ = [
     "InformeCritica",
     "ResultadoJudge",
     "ResultadoValidador",
+    "SalidaEditor",
     "SalidaJudge",
     "Score",
+    "defectos_que_cierran",
     "en_paralelo",
     "evaluar_judge",
     "hook_capitulo",
+    "informe_para_editor",
     "informes_de_capitulo",
     "registrar_informe",
     "ultimo_informe",
