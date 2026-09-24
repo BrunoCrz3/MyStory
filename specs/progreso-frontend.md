@@ -130,6 +130,49 @@ Capturas en `.playwright-mcp/`, sin versionar.
     (`pagina-progreso`, `pagina-entrevista`) que acota sus selectores. Es solo una clase: no
     toca ningún `data-testid` ni ningún texto.
 
+*Lectura*, a 1280×900 y a 390×844:
+
+- **Inspeccionado:**
+  - Una versión 2 de prueba con diez capítulos, los capítulos 3 y 7 modificados, textos
+    largos y cortos, ficha, dos versiones y un hecho en el capítulo 3.
+  - El flujo de cambio completo: hechos del capítulo → «Cambiar» → panel → análisis de
+    impacto.
+  - El PDF disponible con paridad comprobada, y la lectura con el proxy caído
+    (`data-estado="error"`).
+  - Medida de línea: unos 72 caracteres a 19 px en escritorio y 17 px en móvil.
+  - La emulación `print`.
+- **Detectado:**
+  - El patrón `**/api/**` de `page.route` atrapaba también los módulos de Vite
+    (`/src/shared/api/index.ts`) y la app no cargaba. Hay que interceptar
+    `http://127.0.0.1:5173/api/**`. Es un aviso para quien vuelva a inspeccionar así.
+  - La capitular flotaba fuera de los capítulos de una línea y empujaba los controles.
+    Ahora se contiene con `display: flow-root`, que no añade nada al texto.
+  - En móvil, el `select` de versión, con el motivo largo en la opción, desbordaba 52 px en
+    horizontal. Se le quitó la anchura mínima.
+  - En móvil, el numeral «VIII.» del índice se salía por la izquierda.
+  - La portada pinta la ocasión con el valor del enum (`cumpleanos`). Es texto del
+    contrato, no de estilo, así que no se tocó. Queda para la integración.
+- **Cambiado:**
+  - La portada es una cubierta con doble marco dorado, título burdeos, fleurón y
+    dedicatoria en cursiva firmada en versalitas.
+  - El índice va en numerales romanos con separadores punteados, y la ficha, en
+    versalitas bajo un filete doble.
+  - Los capítulos van en la medida de lectura (38rem), con interlineado de 1,75,
+    capitular burdeos y fleurón entre capítulos.
+  - La marca de cambios es una etiqueta en versalitas con los colores de aviso.
+  - Los controles del capítulo quedan discretos bajo un filete. La petición de cambio es
+    una hoja que sube del pie, en la medida del texto.
+  - La barra de versión y PDF va en una línea.
+  - Sin desbordamiento horizontal en ninguna pantalla.
+- **Impresión:** el bloque `@media print` y las reglas base de portada, capítulo, texto y
+  marca siguen idénticos (comprobado contra `HEAD`). Todo lo nuevo va en `@media screen`, o
+  en controles con `data-controles`, que no se imprimen.
+  - Con `print` emulado: texto a 16 px, título en negrita, sin capitular, sin marco y con
+    los trece controles ocultos, igual que antes.
+  - Los tokens sí cambian la tinta y el papel base, que pasan de `#1f1b16` sobre `#fbf8f3`
+    a `#2b2118` sobre `#f8f3ea`. Es una diferencia mínima, que el P49 del backend verá en
+    el render real.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e
