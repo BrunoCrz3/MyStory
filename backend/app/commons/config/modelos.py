@@ -109,6 +109,7 @@ class Calidad(_Estricto):
     # Cuentan hasta cero y cierran el paso siempre (PO-1, PO-2).
     invencion_destinatario: int
     temas_excluidos: int
+    invencion_soporte_minimo: float = Field(ge=0, le=1)
     legibilidad_inflesz_minimo: float | None
     legibilidad_inflesz_minimo_infantil: float | None
 

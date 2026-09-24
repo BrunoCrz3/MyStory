@@ -270,6 +270,12 @@ calidad:
   # fallo más grave del sistema en un regalo y no admite umbral blando.
   invencion_destinatario: 0
 
+  # [provisional — calibrar tras la demo] A-90. Qué es «venir del brief»: una afirmación
+  # sobre el destinatario tiene apoyo si al menos esta fracción de sus palabras con contenido
+  # está en el brief o en el texto libre. La mitad: exige más que una coincidencia suelta y
+  # tolera que el capítulo lo cuente con otras palabras.
+  invencion_soporte_minimo: 0.5
+
   # [provisional — calibrar tras la demo] PO-2. Cuenta apariciones: cero. Un tema que el
   # comprador vetó no aparece «poco».
   temas_excluidos: 0

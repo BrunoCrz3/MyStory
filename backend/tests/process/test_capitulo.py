@@ -51,6 +51,9 @@ async def test_un_borrador_valido_queda_listo_para_aceptar(entorno: Entorno) -> 
         "coherencia_personajes",
         "ritmo",
         "personalizacion_natural",
+        # Y los dos del rol editor que cuentan hasta cero (P37).
+        "invencion_destinatario",
+        "temas_excluidos",
     ]
     cierran = {"schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"}
     assert all(s.valor == 1.0 for s in entorno.trazas.scores if s.nombre in cierran)

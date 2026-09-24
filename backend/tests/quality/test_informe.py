@@ -31,6 +31,8 @@ VALIDADORES_DEL_CICLO = [
     "coherencia_personajes",
     "ritmo",
     "personalizacion_natural",
+    "invencion_destinatario",
+    "temas_excluidos",
 ]
 
 
@@ -61,12 +63,12 @@ async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entor
     assert "longitud" not in [d.dimension for d in segundo.defectos]
     for informe in (primero, segundo):
         assert [s.validador for s in informe.scores] == VALIDADORES_DEL_CICLO
-    assert _que_cierran(primero) == [True, True, False, True, True, True]
+    assert _que_cierran(primero) == [True, True, False, True, True, True, True, True]
     assert all(_que_cierran(segundo))
     # El informe guarda lo que decidió cada intento: el borrador corregido por el editor en el
     # primero. La traza tiene además los scores del borrador antes de corregir (RF-OBS-03).
-    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 32
-    assert len(entorno.trazas.scores) == 48
+    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 36
+    assert len(entorno.trazas.scores) == 54
 
 
 @pytest.mark.anyio

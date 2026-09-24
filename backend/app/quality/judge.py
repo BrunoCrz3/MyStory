@@ -17,8 +17,16 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.commons.config import Config
-from app.quality.models import Defecto, ResultadoValidador
+from app.quality.models import (
+    AfirmacionDestinatario,
+    ContextoJudge,
+    Defecto,
+    ResultadoValidador,
+    TemaExcluidoVisto,
+)
 from app.quality.registro import validador
+from app.quality.validadores.invencion_destinatario import invencion_destinatario
+from app.quality.validadores.temas_excluidos import temas_excluidos
 
 # Criterio de la rúbrica (clave de la salida del judge) → score del registro.
 CRITERIO_A_SCORE: dict[str, str] = {
@@ -36,25 +44,6 @@ class Puntuacion(BaseModel):
 
     puntuacion: float = Field(ge=0, le=1)
     justificacion: str = Field(min_length=1)
-
-
-class AfirmacionDestinatario(BaseModel):
-    """Un hecho personal que el capítulo afirma sobre el destinatario (D-13, P37)."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    afirmacion: str
-    fragmento: str
-
-
-class TemaExcluidoVisto(BaseModel):
-    """Si un tema excluido aparece en el capítulo, aunque no se nombre (D-13, P37)."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    tema: str
-    aparece: bool
-    fragmento: str
 
 
 class SalidaJudge(BaseModel):
@@ -75,11 +64,13 @@ class ResultadoJudge(BaseModel):
 
     schema_valido: ResultadoValidador
     criterios: list[ResultadoValidador]
+    # `invencion_destinatario` y `temas_excluidos`: cuentan hasta cero y cierran siempre.
+    editor: list[ResultadoValidador] = Field(default_factory=list)
     salida: SalidaJudge | None
 
     @property
     def todos(self) -> list[ResultadoValidador]:
-        return [self.schema_valido, *self.criterios]
+        return [self.schema_valido, *self.criterios, *self.editor]
 
 
 def _schema(motivo: str | None) -> ResultadoValidador:
@@ -119,9 +110,13 @@ def _criterio(config: Config, nombre: str, p: Puntuacion) -> ResultadoValidador:
 
 
 def evaluar_judge(
-    config: Config, datos: dict[str, Any] | None, error: str | None
+    config: Config,
+    datos: dict[str, Any] | None,
+    error: str | None,
+    contexto: ContextoJudge | None = None,
 ) -> ResultadoJudge:
-    """La salida del judge como resultados de validador: `schema_valido` y seis criterios."""
+    """La salida del judge como resultados de validador: `schema_valido`, seis criterios y,
+    con el contexto del brief, los dos validadores del rol editor que cuentan hasta cero."""
     if error is not None:
         return ResultadoJudge(schema_valido=_schema(error), criterios=[], salida=None)
     try:
@@ -133,4 +128,14 @@ def evaluar_judge(
         _criterio(config, nombre, getattr(salida, criterio))
         for criterio, nombre in CRITERIO_A_SCORE.items()
     ]
-    return ResultadoJudge(schema_valido=_schema(None), criterios=criterios, salida=salida)
+    editor = (
+        [
+            invencion_destinatario(config, salida.afirmaciones_destinatario, contexto),
+            temas_excluidos(config, salida.temas_excluidos, contexto),
+        ]
+        if contexto is not None
+        else []
+    )
+    return ResultadoJudge(
+        schema_valido=_schema(None), criterios=criterios, editor=editor, salida=salida
+    )

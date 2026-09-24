@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P37 · `invencion_destinatario` y `temas_excluidos` |
+| Paso actual | P38 · Cierre de F3 |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 |
+| Intentos fallidos en el paso actual | 0 de 3 (el P37 cerró con 1) |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P36 |
+| Último commit de paso | P37 |
 
 ## Coste real
 
@@ -70,10 +70,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P34** — Cierre de F2: `tests/e2e/test_f2.py` (capítulo 3 corto en borrador y en corrección, vuelve al redactor y se acepta; la traza de la generación tiene los nueve scores de los hooks, los seis del judge con justificación y los tres del gate); TO-042 y RI-015; bloque § 4.5 con N = 2 en verde (346 pruebas, cobertura 96,2 %); F2 subida
 - **P35** — `BriefNovelaParcial` y sus seis parciales, `DatoFaltante`, `ContradiccionBrief`, `FragmentoSospechoso`, `ResultadoValidacionBrief` idénticos al contrato; `intake/validacion.py` con los obligatorios derivados de `BriefNovela` (comparados con los `required` del contrato) y una pregunta de reintento por obligatorio; `intake/reglas.py` (edad-vs-tono, edad-vs-genero, fecha-vs-edad, identificador con forma de correo); `POST /briefs/validacion`; `crearNovela` responde 400 `brief-invalido` antes de escribir; `validarBrief` fuera de PENDIENTES; 363 pruebas
 - **P36** — Migración 0011 (`fragmento_sospechoso`); `intake/saneamiento.py` con `patrones.txt` (expresión, tabulador, motivo) por frase y línea; `intake/extraccion.py` (tool `extraer_hechos_texto_libre`, rol entrevistador, texto saneado dentro de `<texto_libre_no_confiable>`, solo hechos con fragmento literal); `validarBrief` devuelve fragmentos y hechos; `registrar_brief` guarda el brief saneado y los fragmentos; comprobador `violaciones_ejecucion` con meta-prueba; corpus de inyección entero detectado; 381 pruebas
+- **P37** — `quality/validadores/{invencion_destinatario,temas_excluidos}.py` sobre los campos del judge; `ContextoJudge` (soporte: rasgos, recuerdos, elementos, texto libre saneado, premisa y dedicatoria); `evaluar_judge` los añade como `editor` y `juzgar` emite sus scores; `calidad.invencion_soporte_minimo: 0.5`; los dos cuentan hasta cero y cierran siempre; 388 pruebas
 
 ## Pendiente
 
-- Siguiente: **P37 · `invencion_destinatario` y `temas_excluidos`**, y después el resto hasta el P49 en orden.
+- Siguiente: **P38 · Cierre de F3**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -188,6 +189,8 @@ registrada.
 | A-87 | P36 | La petición del entrevistador la arma `intake/` con el prompt del rol y una sola capa de datos, sin el ensamblador | `intake/` es hoja y no puede importar `context/`; el tamaño lo acotan las longitudes máximas del brief y el llamador rechaza lo que no cabe | TO-043 |
 | A-88 | P36 | El saneamiento parte por línea y por signo final seguido de espacio, y descarta la frase entera que casa | Un punto dentro de una palabra (`.env`) no puede partir la instrucción; descartar de más es el lado conservador | TO-043 |
 | A-89 | P36 | El único proceso que el código puede lanzar es `anyio.run_process` en `commons/llm/claude_code.py` | RNF-09 prohíbe ejecutar la salida del modelo; el CLI recibe argumentos propios y la petición por stdin | TO-043 |
+| A-90 | P37 | Una afirmación sobre el destinatario tiene apoyo si al menos `calidad.invencion_soporte_minimo` (0,5) de sus palabras con contenido están en el brief o el texto libre | D-13 pide un cotejo determinista y RNF-14 la cifra en config; la mitad tolera que el capítulo lo cuente con otras palabras | TO-043 |
+| A-91 | P37 | Una afirmación o un tema cuya cita no está en el capítulo no cuenta como invención; un tema que el brief no excluye tampoco | Sería una invención del judge, no del texto; y el validador solo mide lo que el comprador vetó | TO-043 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -252,14 +255,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P36 cerrado, siguiente P37**. Rama `backend-v1`,
-suite en verde (381 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P37 cerrado, siguiente P38**. Rama `backend-v1`,
+suite en verde (388 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 381 pruebas en verde al cerrar P36
+uv run pytest -q          # 388 pruebas en verde al cerrar P37
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

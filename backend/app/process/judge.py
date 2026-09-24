@@ -59,7 +59,22 @@ async def juzgar(
         datos = respuesta.datos
     except (SalidaInvalida, SalidaTruncada) as e:
         error = str(e)
-    resultado = quality.evaluar_judge(r.config, datos, error)
+    d = brief.destinatario
+    contexto = quality.ContextoJudge(
+        destinatario=d.nombre,
+        # Lo que el comprador contó: el brief y su texto libre, que se guardó ya saneado.
+        soporte=[
+            *d.rasgos,
+            *d.recuerdos,
+            *(e.enunciado for e in brief.elementos_personalizados),
+            *(t.contenido for t in brief.textos_libres),
+            *([brief.premisa] if brief.premisa else []),
+            brief.dedicatoria.texto,
+        ],
+        temas_excluidos=brief.temas_excluidos,
+        texto=texto,
+    )
+    resultado = quality.evaluar_judge(r.config, datos, error, contexto)
     for v in resultado.todos:
         # La justificación del judge es el comentario del score (RF-OBS-03).
         r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])

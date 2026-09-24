@@ -18,7 +18,7 @@ from app.commons.tiempo import ahora
 from app.quality import repository
 from app.quality.editor import SalidaEditor, defectos_que_cierran, informe_para_editor
 from app.quality.judge import ResultadoJudge, SalidaJudge, evaluar_judge
-from app.quality.models import Defecto, InformeCritica, ResultadoValidador, Score
+from app.quality.models import ContextoJudge, Defecto, InformeCritica, ResultadoValidador, Score
 from app.quality.registro import comprobar
 from app.quality.validadores.basicos import longitud, nombres_exactos
 from app.quality.validadores.canon import (
@@ -36,6 +36,7 @@ from app.quality.validadores.texto import (
 )
 
 __all__ = [
+    "ContextoJudge",
     "Defecto",
     "EntidadPrevista",
     "EntradaHookCapitulo",

@@ -69,3 +69,34 @@ class InformeCritica(BaseModel):
     creado_en: str
     defectos: list[Defecto]
     scores: list[Score]
+
+
+class AfirmacionDestinatario(BaseModel):
+    """Un hecho personal que el capítulo afirma sobre el destinatario, con su cita (D-13)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    afirmacion: str
+    fragmento: str
+
+
+class TemaExcluidoVisto(BaseModel):
+    """Si un tema excluido aparece en el capítulo, aunque no se nombre (D-13)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    tema: str
+    aparece: bool
+    fragmento: str
+
+
+class ContextoJudge(BaseModel):
+    """Lo que los validadores del rol editor necesitan además de la salida del judge: contra
+    qué se coteja una afirmación y qué temas vetó el comprador."""
+
+    model_config = ConfigDict(frozen=True)
+
+    destinatario: str
+    soporte: list[str]
+    temas_excluidos: list[str]
+    texto: str
