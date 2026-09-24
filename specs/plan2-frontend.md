@@ -1,6 +1,6 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: Bruno Cruz
 fecha: 2026-09-24
 spec: specs/spec2-frontend.md (aprobada el 2026-09-24, ajustada el mismo día al commit 7d389a7)
 contrato: specs/openapi.yaml 1.1.0 y specs/spec1.md § 4.4
@@ -14,10 +14,9 @@ Cómo se construye lo que especifica `specs/spec2-frontend.md` contra el contrat
 pequeños, cada uno con **la prueba que se escribe primero**, su criterio de terminado **por
 comando** y su commit. Se reanuda en frío desde `specs/progreso-frontend.md`.
 
-> **Estado: borrador.** No se escribe código hasta que el desarrollador lo mueva a
-> `aprobada`. El agente **comprueba el frontmatter antes del F01**, no de memoria. Con el
-> plan aprobado, se ejecuta de principio a fin sin pedir confirmación, salvo en las
-> condiciones de parada.
+> **Estado: aprobada** el 2026-09-24 por el desarrollador. El agente **comprueba el
+> frontmatter antes del F01**, no de memoria. Se ejecuta de principio a fin sin pedir
+> confirmación, salvo en las condiciones de parada.
 
 ---
 
