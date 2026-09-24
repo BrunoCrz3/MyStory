@@ -137,12 +137,50 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-01 | **Test de humo con modelo real solo si la credencial está en el entorno.** Si lo está: apuntar aquí la ruta de la base de la novela, su coste y la URL de la traza en Langfuse. Si no: apuntarlo y **seguir con las fases siguientes**, porque la suite no depende de él. Esta instrucción sustituye a la condición de parada 1 del plan | Cierre de F1 (P26–P27) | pendiente. En el shell de esta sesión `ANTHROPIC_API_KEY` **no** estaba; las variables `LANGFUSE_*` sí |
 | I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | pendiente |
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
-| I-04 | **Cambio de proveedor a Claude Code al cerrar la fase actual.** El desarrollador lo menciona como pedido, pero **no llegó ningún mensaje con esa instrucción en esta sesión**: no se sabe qué cambia ni dónde. No se aplica nada hasta que el desarrollador la reenvíe con su contenido | Al cerrar F1, si se reenvía | **no recibida** |
+| I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | pendiente |
 | I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 subida; F1 pendiente de push al cerrar |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». **TO-038 recoge A-01…A-13. A-14…A-43 están anotadas como TO-039 pero esa entrada todavía no existe**: escribirla, con su RI, en el cierre de F1 (P27) | P27 | pendiente |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
 | I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | pendiente |
+
+### I-04 · Cambio aprobado: proveedor del modelo vía Claude Code, sin clave de API
+
+Texto del desarrollador (2026-09-24), que manda sobre cualquier resumen:
+
+No hay clave de la API de Anthropic disponible. Las llamadas al modelo podrán hacerse a
+través de Claude Code en modo no interactivo, usando la sesión con la que el desarrollador ya
+ha iniciado sesión en esta máquina.
+
+1. **Segunda implementación del `Protocol` de `commons/llm/`**, que invoca el CLI de Claude
+   Code como subproceso: prompt por stdin, salida en JSON y modelo según `config/models.yaml`.
+   Consultar `claude --help` para las opciones exactas; no suponerlas.
+2. **Seguridad, obligatoria:** el subproceso se ejecuta **con todas las herramientas
+   desactivadas** (sin lectura ni edición de ficheros, sin bash, sin red) y con una carpeta de
+   trabajo temporal y vacía, nunca el repo. El texto libre del brief es contenido no
+   confiable, y una inyección no puede poder actuar sobre la máquina. Test que lo compruebe
+   con el corpus de inyección.
+3. **Selección por configuración**: clave `modelo.proveedor` con valores `api` y
+   `claude_code` en `config/thresholds.yaml` o en `config/models.yaml` (donde encaje con
+   TO-017). La implementación de la API se mantiene intacta.
+4. **Lo que cambia con este proveedor**, documentado:
+   - el conteo de tokens previo a la llamada pasa a ser una estimación con margen, y el
+     registro posterior usa los datos de uso que devuelva el CLI, si los devuelve;
+   - el coste registrado en Langfuse es nominal;
+   - los schemas de las tools se validan en el backend con Pydantic sobre la salida, porque
+     no hay modo `strict`; un fallo de schema cuenta como intento fallido.
+   Reflejarlo en la spec (RNF afectados), en `docs/architecture.md` y en
+   `docs/verification.md` (las filas de conteo de tokens, coste y schema estricto pasan a
+   depender del proveedor).
+5. **Pruebas**: la implementación nueva se prueba con un doble del subproceso en `tests/`, y
+   el test de humo real puede ejecutarse con `modelo.proveedor: claude_code` sin ninguna clave.
+6. Registrarlo en `docs/trade-offs.md` como **cambio de arquitectura aprobado por el
+   desarrollador**, con el motivo y los costes (conteo estimado, coste nominal, límites del
+   plan).
+
+**Efecto sobre las condiciones de parada:** la condición 1 («la credencial del modelo no está
+disponible») deja de aplicarse cuando `modelo.proveedor` es `claude_code`: en ese caso el humo
+del P27 se ejecuta. Esto matiza I-01.
 
 ## Parada
 
