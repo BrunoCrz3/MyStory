@@ -106,7 +106,7 @@ son `shared/`, ningún código se usa hoy desde dos páginas (skill FSD § 2).
 
 | Paso | Qué | Prueba que se escribe primero | CA | Estado |
 | --- | --- | --- | --- | --- |
-| F01 | Andamio | `tests/app/arranque.test.tsx` | — | pendiente |
+| F01 | Andamio | `tests/app/arranque.test.tsx` | — | hecho |
 | F02 | Cliente generado desde 1.1.0 | `tests/shared/api/contrato.test.ts` | CA-01 | pendiente |
 | F03 | Apoyo de pruebas | `tests/apoyo/apoyo.test.ts` | — | pendiente |
 | F04 | Guardas de arquitectura | `tests/arquitectura.test.ts` | CA-14 | pendiente |

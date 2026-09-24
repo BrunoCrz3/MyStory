@@ -7,20 +7,26 @@ Fichero de retoma. Si la sesión se interrumpe, se sigue desde aquí.
 | Artefacto | Estado | Siguiente paso |
 | --- | --- | --- |
 | `specs/spec2-frontend.md` | `aprobada` (2026-09-24), ajustada al commit `7d389a7` | — |
-| `specs/plan2-frontend.md` | `borrador` | El desarrollador lo aprueba |
-| `frontend/` | no existe | Se escribe con el plan aprobado |
+| `specs/plan2-frontend.md` | `aprobada` (2026-09-24) | En ejecución |
+| `frontend/` | en construcción | Ver «Pasos del plan» |
 
 ## Pasos del plan
 
-Ver la tabla de `specs/plan2-frontend.md` § 3. Ninguno empezado.
+Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F01 | pendiente de que se apruebe el plan | 0 |
+| F02 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
 2026-09-24. Los antiguos B1 y B2 quedan dentro de F02, F07–F09 y F13–F15.
+
+### Registro de pasos
+
+| Paso | Hecho |
+| --- | --- |
+| F01 | Vite + React 18 + TS estricto, Vitest con jsdom, proxy `/api`, puerto 5173 fijo. Todas las dependencias aprobadas instaladas |
 
 ## Para la sesión del backend
 
@@ -70,3 +76,4 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
   el lector vuelve a comprobar con un botón.
 - **La descarga se construye con la ruta de `descargarExport`**, no con `url_descarga`, que
   es un `uri-reference` sin base definida.
+- **FA-01** (F01, decidido por el agente — revisar): se instalan en F01 todas las dependencias aprobadas, más tres que son parte de ellas y no añaden nada: `@testing-library/dom` (dependencia par de Testing Library) y los tipos `@types/react`, `@types/react-dom` y `@types/node`.
