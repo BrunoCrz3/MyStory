@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import anyio
+
 from app.commons.config import cargar_config
 from app.commons.texto import contar_palabras
-from app.quality.service import EntradaHookCapitulo, hook_capitulo
+from app.quality.service import EntradaHookCapitulo, ResultadoValidador, hook_capitulo
 from app.quality.validadores.basicos import nombres_exactos
 from tests.arquitectura.comprobadores import RAIZ_REPO
 from tests.fixtures.borradores import prosa
@@ -19,8 +21,12 @@ def _entrada(texto: str) -> EntradaHookCapitulo:
     )
 
 
+def _hook(texto: str) -> list[ResultadoValidador]:
+    return anyio.run(hook_capitulo, CONFIG, _entrada(texto))
+
+
 def _resultado(texto: str, nombre: str) -> tuple[bool, str]:
-    (r,) = [v for v in hook_capitulo(CONFIG, _entrada(texto)) if v.nombre == nombre]
+    (r,) = [v for v in _hook(texto) if v.nombre == nombre]
     return r.pasa, r.detalle
 
 
@@ -59,13 +65,15 @@ def test_una_palabra_comun_al_principio_de_frase_no_es_un_nombre() -> None:
 
 
 def test_cada_validador_dice_si_cierra_el_paso() -> None:
-    resultados = hook_capitulo(CONFIG, _entrada(prosa(1100)))
+    resultados = _hook(prosa(1100))
     assert [r.nombre for r in resultados] == [
         "longitud",
         "nombres_exactos",
         "consistencia_factica",
         "cumplimiento_brief",
         "reglas_mundo",
+        "calidad_prosa",
+        "integridad_pov",
     ]
     # Los booleanos cierran siempre; los que tienen score, solo fuera de medición (A-03).
     medicion = CONFIG.umbrales.medicion.cerrar_el_paso
@@ -76,6 +84,8 @@ def test_cada_validador_dice_si_cierra_el_paso() -> None:
         "consistencia_factica": medicion,
         "cumplimiento_brief": medicion,
         "reglas_mundo": True,
+        "calidad_prosa": medicion,
+        "integridad_pov": medicion,
     }
 
 

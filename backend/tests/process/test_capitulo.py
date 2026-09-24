@@ -3,9 +3,12 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from app.process.capitulo import ciclo_capitulo
+from app.quality.validadores import basicos
 from tests.conftest import Entorno
 from tests.fixtures.borradores import borrador
 from tests.fixtures.planificada import novela_planificada
@@ -37,6 +40,8 @@ async def test_un_borrador_valido_queda_listo_para_aceptar(entorno: Entorno) -> 
         "consistencia_factica",
         "cumplimiento_brief",
         "reglas_mundo",
+        "calidad_prosa",
+        "integridad_pov",
     ]
     cierran = {"schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"}
     assert all(s.valor == 1.0 for s in entorno.trazas.scores if s.nombre in cierran)
@@ -127,3 +132,21 @@ async def test_el_contexto_del_redactor_lleva_su_brief_de_capitulo(entorno: Ento
         "SELECT tokens_entrada, coste_usd FROM capitulo WHERE novel_id = ? AND numero = 1", novela
     )[0]
     assert consumo["tokens_entrada"] > 0 and consumo["coste_usd"] > 0
+
+
+@pytest.mark.anyio
+async def test_el_hook_de_capitulo_corre_fuera_del_pool(
+    entorno: Entorno, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    novela = await novela_planificada(entorno)
+    ocupado: list[int] = []
+    original = basicos.longitud
+
+    def espiar(config: Any, texto: str) -> Any:
+        ocupado.append(entorno.recursos.pool.ocupado)
+        return original(config, texto)
+
+    monkeypatch.setattr("app.quality.service.longitud", espiar)
+    entorno.modelo.encolar("redactor", borrador())
+    await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
+    assert ocupado == [0]

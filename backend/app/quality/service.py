@@ -7,7 +7,10 @@ fuera del pool en vuelo (`architecture.md` § Paralelo y serie).
 from __future__ import annotations
 
 import sqlite3
+from collections.abc import Callable
+from functools import partial
 
+import anyio
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.commons.config import Config
@@ -22,6 +25,13 @@ from app.quality.validadores.canon import (
     cumplimiento_brief,
     reglas_mundo,
 )
+from app.quality.validadores.texto import (
+    Focalizacion,
+    Persona,
+    Tiempo,
+    calidad_prosa,
+    integridad_pov,
+)
 
 __all__ = [
     "Defecto",
@@ -30,6 +40,7 @@ __all__ = [
     "InformeCritica",
     "ResultadoValidador",
     "Score",
+    "en_paralelo",
     "hook_capitulo",
     "informes_de_capitulo",
     "registrar_informe",
@@ -49,17 +60,56 @@ class EntradaHookCapitulo(BaseModel):
     reglas_mundo: list[str] = Field(default_factory=list)
     alcance: list[dict[str, str]] = Field(default_factory=list)
     previstas: list[EntidadPrevista] = Field(default_factory=list)
+    anteriores: list[str] = Field(default_factory=list)
+    persona: Persona = "tercera"
+    tiempo_verbal: Tiempo = "pasado"
+    focalizacion: Focalizacion = "interna"
+    pov: str = ""
+    personajes: list[str] = Field(default_factory=list)
 
 
-def hook_capitulo(config: Config, entrada: EntradaHookCapitulo) -> list[ResultadoValidador]:
-    texto = entrada.texto
-    return [
-        longitud(config, texto),
-        nombres_exactos(texto, entrada.nombres),
-        consistencia_factica(config, texto, hechos=entrada.hechos, nombres=entrada.nombres),
-        cumplimiento_brief(config, texto, alcance=entrada.alcance, previstas=entrada.previstas),
-        reglas_mundo(texto, reglas=entrada.reglas_mundo),
-    ]
+async def en_paralelo(
+    tareas: list[Callable[[], ResultadoValidador]],
+) -> list[ResultadoValidador]:
+    """Corre las tareas a la vez, cada una en un hilo, y devuelve los resultados en su orden.
+
+    Los validadores del hook son deterministas y no llaman al modelo: no piden hueco en el
+    pool en vuelo ni esperan a nadie (`architecture.md` § Paralelo y serie).
+    """
+    resultados: dict[int, ResultadoValidador] = {}
+
+    async def correr(i: int, tarea: Callable[[], ResultadoValidador]) -> None:
+        resultados[i] = await anyio.to_thread.run_sync(tarea)
+
+    async with anyio.create_task_group() as grupo:
+        for i, tarea in enumerate(tareas):
+            grupo.start_soon(correr, i, tarea)
+    return [resultados[i] for i in range(len(tareas))]
+
+
+async def hook_capitulo(config: Config, entrada: EntradaHookCapitulo) -> list[ResultadoValidador]:
+    """Los siete validadores programáticos del hook de capítulo, en paralelo."""
+    e, texto = entrada, entrada.texto
+    return await en_paralelo(
+        [
+            partial(longitud, config, texto),
+            partial(nombres_exactos, texto, e.nombres),
+            partial(consistencia_factica, config, texto, hechos=e.hechos, nombres=e.nombres),
+            partial(cumplimiento_brief, config, texto, alcance=e.alcance, previstas=e.previstas),
+            partial(reglas_mundo, texto, reglas=e.reglas_mundo),
+            partial(calidad_prosa, config, texto, anteriores=e.anteriores),
+            partial(
+                integridad_pov,
+                config,
+                texto,
+                persona=e.persona,
+                tiempo_verbal=e.tiempo_verbal,
+                focalizacion=e.focalizacion,
+                pov=e.pov,
+                personajes=e.personajes,
+            ),
+        ]
+    )
 
 
 def registrar_informe(

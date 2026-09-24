@@ -53,6 +53,8 @@ class _Datos:
     nombres: list[str]
     hechos: list[str]
     previstas: list[quality.EntidadPrevista]
+    anteriores: list[str]
+    personajes: list[str]
 
 
 def _previstas(
@@ -133,6 +135,12 @@ async def _leer(
                 total=r.config.umbrales.obra.capitulos,
                 ya_nombrados=" ".join(hechos),
             ),
+            anteriores=[
+                c.texto
+                for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+                if c.numero < numero
+            ],
+            personajes=[p.nombre for p in novel.personajes(con, novel_id=novel_id)],
         )
         return datos, cap
 
@@ -267,7 +275,8 @@ async def ciclo_capitulo(
                         reescrituras_por_guardrail = 0
             if borrador is not None and all(v.pasa for v in resultados):
                 with r.trazador.span("hook_capitulo"):
-                    resultados += quality.hook_capitulo(
+                    voz = datos.brief.voz_narrativa
+                    resultados += await quality.hook_capitulo(
                         config,
                         quality.EntradaHookCapitulo(
                             titulo=borrador.titulo,
@@ -277,6 +286,12 @@ async def ciclo_capitulo(
                             reglas_mundo=datos.brief.reglas_mundo,
                             alcance=datos.brief_capitulo.alcance,
                             previstas=datos.previstas,
+                            anteriores=datos.anteriores,
+                            persona=voz.persona,
+                            tiempo_verbal=voz.tiempo_verbal,
+                            focalizacion=voz.focalizacion,
+                            pov=datos.brief_capitulo.pov,
+                            personajes=datos.personajes,
                         ),
                     )
             for v in resultados:

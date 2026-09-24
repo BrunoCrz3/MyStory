@@ -20,6 +20,8 @@ VALIDADORES_DEL_CICLO = [
     "consistencia_factica",
     "cumplimiento_brief",
     "reglas_mundo",
+    "calidad_prosa",
+    "integridad_pov",
 ]
 
 
@@ -52,8 +54,8 @@ async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entor
     assert _que_cierran(primero) == [True, True, False, True, True]
     assert all(_que_cierran(segundo))
     # Un score por validador ejecutado, igual en la base que en la traza (RF-OBS-03).
-    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 14
-    assert len(entorno.trazas.scores) == 14
+    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 18
+    assert len(entorno.trazas.scores) == 18
 
 
 @pytest.mark.anyio
