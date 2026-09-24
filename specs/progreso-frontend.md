@@ -81,7 +81,9 @@ Tokens en `src/shared/ui/tema.css`, importado desde `app/estilos.css`. Lo decora
 va en `@media screen`, para que la impresión, y con ella el PDF, no cambie. Sin backend, las
 respuestas de `/api` se interceptaron solo en el navegador del MCP (`page.route`), con
 datos de prueba, para ver los estados que pinta el contrato. Nada de eso entra en el código.
-Capturas en `.playwright-mcp/`, sin versionar.
+Capturas de trabajo en `.playwright-mcp/`, sin versionar. Las que sirven de evidencia están
+versionadas en `frontend/docs/capturas-browser-mcp/` (ver «Capturas de evidencia» al final de
+esta sección).
 
 *Entrevista*, a 1280×900 y a 390×844:
 
@@ -186,6 +188,29 @@ La causa eran las rutas de `page.route` que quedaron registradas en la pestaña.
 con `page.unrouteAll()`. Sin ellas, la lectura queda en `data-estado="error"` y la lista de
 novelas de la entrevista muestra su `AvisoProblema`. **Regla para la próxima inspección:**
 cerrar cada sesión con `page.unrouteAll()`, o cerrar la pestaña.
+
+**Capturas de evidencia**, en `frontend/docs/capturas-browser-mcp/`. Al integrar, pasan a
+`docs/browser-mcp.md`. Todas muestran solo datos ficticios: el ejemplo de `openapi.yaml`, un
+«Destinatario de prueba» o textos marcados «Ejemplo de prueba».
+
+| Captura | Qué muestra |
+| --- | --- |
+| `entrevista-antes-escritorio.png` | Entrevista **antes** del rediseño, a 1280×900: enlace azul del navegador, `fieldset` y controles del sistema, una sola columna |
+| `entrevista-despues-escritorio-validacion.png` | Entrevista **después**, a 1280×900, con validación: datos faltantes junto a su campo, contradicción, fragmento descartado y hecho extraído |
+| `entrevista-despues-movil-validacion.png` | Entrevista **después**, a 390×844: voz narrativa y resumen de datos faltantes, sin desbordamiento horizontal |
+| `lectura-despues-escritorio-portada.png` | Lectura **después**, a 1280×900: barra de versión y PDF, y portada con doble marco y dedicatoria firmada |
+| `lectura-despues-movil-indice-modificados.png` | Lectura **después**, a 390×844: índice en romanos con «VIII.» dentro del margen y la marca «Modificado en esta versión» en los capítulos 3 y 7 |
+| `interceptaciones-retiradas-lectura-sin-backend.png` | Interceptaciones olvidadas, tras `page.unrouteAll()`: sin backend, la lectura queda en `data-estado="error"` con su `AvisoProblema` |
+
+**Huecos de evidencia.** Faltan dos capturas:
+
+- **La lectura antes del rediseño.** Se inspeccionó ya con la hoja nueva, así que no existe.
+- **El fallo de las interceptaciones.** Es decir, la novela de prueba visible sin backend.
+  Solo hay captura del estado corregido.
+
+Si hacen falta para `docs/browser-mcp.md`, hay que rehacerlas en una sesión nueva:
+un worktree aparte en un commit anterior al rediseño para el «antes», y un `page.route` sin
+retirar para el fallo.
 
 ## Para la sesión del backend
 
