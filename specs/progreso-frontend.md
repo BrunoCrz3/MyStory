@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F02 | pendiente | 0 |
+| F03 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -27,6 +27,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | Paso | Hecho |
 | --- | --- |
 | F01 | Vite + React 18 + TS estricto, Vitest con jsdom, proxy `/api`, puerto 5173 fijo. Todas las dependencias aprobadas instaladas |
+| F02 | Tipos generados desde `openapi.yaml` 1.1.0 con `npm run gen:api`; cliente `openapi-fetch` con `fetch` inyectable y `ProveedorCliente` |
 
 ## Para la sesión del backend
 
@@ -77,3 +78,4 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
 - **La descarga se construye con la ruta de `descargarExport`**, no con `url_descarga`, que
   es un `uri-reference` sin base definida.
 - **FA-01** (F01, decidido por el agente — revisar): se instalan en F01 todas las dependencias aprobadas, más tres que son parte de ellas y no añaden nada: `@testing-library/dom` (dependencia par de Testing Library) y los tipos `@types/react`, `@types/react-dom` y `@types/node`.
+- **FA-02** (F02, decidido por el agente — revisar): `gen:api` usa un script propio (`scripts/generar-api.mjs`) sobre la API de `openapi-typescript` en vez de su CLI, para que la prueba de CA-01 compare con la misma función que escribe el fichero.
