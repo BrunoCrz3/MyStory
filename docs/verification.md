@@ -97,7 +97,7 @@ Los **tipos** son los cuatro de la ontología: `programático`, `semántico`, `f
 | Coherencia de edad | formal-Lean | gate de publicación | `lean_edad` | O-15 |
 | Cumplimiento de elementos obligatorios | programático | gate de publicación | `elementos_obligatorios` | O-04, O-18 |
 | Cierre del arco | programático + semántico | gate de publicación | `cierre_arco` | O-34, O-35, O-36, O-40, O-41, O-43 |
-| Render visual | programático | gate de publicación | `render_visual` | O-09, O-10, O-59, O-60 |
+| Render visual | programático | gate de publicación, sobre la versión candidata (TO-045) | `render_visual` | O-09, O-10, O-59, O-60, A-106 |
 | Paridad PDF ↔ web | programático | export | `paridad_pdf_web` | O-16 |
 | **Invención sobre el destinatario** | programático + semántico | rol editor | `invencion_destinatario` | O-20 |
 | **Temas excluidos** | semántico | rol editor | `temas_excluidos` | O-21 |
@@ -320,6 +320,7 @@ y se establece razonando sobre el código sin generar una sola novela.
 | **A-103** · Los enlaces internos del PDF exportado —índice y ficha— resuelven a su destino | `alcance` §2; `architecture.md` § Export a PDF | Pruebas unitarias / de integración | T | sí | export | `paridad_pdf_web` | obligatorio | medio | Comprueba que el destino existe, no que sea el correcto: un ancla que apunta al capítulo equivocado resuelve igual | O-16, O-60 | `versioning/`, `tests/versioning/` |
 | **A-104** · La latencia y el coste por novela se mantienen bajo el umbral declarado. Con `proveedor: claude_code` el coste es nominal (TO-040) | `alcance` §6 | Observabilidad | T | sí | CI/desarrollo | — | recomendado | bajo | Mide lo que costó, no lo que debería costar: sin línea base, un coste que se dobla por un prompt más largo parece normal | P-72 | trazas, `commons/langfuse/` |
 | **A-105** · El export a PDF corre una vez por versión y no regenera lo ya publicado | TO-025; `architecture.md` § Export a PDF | Pruebas unitarias / de integración | T | sí | export | `paridad_pdf_web` | recomendado | bajo | Garantiza una ejecución por versión; si el render cambia entre la validación y el export, el PDF difiere de lo validado y la paridad lo detecta después | O-16 | `versioning/` |
+| **A-106** · Ninguna versión pasa a `publicada` sin haber pasado todos los validadores del gate, `render_visual` incluido, y una candidata o una rechazada nunca es la versión vigente, ni se lista ni se exporta | spec RF-QUA-03, RNF-19; TO-045; `architecture.md` § Invariante de publicación | Pruebas unitarias / de integración + verificación formal | T, F | sí | gate de publicación | todos los del gate | obligatorio | medio | TLC demuestra la invariante sobre el modelo; el código la sostiene con triggers que solo admiten `candidata → publicada \| rechazada` y con la vigente leída de las `publicadas`. Una consulta nueva que lea `version_novela` sin filtrar por `estado` la rompería sin que el trigger lo vea | O-09, O-64 | `versioning/`, `novel/`, `formal/tla/` ▸ previsto |
 
 ---
 
@@ -960,7 +961,7 @@ las cubre `A-43` y ninguna fila propia.
 | 13 · Span por rol y tool, score por validador | A-45, P-70, P-71 |
 | 14 · Todo reintento con límite; parada informada | P-58, A-78, A-81 |
 | 15 · La versión anterior nunca se sobrescribe | P-63, O-64, A-88 |
-| 16 · Nada se publica sin el gate, Lean incluido | P-64, P-80, P-82 |
+| 16 · Nada se publica sin el gate, Lean incluido | P-64, P-80, P-82, A-106 |
 
 ### 7 · Modos de fallo narrativo que el comprador nombra
 

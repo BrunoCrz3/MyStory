@@ -3,7 +3,7 @@ estado: aprobada
 aprobada-por: Bruno Cruz
 fecha: 2026-09-24
 contrato-aprobado-con-ella: specs/openapi.yaml
-modificada: 2026-09-24 · TO-037 y TO-040 · cambios aprobados por el desarrollador
+modificada: 2026-09-24 · TO-037, TO-040 y TO-045 · cambios aprobados por el desarrollador
 ---
 
 # SRS 1 — Backend v1 de storyMaker
@@ -25,6 +25,12 @@ contrato de interfaz, datos, fases de construcción y trazabilidad.
 > contrato pasa a la versión 1.1.0 con `BriefNovelaParcial` para la validación del brief
 > (RF-INTAKE-01, § 4.1), y se añade el contrato de lectura con el frontend (§ 4.4). Los dos
 > cambios salieron de revisar el plan 1 y los pidió el desarrollador; no son del agente.
+>
+> **Modificada otra vez el mismo día, con el cambio de contrato aprobado por el desarrollador**
+> (TO-045): el contrato pasa a 1.2.0. Una versión nace `candidata`, el gate completo
+> —`render_visual` incluido— la valida, y solo entonces pasa a `publicada`; si falla, queda
+> `rechazada` (RF-QUA-03, RNF-19). Salió de la parada del plan en el P47: con el contrato
+> anterior, la lectura no podía pintar una versión antes de publicarla.
 
 ---
 
@@ -129,7 +135,7 @@ ninguna tabla lleva `user_id` ni `tenant_id`.
 | **API de Anthropic** | Los seis roles, con el identificador y el effort de `config/models.yaml` | El sistema no genera. Es la única dependencia dura |
 | **Langfuse** | Trazas, spans, scores y versiones de prompt | La generación **sigue**, y lo registra como degradado en `GET /salud`. Perder observabilidad no debe costar una novela |
 | **Lean 4 con `lake`** | Las tres demostraciones de cronología en el gate | Ya está previsto: `formal.gate_activo` está en `false` y el gate no corre. Se enciende al instalar la toolchain |
-| **Playwright** | `render_visual` en el gate y el export a PDF | Sin él no hay export ni validación visual; la generación sí puede terminar |
+| **Playwright** | `render_visual` en el gate y el export a PDF | Sin él no hay export ni validación visual, y **ninguna versión se publica**: la generación termina con la versión `rechazada` (RNF-19, TO-045) |
 
 **Supuestos declarados.** Una sola instancia del backend escribe sobre
 `data/storymaker.db`; el reloj del sistema es fiable para ordenar versiones; y el
@@ -374,12 +380,18 @@ fuera del pool de tokens**, los validadores programáticos: `nombres_exactos`, `
 > story bible, *cuando* corre `nombres_exactos`, *entonces* falla y el capítulo vuelve al
 > redactor.
 
-**RF-QUA-03 [demo]** · El sistema deberá ejecutar en el gate de publicación
-`elementos_obligatorios`, `cierre_arco`, `estructura_edicion` y `render_visual`, y **no
-publicar** si alguno falla.
+**RF-QUA-03 [demo]** · El sistema deberá escribir la versión como **`candidata`**,
+ejecutar sobre ella el gate de publicación —`elementos_obligatorios`, `cierre_arco`,
+`estructura_edicion`, `regeneracion_fiel` desde la segunda versión y `render_visual`, que
+pinta la lectura de la propia candidata— y **pasarla a `publicada` solo si todos pasan**. Si
+alguno falla, la versión queda **`rechazada`**: no se publica nunca y no es la versión
+vigente (TO-045).
 
 > *Dado* un `Elemento personalizado` obligatorio que no aparece en ningún capítulo,
-> *cuando* corre el gate, *entonces* la versión no se publica.
+> *cuando* corre el gate, *entonces* la versión queda `rechazada` y no se publica.
+>
+> *Dado* un gate con todos los validadores en verde salvo `render_visual`, *cuando* corre,
+> *entonces* la versión queda `rechazada`, y la vigente sigue siendo la anterior.
 
 **RF-QUA-04 [demo]** · El `judge` deberá puntuar los seis criterios de la rúbrica **por
 separado y con justificación**, en el modelo de `config/models.yaml` § `roles.judge`, que
@@ -683,6 +695,14 @@ consecuencias, y ninguna es opcional:
   cinco briefs de evaluación y el de la novela de ejemplo— usan **datos ficticios**.
 - **`RNF-18`** La retención de las trazas de Langfuse queda como **pregunta abierta**
   (§ 10.2). Decirlo aquí es lo que impide que se convierta en una decisión por omisión.
+
+### 6.1.1 Invariante de publicación
+
+- **`RNF-19`** **Ninguna versión pasa a `publicada` sin haber pasado todos los validadores
+  del gate, `render_visual` incluido, y una candidata rechazada nunca es visible como
+  versión vigente** (TO-045). La vigente, el historial del lector y el export solo ven
+  versiones `publicada`; pedir una versión por su número la devuelve con su `estado`. Lo
+  recogen `architecture.md` § Estados y la especificación TLA+ del harness.
 
 ### 6.2 Estrategia de pruebas del cliente del modelo
 

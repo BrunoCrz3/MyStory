@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: storyMaker — API del backend v1
-  version: 1.1.0
+  version: 1.2.0
   summary: Genera novelas personalizadas de regalo y las sirve para su lectura web.
   description: |
     Contrato entre el backend FastAPI y el frontend React. **Este fichero es la fuente**:
@@ -28,6 +28,11 @@ info:
       y, por tanto, lo único desde lo que se lanza una generación.
     - **El progreso se consulta por sondeo.** El recurso `Generacion` lleva su propio
       intervalo recomendado y dice si su estado es terminal.
+    - **Una versión nace `candidata`** (TO-045, 1.2.0): el gate de publicación la valida
+      entera —`render_visual` incluido, que pinta la lectura de la candidata— y solo si pasa
+      queda `publicada`; si no, queda `rechazada` y nunca se publica. Pedir una versión por
+      su número la devuelve en cualquiera de los tres estados; la versión vigente de la
+      novela, el historial y el export solo usan versiones `publicada`.
 
     Las cifras que aparecen como ejemplo en este fichero son ilustrativas. Las de verdad
     viven en `config/thresholds.yaml`, que es la fuente única.
@@ -347,6 +352,9 @@ paths:
       description: |
         Responde a RF-VER-01. Cada entrada dice a qué versión sucede y cuántos capítulos
         cambiaron respecto a ella, que es lo que la lectura marca.
+
+        Solo versiones `publicada`: las candidatas y las rechazadas no son historial del
+        lector (TO-045).
       responses:
         '200':
           description: Versiones, de la más reciente a la más antigua.
@@ -372,6 +380,10 @@ paths:
       description: |
         Responde a RF-VER-02. Es lo que alimenta el índice navegable: número, título y la
         marca `modificado` de cada capítulo respecto a la versión anterior.
+
+        Devuelve la versión en cualquier `estado`: una `candidata` también, porque la lectura
+        la pinta para que el gate la valide con `render_visual` antes de publicarla (TO-045).
+        Sus capítulos, su ficha, su portada y sus hechos se sirven igual.
 
         **La versión anterior sigue siendo consultable entera** (`CLAUDE.md` regla 15):
         pedir la versión 1 después de publicar la 3 devuelve la 1 tal como se publicó.
@@ -644,6 +656,9 @@ paths:
         Se genera **una vez por versión**, porque las versiones son inmutables (TO-025).
         Un segundo `POST` sobre una versión ya exportada devuelve `200` con el export que
         ya existe en vez de rehacerlo.
+
+        Solo se exporta una versión `publicada`: una candidata o una rechazada responde
+        `404 version-no-encontrada` (TO-045).
       responses:
         '200':
           description: La versión ya estaba exportada.
@@ -1443,6 +1458,7 @@ components:
         version_vigente:
           type: [integer, 'null']
           minimum: 1
+          description: La última versión `publicada`. Una candidata o una rechazada nunca lo es.
         creada_en:
           type: string
           format: date-time
@@ -1462,6 +1478,7 @@ components:
         version_vigente:
           type: [integer, 'null']
           minimum: 1
+          description: La última versión `publicada`. Una candidata o una rechazada nunca lo es.
         total_capitulos:
           type: integer
           description: Sale de `config/thresholds.yaml` § `obra.capitulos`.
@@ -1632,7 +1649,7 @@ components:
     Version:
       title: Version
       type: object
-      required: [version, novel_id, publicada_en, capitulos]
+      required: [version, novel_id, estado, publicada_en, capitulos]
       properties:
         version:
           type: integer
@@ -1640,11 +1657,20 @@ components:
         novel_id:
           type: string
           format: uuid
+        estado:
+          type: string
+          enum: [candidata, publicada, rechazada]
+          description: |
+            `candidata` mientras el gate la valida; `publicada` solo si el gate completo,
+            `render_visual` incluido, pasó; `rechazada` si falló, y entonces nunca se publica
+            ni es la versión vigente (TO-045).
         titulo:
           type: [string, 'null']
         publicada_en:
           type: string
           format: date-time
+          description: |
+            Cuándo se publicó. En una candidata o una rechazada, cuándo se propuso.
         version_anterior:
           type: [integer, 'null']
           minimum: 1

@@ -9,8 +9,8 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P47 · `render_visual` con Playwright MCP |
-| Estado del paso | **detenido — condición de parada 2** (ver § Parada); sin código del P47 escrito |
+| Paso actual | P47a · Estado de versión y gate sobre la candidata (TO-045) |
+| Estado del paso | en curso; la parada del P47 está **resuelta** con el cambio de contrato TO-045 (§ Parada) |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
 | Último commit de paso | P46 |
@@ -89,7 +89,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 ## Pendiente
 
-- **Detenido en el P47** por la condición de parada 2 (§ Parada). Cuando el desarrollador decida, se retoma el P47 y después el resto hasta el P49 en orden.
+- **P47 partido en P47a y P47b** por el cambio de contrato TO-045 que resuelve la parada; después, P48 y P49 en orden.
 - **Hueco conocido de F4, visto en real**: una regeneración dirigida reescribe capítulos que abren promesas nuevas; los capítulos no afectados pagaban las promesas de las filas viejas, así que al cerrar quedan pendientes y `cierre_arco` detiene la versión nueva. A-102 retira hechos y usos de la fila vieja pero no reconcilia promesas. Propuesta para decidir: al reescribir, cerrar las promesas abiertas por la fila vieja solo si ninguna fila no afectada las paga, y ofrecer al extractor del capítulo reescrito las promesas vivas por su alias para que las reabra en vez de duplicarlas el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
@@ -225,7 +225,11 @@ registrada.
 | A-108 | P43 | `invencion_destinatario` cuenta solo si el judge dice que la afirmación no tiene apoyo (campo `apoyo`) y el cotejo por palabras tampoco lo encuentra; el prompt del judge excluye la trama | El humo adversarial real marcaba paráfrasis de rasgos del brief («cabezota» por «tozuda») y detalles de trama, y el capítulo agotaba sus intentos | TO-044 |
 | A-109 | P44 | `es_terminal` de una generación exige que el orquestador la haya cerrado (`estado_cola = terminado`), además de un estado terminal | Una regeneración recién encolada sobre una novela `Publicada` salía terminal antes de empezar; el e2e de F4 lo destapó | TO-044 |
 | A-110 | P44 | Los hechos y promesas conocidos del extractor van en la capa Estado, no en la Estructural | Son estado del mundo y crecen con la novela; en la Estructural, que no se degrada, detuvieron la regeneración real con ContextoNoCabe | TO-044 |
-| A-111 | P45 | Un personaje aparece en un capítulo si participa en un evento que narra o es su POV; un lugar, si lo es de un evento o del capítulo | El planificador fija POV y lugar aunque el extractor no los cite en un evento | TO-045 |
+| A-111 | P45 | Un personaje aparece en un capítulo si participa en un evento que narra o es su POV; un lugar, si lo es de un evento o del capítulo | El planificador fija POV y lugar aunque el extractor no los cite en un evento | TO-046 (F5) |
+| A-112 | P47a | Las versiones que ya existían se marcan `publicada` en la migración 0013 | Pasaron el gate de su momento | TO-045 |
+| A-113 | P47a | Una versión rechazada ocupa su número y la novela queda `Detenida`, sin intento siguiente | Es lo que ya hacía un gate en rojo (A-47, A-79); la vigente sigue siendo la anterior | TO-045 |
+| A-114 | P47a | Sin servidor MCP configurado, `render_visual` falla con ese motivo | Es la implementación de producción, no un doble: sin navegador no se publica | TO-045 |
+| A-115 | P47a | Una reanudación que encuentra la candidata ya escrita la reutiliza | La reanudación no duplica y el contenido de la candidata no cambia | TO-045 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -241,9 +245,10 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
 | I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F4 subidas** (F4 al cerrar el P44) |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
-| I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
+| I-07 | `specs/openapi.yaml` no se modifica (salvo los cambios aprobados: 1.1.0, TO-037; 1.2.0, TO-045); si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
 | I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | pendiente |
+| I-10 | **El frontend debe regenerar su cliente tipado desde el contrato `specs/openapi.yaml` 1.2.0** (TO-045): `Version.estado` (`candidata`, `publicada`, `rechazada`); `obtenerVersion` sirve cualquier estado; `version_vigente`, `listarVersiones` y el export, solo `publicadas`. La lectura de una candidata es la que pinta `render_visual` | Al subir el cambio de contrato; lo aplica el frontend | pendiente (del frontend) |
 
 ### I-04 · Cambio aprobado: proveedor del modelo vía Claude Code, sin clave de API
 
@@ -285,43 +290,16 @@ del P27 se ejecuta. Esto matiza I-01.
 
 ## Parada
 
-**Condición 2 — un criterio de la spec no se puede cumplir sin tocar el contrato.** Paso
-**P47 · `render_visual` con Playwright MCP**, detectado al diseñarlo, antes de escribir código.
-
-**El conflicto.** RF-QUA-03 exige ejecutar `render_visual` en el **gate de publicación** y
-**no publicar** si falla. `render_visual` renderiza la página `lectura` del frontend (spec
-§ 4.4, CL-01…CL-05), que obtiene la versión por la API. Pero la API solo sirve versiones
-**publicadas**: una versión aún no publicada responde 404 `version-no-encontrada`, y ningún
-endpoint de `specs/openapi.yaml` expone una versión candidata. Publicar primero y renderizar
-después no vale: la versión ya sería inmutable (regla 15) y RF-QUA-03 se habría incumplido.
-
-**Qué se intentó.** Descartar cada salida que no toca el contrato: renderizar dentro de la
-transacción de publicación (el frontend es otro proceso y no ve lo no confirmado);
-publicar en `Publicando` y retirar si falla (las versiones no se borran); renderizar una
-página generada por el backend (valida los datos, no el frontend, que es lo que CL-05 pide).
-Ninguna cumple a la vez RF-QUA-03, el contrato y la inmutabilidad.
-
-**Qué se necesita del desarrollador**, una de estas tres (recomendada la B):
-
-- **A · Cambiar el contrato**: una lectura de la versión candidata (por ejemplo, que
-  `obtenerVersion` y sus subrecursos sirvan la versión mientras la novela está en
-  `Publicando`), para que el frontend la pinte antes de conservarla. Toca `openapi.yaml` y el
-  frontend.
-- **B · Cambiar la spec**: `render_visual` pasa del gate de publicación a un **gate de
-  entrega** sobre la versión ya publicada, que corre antes del export (el PDF solo se genera
-  si `render_visual` está en verde, y sale del mismo render, TO-003). Un fallo no despublica
-  —nada se sobrescribe— sino que bloquea la entrega y se corrige con una versión nueva. No
-  toca el contrato.
-- **C · Cambiar la spec de otra forma**: en el gate, `render_visual` sobre una página que
-  genera el backend desde la versión candidata (comprueba que los datos están), y la
-  comprobación del frontend real se hace en la entrega, como en B.
-
-Lo hecho hasta aquí está commiteado y subido; la suite, en verde (420 pruebas).
+**Resuelta** (2026-09-24). La condición 2 del P47 —`render_visual` tenía que pintar una versión
+que la API no servía antes de publicarla— la resolvió el desarrollador con un **cambio de
+contrato** en la línea de la opción A: la versión nace `candidata`, el gate completo corre
+sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, contrato
+1.2.0). El P47 se parte en P47a y P47b (`plan1.md`).
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P46 cerrado; detenido en el P47 por la condición de parada 2** (§ Parada). Rama `backend-v1`,
-suite en verde (420 pruebas). Al retomar: leer § Parada y aplicar la decisión del desarrollador antes de escribir el P47. Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P46 cerrado; parada del P47 resuelta con TO-045; P47a en curso**. Rama `backend-v1`,
+suite en verde (420 pruebas). Al retomar: seguir por el P47a del plan. Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash

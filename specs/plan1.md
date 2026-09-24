@@ -10,8 +10,10 @@ progreso: specs/progreso.md
 # Plan 1 — Backend v1, fases F0 a F5
 
 Cómo se construye lo que especifica `specs/spec1.md` (aprobada el 2026-09-24 y modificada
-el mismo día con TO-037) contra el contrato `specs/openapi.yaml` **1.1.0** y el contrato de
-lectura de la spec § 4.4. **Un solo plan para las seis fases**,
+el mismo día con TO-037 y TO-045) contra el contrato `specs/openapi.yaml` **1.2.0** y el
+contrato de lectura de la spec § 4.4. El 1.2.0 (TO-045, cambio de contrato aprobado por el
+desarrollador al resolver la parada del P47) añade `Version.estado`: la versión nace
+`candidata` y solo se publica con el gate completo en verde, `render_visual` incluido. **Un solo plan para las seis fases**,
 escrito para que un agente lo ejecute de forma autónoma de principio a fin, paso a paso, y
 pueda reanudarlo en frío desde `specs/progreso.md`.
 
@@ -116,7 +118,7 @@ sus dos rastros.
 | `anthropic` | runtime | P06 | Único cliente del proveedor; trae `httpx`, que es lo que usan los casetes |
 | `langfuse` | runtime | P08 | Nombrado en `CLAUDE.md` § Requisitos técnicos |
 | `playwright` | runtime | P48 | `page.pdf()` (TO-003) |
-| `mcp` | runtime | P47 | Cliente del servidor Playwright MCP que exige TO-026 para `render_visual` |
+| `mcp` | runtime | P47b | Cliente del servidor Playwright MCP que exige TO-026 para `render_visual` |
 | `pypdf` | runtime | P48 | **Leer** el PDF para `paridad_pdf_web`. No genera nada: el PDF sigue saliendo de Playwright, así que no se valida uno y se entrega otro |
 | `pytest`, `pytest-cov` | dev | P01 | Suite y la cobertura mínima de `validadores.cobertura_tests_minima` |
 | `hypothesis` | dev | P07 | Propiedades del pool, de la tabla de transiciones y del prefijo de aceptados |
@@ -288,7 +290,8 @@ si una ya aplicada cambió**: es lo que hace ejecutable «nunca se editan» (RD-
 | `0010_calidad.sql` | P28 | `validador`, `informe_critica`, `defecto`, `score` |
 | `0011_saneamiento_brief.sql` | P36 | `fragmento_sospechoso`, `dato_faltante`, `contradiccion_brief` |
 | `0012_regeneracion.sql` | P40 | `solicitud_cambio`, `analisis_impacto`, `retcon`, `contradiccion_canon` |
-| `0013_exportacion.sql` | P48 | `exportacion` |
+| `0013_estado_version.sql` | P47a | `version_novela.estado` con `CHECK`, las existentes `publicada`; el trigger de `UPDATE` pasa a admitir solo `candidata → publicada \| rechazada` (TO-045) |
+| `0014_exportacion.sql` | P48 | `exportacion` |
 
 Toda tabla lleva `novel_id NOT NULL` con clave foránea a `obra`, salvo `obra`, cuya clave
 primaria es `novel_id`; ninguna lleva `user_id` ni `tenant_id`. La prueba del P05 lo exige de
@@ -302,7 +305,7 @@ toda migración presente y futura.
 README.md                     P10 · arranque, un solo worker, brief de ejemplo, Langfuse
 ejemplos/brief-ejemplo.json   P26
 ejemplos/novela-ejemplo.pdf   P49
-docs/browser-mcp.md           P47 · qué tool del MCP sostiene cada aserción y qué inspeccionó
+docs/browser-mcp.md           P47b · qué tool del MCP sostiene cada aserción y qué inspeccionó
 backend/
   pyproject.toml  uv.lock  .python-version
   app/
@@ -1045,12 +1048,36 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
     ocultos.
 - **Hecho cuando** `uv run pytest tests/versioning/test_lectura.py tests/arquitectura -v`
 
-#### P47 · `render_visual` con Playwright MCP
+#### P47a · Estado de versión y gate sobre la candidata
+
+- **Fase** F5 · **Cubre** RF-QUA-03, RNF-19, TO-045 · **Skill** `sqlite-relacional`,
+  `backend-feature-slice`
+- **Ficheros** migración `0013_estado_version.sql`; `Version.estado` en
+  `app/versioning/schemas.py`; `app/versioning/render_visual.py` con el puerto `RenderVisual`
+  y su implementación sin navegador, que falla con el motivo (A-114); el puerto `Publicador`
+  de `process/` con `proponer`, `gate`, `render_visual`, `publicar` y `rechazar`;
+  `novel.version_vigente` y `listarVersiones` solo con `publicadas`; `VERSION_API` a 1.2.0.
+- **Pruebas primero**
+  - la migración marca `publicada` lo existente; el trigger rechaza cualquier `UPDATE` que no
+    sea `candidata → publicada | rechazada`, y el `CHECK` un estado desconocido;
+  - al aceptarse el último capítulo la versión existe como `candidata` antes de que corra el
+    gate, y `GET` por su número la sirve con su `estado`, sus capítulos, ficha y portada;
+  - gate en verde, `render_visual` incluido → `publicada`, vigente y en el listado;
+  - `render_visual` en rojo con el resto en verde → `rechazada`, la novela `Detenida` y la
+    vigente sigue siendo la anterior (o ninguna), fuera del listado;
+  - en una regeneración dirigida rechazada, la versión 1 sigue siendo la vigente;
+  - una reanudación con la candidata ya escrita la reutiliza (A-115);
+  - conformidad de `obtenerVersion` y `listarVersiones` con `estado`.
+- **Hecho cuando** `uv run pytest -q` en verde.
+
+#### P47b · `render_visual` con Playwright MCP
 
 - **Fase** F5 · **Cubre** RF-QUA-03 (`render_visual`), CL-02, CL-03, CL-05, TO-026 · **Skill**
   `backend-feature-slice`
 - **Ficheros** `app/versioning/render_visual.py` (cliente MCP guionizado contra
-  `PLAYWRIGHT_MCP_URL`, con los selectores de `lectura.py`), `docs/browser-mcp.md` con qué
+  `PLAYWRIGHT_MCP_URL`, con los selectores de `lectura.py`, que implementa el puerto del
+  P47a sobre la versión **candidata**; sin URL configurada sigue la implementación sin
+  navegador), `docs/browser-mcp.md` con qué
   tool del MCP da la evidencia de cada aserción.
 - **Pruebas primero** (servidor MCP real, página de prueba):
   - espera a `data-estado = lista` antes de afirmar, y `error` falla el gate;
@@ -1067,13 +1094,15 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 
 - **Fase** F5 · **Cubre** RF-EXP-01, RF-EXP-02, TO-003, TO-025, D-22 · **Skill**
   `sqlite-relacional`, `backend-feature-slice`
-- **Ficheros** migración `0013`; `app/versioning/{export.py,paridad.py}` y su `__main__` de
+- **Ficheros** migración `0014`; `app/versioning/{export.py,paridad.py}` y su `__main__` de
   línea de comandos con `<novel_id> <version>` (D-22). Emula medios `print` antes de
   `page.pdf()` (CL-04). Saca `exportarVersion` y `descargarExport` de `PENDIENTES`.
 - **Pruebas primero**
   - `POST …/export` → `202` la primera vez y `200` con el mismo export después; el PDF se
     genera **una vez**;
   - `GET …/export` antes de estar → `404 export-no-disponible`; después, `application/pdf`;
+  - `POST …/export` de una versión `candidata` o `rechazada` → `404 version-no-encontrada`
+    (TO-045);
   - el PDF se genera con medios `print`: sobre la página de prueba, los controles ocultos en
     impresión no aparecen en el texto del PDF;
   - `paridad_pdf_web` cuenta las palabras sobre `capitulo-texto` y pasa sobre la página de
@@ -1112,6 +1141,7 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 | Riesgo | Qué lo contiene |
 | --- | --- |
 | El frontend ya generó su cliente con el contrato 1.0.0 | El cambio a 1.1.0 solo cambia el cuerpo de `validarBrief` y añade schemas; el frontend lo espera (TO-037) |
+| El frontend generó su cliente con el 1.1.0 | El 1.2.0 añade `Version.estado` y cambia qué versiones listan la vigente y el historial; el frontend regenera su cliente (TO-045, I-10 de `progreso.md`) |
 | La página `lectura` no cumple la spec § 4.4 al integrarla | El P46 fija la lista como dato comparado con la spec, y el P49 corre `render_visual` contra la página real antes de exportar |
 | El OpenAPI de FastAPI no alcanza alguna forma del contrato | `json_schema_extra`, `responses=` y `openapi_extra`; si ni así, condición 2 |
 | El normalizador de conformidad es demasiado generoso y no falla nunca | La meta-prueba de mutaciones del P01 |
@@ -1210,7 +1240,7 @@ proceso.
 | RF-GUARD-03 | P16, P19 |
 | RF-QUA-01 | P19 |
 | RF-QUA-02 | P19, P29, P30 |
-| RF-QUA-03 | P25, P33, P43, P47 |
+| RF-QUA-03, RNF-19 | P25, P33, P43, P47a, P47b |
 | RF-QUA-04, 07 | P31 |
 | RF-QUA-05 | P32 |
 | RF-QUA-06 | P37 |
@@ -1222,7 +1252,7 @@ proceso.
 | RF-VER-07 | P41 |
 | RF-VER-08 | P42, P43, P44 |
 | RF-EXP-01, 02 | P48, P49 |
-| Spec § 4.4, CL-01…05 | P46, P47, P48, P49 |
+| Spec § 4.4, CL-01…05 | P46, P47b, P48, P49 |
 | RF-EXP-03 | post-demo; P03 y P09 cubren el interruptor |
 | RF-OBS-01, 02 | P08, P22 |
 | RF-OBS-03 | P19, P28, P31 |

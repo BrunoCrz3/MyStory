@@ -324,13 +324,14 @@ flowchart LR
   HP --> HC[Hook de capítulo]
   HC --> ED[Rol editor]
   ED --> ACP[Capítulo aceptado]
-  ACP --> GT[Gate de publicación]
+  ACP --> CAN[Versión candidata]
+  CAN --> GT[Gate de publicación]
   GT --> PUB[Versión publicada]
   HP -.->|falla| REW[Reescribir · intentos + 1]
   ED -.->|el corregido vuelve a pasar HP, HC y judge| HP
   ED -.->|defecto local| REW
   ED -.->|defecto sistémico| RPL[Replanificar pendientes]
-  GT -.->|falla| ED
+  GT -.->|falla| RCH[Versión rechazada · la novela se detiene]
   REW --> BOR
 ```
 
@@ -339,7 +340,18 @@ flowchart LR
 | Hook de policy | `policy/` | Conformidad de schema y guardrail de palabras prohibidas | Determinista, sin modelo |
 | Hook de capítulo | `quality/` | Los validadores programáticos de continuidad y prosa, **en paralelo** | Determinista, sin modelo |
 | Rol editor | `quality/` | El `judge` puntúa la rúbrica; si algo que cierra el paso falla —en los hooks o en el judge—, el `editor` corrige y su versión vuelve a pasar **todos** los validadores, judge incluido | Una llamada, o tres si el editor corrige |
-| Gate de publicación | `versioning/` | Lean, elementos obligatorios, cierre del arco y render visual | Subprocesos, sin modelo |
+| Gate de publicación | `versioning/` | Lean, elementos obligatorios, cierre del arco, estructura de edición, regeneración fiel desde la segunda versión y render visual, **sobre la versión candidata** | Subprocesos, sin modelo |
+
+**Invariante de publicación** (RNF-19, TO-045). Al aceptarse el último capítulo, la versión se
+escribe como **`candidata`**, con sus vínculos, y el gate corre sobre ella. **Ninguna versión
+pasa a `publicada` sin haber pasado todos los validadores del gate, `render_visual`
+incluido**; si falla uno, la versión queda **`rechazada`** y la novela se detiene. La versión
+vigente —la que devuelve `Novela.version_vigente`, la del listado del lector y la única que se
+exporta— es siempre la última `publicada`: **una candidata o una rechazada nunca es visible
+como versión actual**. `GET` de una versión por su número sí las sirve, con su `estado`, porque
+`render_visual` tiene que pintar la candidata antes de decidir. Las dos salidas son terminales
+y las guardan triggers: el único `UPDATE` que admite `version_novela` es `candidata →
+publicada | rechazada`.
 
 **Orden dentro de un intento** (P32). Si el hook de policy falla, el intento se decide ahí:
 no se paga un juicio ni una corrección sobre un borrador sin schema o con una palabra vetada.
@@ -440,8 +452,8 @@ en silencio.
 | `Planificar` | Novela | `Configurando` | `Planificando` | `orquestador.planificar` |
 | `FijarEsquema` | Novela | `Planificando` | `Escribiendo` | `orquestador.fijar_esquema` |
 | `CerrarEscritura` | Novela | `Escribiendo` | `Validando` | `orquestador.cerrar_escritura` · todos los capítulos aceptados |
-| `DevolverAlEditor` | Novela | `Validando` | `Escribiendo` | `orquestador.devolver_al_editor` · falla el gate |
-| `Publicar` | Novela | `Validando` | `Publicando` | `orquestador.publicar` · exige el gate en verde |
+| `DevolverAlEditor` | Novela | `Validando` | `Escribiendo` | `orquestador.devolver_al_editor` · falla el gate y la candidata queda `rechazada` |
+| `Publicar` | Novela | `Validando` | `Publicando` | `orquestador.publicar` · exige el gate en verde sobre la candidata, que pasa a `publicada` |
 | `Conservar` | Novela | `Publicando` | `Publicada` | `orquestador.conservar` · versión inmutable escrita |
 | `Regenerar` | Novela | `Publicada` | `Regenerando` | `orquestador.regenerar` · solicitud de cambio confirmada |
 | `CerrarRegeneracion` | Novela | `Regenerando` | `Validando` | `orquestador.cerrar_regeneracion` · afectados reescritos |
@@ -720,7 +732,7 @@ consulta— mientras que los turnos intermedios del diálogo se descartan.
 | Capítulos aceptados, texto literal | `novel/` | Al consolidar |
 | Resúmenes por capítulo | `context/` | Al consolidar |
 | Checkpoint | `process/` | Al consolidar |
-| Versión de novela y su vínculo con los capítulos | `versioning/` | Al publicar |
+| Versión de novela y su vínculo con los capítulos | `versioning/` | Al cerrar la escritura, como `candidata`; su `estado` cambia una sola vez, al decidir el gate |
 | Audit log | `policy/` | En cada decisión del policy engine |
 
 **Punto único de promoción.** Lo de corto plazo pasa a largo **al consolidar un capítulo
@@ -912,10 +924,28 @@ Un módulo con las dos máquinas, `Novela` y `Capitulo`, porque la transición
 `Escribiendo → Detenida` las acopla. TLC corre **en desarrollo**, nunca en una generación,
 sobre el modelo pequeño cuyos tamaños fija `config/thresholds.yaml` § `modelo_formal`.
 
-**Qué se demuestra**: al menos tres invariantes de seguridad —ninguna versión se publica con
+**Qué se demuestra**: al menos cuatro invariantes de seguridad —ninguna versión se publica con
 un capítulo que no pasó todos los validadores; la reanudación no duplica ni pierde capítulos;
-la versión anterior se conserva siempre tras una regeneración— y una de liveness: toda
-ejecución termina en `Publicada` o en `Detenida`, nunca en bucle.
+la versión anterior se conserva siempre tras una regeneración; y la **invariante de
+publicación** de abajo— y una de liveness: toda ejecución termina en `Publicada` o en
+`Detenida`, nunca en bucle.
+
+**Invariante de publicación** (RNF-19, TO-045). El módulo lleva una tercera variable de estado,
+`estadoVersion ∈ {"candidata", "publicada", "rechazada"}` por versión, y el veredicto de cada
+validador del gate —`render_visual` incluido— como variable que el entorno fija sin
+restricción, para que TLC explore todas las combinaciones. El `.cfg` comprueba dos invariantes
+con nombre propio, que `formal/tla/harness.tla` ▸ previsto **debe** declarar:
+
+```tla
+PublicadaSoloConGateVerde ==
+  \A v \in Versiones : estadoVersion[v] = "publicada" => \A x \in ValidadoresGate : gate[v][x]
+RechazadaNuncaVigente ==
+  vigente # 0 => estadoVersion[vigente] = "publicada"
+```
+
+`vigente` es la versión que la lectura muestra como actual. La acción `Publicar` exige el gate
+en verde y fija `estadoVersion` a `publicada` en el mismo paso; `DevolverAlEditor` la fija a
+`rechazada` sin tocar `vigente`.
 
 **Dos abstracciones declaradas** (TO-023), porque una abstracción declarada es honesta y una
 omisión silenciosa no:
@@ -1002,6 +1032,12 @@ programático, cuesta cero tokens y usa el browser MCP de forma literal, como pi
 puerta bloqueante significa que una publicación puede fallar por razones que nadie puede
 reproducir.
 
+**Sobre la candidata** (TO-045). `render_visual` pinta la versión **antes** de publicarla: la
+lectura la pide por su número y la API sirve candidatas con su `estado`. Así el PDF que se
+entrega sale de un render que el gate ya validó, y un fallo no obliga a retirar nada —la
+versión queda `rechazada` y nunca fue la vigente—. Sin servidor MCP configurado el validador
+falla con ese motivo: ninguna versión se publica sin él.
+
 **Aserciones**: el índice tiene una entrada por capítulo y todas resuelven; cada enlace de la
 ficha lleva a su capítulo; la portada muestra la dedicatoria; no hay errores de consola ni
 desbordes de caja.
@@ -1023,7 +1059,7 @@ real del punto ciego.
 
 ### Export a PDF
 
-Bajo demanda, **una vez por versión**, porque las versiones son inmutables (TO-025). Sale
+Bajo demanda, **una vez por versión** y **solo de una versión `publicada`** (TO-045), porque las versiones publicadas son inmutables (TO-025). Sale
 del mismo render con `page.pdf()` de Playwright (TO-003), de modo que el PDF entregado es lo
 que el gate acaba de validar; con otro motor se validaría uno y se entregaría otro. En ese
 momento corre `paridad_pdf_web`, que comprueba recuento y títulos de capítulos, presencia de

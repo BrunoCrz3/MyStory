@@ -1591,3 +1591,56 @@ diagrama de estados, como A-39 añadió `Planificando → Detenida`. Las que má
 son A-102 y A-103, que fijan qué se retira del canon al reescribir un capítulo y por qué la
 fila publicada se queda `Obsoleto` en vez de reencolarse, y A-108, que cambia qué cuenta como
 invención sobre el destinatario tras ver en real que el cotejo por palabras marcaba paráfrasis.
+
+---
+
+## TO-045 — La versión nace candidata y solo se publica con el gate completo en verde
+
+**Fecha:** 2026-09-24 · **Estado:** **cambio de contrato aprobado por el desarrollador** (resuelve la § Parada del P47 en `specs/progreso.md`) · **Afecta a:** `specs/openapi.yaml` (1.2.0), `specs/spec1.md` (RF-QUA-03, RNF-19), `docs/definitions.md`, `docs/domain-knowledge.md` § Estados, `docs/architecture.md` § Invariante de publicación, § TLA+ y § `render_visual`, `docs/verification.md` (A-106), `specs/plan1.md` (P47, P48), `backend/app/versioning/`, `backend/app/novel/service.py`, `backend/app/process/orquestador.py`, migración `0013_estado_version.sql`
+
+### Problema
+
+RF-QUA-03 exige correr `render_visual` en el gate y no publicar si falla. `render_visual`
+pinta la página `lectura` del frontend, que pide la versión por la API; pero la API solo servía
+versiones publicadas. Publicar primero y renderizar después incumple RF-QUA-03, y retirar una
+versión publicada incumple la regla 15. Es la condición de parada 2 del plan en el P47.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| **A · Contrato con versión candidata** | El gate valida el mismo render que se entrega, antes de publicar; nada publicado se retira | Toca `openapi.yaml` y obliga al frontend a regenerar su cliente |
+| B · `render_visual` en un gate de entrega, tras publicar | No toca el contrato | Una versión publicada puede no pintarse; RF-QUA-03 deja de valer tal como está escrito |
+| C · Página generada por el backend en el gate | No toca el contrato | Valida los datos, no el frontend, que es lo que CL-05 pide |
+
+### Elección
+
+**A, en la forma que fijó el desarrollador.** `Version.estado ∈ {candidata, publicada,
+rechazada}`. La versión se escribe `candidata` con sus vínculos al aceptarse el último
+capítulo; el gate completo —`elementos_obligatorios`, `cierre_arco`, `estructura_edicion`,
+`regeneracion_fiel` desde la segunda y `render_visual`— corre sobre ella; si todos pasan pasa a
+`publicada`, y si no, a `rechazada` y la novela se detiene. `GET` de una versión por su número
+sirve cualquier estado, con sus capítulos, ficha, portada y hechos; `Novela.version_vigente`,
+`listarVersiones` y el export solo ven `publicadas`.
+
+**Invariante** (RNF-19): ninguna versión pasa a `publicada` sin haber pasado todos los
+validadores, `render_visual` incluido, y una candidata rechazada nunca es visible como versión
+actual. Se escribe en la spec, en `architecture.md` y como dos invariantes con nombre del
+`.tla` previsto; en el código la sostienen un trigger que solo admite `candidata → publicada |
+rechazada` y la vigente leída de las `publicadas`.
+
+| Id | Detalle de implementación | Por qué |
+| --- | --- | --- |
+| A-112 | Las versiones que ya existían se marcan `publicada` en la migración | Pasaron el gate de su momento; reescribir la historia no la haría más cierta |
+| A-113 | Una versión rechazada ocupa su número y la novela queda `Detenida`, sin intento siguiente | Es lo que ya hacía un gate en rojo (A-47, A-79); la vigente sigue siendo la anterior |
+| A-114 | Sin servidor MCP configurado, `render_visual` falla con ese motivo | Es la implementación de producción y no un doble: sin navegador no hay validación visual, y sin ella no se publica |
+| A-115 | Si una reanudación encuentra la candidata ya escrita, la reutiliza | La reanudación no duplica: el contenido de una candidata no cambia, porque sus capítulos ya están aceptados |
+
+### Consecuencias
+
+- **El frontend regenera su cliente** desde el contrato 1.2.0 (I-10 de `specs/progreso.md`).
+- **Un capítulo de una candidata ya es inmutable**, aunque la versión acabe rechazada: el
+  trigger de contenido lo protege desde que tiene vínculo. Son capítulos aceptados, que no
+  volvían a cambiar.
+- **Hasta el P47b ninguna versión se publica en producción**: el humo real no puede cerrar F1
+  otra vez sin el servidor MCP. Las pruebas con dobles inyectan un `render_visual` propio.

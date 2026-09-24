@@ -1042,3 +1042,32 @@ vista de una generación recién encolada (A-109).
 El e2e de F4 cambia «el perro se llama Nala» por HTTP: la versión 2 reescribe los capítulos 2
 y 7, sirve los otros ocho idénticos byte a byte, y la versión 1 sigue entera con su hash y su
 hecho viejo.
+
+---
+
+## RI-018 — Cambio de contrato: la versión nace candidata
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/openapi.yaml`, `specs/spec1.md`,
+`docs/definitions.md`, `docs/domain-knowledge.md`, `docs/architecture.md`,
+`docs/verification.md`, `docs/trade-offs.md` (TO-045), `specs/plan1.md`,
+`backend/app/versioning/`, `backend/app/novel/service.py`, `backend/app/process/orquestador.py`,
+`backend/app/commons/db/migrations/0013_estado_version.sql`
+
+### Causa
+
+El P47 se detuvo por la condición de parada 2: `render_visual` tenía que pintar una versión que
+la API no servía hasta publicarla. El desarrollador aprobó el cambio de contrato.
+
+### Qué cambió
+
+El contrato pasa a 1.2.0 con `Version.estado`. La versión se escribe `candidata`, el gate
+completo corre sobre ella con `render_visual` como puerto inyectable, y pasa a `publicada` o a
+`rechazada`. La vigente, el listado y el export leen solo `publicadas`. La invariante de
+publicación queda escrita en la spec (RNF-19), en `architecture.md` y en el `.tla` previsto. El
+P47 se parte: P47a (estado de versión y gate sobre la candidata) y P47b (`render_visual` real con
+Playwright MCP).
+
+### Efecto
+
+La parada se resuelve sin retirar nada publicado: una versión que no pinta nunca llega a ser la
+vigente, y la que se publica es la que el gate acaba de ver.
