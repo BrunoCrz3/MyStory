@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -12,8 +13,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from app.commons.config import cargar_config
 from app.main import crear_app
 from tests.contrato.normalizar import cargar_contrato, schema_de_respuesta
+from tests.dobles.modelo import ModeloGuionizado
+from tests.dobles.trazador import RegistroTrazas
 
 _CONTRATO = cargar_contrato()
 
@@ -51,6 +55,26 @@ def app() -> FastAPI:
 def cliente(app: FastAPI) -> Iterator[TestClient]:
     with TestClient(app) as c:
         yield c
+
+
+@dataclass
+class Instancia:
+    """App arrancada con los dos dobles, para afirmar sobre lo que ha hecho."""
+
+    cliente: TestClient
+    modelo: ModeloGuionizado
+    trazas: RegistroTrazas
+    app: FastAPI
+
+
+@pytest.fixture
+def instancia() -> Iterator[Instancia]:
+    config = cargar_config()
+    modelo = ModeloGuionizado(config)
+    trazas = RegistroTrazas()
+    app = crear_app(config, cliente_modelo=modelo, trazador=trazas)
+    with TestClient(app) as c:
+        yield Instancia(cliente=c, modelo=modelo, trazas=trazas, app=app)
 
 
 ValidarContrato = Callable[[httpx2.Response, str], None]

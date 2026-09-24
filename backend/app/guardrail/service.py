@@ -7,6 +7,7 @@ Los tres niveles se aplican en conjunto y gana el más restrictivo. El registro 
 
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -16,12 +17,20 @@ from pydantic import BaseModel, ConfigDict
 
 from app.commons.config import Config
 from app.commons.config.modelos import Normalizacion
+from app.guardrail import repository
 from app.guardrail.models import RESTRICCION, Coincidencia, PalabraProhibida
 from app.guardrail.normalizacion import raices, tokenizar
 
 LISTAS = Path(__file__).resolve().parent / "listas"
 
-__all__ = ["Coincidencia", "Guardrail", "PalabraProhibida", "PerfilLector"]
+__all__ = [
+    "Coincidencia",
+    "Guardrail",
+    "PalabraProhibida",
+    "PerfilLector",
+    "palabras_de_novela",
+    "registrar_palabras_novela",
+]
 
 
 @dataclass(frozen=True)
@@ -120,3 +129,14 @@ class Guardrail:
             )
             for (p, inicio, fin) in sorted(mejores.values(), key=lambda x: (x[1], x[2]))
         ]
+
+
+def registrar_palabras_novela(
+    con: sqlite3.Connection, *, novel_id: str, palabras: list[str]
+) -> None:
+    """Guarda el nivel `novela` que declara el comprador (RF-INTAKE-05)."""
+    repository.insertar_palabras(con, novel_id=novel_id, palabras=palabras, origen="brief")
+
+
+def palabras_de_novela(con: sqlite3.Connection, *, novel_id: str) -> list[PalabraProhibida]:
+    return repository.leer_palabras(con, novel_id=novel_id)

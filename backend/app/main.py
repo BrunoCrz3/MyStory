@@ -22,6 +22,7 @@ from app.commons.llm.llamar import LlamadorModelo
 from app.commons.llm.pool import PoolEnVuelo
 from app.commons.observabilidad import Trazador, TrazadorLangfuse
 from app.commons.recursos import Recursos
+from app.novel import router as novel
 
 TITULO = "storyMaker — API del backend v1"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -84,6 +85,7 @@ def crear_app(
         lifespan=lifespan,
     )
     app.include_router(salud.router)
+    app.include_router(novel.router)
     registrar_errores(app)
     return app
 
