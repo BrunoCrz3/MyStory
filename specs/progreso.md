@@ -25,6 +25,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | --- | --- | --- | --- | --- |
 | 2026-09-24 | P27 | Humo 1 (`proveedor: claude_code`): el planificador se truncó con `max_tokens` 4000 y la novela quedó `Detenida` (error-interno). La generación registró 0 USD porque la llamada fallida no devuelve `usage`; **estimación nominal ≤ 0,40 USD** (Opus 5.5, hasta 4 × 4000 tokens de salida con los reintentos del CLI) | 0,40 | 0,40 |
 | 2026-09-24 | P27 | Medición puntual en base temporal (planificador y dos redactor del capítulo 1, topes altos en memoria) para fijar I-02 | 0,41 | 0,81 |
+| 2026-09-24 | P27 | Humo 2: capítulos 1 y 2 aceptados en el cuarto intento por un falso positivo de `nombres_exactos`; parado a mano en el capítulo 3 para no gastar ni pasar el tope de latencia. Base apartada como `data/storymaker-demo-intentos-p27.db` | 1,55 | 2,36 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `—`, `novel_id` `—`.
 

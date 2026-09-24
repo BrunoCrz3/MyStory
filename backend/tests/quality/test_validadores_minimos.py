@@ -5,6 +5,7 @@ from __future__ import annotations
 from app.commons.config import cargar_config
 from app.commons.texto import contar_palabras
 from app.quality.service import EntradaHookCapitulo, hook_capitulo
+from app.quality.validadores.basicos import nombres_exactos
 from tests.arquitectura.comprobadores import RAIZ_REPO
 from tests.fixtures.borradores import prosa
 
@@ -61,3 +62,26 @@ def test_cada_validador_dice_si_cierra_el_paso() -> None:
     resultados = hook_capitulo(CONFIG, _entrada(prosa(1100)))
     assert {r.nombre for r in resultados} == {"longitud", "nombres_exactos"}
     assert all(r.cierra_el_paso for r in resultados)
+
+
+def test_una_palabra_comun_dentro_de_un_nombre_compuesto_no_es_un_nombre_mal_escrito() -> None:
+    # Humo real del P27: con «El perro de Marta», «La bocana» y «Varadero de Remedios» en la
+    # obra, cada «perro», «bocana» o «varadero» de la prosa suspendía el capítulo.
+    nombres = ["Marta", "El perro de Marta", "La bocana", "Bar El Ancla", "Varadero de Remedios"]
+    texto = (
+        "Marta subió al varadero con el perro. Desde la bocana se veía el ancla oxidada "
+        "del bar, y el varadero olía a brea."
+    )
+    r = nombres_exactos(texto, nombres)
+    assert r.pasa, r.detalle
+
+
+def test_los_nombres_de_una_palabra_y_las_grafias_distintas_siguen_fallando() -> None:
+    nombres = ["Marta", "Tomás", "Varadero de Remedios"]
+    for texto, culpable in (
+        ("Aquella tarde marta volvió al puerto.", "marta"),
+        ("Aquella tarde Tomas volvió al puerto.", "Tomas"),
+        ("Aquella tarde fue al Baradero de Remedios con prisa.", "Baradero"),
+    ):
+        r = nombres_exactos(texto, nombres)
+        assert not r.pasa and culpable in r.detalle, texto

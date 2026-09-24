@@ -1394,3 +1394,45 @@ corpus de inyección contra un doble del subproceso y contra el CLI real.
 - **Límites del plan**: la sesión tiene los límites de uso de la suscripción, no los de la API.
   Un límite alcanzado es un fallo de infraestructura con su contador y, agotado, detiene.
 - **Latencia**: cada llamada arranca un proceso; unos segundos por llamada que la API no tenía.
+
+---
+
+## TO-041 — Topes de salida, margen y latencia calibrados con la primera ejecución real
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** (autorizado por I-02 de `specs/progreso.md`) · **Afecta a:** `config/thresholds.yaml` § `modelo.max_tokens_por_rol`, § `contexto.capas`, § `coste.latencia_maxima_novela`
+
+### Problema
+
+El primer humo real se detuvo en la planificación: la salida del planificador llegó a su
+`max_tokens` de 4.000, y con thinking adaptativo el razonamiento cuenta dentro. Los topes
+eran provisionales y no salían de ninguna medición.
+
+### Criterio
+
+Medir antes de fijar. Una ejecución puntual en base temporal, con topes altos en memoria,
+dio: planificador 7.725 tokens de salida (1.882 de razonamiento); redactor 4.911 y 4.222;
+estimación de entrada a un 3–5 % por encima del real sin contar lo propio del CLI; 55–75 s por
+llamada.
+
+### Elección
+
+| Clave | Antes | Ahora | Por qué |
+| --- | --- | --- | --- |
+| `max_tokens_por_rol.planificador` | 4.000 | 12.000 | ≈1,5 × lo medido |
+| `max_tokens_por_rol.redactor`, `editor` | 6.000 | 9.000 | ≈1,8 × lo medido; el editor reescribe el capítulo entero |
+| `max_tokens_por_rol.extractor` | 3.000 | 6.000 | Sin medir; se dobla por prudencia |
+| `max_tokens_por_rol.judge` | 3.000 | 3.000 | Se mide en el P31, cuando exista |
+| `contexto.capas.margen` | 6.000 | 12.000 | La invariante de arranque exige margen ≥ `max_tokens` de cada rol |
+| `contexto.capas.estado` | 18.000 | 14.000 | Cede al margen: el snapshot de diez capítulos no se acerca a esa cifra |
+| `contexto.capas.anticontexto` | 10.000 | 8.000 | Cede al margen: n-gramas y palabras vetadas de tres capítulos |
+| `coste.latencia_maxima_novela` | 1.800 | 3.600 | Con 55–75 s por llamada, treinta minutos detendrían una novela sana |
+
+**Recuperado no se toca** (30.000): TO-015 descarta `sqlite-vec` porque la novela entera
+cabe en esa capa, y quitarle presupuesto rompería la premisa.
+
+### Consecuencias
+
+La suma sigue en `contexto.total` y el arranque sigue comprobando el margen rol por rol. El
+coste nominal por novela sube con la reserva de salida pero no con lo gastado: `max_tokens` es
+un tope, no un consumo. La latencia máxima deja de servir para «enseñarla en directo»; si la
+demo lo necesita, el camino es bajar la latencia por llamada, no el tope.
