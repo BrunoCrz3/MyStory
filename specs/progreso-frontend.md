@@ -275,3 +275,9 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
   Lanza **Edge** (`--browser msedge`), no Chrome, porque la máquina de desarrollo no tiene
   Chrome instalado (decidido por el desarrollador frente a instalar Chrome o el Chromium de
   Playwright).
+- **`.playwright-mcp/` en el `.gitignore` raíz** (decidido por el desarrollador). Es un fichero
+  compartido con el backend, y hay que revisarlo al fusionar. Es el directorio donde el
+  Playwright MCP del agente de desarrollo deja capturas y logs de consola. Es material de
+  trabajo, no entregable: la evidencia elegida se versiona aparte, en
+  `frontend/docs/capturas-browser-mcp/`. Si el backend usa el mismo servidor MCP, le sirve
+  la misma regla.

@@ -33,3 +33,5 @@ formal/tla/states/
 # Salidas locales que no son entregable
 .DS_Store
 *.log
+# Capturas y logs de trabajo del browser MCP; las de evidencia van en frontend/docs/
+.playwright-mcp/
