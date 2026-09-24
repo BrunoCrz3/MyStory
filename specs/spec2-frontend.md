@@ -1,6 +1,6 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: Bruno Cruz
 fecha: 2026-09-24
 contrato: specs/openapi.yaml (aprobado con specs/spec1.md el 2026-09-24)
 ---
@@ -11,8 +11,9 @@ Mini-spec del frontend de la demo de storyMaker. Aquí no se redefine nada: el v
 es el de `docs/definitions.md`, y la forma de cada dato es la de `specs/openapi.yaml`, que
 **no se modifica desde esta spec**.
 
-> **Estado: borrador.** No hay plan (`specs/plan2-frontend.md`) hasta que el desarrollador
-> la apruebe, ni código hasta que el plan esté aprobado (`CLAUDE.md` § Ciclo de cambio).
+> **Estado: aprobada** el 2026-09-24 por el desarrollador, con las respuestas de § 7. No
+> hay código hasta que `specs/plan2-frontend.md` esté aprobado (`CLAUDE.md` § Ciclo de
+> cambio).
 
 ---
 
@@ -153,13 +154,13 @@ Todos se comprueban con `npm run test` y `npm run typecheck` en `frontend/`, sin
 | # | Dado / Cuando / Entonces |
 | --- | --- |
 | CA-01 | *Dado* `specs/openapi.yaml`, *cuando* se regenera el cliente, *entonces* el fichero generado coincide byte a byte con el commiteado |
-| CA-02 | *Dado* un `ResultadoValidacionBrief` con un `DatoFaltante` en `destinatario.nombre`, *cuando* se valida, *entonces* su `pregunta_reintento` aparece junto a ese campo y «Crear y generar» sigue deshabilitado |
+| CA-02 | *Dado* un `ResultadoValidacionBrief` con un `DatoFaltante` en `destinatario.nombre`, *cuando* se valida un brief sin nombre, *entonces* su `pregunta_reintento` aparece junto a ese campo y «Crear y generar» sigue deshabilitado. *Dado* un `422` sin `datos_faltantes`, *entonces* su `detail` aparece en la cabecera del formulario |
 | CA-03 | *Dado* un texto libre con un fragmento sospechoso, *cuando* se valida, *entonces* aparece marcado como descartado |
 | CA-04 | *Dado* un brief válido (el ejemplo del contrato), *cuando* se crea y genera, *entonces* se llaman `crearNovela` y `lanzarGeneracion` en ese orden y se navega al progreso |
 | CA-05 | *Dado* el ejemplo `enCurso`, *cuando* se abre el progreso, *entonces* se muestra 3 de 10 y se vuelve a pedir; *dado* el ejemplo `detenida`, *entonces* se muestra `limite-de-intentos-agotado` y no se vuelve a pedir |
 | CA-06 | *Dado* una versión con diez capítulos, *cuando* se abre la lectura, *entonces* el índice tiene diez entradas y cada una enlaza a su `#capitulo-N` |
 | CA-07 | *Dado* una ficha con un personaje en los capítulos 2 y 7, *entonces* hay enlaces a `#capitulo-2` y `#capitulo-7` |
-| CA-08 | *Dado* una portada, *entonces* la dedicatoria y su firma aparecen en `data-testid="dedicatoria"` |
+| CA-08 | *Dado* una portada, *entonces* la dedicatoria y su firma aparecen en la portada, y —tras incorporar el contrato de lectura— en el `data-testid` que fije `spec1.md` |
 | CA-09 | *Dado* el ejemplo `porFragmento`, *cuando* el lector selecciona texto del capítulo 3 y pide el cambio, *entonces* se envía ese cuerpo, se muestran el hecho candidato y los capítulos afectados, y **no** se llama a `confirmarSolicitudCambio` hasta pulsar «Confirmar» |
 | CA-10 | *Dado* el ejemplo `porHecho`, *cuando* el lector elige un hecho del capítulo 3, *entonces* se envía ese cuerpo y se exige la misma confirmación |
 | CA-11 | *Dado* un `409 generacion-en-curso` (el ejemplo del contrato), *entonces* se muestra con enlace a su `generacion_id` |
@@ -190,7 +191,8 @@ cliente, que vive en `tests/`.
 
 ## 7. Preguntas de grill
 
-Tres, con la opción que recomiendo en primer lugar. Sin respuesta, la spec no pasa a plan.
+Tres, con la opción que recomendaba en primer lugar y **la respuesta del desarrollador**
+debajo de cada una.
 
 **G1 · El contrato no deja validar un brief al que le falta un campo obligatorio.**
 RF-INTAKE-01 dice que un brief sin `destinatario.nombre` devuelve `200` con un
@@ -210,6 +212,12 @@ desde aquí.
 - (c) El frontend comprueba los obligatorios antes de enviar. Es lógica de dominio en el
   frontend y duplica lo que decide el backend: la descarto.
 
+> **Respuesta: (b), con (a) como red de seguridad.** La sesión del backend separa en el
+> contrato un brief parcial para `validarBrief` —que responde `200` con `datos_faltantes`—
+> del `BriefNovela` completo para `crearNovela`. Cuando avise de su commit se incorpora con
+> `git merge Contexto-semilla-v2` y se regenera el cliente. El frontend sigue pintando
+> `datos_faltantes` venga en la respuesta que venga y, si un `422` no los trae, su `detail`.
+
 **G2 · ¿Tres páginas o dos?** `CLAUDE.md` § Persistencia, backend y frontend dice «Dos
 páginas: `entrevista` y `lectura`», y tú pides además el progreso. El progreso se llega a
 abrir desde dos sitios, la entrevista y la confirmación de un cambio en la lectura.
@@ -219,9 +227,20 @@ abrir desde dos sitios, la entrevista y la confirmación de un cambio en la lect
 - (b) Dos páginas, y el progreso como `features/seguir-generacion` que montan las dos. Es
   más fiel al texto, pero crea una capa solo para no crear una página.
 
+> **Respuesta: (a).** Tres páginas. `CLAUDE.md` no se toca desde aquí: el cambio queda en
+> «Para integrar» de `specs/progreso-frontend.md`.
+
 **G3 · ¿Apruebas las dependencias de § 6?** La regla 6 dice que el stack está cerrado, y
 fuera de las fijadas añado `react-router-dom`, `openapi-fetch` y las de desarrollo.
 
 - **(a) Recomendada.** Sí, tal como están.
 - (b) Sin `react-router-dom`: navegación a mano por `location.hash`. Una dependencia menos,
   pero rutas con parámetros escritas y probadas a mano.
+
+> **Respuesta: (a).** Dependencias aprobadas tal como están en § 6, y anotadas en «Para
+> integrar».
+
+**Contrato de lectura para Playwright.** El backend fija en `specs/spec1.md` la URL de
+lectura, los `data-testid` y la hoja de impresión. **La lista de § 4 es provisional**: al
+incorporar ese commit se ajusta a la de `spec1.md` si difiere, y hasta entonces ninguna
+prueba depende de un `data-testid`.
