@@ -6,6 +6,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -37,35 +38,41 @@ def entorno(db: Path, **extra: str) -> dict[str, str]:
 def backend(
     env: dict[str, str], *, modulo: list[str] | None = None, espera_s: float = 30.0
 ) -> Iterator[tuple[str, subprocess.Popen[str]]]:
-    """Lanza el backend y espera a que `/salud` responda. Lo mata al salir."""
+    """Lanza el backend y espera a que `/salud` responda. Lo mata al salir.
+
+    La salida del proceso va a un fichero temporal y no a una tubería: una tubería que nadie
+    lee se llena con los logs de acceso de un sondeo y bloquea al servidor al escribir.
+    """
     puerto = puerto_libre()
     orden = [sys.executable, *(modulo or ["-m", "app"]), "--port", str(puerto)]
-    proceso = subprocess.Popen(
-        orden,
-        cwd=RAIZ_BACKEND,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        encoding="utf-8",
-    )
-    base = f"http://127.0.0.1:{puerto}"
-    try:
-        limite = time.monotonic() + espera_s
-        while True:
-            if proceso.poll() is not None:
-                salida = proceso.stdout.read() if proceso.stdout else ""
-                raise RuntimeError(f"el backend terminó al arrancar:\n{salida}")
-            try:
-                if httpx2.get(f"{base}/salud", timeout=1).status_code == 200:
-                    break
-            except httpx2.HTTPError:
-                pass
-            if time.monotonic() > limite:
-                raise TimeoutError("el backend no respondió a tiempo")
-            time.sleep(0.2)
-        yield base, proceso
-    finally:
-        if proceso.poll() is None:
-            proceso.kill()
-            proceso.wait(timeout=10)
+    with tempfile.TemporaryFile() as registro:
+        proceso = subprocess.Popen(
+            orden,
+            cwd=RAIZ_BACKEND,
+            env=env,
+            stdout=registro,
+            stderr=subprocess.STDOUT,
+            text=True,
+            encoding="utf-8",
+        )
+        base = f"http://127.0.0.1:{puerto}"
+        try:
+            limite = time.monotonic() + espera_s
+            while True:
+                if proceso.poll() is not None:
+                    registro.seek(0)
+                    salida = registro.read().decode("utf-8", errors="replace")
+                    raise RuntimeError(f"el backend terminó al arrancar:\n{salida}")
+                try:
+                    if httpx2.get(f"{base}/salud", timeout=1).status_code == 200:
+                        break
+                except httpx2.HTTPError:
+                    pass
+                if time.monotonic() > limite:
+                    raise TimeoutError("el backend no respondió a tiempo")
+                time.sleep(0.2)
+            yield base, proceso
+        finally:
+            if proceso.poll() is None:
+                proceso.kill()
+                proceso.wait(timeout=10)

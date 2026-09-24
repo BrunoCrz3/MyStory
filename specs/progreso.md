@@ -10,7 +10,7 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
 | Paso actual | P27 · Cierre de F1 |
-| Estado del paso | `no-iniciado` |
+| Estado del paso | `en-curso`: e2e de F1 hecho (commit propio); falta I-04, TO-039 (I-06), humo real y bloque § 4.5 |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
 | Último commit de paso | P26 |
