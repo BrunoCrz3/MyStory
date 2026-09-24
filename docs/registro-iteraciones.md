@@ -918,3 +918,36 @@ una prueba real de contención: con la orden de producción, el CLI de verdad no
 canario, no escribió ni ejecutó nada aunque el texto se lo pedía. Dos datos que solo salieron
 al probar en real: el CLI añade unos 2.600 tokens de entrada propios a cada llamada, y respeta
 `CLAUDE_CODE_MAX_OUTPUT_TOKENS` cortando la respuesta y diciéndolo en el resultado.
+
+---
+
+## RI-014 — F1 del plan 1: una novela real de principio a fin
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/`, `config/thresholds.yaml`,
+`ejemplos/brief-ejemplo.json`, `docs/trade-offs.md` (TO-039, TO-041), `docs/verification.md`
+(O-02), `docs/architecture.md`
+
+### Causa
+
+Segunda fase del plan 1: generar una novela de diez capítulos de extremo a extremo, con
+checkpoint, reanudación, gate mínimo y publicación inmutable, y demostrarlo con el modelo real.
+
+### Qué cambió
+
+Los pasos P11 a P27: guardrail, encargo y obra, máquina de estados como dato, prompts
+versionados, canon, policy engine con audit log, ensamblado por capas, planificador, redactor
+con sus hooks, extractor y aceptación, cola y worker, reintentos y topes, reanudación, gate y
+publicación. El cierre añade el e2e de F1 con el backend como proceso real —incluida una
+reanudación tras matar el proceso en el capítulo 5—, el humo real, el barrido de secretos y el
+grabador de casetes. Las decisiones del agente quedan en TO-039 y TO-041; el proveedor
+`claude_code`, en TO-040 y RI-013.
+
+### Efecto
+
+**288 pruebas en verde, cobertura del 96 %.** El humo real publicó la primera novela
+(`data/storymaker-demo.db`, que reutilizan F4 y F5) en 27 minutos y 5,06 USD nominales.
+Llegar a él costó tres intentos, y cada uno enseñó algo que la suite con dobles no podía ver:
+el planificador necesitaba casi el doble de salida de la reservada; `nombres_exactos`
+suspendía capítulos sanos porque los nombres de una novela son palabras comunes («Boya»,
+«Varadero»); y la etiqueta de versión de prompt no cabía en Langfuse. Los casetes HTTP siguen
+pendientes: solo se graban con `proveedor: api`, y no hay clave.

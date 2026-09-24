@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P27 · Cierre de F1 |
-| Estado del paso | `en-curso`: e2e de F1 e I-04 hechos (commits propios); falta TO-039 (I-06), humo real y bloque § 4.5 |
+| Paso actual | P28 · Registro de validadores e informe de crítica |
+| Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P26 |
+| Último commit de paso | P27 |
 
 ## Coste real
 
@@ -26,8 +26,9 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P27 | Humo 1 (`proveedor: claude_code`): el planificador se truncó con `max_tokens` 4000 y la novela quedó `Detenida` (error-interno). La generación registró 0 USD porque la llamada fallida no devuelve `usage`; **estimación nominal ≤ 0,40 USD** (Opus 5.5, hasta 4 × 4000 tokens de salida con los reintentos del CLI) | 0,40 | 0,40 |
 | 2026-09-24 | P27 | Medición puntual en base temporal (planificador y dos redactor del capítulo 1, topes altos en memoria) para fijar I-02 | 0,41 | 0,81 |
 | 2026-09-24 | P27 | Humo 2: capítulos 1 y 2 aceptados en el cuarto intento por un falso positivo de `nombres_exactos`; parado a mano en el capítulo 3 para no gastar ni pasar el tope de latencia. Base apartada como `data/storymaker-demo-intentos-p27.db` | 1,55 | 2,36 |
+| 2026-09-24 | P27 | Humo 3, **verde**: novela publicada como versión 1, diez capítulos, 25 llamadas, 1.647 s (`coste_usd` de la generación, nominal) | 5,06 | 7,42 |
 
-**Novela de humo** (se reutiliza en F4 y F5): base `—`, `novel_id` `—`.
+**Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
 ## Hecho
 
@@ -59,10 +60,12 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P24** — Reanudación: el worker devuelve a `pendiente` al arrancar los trabajos `en-curso` (UPDATE … RETURNING, sin copia); `Orquestador.estado_inicial` normaliza a `Pendiente` los capítulos en Escribiendo, Validando o Reescribiendo sin tocar sus intentos; un corte entre guardar y fijar el esquema no replanifica; `CerrarEscritura` solo desde Escribiendo; propiedad con hypothesis (uno o dos cortes en redactor o extractor): aceptados en prefijo, mismo `capitulo_id`, un snapshot por capítulo, un solo trabajo; 237 pruebas
 - **P25** — Migración 0009_version (version_novela, version_capitulo, triggers de inmutabilidad también sobre título, texto y palabras de un capítulo publicado); versioning/ con gate F1 (`estructura_edicion`, `elementos_obligatorios`, score por validador), publicar con hash SHA-256 del contenido canónico y `modificado` por fila distinta (D-05), y las cuatro rutas de lectura; puerto `Publicador` en process/service.py inyectado desde el lifespan; el orquestador publica en una transacción (Publicar + Conservar) y deja `version_resultante`; gate en rojo → DevolverAlEditor + Detener; el guion del doble declara los elementos del brief; 245 pruebas
 - **P26** — `ejemplos/brief-ejemplo.json` (el `example` de `BriefNovela`, con prueba de igualdad); `tests/humo/test_novela_real.py` marcado `real` sobre `STORYMAKER_DB_PATH` que se salta con motivo si falta la credencial; `tests/herramientas/casetes.py` con `TransporteGrabador` (lista blanca de cabeceras) y `reproductor`; `tests/arquitectura/test_sin_secretos.py` sobre lo versionado y los casetes, con meta-pruebas; 254 pruebas
+- **P27** — Cierre de F1: e2e con proceso real (novela por HTTP y reanudación tras matar el proceso en el capítulo 5; el arnés escribe la salida del hijo en fichero para no bloquear); proveedor `claude_code` contenido (I-04, TO-040); etiqueta de prompt al límite de Langfuse; `nombres_exactos` sin falsos positivos por palabras comunes (A-60); topes calibrados en real (A-58, A-59, A-61); TO-039 y TO-041; humo real verde; 288 pruebas, cobertura 96 %
 
 ## Pendiente
 
-- Siguiente: **P27 · Cierre de F1** (con I-04 antes del humo), y después el resto hasta el P49 en orden.
+- Siguiente: **P28 · Registro de validadores e informe de crítica**, y después el resto hasta el P49 en orden.
+- Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -147,6 +150,7 @@ registrada.
 | A-58 | P27 | `max_tokens_por_rol` medido (I-02): planificador 12000, redactor y editor 9000, extractor 6000; judge sin tocar hasta medirlo (P31). `contexto.capas.margen` 6000 → 12000, cediendo estado 18000 → 14000 y anticontexto 10000 → 8000; recuperado intacto | El planificador sacó 7.725 tokens y se truncaba con 4.000; el redactor 4.911. Recuperado no se toca porque TO-015 descansa en que la novela entera cabe en él | TO-041 |
 | A-59 | P27 | `coste.latencia_maxima_novela` 1800 → 3600 | 55–75 s por llamada medidos con `claude_code`; treinta minutos detendrían una novela sana | TO-041 |
 | A-60 | P27 | `nombres_exactos` no marca una diferencia solo de mayúsculas, y solo toma como forma de nombre las palabras en mayúscula del nombre declarado | El humo real suspendía capítulos por «boya» (el perro se llama Boya) y «varadero» («Varadero de Remedios»); un modelo no escribe un nombre propio en minúscula, y lo que sí hace —otra grafía, un casi-nombre— se sigue cazando. Residuo declarado en O-02 | TO-041 |
+| A-61 | P27 | Segunda calibración con la novela completa: redactor y editor 16000, extractor 8000, margen 16000 (estado 12000, anticontexto 6000), `margen_estimacion` 1,35 | Redactor hasta 8.149 y dos topes de 9.000 alcanzados (el CLI reintenta dentro del turno); extractor 4.955; la estimación quedaba un 5–7 % por debajo en prompts de ~20.000 | TO-041 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -156,11 +160,11 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 
 | # | Instrucción | Cuándo | Estado |
 | --- | --- | --- | --- |
-| I-01 | **Test de humo con modelo real solo si la credencial está en el entorno.** Si lo está: apuntar aquí la ruta de la base de la novela, su coste y la URL de la traza en Langfuse. Si no: apuntarlo y **seguir con las fases siguientes**, porque la suite no depende de él. Esta instrucción sustituye a la condición de parada 1 del plan | Cierre de F1 (P26–P27) | pendiente. En el shell de esta sesión `ANTHROPIC_API_KEY` **no** estaba; las variables `LANGFUSE_*` sí |
-| I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | pendiente |
+| I-01 | **Test de humo con modelo real solo si la credencial está en el entorno.** Si lo está: apuntar aquí la ruta de la base de la novela, su coste y la URL de la traza en Langfuse. Si no: apuntarlo y **seguir con las fases siguientes**, porque la suite no depende de él. Esta instrucción sustituye a la condición de parada 1 del plan | Cierre de F1 (P26–P27) | **aplicada** con `proveedor: claude_code` (I-04): base, coste y traza en § Coste real y «Novela de humo» |
+| I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | **aplicada**: tokens por llamada en `data/humo-20260924T163649.json`; ajustes A-58 y A-61 |
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
-| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 subida; subido también hasta el P25 por el apagado del 2026-09-24; al cerrar F1 se vuelve a subir |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 y **F1 subidas** (F1 al cerrar el P27) |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
@@ -211,14 +215,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P26 cerrado, siguiente P27**. Rama `backend-v1`,
-suite en verde (254 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P27 cerrado (F1 completa y subida), siguiente P28**. Rama `backend-v1`,
+suite en verde (288 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 254 pruebas en verde al cerrar P26
+uv run pytest -q          # 288 pruebas en verde al cerrar P27
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
@@ -269,3 +273,11 @@ del paso. Mensaje: `PNN: Verbo en imperativo…` más la línea `Co-Authored-By`
 `PYTHONUTF8=1`; las lambdas dentro de bucles disparan B023 (usar `functools.partial`);
 hypothesis va sin `deadline` (perfil en `conftest.py`); un campo del contrato opcional y no
 nulable se declara con `commons.esquemas.opcional()`, que lo omite si es `None`.
+Del P27: el humo se lanza desde `backend/` con la base en **ruta absoluta** (una relativa se
+resuelve desde el directorio de trabajo) — `uv run --env-file ../.env -- env
+STORYMAKER_DB_PATH="$(cd .. && pwd -W)/data/storymaker-demo.db" PYTHONUTF8=1 pytest -m real
+tests/humo/test_novela_real.py -v -s`, en segundo plano porque tarda ~30 min; un proceso hijo
+con `stdout=PIPE` que nadie lee se bloquea al llenarse la tubería; la API de lectura de trazas
+y scores de Langfuse devuelve 410 en esta organización (solo `v2/observations`), así que el
+diagnóstico de un validador se hace en local; si se mata un humo, su trabajo queda `en-curso`
+en la base y el siguiente arranque lo reanuda antes que cualquier novela nueva.

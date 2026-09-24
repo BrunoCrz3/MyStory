@@ -653,7 +653,7 @@ activa: el ensamblador, el pool, el llamador y el trazador son los mismos.
 | Credencial | `ANTHROPIC_API_KEY` | La sesión de Claude Code iniciada en la máquina |
 | Recuento previo | `messages.count_tokens`, exacto | **Estimación** por caracteres con margen (`modelo.claude_code`), por lo alto |
 | Recuento posterior | `usage` de la respuesta | `usage` del JSON del CLI, que suma unos 2.600 tokens de entrada propios del CLI |
-| Tope de salida | `max_tokens` de la petición | `CLAUDE_CODE_MAX_OUTPUT_TOKENS` en el entorno del subproceso |
+| Tope de salida | `max_tokens` de la petición | `CLAUDE_CODE_MAX_OUTPUT_TOKENS` en el entorno del subproceso. **No es duro**: al alcanzarlo, el CLI a veces reintenta dentro de su turno y devuelve el texto completo con el uso sumado (TO-041) |
 | Salida estructurada | `output_config.format` con JSON Schema | `--json-schema`, **sin modo estricto**: la forma la garantiza la validación Pydantic posterior, y un fallo de schema es un intento fallido (`schema_valido`) |
 | Coste en Langfuse | Real, con los precios de `coste.precio_usd_por_millon` | **Nominal**: el `total_cost_usd` que calcula el CLI a precio de lista; la sesión no se factura por llamada |
 

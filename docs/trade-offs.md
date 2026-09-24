@@ -1427,6 +1427,26 @@ llamada.
 | `contexto.capas.anticontexto` | 10.000 | 8.000 | Cede al margen: n-gramas y palabras vetadas de tres capítulos |
 | `coste.latencia_maxima_novela` | 1.800 | 3.600 | Con 55–75 s por llamada, treinta minutos detendrían una novela sana |
 
+**Segunda calibración (A-61), con la novela completa del humo verde** (25 llamadas, 1.647 s,
+5,06 USD nominales): el redactor llegó a 8.149 tokens de salida y dos veces alcanzó el tope de
+9.000; el extractor, 4.955; y la estimación de entrada quedó un 5–7 % por debajo del real en
+los prompts de unos 20.000 tokens.
+
+| Clave | Primera calibración | Ahora |
+| --- | --- | --- |
+| `max_tokens_por_rol.redactor`, `editor` | 9.000 | 16.000 |
+| `max_tokens_por_rol.extractor` | 6.000 | 8.000 |
+| `contexto.capas.margen` | 12.000 | 16.000 |
+| `contexto.capas.estado` | 14.000 | 12.000 |
+| `contexto.capas.anticontexto` | 8.000 | 6.000 |
+| `modelo.claude_code.margen_estimacion` | 1,2 | 1,35 |
+
+**Con `claude_code` el tope de salida no es duro.** Cuando la respuesta llega a
+`CLAUDE_CODE_MAX_OUTPUT_TOKENS`, el CLI a veces reintenta dentro de su turno y devuelve el texto
+completo, con el `usage` de los dos intentos sumado: no hay `SalidaTruncada` y el capítulo pasa
+los validadores como cualquier otro. El coste y la latencia de ese capítulo se doblan, y por
+eso el tope se sube en vez de dejar que el CLI lo resuelva.
+
 **Recuperado no se toca** (30.000): TO-015 descarta `sqlite-vec` porque la novela entera
 cabe en esa capa, y quitarle presupuesto rompería la premisa.
 

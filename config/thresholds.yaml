@@ -62,12 +62,12 @@ contexto:
   capas:
     invariante: 10000      # Premisa, brief de novela, dedicatoria, guía de estilo, voz narrativa
     estructural: 4000      # Brief de capítulo y restricción de destino
-    estado: 14000          # Snapshot al cierre del capítulo N-1, nunca texto bruto · A-58: cede 4.000 al margen
+    estado: 12000          # Snapshot al cierre del capítulo N-1, nunca texto bruto · A-58 y A-61: cede 6.000 al margen
     local: 14000           # Últimos capítulos literales
     recuperado: 30000      # Filtrado por entidades del brief de capítulo, luego similitud
     estilo: 8000           # Muestras de voz de los personajes presentes
-    anticontexto: 8000     # Repeticiones, clichés vetados y palabras prohibidas de la novela · A-58: cede 2.000 al margen
-    margen: 12000          # Reserva para la respuesta y el desbordamiento · A-58: cubre el max_tokens del planificador
+    anticontexto: 6000     # Repeticiones, clichés vetados y palabras prohibidas de la novela · A-58 y A-61: cede 4.000 al margen
+    margen: 16000          # Reserva para la respuesta y el desbordamiento · A-61: cubre el max_tokens del redactor y del editor
 
   # Orden en que se comprime cuando el ensamblado no cabe. Se para en cuanto quepa.
   # `invariante` y la restricción de destino (dentro de `estructural`) no aparecen
@@ -436,15 +436,20 @@ coste:
 # claude_code, effort de models.yaml). El planificador sacó 7.725 tokens de salida (1.882 de
 # razonamiento) y se truncaba con 4.000; el redactor, 4.911 y 4.222. Cada tope medido queda
 # en torno a 1,5–1,8 veces lo observado. El judge no se ha medido todavía (P31).
+#
+# A-61 (P27, I-02): la novela completa del humo verde (25 llamadas) llevó al redactor a
+# 8.149 tokens de salida con 4.472 de razonamiento, y dos veces por encima de 9.000: el CLI
+# llegó al tope, reintentó dentro de su turno y devolvió el texto completo (16.200 y 16.721
+# sumando los dos intentos). El extractor llegó a 4.955. Se suben a unas dos veces lo medido.
 
 modelo:
   max_tokens_por_rol:
     entrevistador: 2000   # [provisional] turnos de conversación y el brief estructurado; nunca prosa larga
-    planificador: 12000   # [provisional] diez briefs de capítulo con su restricción de destino, de una vez · medido 7.725. Igual al margen
-    redactor: 9000        # [provisional] 2.100 de capítulo más razonamiento · medido 4.911
-    editor: 9000          # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
+    planificador: 12000   # [provisional] diez briefs de capítulo con su restricción de destino, de una vez · medido 7.725 y 7.397
+    redactor: 16000       # [provisional] 2.100 de capítulo más razonamiento · medido hasta 8.149 y dos topes de 9.000 alcanzados. Igual al margen
+    editor: 16000         # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
     judge: 3000           # [provisional] seis puntuaciones con su justificación, sin prosa
-    extractor: 6000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto · sin medir: se dobla por prudencia tras el truncado del planificador
+    extractor: 8000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto · medido hasta 4.955
   # Proveedor `claude_code` (I-04, TO-040): el CLI no tiene `count_tokens`, así que el
   # recuento previo es una ESTIMACIÓN por caracteres con margen, hecha antes de llamar
   # igual que con la API. Por lo alto a propósito: una estimación corta dejaría pasar un
@@ -452,7 +457,7 @@ modelo:
   # unos 2.600 tokens de entrada propios del CLI que no son nuestro prompt.
   claude_code:
     caracteres_por_token: 3.0   # [provisional — calibrar tras la demo] español con el tokenizador actual ronda 3,5–4
-    margen_estimacion: 1.2      # [provisional — calibrar tras la demo] se multiplica sobre la estimación
+    margen_estimacion: 1.35     # [provisional — calibrar tras la demo] A-61: con 1,2 los prompts de ~20.000 tokens quedaban un 5–7 % por debajo del real
 
 # ---------------------------------------------------------------------------
 # Verificación formal
