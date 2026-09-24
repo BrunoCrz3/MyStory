@@ -109,7 +109,7 @@ son `shared/`, ningún código se usa hoy desde dos páginas (skill FSD § 2).
 | F01 | Andamio | `tests/app/arranque.test.tsx` | — | hecho |
 | F02 | Cliente generado desde 1.1.0 | `tests/shared/api/contrato.test.ts` | CA-01 | hecho |
 | F03 | Apoyo de pruebas | `tests/apoyo/apoyo.test.ts` | — | hecho |
-| F04 | Guardas de arquitectura | `tests/arquitectura.test.ts` | CA-14 | pendiente |
+| F04 | Guardas de arquitectura | `tests/arquitectura.test.ts` | CA-14 | hecho |
 | F05 | Rutas y problema | `tests/app/rutas.test.tsx`, `tests/shared/api/problema.test.ts` | — | pendiente |
 | F06 | Progreso | `tests/pages/progreso/progreso.test.tsx` | CA-05 | pendiente |
 | F07 | Lectura: raíz, portada, índice, capítulos | `tests/pages/lectura/lectura.test.tsx` | CA-06, CA-08 | pendiente |
