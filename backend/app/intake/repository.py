@@ -6,7 +6,7 @@ import json
 import sqlite3
 import uuid
 
-from app.intake.schemas import BriefNovela
+from app.intake.schemas import BriefNovela, FragmentoSospechoso
 
 SCHEMA_VERSION = "openapi-1.1.0#BriefNovela"
 
@@ -79,3 +79,20 @@ def leer_elementos(con: sqlite3.Connection, *, novel_id: str) -> list[tuple[str,
         (novel_id,),
     ).fetchall()
     return [(f["id"], f["enunciado"], bool(f["obligatorio"])) for f in filas]
+
+
+def insertar_fragmentos(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    fragmentos: list[FragmentoSospechoso],
+    ahora: str,
+) -> None:
+    con.executemany(
+        "INSERT INTO fragmento_sospechoso (id, novel_id, orden, fragmento, motivo, creado_en)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        [
+            (str(uuid.uuid4()), novel_id, orden, f.fragmento, f.motivo, ahora)
+            for orden, f in enumerate(fragmentos)
+        ],
+    )

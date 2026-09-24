@@ -41,10 +41,12 @@ def corregido(palabras: int = 1200, **kw: str) -> dict[str, Any]:
 
 
 def guion_revision(modelo: ModeloGuionizado) -> None:
-    """Judge y editor por defecto: el judge aprueba los seis criterios y el editor devuelve un
-    borrador válido. Una prueba que necesite otra cosa la encola antes."""
+    """Judge, editor y entrevistador por defecto: el judge aprueba los seis criterios, el
+    editor devuelve un borrador válido y el entrevistador no extrae ningún hecho. Una prueba
+    que necesite otra cosa la encola antes."""
     modelo.por_defecto.setdefault("judge", lambda p: salida_judge())
     modelo.por_defecto.setdefault("editor", lambda p: corregido())
+    modelo.por_defecto.setdefault("entrevistador", lambda p: {"hechos": []})
 
 
 def guion_completo(modelo: ModeloGuionizado, brief: dict[str, Any] | None = None) -> None:

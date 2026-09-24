@@ -13,11 +13,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.intake.validacion import OBLIGATORIOS, PREGUNTAS
-from tests.conftest import ValidarContrato
+from tests.conftest import Instancia, ValidarContrato
 from tests.contrato.normalizar import cargar_contrato
 from tests.fixtures.briefs import brief_ejemplo
 
 TABLAS = ("obra", "brief_novela", "destinatario", "comprador", "audit_log")
+
+
+@pytest.fixture
+def cliente(instancia: Instancia) -> TestClient:
+    """La app con los dobles: el brief de ejemplo lleva texto libre, y validarlo llama al
+    `interviewer`, que en la suite nunca es el modelo real."""
+    return instancia.cliente
 
 
 def _validar(c: TestClient, cuerpo: dict[str, Any], validar: ValidarContrato) -> dict[str, Any]:

@@ -1,0 +1,17 @@
+# Patrones de Fragmento sospechoso (D-20): lo que en el texto libre parece una instrucción
+# dirigida al sistema. Uno por línea: expresión regular, tabulador, motivo. Se comparan sin
+# distinguir mayúsculas contra cada frase o línea del texto libre.
+#
+# Residuo declarado: una inyección parafraseada los esquiva. La contención de verdad es que
+# el texto libre entra siempre como datos (RNF-09); esto retira lo evidente y lo deja
+# registrado como evidencia.
+\b(ignora|ignorad|olvida|olvidad|omite|descarta)\b.{0,40}\b(instrucciones|indicaciones|[oó]rdenes|reglas|todo lo anterior)\b	Pide al sistema que desobedezca sus instrucciones
+^\s*(system|sistema|assistant|asistente|human|humano|user|usuario)\s*:	Se presenta como un turno o un mensaje de sistema
+</?\s*(texto_libre_no_confiable|instrucciones|system|capa|tarea)\b	Intenta abrir o cerrar una etiqueta del ensamblado
+\b(ahora eres|act[uú]a como|finge que eres|a partir de ahora eres)\b	Intenta cambiar el papel del modelo
+\b(herramienta|tool|bash|powershell|webfetch|websearch)\b	Nombra herramientas del agente
+\b(ejecuta|ejecútalo|ejecutar|lanza el comando|rm -rf|sudo)\b	Pide ejecutar algo
+(^|\s)--[a-z][a-z-]+	Parece una bandera de línea de órdenes
+https?://	Contiene una dirección web
+^\s*/[a-z]+\b	Parece un comando de barra
+\b(lee|leer|abre|copia) (el )?(fichero|archivo)\b|\.env\b|file_path	Pide leer ficheros

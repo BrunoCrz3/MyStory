@@ -109,3 +109,25 @@ def test_nadie_llama_al_modelo_sin_pasar_por_el_llamador() -> None:
 def test_meta_llamada_directa_al_cliente(tmp_path: Path) -> None:
     _escribir(tmp_path, "process/service.py", "async def f(c, p):\n    await c.generar(p, 1)\n")
     assert c.violaciones_camino_al_modelo(tmp_path)
+
+
+def test_ningun_camino_ejecuta_la_salida_del_modelo() -> None:
+    """RNF-09: nada en `app/` llama a `eval`, `exec` ni `os.system`, y el único proceso que
+    se lanza es el CLI del proveedor `claude_code`, con argumentos propios y la petición por
+    la entrada estándar (TO-040). La salida del modelo es prosa que se guarda."""
+    assert c.violaciones_ejecucion() == []
+
+
+def test_meta_ejecucion_caza_eval_os_system_y_procesos(tmp_path: Path) -> None:
+    raiz = tmp_path / "app"
+    (raiz / "quality").mkdir(parents=True)
+    codigo = [
+        "import os",
+        "import subprocess",
+        "def f(x):",
+        "    eval(x)",
+        "    os.system(x)",
+        "    subprocess.run([x])",
+    ]
+    (raiz / "quality" / "malo.py").write_text("\n".join(codigo), encoding="utf-8")
+    assert len(c.violaciones_ejecucion(raiz)) == 3

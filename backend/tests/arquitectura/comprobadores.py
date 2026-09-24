@@ -257,3 +257,46 @@ def violaciones_camino_al_modelo(raiz: Path = RAIZ_APP) -> list[str]:
             ):
                 problemas.append(f"{fichero.name}:{nodo.lineno} llama a .{nodo.func.attr}()")
     return problemas
+
+
+# Lo único que lanza un proceso: el CLI del proveedor `claude_code`, con argumentos propios y
+# la petición por la entrada estándar (TO-040). Nunca con la salida del modelo.
+_EJECUCION_PERMITIDA = {("commons/llm/claude_code.py", "anyio.run_process")}
+_NOMBRES_PROHIBIDOS = frozenset({"eval", "exec"})
+_MODULOS_PROCESO = ("subprocess.", "os.system", "os.popen", "os.exec", "os.spawn")
+_LLAMADAS_PROCESO = frozenset(
+    {"anyio.run_process", "anyio.open_process", "asyncio.create_subprocess_exec",
+     "asyncio.create_subprocess_shell"}
+)  # fmt: skip
+
+
+def _nombre_llamada(nodo: ast.expr) -> str | None:
+    partes: list[str] = []
+    while isinstance(nodo, ast.Attribute):
+        partes.append(nodo.attr)
+        nodo = nodo.value
+    if isinstance(nodo, ast.Name):
+        partes.append(nodo.id)
+        return ".".join(reversed(partes))
+    return None
+
+
+def violaciones_ejecucion(raiz: Path = RAIZ_APP) -> list[str]:
+    """RNF-09: ningún `eval`/`exec`, ningún `os.system` y ningún proceso fuera de la lista."""
+    problemas = []
+    for fichero, arbol in _modulos(raiz):
+        relativo = fichero.relative_to(raiz).as_posix()
+        for nodo in ast.walk(arbol):
+            if not isinstance(nodo, ast.Call):
+                continue
+            nombre = _nombre_llamada(nodo.func)
+            if nombre is None:
+                continue
+            prohibida = (
+                nombre in _NOMBRES_PROHIBIDOS
+                or nombre.startswith(_MODULOS_PROCESO)
+                or nombre in _LLAMADAS_PROCESO
+            )
+            if prohibida and (relativo, nombre) not in _EJECUCION_PERMITIDA:
+                problemas.append(f"{relativo}:{nodo.lineno} llama a {nombre}()")
+    return problemas

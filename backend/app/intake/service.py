@@ -9,7 +9,9 @@ import sqlite3
 
 from app.commons.config import Config
 from app.commons.errores import BriefInvalido
-from app.intake import repository, validacion
+from app.commons.recursos import Recursos
+from app.intake import extraccion, repository, validacion
+from app.intake.saneamiento import Saneado, sanear
 from app.intake.schemas import (
     BriefNovela,
     BriefNovelaParcial,
@@ -17,6 +19,7 @@ from app.intake.schemas import (
     Dedicatoria,
     Destinatario,
     ElementoPersonalizado,
+    FragmentoSospechoso,
     Ocasion,
     ResultadoValidacionBrief,
     TextoLibre,
@@ -36,15 +39,31 @@ __all__ = [
     "exigir_brief_valido",
     "leer_brief",
     "registrar_brief",
+    "sanear_brief",
     "validar_brief",
 ]
+
+
+def sanear_brief(brief: BriefNovela) -> tuple[BriefNovela, list[FragmentoSospechoso]]:
+    """El brief sin los `Fragmento sospechoso` de su texto libre, y los fragmentos retirados.
+    Un texto libre que se queda vacío desaparece: no hay nada que tratar como dato."""
+    saneados: list[tuple[TextoLibre, Saneado]] = [
+        (t, sanear(t.contenido)) for t in brief.textos_libres
+    ]
+    textos = [t.model_copy(update={"contenido": s.limpio}) for t, s in saneados if s.limpio.strip()]
+    fragmentos = [f for _, s in saneados for f in s.fragmentos]
+    return brief.model_copy(update={"textos_libres": textos}), fragmentos
 
 
 def registrar_brief(
     con: sqlite3.Connection, *, novel_id: str, brief: BriefNovela, ahora: str
 ) -> None:
-    """Persiste el brief validado. Va dentro de la transacción de quien crea la novela."""
-    repository.insertar_brief(con, novel_id=novel_id, brief=brief, ahora=ahora)
+    """Persiste el brief validado **ya saneado** y registra lo que se retiró (RF-INTAKE-03).
+    Va dentro de la transacción de quien crea la novela: ningún modelo lee nunca el texto
+    libre sin sanear, porque no queda guardado en ninguna parte."""
+    limpio, fragmentos = sanear_brief(brief)
+    repository.insertar_brief(con, novel_id=novel_id, brief=limpio, ahora=ahora)
+    repository.insertar_fragmentos(con, novel_id=novel_id, fragmentos=fragmentos, ahora=ahora)
 
 
 def leer_brief(con: sqlite3.Connection, *, novel_id: str) -> BriefNovela | None:
@@ -58,9 +77,19 @@ def elementos_personalizados(
     return repository.leer_elementos(con, novel_id=novel_id)
 
 
-def validar_brief(config: Config, brief: BriefNovelaParcial) -> ResultadoValidacionBrief:
-    """Analiza un brief parcial sin crear nada (RF-INTAKE-01)."""
-    return validacion.validar(config, brief)
+async def validar_brief(r: Recursos, brief: BriefNovelaParcial) -> ResultadoValidacionBrief:
+    """Analiza un brief parcial sin crear nada (RF-INTAKE-01, RF-INTAKE-03): faltantes,
+    contradicciones, fragmentos sospechosos del texto libre y los hechos que el
+    `interviewer` lee del texto ya saneado."""
+    resultado = validacion.validar(r.config, brief)
+    saneados = [sanear(t.contenido) for t in brief.textos_libres or [] if t.contenido]
+    hechos = await extraccion.extraer_hechos(r, [s.limpio for s in saneados])
+    return resultado.model_copy(
+        update={
+            "fragmentos_sospechosos": [f for s in saneados for f in s.fragmentos],
+            "hechos_extraidos": hechos,
+        }
+    )
 
 
 def exigir_brief_valido(config: Config, brief: BriefNovela) -> None:

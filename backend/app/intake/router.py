@@ -23,4 +23,4 @@ router = APIRouter(tags=["intake"])
 async def validar_brief(
     brief: BriefNovelaParcial, r: Annotated[Recursos, Depends(recursos)]
 ) -> ResultadoValidacionBrief:
-    return service.validar_brief(r.config, brief)
+    return await service.validar_brief(r, brief)
