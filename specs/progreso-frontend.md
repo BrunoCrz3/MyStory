@@ -7,8 +7,8 @@ Fichero de retoma. Si la sesión se interrumpe, se sigue desde aquí.
 | Artefacto | Estado | Siguiente paso |
 | --- | --- | --- |
 | `specs/spec2-frontend.md` | `aprobada` (2026-09-24), ajustada al commit `7d389a7` | — |
-| `specs/plan2-frontend.md` | `aprobada` (2026-09-24) | En ejecución |
-| `frontend/` | en construcción | Ver «Pasos del plan» |
+| `specs/plan2-frontend.md` | `aprobada` (2026-09-24), ejecutado entero | — |
+| `frontend/` | **terminado** (F01–F16) | Integración con el backend real: P49 de `plan1.md` |
 
 ## Pasos del plan
 
@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F16 | pendiente | 0 |
+| — | plan terminado | — |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -41,6 +41,23 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F13 | Prueba que lee la tabla CL-03 de `spec1.md` y comprueba cada fila (número, padre, atributos, contenido); `lectura.css` con `@media print` (CL-04) y los controles marcados con `data-controles` |
 | F14 | Formulario completo del brief serializado como `BriefNovelaParcial`; «Crear y generar» solo con `valido: true` vigente; `crearNovela` con el estrechamiento a `BriefNovela` y luego `lanzarGeneracion`; lista de novelas (2 intentos en rojo: tipos con `default` obligatorios y una aserción que contaba el sondeo del progreso) |
 | F15 | Datos faltantes junto a su campo y en un resumen, contradicciones, fragmentos descartados y hechos extraídos; red de seguridad para `400` y `422`, con el `detail` en la cabecera del formulario |
+| F16 | `frontend/README.md` con el arranque conjunto; `npm run build` en verde; el servidor de desarrollo sirve `/` y la lectura, y el proxy `/api` llega a `127.0.0.1:8000` (sin backend: `ECONNREFUSED`, como se espera) |
+
+## Arranque conjunto
+
+Detalle en `frontend/README.md`. Resumen:
+
+1. **Backend**, en `127.0.0.1:8000` con un solo worker (`specs/plan1.md` § 9):
+   `uv run --env-file ../.env uvicorn app.main:app --reload --port 8000` desde `backend/`, con
+   `STORYMAKER_LECTURA_URL=http://127.0.0.1:5173` en `.env`.
+2. **Frontend**, en `127.0.0.1:5173`: `cd frontend && npm install && npm run dev`. El proxy
+   de Vite lleva `/api/*` a `http://127.0.0.1:8000/*`.
+3. Opcional, para `render_visual`: `npx -y @playwright/mcp --port 8931`.
+4. Comprobación: `http://127.0.0.1:5173/api/salud` devuelve el JSON de `GET /salud`.
+
+**No probado contra el backend real**: `backend/` no existe todavía en esta rama. Todo lo
+anterior está verificado con respuestas construidas a partir de los ejemplos del contrato. La
+integración real es el P49 de `plan1.md`.
 
 ## Para la sesión del backend
 
