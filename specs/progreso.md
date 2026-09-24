@@ -8,8 +8,8 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 
 | Campo | Valor |
 | --- | --- |
-| Plan | `specs/plan1.md` — **borrador, no aprobado** |
-| Paso actual | — (P01 bloqueado hasta que el plan esté `aprobada`) |
+| Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
+| Paso actual | P01 |
 | Estado del paso | `no-iniciado` · `pruebas-escritas` · `en-verde` · `cerrado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |

@@ -1,6 +1,6 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: el desarrollador, en la conversación del 2026-09-24 («plan aprobado»)
 fecha: 2026-09-24
 spec: specs/spec1.md
 contrato: specs/openapi.yaml
@@ -15,8 +15,8 @@ lectura de la spec § 4.4. **Un solo plan para las seis fases**,
 escrito para que un agente lo ejecute de forma autónoma de principio a fin, paso a paso, y
 pueda reanudarlo en frío desde `specs/progreso.md`.
 
-> **Estado: borrador.** No se escribe una línea de código hasta que el desarrollador lo mueva
-> a `aprobada` (`CLAUDE.md` § Ciclo de cambio). El agente que lo ejecute **comprueba el
+> **Estado: aprobada** por el desarrollador el 2026-09-24. Antes de eso: no se escribía código
+> hasta que el desarrollador lo moviera a `aprobada` (`CLAUDE.md` § Ciclo de cambio). El agente que lo ejecute **comprueba el
 > frontmatter antes del P01**, no de memoria, y se detiene si no dice `aprobada`.
 
 ---
