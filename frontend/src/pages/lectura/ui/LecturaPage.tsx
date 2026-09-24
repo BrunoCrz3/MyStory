@@ -1,10 +1,13 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { problemaDe } from '@/shared/api'
 import { AvisoProblema } from '@/shared/ui'
 import { useCapitulos, useFicha, usePortada, useVersion } from '../api/lectura'
+import type { OrigenCambio } from '../model/peticion-cambio'
 import { CapituloLeido } from './CapituloLeido'
 import { Ficha } from './Ficha'
 import { Indice } from './Indice'
+import { PanelCambio } from './PanelCambio'
 import { Portada } from './Portada'
 import { SelectorVersion } from './SelectorVersion'
 
@@ -15,6 +18,7 @@ import { SelectorVersion } from './SelectorVersion'
 export function LecturaPage() {
   const { novelId = '', version: versionTexto = '' } = useParams()
   const version = Number(versionTexto)
+  const [origenCambio, setOrigenCambio] = useState<OrigenCambio | null>(null)
 
   const datosVersion = useVersion(novelId, version)
   const capitulos = useCapitulos(novelId, version)
@@ -33,7 +37,24 @@ export function LecturaPage() {
       {datosVersion.isSuccess && <Indice capitulos={datosVersion.data.capitulos} />}
       {ficha.isSuccess && <Ficha ficha={ficha.data} />}
       {capitulos.isSuccess &&
-        capitulos.data.map((capitulo) => <CapituloLeido key={capitulo.numero} capitulo={capitulo} />)}
+        capitulos.data.map((capitulo) => (
+          <CapituloLeido
+            key={capitulo.numero}
+            capitulo={capitulo}
+            novelId={novelId}
+            version={version}
+            alPedirCambio={setOrigenCambio}
+          />
+        ))}
+      {origenCambio && (
+        // La `key` reinicia el panel si el lector elige otro origen sin cerrar el anterior.
+        <PanelCambio
+          key={JSON.stringify(origenCambio)}
+          novelId={novelId}
+          origen={origenCambio}
+          alCerrar={() => setOrigenCambio(null)}
+        />
+      )}
     </article>
   )
 }

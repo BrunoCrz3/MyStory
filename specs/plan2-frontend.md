@@ -115,7 +115,7 @@ son `shared/`, ningún código se usa hoy desde dos páginas (skill FSD § 2).
 | F07 | Lectura: raíz, portada, índice, capítulos | `tests/pages/lectura/lectura.test.tsx` | CA-06, CA-08 | hecho |
 | F08 | Lectura: ficha | `tests/pages/lectura/ficha.test.tsx` | CA-07 | hecho |
 | F09 | Modificados y versiones | `tests/pages/lectura/versiones.test.tsx` | CA-12 | hecho |
-| F10 | Cambio por hecho | `tests/pages/lectura/cambio-hecho.test.tsx` | CA-10, CA-11 | pendiente |
+| F10 | Cambio por hecho | `tests/pages/lectura/cambio-hecho.test.tsx` | CA-10, CA-11 | hecho |
 | F11 | Cambio por fragmento | `tests/pages/lectura/cambio-fragmento.test.tsx` | CA-09 | pendiente |
 | F12 | PDF | `tests/pages/lectura/pdf.test.tsx` | CA-13 | pendiente |
 | F13 | Contrato de lectura completo e impresión | `tests/pages/lectura/contrato-lectura.test.tsx` | CA-15, CA-16 | pendiente |

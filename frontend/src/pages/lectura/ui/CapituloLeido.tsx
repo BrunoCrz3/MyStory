@@ -1,7 +1,16 @@
 import type { Esquemas } from '@/shared/api'
+import type { OrigenCambio } from '../model/peticion-cambio'
+import { HechosDelCapitulo } from './HechosDelCapitulo'
 import { MarcaModificado } from './MarcaModificado'
 
-export function CapituloLeido({ capitulo }: { capitulo: Esquemas['Capitulo'] }) {
+interface Props {
+  capitulo: Esquemas['Capitulo']
+  novelId: string
+  version: number
+  alPedirCambio: (origen: OrigenCambio) => void
+}
+
+export function CapituloLeido({ capitulo, novelId, version, alPedirCambio }: Props) {
   return (
     <section
       data-testid="capitulo"
@@ -17,6 +26,15 @@ export function CapituloLeido({ capitulo }: { capitulo: Esquemas['Capitulo'] }) 
       <div data-testid="capitulo-texto" className="capitulo-texto">
         {capitulo.texto ?? ''}
       </div>
+      {/* Los controles van dentro del capítulo pero fuera de capitulo-texto (CL-03). */}
+      <aside className="capitulo-controles" data-controles="">
+        <HechosDelCapitulo
+          novelId={novelId}
+          version={version}
+          capitulo={capitulo.numero}
+          alElegir={(hecho) => alPedirCambio({ tipo: 'hecho', hecho, capitulo: capitulo.numero })}
+        />
+      </aside>
     </section>
   )
 }
