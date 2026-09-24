@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F03 | pendiente | 0 |
+| F04 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -28,6 +28,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | --- | --- |
 | F01 | Vite + React 18 + TS estricto, Vitest con jsdom, proxy `/api`, puerto 5173 fijo. Todas las dependencias aprobadas instaladas |
 | F02 | Tipos generados desde `openapi.yaml` 1.1.0 con `npm run gen:api`; cliente `openapi-fetch` con `fetch` inyectable y `ProveedorCliente` |
+| F03 | Ejemplos leídos de `openapi.yaml` en cada ejecución, `fetch` de prueba con registro de peticiones, render con proveedores y datos de lectura tipados con `satisfies` |
 
 ## Para la sesión del backend
 
