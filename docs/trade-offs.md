@@ -1465,3 +1465,47 @@ La suma sigue en `contexto.total` y el arranque sigue comprobando el margen rol 
 coste nominal por novela sube con la reserva de salida pero no con lo gastado: `max_tokens` es
 un tope, no un consumo. La latencia máxima deja de servir para «enseñarla en directo»; si la
 demo lo necesita, el camino es bajar la latencia por llamada, no el tope.
+
+---
+
+## TO-042 — Decisiones menores del agente al ejecutar la F2 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/quality/`, `backend/app/process/`, `backend/app/versioning/`, `backend/app/commons/db/migrations/0010_calidad.sql`, `docs/architecture.md`, `docs/verification.md`
+
+### Problema
+
+Las decisiones de la F2 (calidad) que no estaban en el plan: `specs/progreso.md` § Decisiones,
+A-62 a A-80.
+
+### Elección
+
+| Id | Paso | Decisión | Por qué |
+| --- | --- | --- | --- |
+| A-62 | P28 | Sin tabla `validador`: el registro vive en `quality/registro.py` y una prueba lo compara con el índice de `verification.md` | Es un catálogo sin novela; una tabla sin `novel_id` rompería RD-01 y la prueba del P05 |
+| A-63 | P28 | `informe_critica` no es única por (capítulo, intento) y se ordena por intento y orden de inserción | Una reanudación tras un corte entre aceptar y extraer reescribe con el mismo intento (A-44); la propiedad de reanudación lo cazó |
+| A-64 | P29 | La mitad programática de `consistencia_factica` coteja la edad en presente («tiene/cumple/sus/con N años») de cada personaje con los hechos vigentes y con la edad del brief | Es la contradicción enumerable que los hechos extraídos sí contienen; la edad en pasado es analepsis, no contradicción |
+| A-65 | P29 | `cumplimiento_brief` coteja el borrador (no hay snapshot de salida antes de extraer): que nombre las entidades del alcance y que no adelante a una entidad cuya primera aparición en el plan es posterior y que el canon no ha nombrado | El hook corre antes de la extracción; la fila O-30 hablaba del snapshot de salida |
+| A-66 | P29 | O-31 (personaje ausente en el snapshot anterior que actúa) no se implementa | El plan del P29 no lo pide y, sin la lista de entradas en escena del brief, marcaría toda reaparición legítima |
+| A-67 | P29 | La prueba de `trabajos_en_cola` corre sin worker | Con worker, el trabajo se reclama a veces antes de contar: era una carrera, no un fallo del código |
+| A-68 | P30 | El hook de capítulo es asíncrono y corre cada validador en un hilo (`anyio.to_thread`) dentro de un grupo de tareas | Son síncronos y deterministas; en hilos corren a la vez sin bloquear el bucle ni pedir hueco en el pool |
+| A-69 | P30 | O-53 (ortografía), O-55 (descripciones repetidas) y O-56 (deriva de estilo) no se miden todavía | Sin diccionario en el stack cerrado y sin registro de descripciones; el plan del P30 no los pide |
+| A-70 | P30 | Las listas cerradas de muletillas y clichés viven en `quality/listas/` como datos versionados | Mismo criterio que las listas del guardrail (D-21): son datos, no código |
+| A-71 | P30 | `integridad_pov` coteja el tiempo verbal solo cuando se declara presente | Detectar presente en una narración en pasado sin analizador morfológico daría más falsos positivos que aciertos |
+| A-72 | P31 | El contrato y la evaluación del judge viven en `quality/judge.py`; el ensamblado y la llamada, en `process/judge.py`, con las piezas en `context.piezas_judge` | `quality/` no tiene arista a `context/`; `process/` sí, y es quien orquesta |
+| A-73 | P31 | El criterio «arco» emite el score `cierre_arco` en cada capítulo; el gate usará el del último (D-15) | El registro tiene un solo score para el arco y D-15 lo asigna al judge |
+| A-74 | P31 | Un criterio semántico sin umbral en `calidad` pasa siempre y deja su score | Sin cifra no hay con qué suspender; la fase de medición es justo para reunirla |
+| A-75 | P32 | El editor se llama cuando falla algo que cierra el paso, venga del hook de capítulo o del judge; el corregido vuelve a pasar los tres puntos, judge incluido, y es lo que decide el policy engine | La prueba del plan (el editor arregla la longitud) exige que corrija defectos del hook; «todos los validadores» incluye al judge |
+| A-76 | P32 | Si el hook de policy falla no corren ni judge ni editor | Lo barato primero: no se paga un juicio sobre un borrador sin schema o con una palabra vetada, y el guardrail tiene su propio sublímite |
+| A-77 | P32 | Los defectos que solo puntúan (fase de medición) quedan en el informe pero no provocan llamada al editor | RF-QUA-07: puntúan y no suspenden; una corrección por cada defecto sin umbral calibrado multiplicaría las llamadas |
+| A-78 | P32 | Un informe por intento con los resultados del borrador que se decide (el corregido si hubo editor); la traza guarda también los del borrador antes de corregir | La tabla no admite otra decisión que aceptar, devolver, agotar o detener, y la migración 0010 ya está commiteada |
+| A-79 | P33 | El gate en rojo sigue deteniendo tras `DevolverAlEditor` (A-47): el editor corrige capítulos, y arreglar un fallo del gate exige reescribir capítulos aceptados con retcon (F4, P42–P43) | Sin retcon, «corregir» la novela en el gate dejaría un canon que no cuadra con el texto; queda para cuando exista la regeneración dirigida |
+| A-80 | P33 | El gate corre solo la mitad programática de `cierre_arco`; la semántica es el «arco» del judge en cada capítulo | `versioning/` no tiene arista a `quality/`, y con la medición cerrada el judge ya suspende el último capítulo antes del gate |
+
+### Consecuencias
+
+Ninguna cambia el contrato ni añade una clase a la ontología. Las que más pesan al revisar:
+A-75 (el editor corrige también los defectos del hook de capítulo, y su versión vuelve a pasar
+los tres puntos, judge incluido), A-77 (en la fase de medición los defectos que solo puntúan no
+llaman al editor) y A-79 (el gate en rojo sigue deteniendo la novela hasta que exista el
+retcon de F4). Quedan sin medir O-31, O-53, O-55 y O-56, anotados en sus filas de
+`verification.md`.

@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P34 · Cierre de F2 |
+| Paso actual | P35 · Validación del brief parcial |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P33 |
+| Último commit de paso | P34 |
 
 ## Coste real
 
@@ -67,10 +67,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P31** — `quality/judge.py`: `SalidaJudge` (seis `Puntuacion` 0–1 con justificación, más afirmaciones sobre el destinatario y temas excluidos para el P37), `evaluar_judge` con `schema_valido` y un resultado por criterio con tipo y punto del registro; `context.piezas_judge` (borrador en Local como no confiable, temas excluidos, último capítulo marcado); `process/judge.juzgar` llama con `roles.judge` y deja un score por criterio con su justificación como comentario; 336 pruebas
 - **P32** — Ciclo por intento: redactor → hook de policy (si falla, se decide sin judge ni editor) → hook de capítulo → judge → si falla algo que cierra, `process/editor.corregir` (contrato en `quality/editor.py`, piezas en `context.piezas_editor` con informe y anticontexto) → el corregido vuelve a pasar policy, capítulo y judge → decisión; defecto sistémico del editor al audit log (`defecto-sistemico-como-local`, D-14); prompt del editor con la clasificación; dobles con judge y editor por defecto (`guion_revision`); 343 pruebas
 - **P33** — `versioning/gate.py` con `estructura_edicion`, `elementos_obligatorios` y `cierre_arco` (mitad programática: promesas pendientes al cierre ≤ `continuidad.promesas_pendientes_al_cerrar`); el gate en rojo registra en el audit log las transiciones `DevolverAlEditor` y `Detener`; pruebas con una promesa sin pagar (no publica) y pagada por alias `P1` (publica); 345 pruebas
+- **P34** — Cierre de F2: `tests/e2e/test_f2.py` (capítulo 3 corto en borrador y en corrección, vuelve al redactor y se acepta; la traza de la generación tiene los nueve scores de los hooks, los seis del judge con justificación y los tres del gate); TO-042 y RI-015; bloque § 4.5 con N = 2 en verde (346 pruebas, cobertura 96,2 %); F2 subida
 
 ## Pendiente
 
-- Siguiente: **P34 · Cierre de F2**, y después el resto hasta el P49 en orden.
+- Siguiente: **P35 · Validación del brief parcial**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -189,7 +190,7 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | **aplicada**: tokens por llamada en `data/humo-20260924T163649.json`; ajustes A-58 y A-61 |
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
-| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 y **F1 subidas** (F1 al cerrar el P27) |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0, F1 y **F2 subidas** (F2 al cerrar el P34) |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
@@ -240,14 +241,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P33 cerrado, siguiente P34**. Rama `backend-v1`,
-suite en verde (345 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P34 cerrado (F2 completa y subida), siguiente P35**. Rama `backend-v1`,
+suite en verde (346 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 345 pruebas en verde al cerrar P33
+uv run pytest -q          # 346 pruebas en verde al cerrar P34
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

@@ -951,3 +951,35 @@ el planificador necesitaba casi el doble de salida de la reservada; `nombres_exa
 suspendía capítulos sanos porque los nombres de una novela son palabras comunes («Boya»,
 «Varadero»); y la etiqueta de versión de prompt no cabía en Langfuse. Los casetes HTTP siguen
 pendientes: solo se graban con `proveedor: api`, y no hay clave.
+
+---
+
+## RI-015 — F2 del plan 1: la calidad antes de aceptar
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/quality/`, `backend/app/process/`,
+`backend/app/context/service.py`, `backend/app/versioning/gate.py`,
+`backend/app/commons/db/migrations/0010_calidad.sql`, `backend/app/prompts/editor.md`,
+`docs/architecture.md`, `docs/verification.md`, `docs/trade-offs.md` (TO-042)
+
+### Causa
+
+Tercera fase del plan 1: que ningún capítulo se acepte sin pasar los validadores de calidad,
+el juicio de la rúbrica y la corrección del editor, y que la novela no se publique con el arco
+sin cerrar.
+
+### Qué cambió
+
+Registro de los 26 validadores comprobado contra el índice de `verification.md` e informe de
+crítica por intento (P28). El hook de capítulo pasa de dos validadores a siete, contra el canon
+y el plan (P29) y sobre el texto, en paralelo y fuera del pool (P30). El judge puntúa los seis
+criterios con justificación en su propio modelo (P31). El ciclo queda redactor → policy →
+capítulo → judge → editor, y el borrador corregido vuelve a pasar todo (P32). El gate añade
+`cierre_arco` (P33).
+
+### Efecto
+
+**346 pruebas en verde.** El e2e de F2 hace fallar a propósito el capítulo 3 —corto en el
+borrador y en la corrección—, lo ve volver al redactor y aceptarse, y encuentra en la traza de
+esa generación los scores de los nueve validadores de los hooks, los seis criterios del judge
+con su justificación y los tres del gate. Lo que queda por medir está anotado en
+`verification.md` (O-31, O-53, O-55, O-56).
