@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import logging
 import sqlite3
+from datetime import UTC, datetime
 from functools import partial
 from typing import Any
 
 from app.commons.errores import ErrorDominio, LimiteDeIntentosAgotado
+from app.commons.llm import ErrorModelo
 from app.commons.llm.llamar import Consumo, acumular_en
 from app.commons.recursos import Recursos
 from app.commons.tiempo import ahora
@@ -74,8 +76,29 @@ class Orquestador:
 
     async def _guardar_consumo(self, t: dict[str, Any], consumo: Consumo) -> None:
         await self._actualizar(
-            t, tokens_consumidos=consumo.tokens, coste_usd=round(consumo.coste_usd, 6)
+            t,
+            tokens_consumidos=consumo.tokens,
+            coste_usd=round(consumo.coste_usd, 6),
+            intentos_infra=t["intentos_infra"] + consumo.reintentos_infra,
         )
+
+    def _comprobar_topes(self, t: dict[str, Any], consumo: Consumo) -> None:
+        """Coste y latencia por novela bajo umbral; superarlo detiene e informa (RNF-13)."""
+        coste = self.r.config.umbrales.coste
+        if consumo.coste_usd > coste.coste_maximo_novela:
+            raise GeneracionDetenida(
+                "error-interno",
+                f"el coste ({consumo.coste_usd:.4f} USD) supera coste.coste_maximo_novela "
+                f"({coste.coste_maximo_novela})",
+            )
+        iniciada = datetime.fromisoformat(t["iniciada_en"].replace("Z", "+00:00"))
+        transcurrido = (datetime.now(UTC) - iniciada).total_seconds()
+        if transcurrido > coste.latencia_maxima_novela:
+            raise GeneracionDetenida(
+                "error-interno",
+                f"la generación lleva {transcurrido:.0f} s y coste.latencia_maxima_novela es "
+                f"{coste.latencia_maxima_novela}",
+            )
 
     async def ejecutar(self, generacion_id: str) -> None:
         t = await self._trabajo(generacion_id)
@@ -98,6 +121,12 @@ class Orquestador:
             except ErrorDominio as e:
                 _log.error("generación %s detenida por %s", t["id"], e.slug)
                 await self._detener(t, e.slug, str(e))
+            except ErrorModelo as e:
+                # Reintentos de infraestructura agotados, contexto que no cabe, rechazo del
+                # modelo: el catálogo no tiene un tipo propio y se informa como error interno,
+                # con el motivo en el audit log.
+                _log.error("generación %s detenida: %s", t["id"], type(e).__name__)
+                await self._detener(t, "error-interno", f"{type(e).__name__}: {e}")
             finally:
                 await self._guardar_consumo(t, consumo)
 
@@ -109,6 +138,7 @@ class Orquestador:
             estado = "Planificando"
         if estado == "Planificando":
             await planificar(self.r, novel_id=novel_id, version=version)
+            self._comprobar_topes(t, consumo)
             await self._mover_novela(t, "FijarEsquema")
 
         total = await self.r.db.ejecutar(partial(novel.total_capitulos, novel_id=novel_id))
@@ -136,6 +166,7 @@ class Orquestador:
                 generacion_id=t["id"],
             )
             await self._guardar_consumo(t, consumo)
+            self._comprobar_topes(t, consumo)
 
         await self._mover_novela(t, "CerrarEscritura")
         await self._cerrar(t)
