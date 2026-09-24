@@ -59,6 +59,17 @@ Detalle en `frontend/README.md`. Resumen:
 anterior está verificado con respuestas construidas a partir de los ejemplos del contrato. La
 integración real es el P49 de `plan1.md`.
 
+## Uso del browser MCP
+
+**Configuración.** Claude Code lee los servidores MCP de ámbito de proyecto en **`.mcp.json`**
+en la raíz del repositorio, no en `.claude/mcp.json`. Lo comprobé con `claude mcp --help`:
+`list` y `get` hablan de «servidores de `.mcp.json`», y `claude mcp add -s project` escribió
+en ese fichero. **`.mcp.json` es, por tanto, el «`.claude/mcp.json` o equivalente» del
+alcance.** Declara el servidor `playwright` (`@playwright/mcp@0.0.82`, versión fijada) por
+stdio, con `cmd /c npx` porque en Windows `npx` no se lanza directamente. Es otro uso distinto
+del paso 3 del arranque conjunto: aquel es el Playwright MCP por HTTP que usa el backend para
+`render_visual`, y este es el navegador del agente de desarrollo.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e
@@ -113,3 +124,9 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
 - **FA-04** (F10, decidido por el agente — revisar): el `oneOf` de `NuevaSolicitudCambio` se genera como `& (unknown | unknown)`, que no restringe nada. La regla «exactamente uno de `hecho_id` o `fragmento`» la garantiza el tipo `OrigenCambio` de `pages/lectura/model/`, no el tipo generado. No es insuficiencia del contrato: el backend lo valida.
 - **FA-05** (F13, decidido por el agente — revisar): la prueba del contrato de lectura **lee la tabla CL-03 de `specs/spec1.md`** en cada ejecución en vez de copiarla, y falla si la tabla gana o pierde una fila que la prueba no cubra. Los controles interactivos llevan el atributo `data-controles`, que es lo que la hoja de impresión oculta. No es un `data-testid` y no forma parte del contrato de lectura.
 - **FA-06** (F14, decidido por el agente — revisar): los tipos se generan con `defaultNonNullable: false`. `openapi-typescript` 7 hace obligatorio por defecto todo campo con `default` —`ElementoPersonalizado.origen`, `VozNarrativa.*`, `Capitulo.modificado`—, y en un cuerpo de petición eso contradice el contrato: el campo se puede omitir y lo pone el backend. En las respuestas, el frontend trata esos campos como opcionales.
+- **Browser MCP del agente en `.mcp.json`** (decidido por el desarrollador, camino (a) del
+  rediseño visual): el alcance y el layout de `CLAUDE.md` piden `.claude/mcp.json`, pero
+  Claude Code lee los servidores de proyecto en `.mcp.json`, en la raíz (comprobado con
+  `claude mcp --help`). Se crea ese fichero con `@playwright/mcp@0.0.82` fijado. Al integrar,
+  el layout de `CLAUDE.md` debe decir `.mcp.json` en vez de `.claude/mcp.json ▸ previsto`.
+  Es una dependencia de herramienta, no de la aplicación: no entra en `package.json`.
