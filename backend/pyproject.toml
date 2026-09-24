@@ -7,6 +7,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn>=0.30",
     "pydantic>=2.8",
+    "pyyaml>=6.0.3",
 ]
 
 [dependency-groups]
@@ -29,6 +30,7 @@ package = false
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-m 'not real' -p no:cacheprovider"
+filterwarnings = ["ignore:Using `httpx` with `starlette.testclient`"]
 markers = [
     "real: llama al modelo real; cuesta dinero y necesita la credencial en el entorno",
 ]

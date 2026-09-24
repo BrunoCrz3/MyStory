@@ -7,6 +7,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.commons.config import Config, cargar_config
+
 TITULO = "storyMaker — API del backend v1"
 VERSION_API = "1.1.0"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -22,18 +24,21 @@ ETIQUETAS = [
 ]
 
 
-@asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    yield
+def crear_app(config: Config | None = None) -> FastAPI:
+    """Crea la aplicación. Sin `config`, la lee de `config/` al arrancar, y si no vale el
+    arranque falla en voz alta (RNF-15)."""
 
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        app.state.config = config if config is not None else cargar_config()
+        yield
 
-def crear_app() -> FastAPI:
     return FastAPI(
         title=TITULO,
         version=VERSION_API,
         servers=SERVIDORES,
         openapi_tags=ETIQUETAS,
-        lifespan=_lifespan,
+        lifespan=lifespan,
     )
 
 
