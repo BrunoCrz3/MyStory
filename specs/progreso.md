@@ -17,7 +17,8 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 
 ## Coste real
 
-Tope de parada: **40 USD** acumulados (plan § 1, condición 4). Antes de cada ejecución
+Tope de parada: **40 USD** acumulados (plan § 1, condición 4; unidad y tope confirmados por
+el desarrollador el 2026-09-24). Antes de cada ejecución
 real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
@@ -34,9 +35,21 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 ## Pendiente
 
-- P01 a P48, en orden. Siguiente: **P01 · Esqueleto del proyecto y test de conformidad**,
+- P01 a P49, en orden. Siguiente: **P01 · Esqueleto del proyecto y test de conformidad**,
   en cuanto el frontmatter del plan diga `estado: aprobada`.
-- Decidir **D-01** (Dato faltante frente al schema de `BriefNovela`) antes de aprobar.
+- **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
+  de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
+  al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
+  con el comando exacto, y el plan no se da por cerrado hasta que esté commiteado.
+
+## Post-demo
+
+Lo que se decidió no hacer en la demo y **no se olvida**. No es trabajo de este plan.
+
+| Qué | Por qué queda fuera | Decisión |
+| --- | --- | --- |
+| **Replanificación de capítulos pendientes** (invalidación de restricción de destino) | Sin RF en la spec 1; un defecto sistémico se trata como reescritura y queda registrado con su clasificación | D-14, aceptada por el desarrollador |
+| El resto de la lista post-demo de la spec | Entrevistador conversacional, TLA+, servidor MCP, agente de seguridad, gate de Lean, SSE, PO-11 y PO-12 | `specs/spec1.md` § 7 Post-demo |
 
 ## Decisiones
 
@@ -46,7 +59,9 @@ registrada.
 
 | Id | Paso | Decisión | Porqué | Registro |
 | --- | --- | --- | --- | --- |
-| — | — | — | — | — |
+| — | plan | D-01 resuelta con un cambio de contrato: `BriefNovelaParcial` para validar, `BriefNovela` para crear; contrato 1.1.0 | Aprobado por el desarrollador | TO-037 |
+| — | plan | D-08, D-09, D-14 y D-22 aceptadas; D-08 con seis aristas nuevas comprobadas sin ciclo | Aprobado por el desarrollador | TO-036, `docs/architecture.md` |
+| — | plan | Contrato de lectura en la spec § 4.4 y paso P46 que lo lleva como dato | Pedido por el desarrollador | TO-037 |
 
 ## Parada
 

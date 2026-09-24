@@ -9,8 +9,9 @@ progreso: specs/progreso.md
 
 # Plan 1 — Backend v1, fases F0 a F5
 
-Cómo se construye lo que especifica `specs/spec1.md` (aprobada el 2026-09-24) contra el
-contrato `specs/openapi.yaml` (aprobado con ella). **Un solo plan para las seis fases**,
+Cómo se construye lo que especifica `specs/spec1.md` (aprobada el 2026-09-24 y modificada
+el mismo día con TO-037) contra el contrato `specs/openapi.yaml` **1.1.0** y el contrato de
+lectura de la spec § 4.4. **Un solo plan para las seis fases**,
 escrito para que un agente lo ejecute de forma autónoma de principio a fin, paso a paso, y
 pueda reanudarlo en frío desde `specs/progreso.md`.
 
@@ -88,7 +89,7 @@ desarrollador; hace commit de ese fichero, y **se detiene sin tocar nada más**.
 | 1 | **La prueba de humo necesita la credencial del modelo y no está en el entorno** | `ANTHROPIC_API_KEY` vacía o ausente al llegar al P27. La suite normal **no** la necesita: sin ella, todo lo anterior al humo se hace igual |
 | 2 | **Una decisión contradice la spec o exige cambiar `specs/openapi.yaml`** | Un criterio de la spec no se puede cumplir sin tocar el contrato, o el test de conformidad solo pasaría editando el fichero. También: cualquier cosa que exija un nombre nuevo en la ontología, porque la spec § 1.3 lo declara error |
 | 3 | **La suite no se pone en verde tras 3 intentos en el mismo paso** | Contador de § 0.2 |
-| 4 | **El coste acumulado de llamadas reales supera 40 USD** | Contador en progreso § Coste real. **Es preventivo**: antes de lanzar una ejecución real, si `acumulado + coste.coste_maximo_novela` pasaría de 40, no se lanza y se para. El tope por novela de `config/thresholds.yaml` garantiza que ninguna ejecución individual se lo salte |
+| 4 | **El coste acumulado de llamadas reales supera 40 USD** (unidad y tope confirmados por el desarrollador) | Contador en progreso § Coste real. **Es preventivo**: antes de lanzar una ejecución real, si `acumulado + coste.coste_maximo_novela` pasaría de 40, no se lanza y se para. El tope por novela de `config/thresholds.yaml` garantiza que ninguna ejecución individual se lo salte |
 
 **`specs/openapi.yaml` no se edita nunca durante este plan**, ni para corregir una errata:
 el frontend depende de él. Si una ruta no se puede expresar en FastAPI de forma que el
@@ -97,7 +98,7 @@ OpenAPI generado coincida, eso es la condición 2, no un motivo para ajustar el 
 **Lo que no es condición de parada**, y el agente resuelve y registra: una dependencia que no
 instala a la primera, un umbral provisional que parece mal elegido, un fallo intermitente
 —que se arregla, no se reintenta hasta que pase—, o que falte la página `lectura` del
-frontend en F5 (§ 7, P48).
+frontend en F5 (§ 7, P49).
 
 ---
 
@@ -114,9 +115,9 @@ sus dos rastros.
 | `pyyaml` | runtime | P03 | Leer `config/*.yaml` |
 | `anthropic` | runtime | P06 | Único cliente del proveedor; trae `httpx`, que es lo que usan los casetes |
 | `langfuse` | runtime | P08 | Nombrado en `CLAUDE.md` § Requisitos técnicos |
-| `playwright` | runtime | P47 | `page.pdf()` (TO-003) |
-| `mcp` | runtime | P46 | Cliente del servidor Playwright MCP que exige TO-026 para `render_visual` |
-| `pypdf` | runtime | P47 | **Leer** el PDF para `paridad_pdf_web`. No genera nada: el PDF sigue saliendo de Playwright, así que no se valida uno y se entrega otro |
+| `playwright` | runtime | P48 | `page.pdf()` (TO-003) |
+| `mcp` | runtime | P47 | Cliente del servidor Playwright MCP que exige TO-026 para `render_visual` |
+| `pypdf` | runtime | P48 | **Leer** el PDF para `paridad_pdf_web`. No genera nada: el PDF sigue saliendo de Playwright, así que no se valida uno y se entrega otro |
 | `pytest`, `pytest-cov` | dev | P01 | Suite y la cobertura mínima de `validadores.cobertura_tests_minima` |
 | `hypothesis` | dev | P07 | Propiedades del pool, de la tabla de transiciones y del prefijo de aceptados |
 | `jsonschema` | dev | P01 | Validar cada respuesta de la suite contra el schema aprobado (OpenAPI 3.1 es JSON Schema 2020-12) |
@@ -135,25 +136,26 @@ plan (spec § 1.2 y RF-EXP-03).
 
 ## 3. Decisiones que fija este plan
 
-Todas **decididas por el agente al escribir el plan — revisar antes de aprobar**. Se
-registran como TO-036. Las que más pesan van primero.
+Decididas por el agente al escribir el plan y registradas como TO-036. **D-01, D-08, D-09,
+D-14 y D-22 ya las ha revisado el desarrollador**, y así lo dice cada fila; el resto sigue
+en «revisar». Las que más pesan van primero.
 
 | # | Decisión | Por qué |
 | --- | --- | --- |
-| **D-01** | **Choque entre RF-INTAKE-01 y el contrato — requiere tu decisión.** El criterio de RF-INTAKE-01 pide `200 valido:false` para un brief *sin* `destinatario.nombre`, pero `BriefNovela` en `specs/openapi.yaml` marca ese campo como `required` con `minLength: 1`, así que la petición no pasa el schema y el contrato obliga a un `422`. **El plan propone** leer «falta el dato» como *campo presente pero vacío tras quitar espacios* (`"   "` pasa `minLength` y es un `Dato faltante`), más los campos opcionales en el schema que el dominio necesita. Si no se acepta esta lectura, es la condición de parada 2 en el P35 | Cualquier otra salida cambia la spec o el contrato, y eso no lo puede decidir el agente |
+| **D-01** | **Resuelta con un cambio de contrato aprobado por el desarrollador (TO-037).** La validación acepta `BriefNovelaParcial` —los mismos campos que `BriefNovela`, todos opcionales, también los anidados— y responde `200` con los `Dato faltante` y las contradicciones; `crearNovela` sigue exigiendo el `BriefNovela` completo y un campo obligatorio ausente ahí es un `422`. La lectura del «campo vacío» que proponía el borrador **queda rechazada**. El contrato pasa a 1.1.0 | La spec pedía un `200` para un brief incompleto y el schema único lo hacía imposible; el frontend encontró el mismo fallo |
 | D-02 | `pyproject.toml`, `uv.lock` y `tests/` viven en `backend/`; los comandos corren desde ahí. `config/` se lee desde la raíz del repositorio | Es lo que suponen los comandos de `CLAUDE.md` (`app.main:app`, `tests/guardrail`) |
 | D-03 | SQLite con `sqlite3` de la biblioteca estándar, **una conexión por unidad de trabajo** salida de una única fábrica `conectar()`, y los repositorios síncronos llamados desde el servicio con `anyio.to_thread.run_sync` | RD-04 se cumple por construcción —no hay otra forma de abrir una conexión— y no añade `aiosqlite` |
 | D-04 | La tabla de trabajos de RD-06 se llama `trabajo` y **es** el recurso `Generacion`: `generacion_id` es su clave. El estado del export vive en su propia tabla `exportacion` | Una tabla por concepto de la API; ninguna es clase de la ontología (TO-035) |
 | D-05 | **Cada texto de capítulo aceptado es una fila nueva de `capitulo`**, y `version_capitulo (novel_id, version, numero) → capitulo_id` dice qué fila lee cada versión. Una regeneración solo crea filas para los capítulos reescritos | Los capítulos no afectados de la versión 2 **son la misma fila** que en la 1: el «idénticos byte a byte» de F4 sale por construcción, no por comparación |
 | D-06 | Vigencia **semiabierta**: una fila es vigente en `v` si `version_desde ≤ v` y (`version_hasta` es nulo o `v < version_hasta`) | TO-028 no fijaba el borde, y un borde ambiguo es el mismo fallo silencioso que olvidar `version` |
 | D-07 | La transacción de `Aceptar` la abre `process/` y pasa la conexión al `service.py` de cada dueña —`novel/`, `canon/`, `context/`, `policy/`—; ninguna escribe en tabla ajena | Una consolidación toca cinco features y tiene que ser una sola transacción (RF-CANON-01) sin romper la regla de importación |
-| D-08 | Las rutas `/novelas` son de `novel/` y usan `intake.service` para validar y guardar el brief: **arista nueva `novel → intake`** en el grafo de importación | `Obra` es el recurso; el grafo de `architecture.md` no preveía que alguien leyera el brief. Sin ciclo: `intake` solo depende de `commons` |
-| D-09 | **`backend/app/prompts/` como tercera excepción declarada** junto a `mcp_server/` y `skills/`: un fichero por rol y el comando `sync`. Se declara en `architecture.md` § Anatomía | `CLAUDE.md` ya nombra `app.prompts.sync`; los prompts son memoria procedural que se versiona con git (TO-024) |
+| D-08 | **Aceptada por el desarrollador, con la condición de que no cree ciclo.** Las rutas `/novelas` son de `novel/` y usan `intake.service`. Al comprobar el ciclo aparecieron **cinco aristas más** que el plan necesitaba y el grafo no tenía: `novel → guardrail`, `context → intake`, `context → guardrail`, `quality → intake` y `versioning → intake`. **Comprobado sobre el grafo de `architecture.md` con las seis: es acíclico**, porque `intake/` y `guardrail/` solo importan de `commons/`. Ya están dibujadas en `architecture.md` | `Obra` es el recurso; la capa Invariante necesita el brief, el Anticontexto las palabras vetadas, `invencion_destinatario` el texto libre y la portada la dedicatoria. La prueba de importaciones del P02 hace fallar la suite si `intake/` o `guardrail/` llegan a importar otra feature |
+| D-09 | **Aceptada por el desarrollador.** **`backend/app/prompts/` como tercera excepción declarada** junto a `mcp_server/` y `skills/`: un fichero por rol y el comando `sync`. Ya declarada en `architecture.md` § Anatomía y en el layout de `CLAUDE.md` | `CLAUDE.md` ya nombra `app.prompts.sync`; los prompts son memoria procedural que se versiona con git (TO-024) |
 | D-10 | Sin credenciales de Langfuse, el trazador de producción **escribe cada span en el log estructurado** y `GET /salud` devuelve `degradado` | Spec § 2.4: perder observabilidad no cuesta una novela. No es un mock: es la misma implementación con un destino de respaldo, y el span existe (RNF-08) |
 | D-11 | Lanzador `python -m app` que **se niega a escuchar fuera de la interfaz local** sin `--permitir-red` y fija un único worker; más un **cerrojo de instancia** sobre la base que hace fallar en voz alta al segundo proceso | RNF-12 y RF-PROC-03: dos procesos duplicarían el pool en silencio, y el README solo lo prohíbe; esto lo impide |
 | D-12 | El `Snapshot` se **deriva** por SQL de los hechos vigentes y las promesas al cierre del capítulo; el `Resumen de capítulo` y el gancho los devuelve el `extractor` en la misma llamada | Un snapshot es derivado por definición, y así no se paga una llamada más por capítulo |
 | D-13 | `invencion_destinatario` y `temas_excluidos` se piden al `judge` como campos estructurados adicionales de su única llamada, y la mitad programática de `invencion_destinatario` coteja cada afirmación contra el brief y el texto libre | Cero llamadas extra; el cotejo determinista es el que cuenta hasta cero |
-| D-14 | **La replanificación no se implementa**: no hay RF que la pida en la spec 1. Un defecto clasificado sistémico se trata como reescritura y queda en el audit log con su clasificación | No construir lo que no está especificado; el dato queda para cuando haya spec |
+| D-14 | **Aceptada por el desarrollador para la demo.** **La replanificación no se implementa**: no hay RF que la pida en la spec 1. Queda en la lista post-demo de `specs/progreso.md`. Un defecto clasificado sistémico se trata como reescritura y queda en el audit log con su clasificación | No construir lo que no está especificado; el dato queda para cuando haya spec |
 | D-15 | `cierre_arco`: el gate corre la mitad programática (`continuidad.promesas_pendientes_al_cerrar`); la semántica es el criterio «Arco de la historia» de la rúbrica, puntuado por el `judge` en el último capítulo | `architecture.md` dice que el gate no llama al modelo |
 | D-16 | `legibilidad` no se implementa | No tiene RF en la spec 1 |
 | D-17 | Gate de publicación por fases: F1 corre `estructura_edicion` y `elementos_obligatorios`; F2 añade `cierre_arco`; F4, `regeneracion_fiel`; F5, `render_visual`. `lean_*` no corre mientras `formal.gate_activo` sea `false` | Cada fase publica con el gate más completo que puede ejecutar, y ninguna lo salta |
@@ -161,9 +163,9 @@ registran como TO-036. Las que más pesan van primero.
 | D-19 | Hecho candidato desde un fragmento (RF-VER-07): similitud de Jaccard sobre tokens normalizados entre el fragmento y el `fragmento_soporte` de los hechos que **usa** el capítulo de origen; umbral en `config/thresholds.yaml` § `regeneracion.similitud_hecho_candidato`, provisional | Resuelve la pregunta abierta 4 de la spec sin embeddings (TO-015) |
 | D-20 | Detección de `Fragmento sospechoso` por lista de patrones determinista y versionada en `intake/`. Residuo declarado: una inyección parafraseada la esquiva; la contiene igualmente que el texto libre entra siempre como datos | Auditable y sin modelo; la contención de verdad es RNF-09 |
 | D-21 | Las listas `global` y `perfil` del guardrail son ficheros del repositorio en `guardrail/`; solo el nivel `novela` es tabla, con `novel_id` | RD-01: una lista global no pertenece a ninguna novela |
-| D-22 | El comando de export pasa a `python -m app.versioning.export <novel_id> <version>`; se corrige en `CLAUDE.md` | Con varias novelas, la versión sola no identifica nada |
+| D-22 | **Aceptada por el desarrollador.** El comando de export pasa a `python -m app.versioning.export <novel_id> <version>`; ya corregido en `CLAUDE.md` | Con varias novelas, la versión sola no identifica nada |
 | D-23 | El planificador comparte el límite `orquestacion.max_intentos_capitulo` para su salida inválida; agotarlo detiene con `limite-de-intentos-agotado` | Todo reintento tiene límite (regla 14) y no hace falta una cifra nueva |
-| D-24 | **Contrato DOM de la lectura**: los selectores que usan `render_visual` y `paridad_pdf_web` se fijan en `docs/browser-mcp.md` y se acuerdan con el frontend. Las pruebas del backend usan una página de prueba en `tests/fixtures/lectura/` | Es la única dependencia del backend con el frontend que no está en el OpenAPI |
+| D-24 | **Sustituida por la spec § 4.4 (TO-037)**: el contrato de lectura —ruta, señal de carga, selectores `data-testid` y hoja de impresión— ya no lo fija el plan sino la spec, y el frontend lo implementa tal cual. El backend lo lleva como dato en un único módulo (P46) y sus pruebas usan una página de prueba en `tests/fixtures/lectura/` que lo cumple | Era la única dependencia con el frontend fuera del OpenAPI, y una dependencia entre dos equipos no puede vivir en el plan de uno |
 
 ---
 
@@ -204,10 +206,15 @@ Nace en el P01 y corre en toda la suite. Tres partes:
 2. **Incremental.** Una lista `PENDIENTES` con los `operationId` aún no implementados. Toda
    operación del app debe estar en el contrato y coincidir exactamente; toda operación del
    contrato debe estar implementada **o** en `PENDIENTES`. Cada paso que implementa un
-   endpoint lo saca de la lista. **El P48 comprueba que la lista está vacía.**
+   endpoint lo saca de la lista. **El P49 comprueba que la lista está vacía.**
 3. **Dinámica.** Un fixture `validar_contra_contrato` que valida con `jsonschema` el cuerpo,
    el código y el tipo de medio de **cada respuesta** de las pruebas de API contra el schema
    aprobado para esa operación y ese código. Incluye los errores `problem+json` y el 422.
+
+**Las dos formas del brief** (TO-037) se comprueban como cualquier otro schema, más dos
+pruebas propias: `validarBrief` acepta un `BriefNovelaParcial` vacío (`{}`) con `200`, y
+`crearNovela` rechaza ese mismo cuerpo con `422`. Si FastAPI generase un solo schema para
+las dos, la comparación estructural fallaría.
 
 **Meta-prueba**: una copia del contrato con una sola mutación —un `required` de menos, un
 código de más, un `enum` cambiado— debe hacer fallar la comparación. Sin ella, un
@@ -281,7 +288,7 @@ si una ya aplicada cambió**: es lo que hace ejecutable «nunca se editan» (RD-
 | `0010_calidad.sql` | P28 | `validador`, `informe_critica`, `defecto`, `score` |
 | `0011_saneamiento_brief.sql` | P36 | `fragmento_sospechoso`, `dato_faltante`, `contradiccion_brief` |
 | `0012_regeneracion.sql` | P40 | `solicitud_cambio`, `analisis_impacto`, `retcon`, `contradiccion_canon` |
-| `0013_exportacion.sql` | P47 | `exportacion` |
+| `0013_exportacion.sql` | P48 | `exportacion` |
 
 Toda tabla lleva `novel_id NOT NULL` con clave foránea a `obra`, salvo `obra`, cuya clave
 primaria es `novel_id`; ninguna lleva `user_id` ni `tenant_id`. La prueba del P05 lo exige de
@@ -294,8 +301,8 @@ toda migración presente y futura.
 ```
 README.md                     P10 · arranque, un solo worker, brief de ejemplo, Langfuse
 ejemplos/brief-ejemplo.json   P26
-ejemplos/novela-ejemplo.pdf   P48
-docs/browser-mcp.md           P46 · contrato DOM de la lectura y qué inspeccionó el MCP
+ejemplos/novela-ejemplo.pdf   P49
+docs/browser-mcp.md           P47 · qué tool del MCP sostiene cada aserción y qué inspeccionó
 backend/
   pyproject.toml  uv.lock  .python-version
   app/
@@ -346,8 +353,9 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
   `test_dependencias.py`, `test_parametros_de_dominio.py`.
 - **Pruebas primero**, todas sobre `app/` por análisis estático (`ast`):
   - ninguna feature importa el `repository.py` de otra; el grafo de importación entre
-    features no tiene ciclos y sus aristas son las de `architecture.md` más `novel → intake`
-    (D-08);
+    features no tiene ciclos, sus aristas son **exactamente** las del diagrama de
+    `architecture.md` § Regla de importación —leído del fichero—, y `intake/` y `guardrail/`
+    no importan ninguna otra feature (D-08);
   - ningún módulo de `app/` importa `unittest.mock`, `tests` ni nombres de doble (§ 4.1);
   - `uv.lock` no contiene ningún paquete de la lista excluida de `CLAUDE.md` (Postgres,
     ORM, Redis, Celery, Django, Flask…);
@@ -507,14 +515,16 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 
 - **Fase** F1 · **Cubre** RF-INTAKE-04, RF-INTAKE-05, RF-NOVEL-02, RF-NOVEL-03, RNF-10, RD-01 ·
   **Skill** `backend-feature-slice`, `sqlite-relacional`
-- **Ficheros** migraciones `0001`–`0003`; `app/intake/` (schemas del brief idénticos al
-  contrato, persistencia), `app/novel/` (router de `/novelas`, `Obra`),
+- **Ficheros** migraciones `0001`–`0003`; `app/intake/` (`BriefNovela` idéntico al
+  contrato, persistencia; `BriefNovelaParcial` llega en el P35), `app/novel/` (router de `/novelas`, `Obra`),
   `app/guardrail/repository.py` para el nivel `novela`. Saca `crearNovela`, `listarNovelas`
   y `obtenerNovela` de `PENDIENTES`.
 - **Pruebas primero**
   - conformidad de las tres operaciones y validación dinámica de sus respuestas;
   - `POST /novelas` con el brief del contrato → `201`, `Location`, estado `Configurando`, y
     **el doble del modelo registra cero llamadas**;
+  - un brief sin un campo obligatorio de `BriefNovela` → `422 peticion-invalida` y ninguna
+    fila nueva: crear exige el brief completo (TO-037);
   - las palabras prohibidas del brief quedan como nivel `novela`, y las reglas del mundo
     asociadas a la novela;
   - `GET /novelas` pagina con `limite` y `desplazamiento`, de la más reciente a la más antigua;
@@ -548,8 +558,8 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 - **Ficheros** `app/prompts/{planner,writer,extractor,judge,editor,interviewer}.md`,
   `app/prompts/cargar.py` (devuelve texto y **hash de blob de git** calculado sobre el
   contenido realmente leído), `app/prompts/sync.py` (publica en Langfuse solo los hashes que
-  no estén), `app/skills/personalizacion-natural/SKILL.md`. Declara la excepción en
-  `docs/architecture.md` § Anatomía.
+  no estén), `app/skills/personalizacion-natural/SKILL.md`. La excepción ya está declarada en
+  `docs/architecture.md` § Anatomía (D-09).
 - **Pruebas primero**
   - el hash coincide con `git hash-object` del fichero;
   - `sync` con el registro de prueba es idempotente: dos ejecuciones publican una vez;
@@ -861,21 +871,33 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 
 ### F3 — Intake
 
-#### P35 · Validación determinista del brief
+#### P35 · Validación del brief parcial
 
-- **Fase** F3 · **Cubre** RF-INTAKE-01, RF-INTAKE-02, RNF-16, **D-01** · **Skill**
+- **Fase** F3 · **Cubre** RF-INTAKE-01, RF-INTAKE-02, RNF-16, TO-037 · **Skill**
   `backend-feature-slice`
-- **Ficheros** `app/intake/{validacion.py,reglas.py,router.py}`; `crearNovela` responde `400
-  brief-invalido` con `datos_faltantes` y `contradicciones` en las extensiones. Saca
-  `validarBrief` de `PENDIENTES`.
+- **Ficheros** `app/intake/{schemas.py,validacion.py,reglas.py,router.py}`:
+  `BriefNovelaParcial` y sus seis objetos parciales en `schemas.py`, idénticos al contrato
+  1.1.0; la validación recorre el brief parcial contra la lista de obligatorios de
+  `BriefNovela` —**derivada del propio modelo Pydantic**, no escrita a mano— y aplica las
+  reglas deterministas entre campos. `crearNovela` responde `400 brief-invalido` con las
+  contradicciones en las extensiones. Saca `validarBrief` de `PENDIENTES`.
 - **Pruebas primero**
-  - `destinatario.nombre` en blanco → `200 valido:false` con un `Dato faltante` y su
-    pregunta de reintento; **el sistema no rellena nada** (según D-01);
-  - `edad: 7` con un tono adulto → contradicción `edad-vs-tono`, por regla determinista;
-  - `comprador.identificador` con forma de correo → `Dato faltante` o contradicción, no pasa;
+  - `{}` → `200 valido:false` con un `Dato faltante` por cada campo obligatorio de
+    `BriefNovela`, cada uno con su pregunta de reintento;
+  - un brief sin `destinatario.nombre` → `200 valido:false` con ese `Dato faltante`; **el
+    sistema no rellena nada**;
+  - un campo que llega vacío o solo con espacios también es `Dato faltante`;
+  - un valor mal formado —`edad: "siete"`, `ocasion.tipo` fuera del `enum`— sigue siendo
+    `422 peticion-invalida`;
+  - `edad: 7` con un tono adulto → contradicción `edad-vs-tono`, por regla determinista, y
+    se detecta aunque falten otros campos;
+  - `comprador.identificador` con forma de correo → no pasa (RNF-16);
   - validar **no crea nada**: ninguna fila nueva;
-  - `crearNovela` con el mismo brief → `400 brief-invalido`;
-  - conformidad de `validarBrief`.
+  - el mismo brief sin `destinatario.nombre` enviado a `crearNovela` → `422`; uno completo
+    con una contradicción → `400 brief-invalido`;
+  - la lista de obligatorios que usa la validación es igual a la de `required` de
+    `BriefNovela` y sus anidados **en el contrato**, leída del fichero;
+  - conformidad de `validarBrief`, con `BriefNovelaParcial` como cuerpo.
 - **Hecho cuando** `uv run pytest tests/intake tests/contrato -v`
 
 #### P36 · Texto libre como contenido no confiable
@@ -1002,14 +1024,37 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
   `evento_capitulo`); la portada lleva la dedicatoria del brief; conformidad.
 - **Hecho cuando** `uv run pytest tests/versioning tests/contrato -v`
 
-#### P46 · `render_visual` con Playwright MCP
+#### P46 · Contrato de lectura como dato
 
-- **Fase** F5 · **Cubre** RF-QUA-03 (`render_visual`), TO-026, D-24 · **Skill**
+- **Fase** F5 · **Cubre** spec § 4.4, CL-01…CL-05, TO-037 · **Skill** `backend-feature-slice`
+- **Ficheros** `app/versioning/lectura.py`: la ruta, los estados de `data-estado` y la tabla
+  de selectores `data-testid` de CL-03 como **un único dato** que usan `render_visual` y
+  `paridad_pdf_web`; ningún selector aparece escrito fuera de este módulo.
+  `STORYMAKER_LECTURA_URL` en `.env.example`. `tests/fixtures/lectura/`: una página estática
+  generada desde una versión publicada que cumple el contrato, con su hoja `@media print`.
+- **Pruebas primero**
+  - la tabla de selectores del módulo es **igual** a la tabla CL-03 de `specs/spec1.md`,
+    leída del fichero: si alguien cambia una sin la otra, la suite falla;
+  - la ruta construida para `(novel_id, version)` es `/novelas/{novel_id}/versiones/{version}`
+    sobre la URL base;
+  - prueba de arquitectura: ningún módulo de `app/` fuera de `lectura.py` contiene la
+    cadena `data-testid`;
+  - la página de prueba cumple CL-01 a CL-04: un solo documento con todo, `data-estado` en
+    `lista`, todos los selectores con su cardinalidad, `capitulo-modificado` solo donde
+    `modificado` es `true`, y con medios `print` todos los capítulos visibles y los controles
+    ocultos.
+- **Hecho cuando** `uv run pytest tests/versioning/test_lectura.py tests/arquitectura -v`
+
+#### P47 · `render_visual` con Playwright MCP
+
+- **Fase** F5 · **Cubre** RF-QUA-03 (`render_visual`), CL-02, CL-03, CL-05, TO-026 · **Skill**
   `backend-feature-slice`
 - **Ficheros** `app/versioning/render_visual.py` (cliente MCP guionizado contra
-  `PLAYWRIGHT_MCP_URL`), `STORYMAKER_LECTURA_URL` en `.env.example`, `docs/browser-mcp.md` con
-  el contrato DOM, `tests/fixtures/lectura/` con una página que lo cumple.
+  `PLAYWRIGHT_MCP_URL`, con los selectores de `lectura.py`), `docs/browser-mcp.md` con qué
+  tool del MCP da la evidencia de cada aserción.
 - **Pruebas primero** (servidor MCP real, página de prueba):
+  - espera a `data-estado = lista` antes de afirmar, y `error` falla el gate;
+  - un selector ausente falla con el nombre del selector;
   - una página correcta pasa las cuatro aserciones: índice completo y resoluble, enlaces de la
     ficha, dedicatoria, sin errores de consola ni desbordes;
   - un enlace roto falla; si el dato no está en la story bible el fallo vuelve al rol dueño, y
@@ -1018,39 +1063,47 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 - **Hecho cuando** `uv run pytest tests/versioning/test_render_visual.py -v` con el servidor
   MCP en marcha (§ 9).
 
-#### P47 · Export a PDF y paridad
+#### P48 · Export a PDF y paridad
 
 - **Fase** F5 · **Cubre** RF-EXP-01, RF-EXP-02, TO-003, TO-025, D-22 · **Skill**
   `sqlite-relacional`, `backend-feature-slice`
 - **Ficheros** migración `0013`; `app/versioning/{export.py,paridad.py}` y su `__main__` de
-  línea de comandos. Saca `exportarVersion` y `descargarExport` de `PENDIENTES`. Corrige el
-  comando en `CLAUDE.md`.
+  línea de comandos con `<novel_id> <version>` (D-22). Emula medios `print` antes de
+  `page.pdf()` (CL-04). Saca `exportarVersion` y `descargarExport` de `PENDIENTES`.
 - **Pruebas primero**
   - `POST …/export` → `202` la primera vez y `200` con el mismo export después; el PDF se
     genera **una vez**;
   - `GET …/export` antes de estar → `404 export-no-disponible`; después, `application/pdf`;
-  - `paridad_pdf_web` pasa sobre la página de prueba y falla si falta un capítulo, un título,
+  - el PDF se genera con medios `print`: sobre la página de prueba, los controles ocultos en
+    impresión no aparecen en el texto del PDF;
+  - `paridad_pdf_web` cuenta las palabras sobre `capitulo-texto` y pasa sobre la página de
+    prueba; falla si falta un capítulo, un título,
     la dedicatoria o el índice, o si el recuento de palabras se sale de
     `export.tolerancia_recuento_palabras`;
   - conformidad de las dos operaciones.
 - **Hecho cuando** `uv run pytest tests/versioning/test_export.py tests/contrato -v`
 
-#### P48 · Cierre de F5 y entrega
+#### P49 · Cierre de F5 e integración con la lectura
 
 - **Pruebas primero** `tests/e2e/test_f5.py`: sobre una novela publicada con dobles, ficha y
   portada por HTTP, gate con `render_visual` en verde y export con paridad. Y
   `test_conformidad_completa`: **`PENDIENTES` está vacía**.
 - **Entrega**: `uv run --env-file ../.env python -m app.versioning.export <novel_id> 1` sobre
   la novela del humo, con la página `lectura` del frontend en `STORYMAKER_LECTURA_URL`, y se
-  commitea `ejemplos/novela-ejemplo.pdf`. **Si la página `lectura` aún no existe, no es
-  parada**: se termina el resto, se anota en progreso como pendiente con el comando exacto y
-  se avisa al terminar.
+  commitea `ejemplos/novela-ejemplo.pdf`. Antes, `render_visual` corre contra la página real:
+  es la **prueba de integración** de que el frontend cumple la spec § 4.4.
+- **Si la página `lectura` aún no existe, no es parada.** Se termina todo lo demás y
+  `ejemplos/novela-ejemplo.pdf` se anota en `specs/progreso.md` § Pendiente como **pendiente
+  del paso de integración P49**, con el comando exacto para generarlo. **No es un descarte**:
+  es entregable obligatorio del alcance, y el plan no está cerrado hasta que el PDF esté
+  commiteado.
 - **Documentos al cerrar el plan** (`architecture.md` § Ciclo de cambio): la spec si algún
   comportamiento resultó distinto, `docs/verification.md` por los validadores implementados y
-  los dejados fuera (D-16), `docs/architecture.md` por D-08 y D-09, y
-  `docs/registro-iteraciones.md`.
-- **Hecho cuando** el bloque de § 4.5 con `N = 5`, `PENDIENTES` vacía y el PDF commiteado o
-  anotado como pendiente.
+  los dejados fuera (D-16), y `docs/registro-iteraciones.md`. `architecture.md` ya recoge
+  D-08 y D-09.
+- **Hecho cuando** el bloque de § 4.5 con `N = 5`, `PENDIENTES` vacía y el PDF commiteado.
+  Si el PDF queda pendiente de la lectura, la F5 se cierra y **el plan no**: el P49 sigue
+  abierto en progreso hasta que el PDF exista.
 
 ---
 
@@ -1058,11 +1111,12 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 
 | Riesgo | Qué lo contiene |
 | --- | --- |
-| **D-01 no se acepta** y no hay forma de cumplir RF-INTAKE-01 sin tocar el contrato | Decidirlo antes de aprobar el plan; si no, el P35 para por la condición 2 |
+| El frontend ya generó su cliente con el contrato 1.0.0 | El cambio a 1.1.0 solo cambia el cuerpo de `validarBrief` y añade schemas; el frontend lo espera (TO-037) |
+| La página `lectura` no cumple la spec § 4.4 al integrarla | El P46 fija la lista como dato comparado con la spec, y el P49 corre `render_visual` contra la página real antes de exportar |
 | El OpenAPI de FastAPI no alcanza alguna forma del contrato | `json_schema_extra`, `responses=` y `openapi_extra`; si ni así, condición 2 |
 | El normalizador de conformidad es demasiado generoso y no falla nunca | La meta-prueba de mutaciones del P01 |
 | El coste real se dispara en el humo | Tope por novela de configuración, parada preventiva a 40 y reutilización de la misma novela en F4 y F5 |
-| La página `lectura` no está cuando llega F5 | Página de prueba en `tests/`, contrato DOM en `docs/browser-mcp.md`, y el PDF final como pendiente anotado en vez de parada |
+| La página `lectura` no está cuando llega F5 | Página de prueba en `tests/` que cumple la spec § 4.4, y el PDF final como pendiente del P49, no como parada ni como descarte |
 | Los validadores programáticos de F2 dan falsos positivos en cadena | `medicion.cerrar_el_paso: false` para los semánticos; los programáticos se prueban con un capítulo limpio además del defectuoso |
 | `--reload` y el cerrojo de instancia chocan | El recargador tiene un solo proceso de app a la vez; la prueba de reanudación del P27 lo ejercita |
 | Detectar inyecciones por patrones deja pasar paráfrasis | Residuo declarado en D-20; la contención real es RNF-09, que se prueba en el P36 |
@@ -1078,6 +1132,7 @@ Desde la raíz del repositorio salvo que se diga otra cosa. En PowerShell de Win
 
 ```bash
 cp .env.example .env              # y rellénalo: ANTHROPIC_API_KEY, LANGFUSE_*, STORYMAKER_*
+                                  # STORYMAKER_LECTURA_URL: base del frontend, para F5
 cd backend
 uv sync
 uv run playwright install chromium
@@ -1132,7 +1187,7 @@ proceso.
 
 | Requisito | Pasos |
 | --- | --- |
-| RF-INTAKE-01, 02 | P35 |
+| RF-INTAKE-01, 02 | P12 (brief completo), P35 |
 | RF-INTAKE-03 | P36, P38 |
 | RF-INTAKE-04, 05 | P12 |
 | RF-INTAKE-06 | post-demo, fuera de este plan |
@@ -1155,7 +1210,7 @@ proceso.
 | RF-GUARD-03 | P16, P19 |
 | RF-QUA-01 | P19 |
 | RF-QUA-02 | P19, P29, P30 |
-| RF-QUA-03 | P25, P33, P43, P46 |
+| RF-QUA-03 | P25, P33, P43, P47 |
 | RF-QUA-04, 07 | P31 |
 | RF-QUA-05 | P32 |
 | RF-QUA-06 | P37 |
@@ -1166,7 +1221,8 @@ proceso.
 | RF-VER-06, 09 | P40 |
 | RF-VER-07 | P41 |
 | RF-VER-08 | P42, P43, P44 |
-| RF-EXP-01, 02 | P47, P48 |
+| RF-EXP-01, 02 | P48, P49 |
+| Spec § 4.4, CL-01…05 | P46, P47, P48, P49 |
 | RF-EXP-03 | post-demo; P03 y P09 cubren el interruptor |
 | RF-OBS-01, 02 | P08, P22 |
 | RF-OBS-03 | P19, P28, P31 |

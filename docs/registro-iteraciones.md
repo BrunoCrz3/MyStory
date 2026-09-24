@@ -810,3 +810,50 @@ El plan propone una lectura (D-01) y la deja **pendiente del desarrollador**: si
 acepta, el P35 se detiene por la condición 2.
 
 **Sigue pendiente**: aprobar el plan, decidir D-01 y revisar TO-035 y TO-036.
+
+---
+
+## RI-011 — El contrato cambia a 1.1.0 y la lectura tiene contrato
+
+**Fecha:** 2026-09-24 · **Ficheros:** `specs/openapi.yaml`, `specs/spec1.md`,
+`specs/plan1.md`, `specs/progreso.md`, `docs/architecture.md`, `docs/trade-offs.md`,
+`CLAUDE.md`
+
+### Causa
+
+La revisión del plan 1 por el desarrollador. D-01 destapó que RF-INTAKE-01 no se podía
+cumplir con el contrato aprobado —la sesión del frontend encontró el mismo fallo por su
+lado—, y el plan dejaba en sus propias manos un contrato con el frontend que tenía que estar
+en la spec.
+
+### Qué cambió
+
+**El contrato pasa a 1.1.0** (TO-037): `validarBrief` recibe un `BriefNovelaParcial` con
+todos los campos opcionales y siete schemas nuevos; `crearNovela` sigue con el `BriefNovela`
+completo; el ejemplo de `brief-invalido` deja de mostrar un dato faltante que el schema ya
+no permite. Quedan 20 operaciones y 38 schemas, sin ningún `$ref` roto.
+
+**La spec gana RF-INTAKE-01 reescrito**, con un segundo criterio —el mismo brief a crear da
+`422`— y **§ 4.4, el contrato de lectura**: ruta, señal de carga, catorce selectores
+`data-testid` con su cardinalidad y la hoja de impresión.
+
+**El plan gana un paso, el P46**, que lleva ese contrato como dato comparado con la spec; el
+P35 se reescribe sobre el brief parcial; el P49 pasa a ser el paso de integración con la
+lectura real. Son 49 pasos.
+
+**Las decisiones revisadas quedan escritas donde viven**: D-08 en el grafo de importación de
+`architecture.md` —con cinco aristas más hacia `intake/` y `guardrail/` que la comprobación
+destapó, todas sin ciclo—, D-09 en § Anatomía y en el layout de `CLAUDE.md`, D-22 en su
+comando, y D-14 en la lista post-demo de `specs/progreso.md`.
+
+### Efecto
+
+**Comprobar el ciclo que pedía el desarrollador sacó más de lo que se buscaba.** La arista
+`novel → intake` no creaba ciclo, pero al recorrer el plan paso a paso aparecieron cinco
+dependencias más que el grafo no tenía: la capa Invariante necesita el brief, el Anticontexto
+las palabras vetadas, la portada la dedicatoria. Sin la comprobación, la prueba de
+importaciones del P02 habría fallado a mitad de la F1 por una arista que nadie había
+decidido.
+
+**Sigue pendiente**: aprobar el plan 1.
+

@@ -1171,18 +1171,75 @@ pesan:
 
 | Decisión | Qué se eligió | Alternativa descartada |
 | --- | --- | --- |
-| **D-01** | Leer «Dato faltante» como campo presente pero vacío, porque el schema aprobado de `BriefNovela` hace obligatorio `destinatario.nombre` y RF-INTAKE-01 pide un `200` sin él | Cambiar el contrato o la spec: **no lo puede decidir el agente**, y por eso D-01 está pendiente del desarrollador |
+| **D-01** | ~~Leer «Dato faltante» como campo presente pero vacío~~ **Rechazada por el desarrollador y sustituida por TO-037**: cambio de contrato con un brief parcial para validar | — |
 | D-05 | Una fila de `capitulo` por texto aceptado, y `version_capitulo` apunta a la fila | Copiar el texto en cada versión: los no afectados serían iguales por comparación, no por construcción |
 | D-06 | Vigencia semiabierta `[version_desde, version_hasta)` | Dejar el borde sin fijar, que es un fallo silencioso de la misma familia que olvidar `version` |
 | D-07 | La transacción de `Aceptar` la abre `process/` y la reparte entre los servicios dueños | Que `canon/` escriba en tablas de `novel/`, que rompe la anatomía |
 | D-09 | `backend/app/prompts/` como tercera excepción declarada | Prompts dentro de cada feature, con un comando `sync` que tendría que recorrerlas todas |
 | D-11 | Lanzador que exige interfaz local y un worker, más cerrojo de instancia | Solo documentarlo en el README, que no impide nada |
-| D-14 | La replanificación no se implementa: no tiene RF en la spec 1 | Construirla sin especificar |
+| D-14 | La replanificación no se implementa: no tiene RF en la spec 1. **Aceptada para la demo**; queda en la lista post-demo de `specs/progreso.md` | Construirla sin especificar |
 
 Las dependencias nuevas y su justificación están en `specs/plan1.md` § 2: todas son
 librerías de Python o toolchain de desarrollo, y ninguna añade infraestructura de servidor.
 
 ### Consecuencias
 
-Aprobar el plan aprueba estas decisiones. **D-01 no se puede aprobar por omisión**: o el
-desarrollador acepta la lectura propuesta, o cambia la spec o el contrato antes del P35.
+Aprobar el plan aprueba estas decisiones. **Revisión del desarrollador, 2026-09-24**: D-01
+rechazada y sustituida por un cambio de contrato (TO-037); D-08 aceptada con la condición de
+que no cree ciclo —comprobado, con cinco aristas más que se destaparon al hacerlo—; D-09,
+D-14 y D-22 aceptadas; D-24 sustituida por la spec § 4.4. El resto sigue en «revisar» hasta
+que se apruebe el plan.
+
+---
+
+## TO-037 — El brief tiene dos formas, y la lectura tiene contrato
+
+**Fecha:** 2026-09-24 · **Estado:** **decidida — cambio de contrato aprobado por el desarrollador** · **Afecta a:** `specs/openapi.yaml` (1.0.0 → 1.1.0), `specs/spec1.md` RF-INTAKE-01 y § 4.4, `specs/plan1.md`
+
+### Problema
+
+Dos huecos que salieron al escribir el plan 1, y que la sesión del frontend encontró por su
+lado:
+
+1. **RF-INTAKE-01 era imposible con el contrato aprobado.** Pedía `200 valido:false` para un
+   brief sin `destinatario.nombre`, pero `validarBrief` recibía el mismo `BriefNovela` que la
+   creación, con ese campo obligatorio: la petición no pasaba el schema y el contrato obligaba
+   a un `422`. La validación no podía decir qué faltaba, que es para lo que existe.
+2. **El render que se valida y se exporta no tenía contrato.** `render_visual` y el export a
+   PDF dependen de la página `lectura` del frontend, y nada fijaba qué ruta, qué selectores
+   ni qué hoja de impresión tenía que tener. Era la única dependencia entre los dos equipos
+   fuera del OpenAPI.
+
+### Opciones para el brief
+
+| Opción | En qué consiste | A favor | En contra |
+| --- | --- | --- | --- |
+| A. Campo vacío como dato faltante | Mantener el schema y tratar `"   "` como ausente | No toca el contrato | El formulario tendría que enviar huecos falsos para preguntar qué falta; el criterio de la spec seguía sin cumplirse |
+| **B. Brief parcial para validar** | `BriefNovelaParcial`, todos los campos opcionales, para `validarBrief`; `BriefNovela` completo para `crearNovela` | Cada operación acepta lo que su trabajo necesita; el `200 valido:false` es posible | Cambia el contrato aprobado y añade siete schemas |
+| C. Todo opcional en `BriefNovela` | Relajar el único schema | Un schema | La creación aceptaría briefs incompletos y el `422` dejaría de proteger la generación |
+
+### Elección
+
+**B**, aprobada por el desarrollador. `BriefNovelaParcial` tiene los mismos campos que
+`BriefNovela`, todos opcionales —también los de `Comprador`, `Destinatario`, `Ocasion`,
+`Dedicatoria`, `ElementoPersonalizado` y `TextoLibre`, cada uno con su variante parcial— y
+sin longitud mínima, pero **conserva tipos, `enum`, máximos y rangos**: un valor mal formado
+sigue siendo un `422`. Un `Dato faltante` es todo campo obligatorio de `BriefNovela` que no
+llega o llega vacío. `crearNovela` sigue exigiendo el brief completo, así que **nada que no
+sea un `BriefNovela` válido llega a lanzar una generación**. El contrato pasa a **1.1.0**: el
+cambio es compatible para un cliente que ya enviaba el brief completo.
+
+**Y el contrato de lectura va a la spec**, § 4.4, no al plan: la ruta
+`/novelas/{novel_id}/versiones/{version}` con la versión entera en un solo documento, la
+señal de carga `data-estado`, la tabla de selectores `data-testid` estables —portada, índice,
+ficha, capítulos y marca de modificado— y la hoja `@media print`. El frontend la implementa
+tal cual; cambiarla es cambiar la spec.
+
+### Consecuencias
+
+La prueba de conformidad comprueba los dos schemas del brief y que el mismo cuerpo vacío da
+`200` en la validación y `422` en la creación. El backend lleva la lista de selectores como
+dato en un único módulo, comparado en una prueba con la tabla de la spec, y el paso de
+integración del plan corre `render_visual` contra la página real antes de exportar el PDF de
+ejemplo. La lectura del «campo vacío» (D-01 del borrador del plan) queda rechazada.
+

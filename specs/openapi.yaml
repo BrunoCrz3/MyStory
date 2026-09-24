@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: storyMaker — API del backend v1
-  version: 1.0.0
+  version: 1.1.0
   summary: Genera novelas personalizadas de regalo y las sirve para su lectura web.
   description: |
     Contrato entre el backend FastAPI y el frontend React. **Este fichero es la fuente**:
@@ -22,6 +22,10 @@ info:
       solo en la interfaz local (`docs/architecture.md` § Seguridad).
     - **Todo error es `application/problem+json`** (RFC 9457) con un `type` de catálogo
       cerrado, incluidos los 422 de validación de FastAPI.
+    - **Dos formas del brief** (TO-037): `BriefNovelaParcial`, con todos los campos
+      opcionales, es lo que acepta la validación, que devuelve lo que falta en vez de
+      rechazarlo; `BriefNovela`, completo, es lo único que acepta la creación de la novela
+      y, por tanto, lo único desde lo que se lanza una generación.
     - **El progreso se consulta por sondeo.** El recurso `Generacion` lleva su propio
       intervalo recomendado y dice si su estado es terminal.
 
@@ -89,12 +93,17 @@ paths:
 
         El texto libre es **contenido no confiable**: entra marcado como datos y lo que
         parece una instrucción al sistema se registra y se descarta, nunca se obedece.
+
+        Acepta un **`BriefNovelaParcial`** (TO-037): todos los campos son opcionales, y un
+        campo obligatorio del brief completo que no llega, o llega vacío, se devuelve como
+        `Dato faltante` con su pregunta de reintento en un `200`. Solo un cuerpo mal formado
+        —un tipo equivocado, un valor fuera de su `enum`— es un `422`.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BriefNovela'
+              $ref: '#/components/schemas/BriefNovelaParcial'
       responses:
         '200':
           description: |
@@ -145,9 +154,11 @@ paths:
         Responde a RF-NOVEL-01. Valida el brief contra su schema y lo persiste; **no**
         lanza la generación, que es una operación aparte y cara.
 
-        Si el brief no pasa la validación de dominio —falta un campo obligatorio, dos
-        campos se contradicen— responde `400` con `brief-invalido` y el detalle en las
-        extensiones del problema, no un `422`: la petición estaba bien formada.
+        Exige el **`BriefNovela` completo**: un campo obligatorio ausente es un `422`, porque
+        el brief parcial solo lo acepta la validación (TO-037). Si el brief cumple el schema
+        pero no pasa la validación de dominio —dos campos se contradicen, o un campo llega
+        vacío— responde `400` con `brief-invalido` y el detalle en las extensiones del
+        problema: la petición estaba bien formada.
       requestBody:
         required: true
         content:
@@ -759,21 +770,18 @@ components:
 
     BriefInvalido:
       description: |
-        La petición está bien formada, pero el brief no es válido como encargo: falta un
-        campo obligatorio o dos campos se contradicen.
+        La petición está bien formada y cumple el schema de `BriefNovela`, pero el brief no
+        es válido como encargo: dos campos se contradicen o un campo llega vacío.
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problema'
           example:
             type: /problemas/brief-invalido
-            title: El brief no está completo
+            title: El brief no es válido como encargo
             status: 400
-            detail: Faltan 1 dato obligatorio y hay 1 contradicción sin resolver.
+            detail: Hay 1 contradicción sin resolver.
             instance: /novelas
-            datos_faltantes:
-              - campo: destinatario.nombre
-                pregunta_reintento: ¿Cómo se llama la persona a quien va dirigida?
             contradicciones:
               - campos: [destinatario.edad, tono]
                 tipo: edad-vs-tono
@@ -1184,6 +1192,164 @@ components:
           - contenido: Aquel verano se empeñó en soltar amarras sin ayuda de nadie.
             procedencia: carta de su hermana
 
+    CompradorParcial:
+      title: CompradorParcial
+      description: '`Comprador` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        identificador:
+          type: string
+          maxLength: 64
+        relacion_con_destinatario:
+          type: string
+          maxLength: 120
+
+    DestinatarioParcial:
+      title: DestinatarioParcial
+      description: '`Destinatario` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        nombre:
+          type: string
+          maxLength: 120
+        edad:
+          type: integer
+          minimum: 0
+          maximum: 120
+        rasgos:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+        recuerdos:
+          type: array
+          items:
+            type: string
+            maxLength: 2000
+        fecha_nacimiento:
+          type: [string, 'null']
+          format: date
+
+    OcasionParcial:
+      title: OcasionParcial
+      description: '`Ocasion` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        tipo:
+          type: string
+          enum: [cumpleanos, boda, aniversario, jubilacion, nacimiento, otra]
+        fecha:
+          type: [string, 'null']
+          format: date
+        tono_esperado:
+          type: [string, 'null']
+          maxLength: 120
+
+    DedicatoriaParcial:
+      title: DedicatoriaParcial
+      description: '`Dedicatoria` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        texto:
+          type: string
+          maxLength: 1000
+        firma:
+          type: [string, 'null']
+          maxLength: 120
+
+    ElementoPersonalizadoParcial:
+      title: ElementoPersonalizadoParcial
+      description: '`ElementoPersonalizado` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        enunciado:
+          type: string
+          maxLength: 500
+        obligatorio:
+          type: boolean
+        origen:
+          type: string
+          enum: [formulario, texto-libre]
+          default: formulario
+
+    TextoLibreParcial:
+      title: TextoLibreParcial
+      description: '`TextoLibre` sin campos obligatorios. Solo lo acepta la validación del brief.'
+      type: object
+      properties:
+        contenido:
+          type: string
+          maxLength: 20000
+        procedencia:
+          type: string
+          maxLength: 120
+
+    BriefNovelaParcial:
+      title: BriefNovelaParcial
+      description: |
+        El brief tal como está mientras se rellena: **los mismos campos que `BriefNovela`,
+        todos opcionales**, también dentro de los objetos anidados, y sin longitud mínima
+        (TO-037). Es lo que acepta `validarBrief`, que responde con los `Dato faltante` en
+        vez de rechazarlo. **No sirve para crear una novela**: `crearNovela` exige el
+        `BriefNovela` completo.
+
+        Conserva los tipos, los `enum`, las longitudes máximas y los rangos: un valor mal
+        formado sigue siendo un `422`. Lo único que se relaja es la obligatoriedad.
+      type: object
+      properties:
+        comprador:
+          $ref: '#/components/schemas/CompradorParcial'
+        destinatario:
+          $ref: '#/components/schemas/DestinatarioParcial'
+        ocasion:
+          $ref: '#/components/schemas/OcasionParcial'
+        genero:
+          type: string
+          maxLength: 80
+        tono:
+          type: string
+          maxLength: 80
+        dedicatoria:
+          $ref: '#/components/schemas/DedicatoriaParcial'
+        premisa:
+          type: [string, 'null']
+          maxLength: 2000
+        elementos_personalizados:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementoPersonalizadoParcial'
+        temas_excluidos:
+          type: array
+          items:
+            type: string
+            maxLength: 200
+        palabras_prohibidas:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+        reglas_mundo:
+          type: array
+          items:
+            type: string
+            maxLength: 300
+        textos_libres:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextoLibreParcial'
+        voz_narrativa:
+          $ref: '#/components/schemas/VozNarrativa'
+      example:
+        comprador:
+          identificador: comprador-0042
+        destinatario:
+          edad: 7
+        ocasion:
+          tipo: cumpleanos
+        tono: adulto irónico
+        dedicatoria:
+          texto: Para quien cumple siete.
+
     DatoFaltante:
       title: DatoFaltante
       type: object
@@ -1194,7 +1360,10 @@ components:
           example: destinatario.nombre
         pregunta_reintento:
           type: string
-          description: Lo que el formulario vuelve a preguntar. El sistema repregunta; nunca rellena el hueco.
+          description: |
+            Lo que el formulario vuelve a preguntar. El sistema repregunta; nunca rellena el
+            hueco. Un campo es un dato faltante si es obligatorio en `BriefNovela` y no llega
+            en el `BriefNovelaParcial`, o llega vacío.
 
     ContradiccionBrief:
       title: ContradiccionBrief
