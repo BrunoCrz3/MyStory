@@ -29,7 +29,7 @@ from app.process import cola
 from app.process import router as generacion
 from app.process.worker import Worker
 from app.versioning import router as lectura
-from app.versioning.service import Publicacion, RenderVisual
+from app.versioning.service import Publicacion, RenderVisual, render_de_entorno
 
 TITULO = "storyMaker — API del backend v1"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -80,7 +80,8 @@ def crear_app(
                 llamador=LlamadorModelo(cfg, cliente, pool, traz),
             )
             recursos.contar_cola = lambda: cola.trabajos_en_cola(recursos)
-            worker = Worker(recursos, Publicacion(cfg, render_visual))
+            render = render_visual if render_visual is not None else render_de_entorno(cfg, db)
+            worker = Worker(recursos, Publicacion(cfg, render))
             recursos.avisar_trabajo = worker.avisar
             app.state.recursos = recursos
             app.state.worker = worker

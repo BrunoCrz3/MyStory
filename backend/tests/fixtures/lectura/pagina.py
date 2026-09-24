@@ -90,14 +90,23 @@ def pagina(datos: dict[str, Any], *, estado: str = LISTA, sin: tuple[str, ...] =
     personajes = "".join(_entrada_ficha("ficha-personaje", e) for e in ficha["personajes"])
     lugares = "".join(_entrada_ficha("ficha-lugar", e) for e in ficha["lugares"])
     return (
-        '<!doctype html><html lang="es"><head><meta charset="utf-8">'
+        # Sin favicon, el navegador pide `/favicon.ico` y el 404 sale como error de consola.
+        '<!doctype html><html lang="es"><head><meta charset="utf-8"><link rel="icon" href="data:,">'
         f"<title>{html.escape(p['titulo'])}</title><style>{ESTILO}</style></head><body>"
         f'<main {_t("lectura")} data-estado="{estado}" data-novel-id="{datos["novel_id"]}"'
         f' data-version="{datos["version"]}">'
         + si(
             "portada",
-            f"<header {_t('portada')}><h1 {_t('portada-titulo')}>{html.escape(p['titulo'])}</h1>"
-            f"<p {_t('portada-dedicatoria')}>{html.escape(p['dedicatoria']['texto'])}</p></header>",
+            f"<header {_t('portada')}>"
+            + si(
+                "portada-titulo",
+                f"<h1 {_t('portada-titulo')}>{html.escape(p['titulo'])}</h1>",
+            )
+            + si(
+                "portada-dedicatoria",
+                f"<p {_t('portada-dedicatoria')}>{html.escape(p['dedicatoria']['texto'])}</p>",
+            )
+            + "</header>",
         )
         + '<nav class="control"><button type="button">Pedir un cambio</button></nav>'
         + si("indice", f"<ol {_t('indice')}>{indice}</ol>")

@@ -24,7 +24,7 @@ from app.versioning import ficha as _ficha
 from app.versioning import gate, repository
 from app.versioning import portada as _portada
 from app.versioning.huella import contenido, hash_contenido, hash_de_version
-from app.versioning.render_visual import RenderVisual, SinNavegador
+from app.versioning.render_visual import RenderVisual, SinNavegador, render_de_entorno
 from app.versioning.schemas import (
     Capitulo,
     CapituloIndice,
@@ -46,6 +46,7 @@ __all__ = [
     "listar_versiones",
     "obtener_capitulo",
     "obtener_version",
+    "render_de_entorno",
 ]
 
 

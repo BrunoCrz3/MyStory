@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P47b · `render_visual` con Playwright MCP |
-| Estado del paso | sin empezar; P47a cerrado (la parada del P47 está **resuelta** con TO-045, § Parada) |
+| Paso actual | P48 · Export a PDF y paridad |
+| Estado del paso | sin empezar; P47b cerrado |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P47a |
+| Último commit de paso | P47b |
 
 ## Coste real
 
@@ -88,6 +88,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P46** — `versioning/lectura.py`: ruta, estados de `data-estado` y los 14 selectores de CL-03 como un único dato, comparado con la tabla de la spec leída del fichero; `url()` y `selector()`; prueba de arquitectura: `data-testid` solo en `lectura.py`; `tests/fixtures/lectura/pagina.py` genera la página de prueba desde una versión publicada (con `@media print` y opciones para romperla); `STORYMAKER_LECTURA_URL` en `.env.example`; 420 pruebas
 
 - **P47a** — contrato 1.2.0 (TO-045): migración `0013_estado_version.sql` (`estado` con `CHECK`, existentes `publicada`, trigger que solo admite `candidata → publicada | rechazada`); `Version.estado`; `novel.version_vigente` y `listarVersiones` solo con publicadas; puerto `Publicador` con `proponer`, `gate`, `render_visual`, `publicar` y `rechazar`; `versioning/render_visual.py` con el puerto y `SinNavegador` (A-114); el orquestador escribe la candidata, corre el gate completo sobre ella y publica o rechaza en la transacción que detiene; `crear_app(render_visual=…)`; doble `tests/dobles/render.py`; `VERSION_API` 1.2.0; 428 pruebas
+- **P47b** — `versioning/render_visual.py`: cliente guionizado del servidor Playwright MCP (0.0.82, `--headless --isolated --browser msedge`, URL con `localhost`) sobre la candidata: navega, sondea `data-estado`, extrae el DOM con una llamada a `browser_evaluate` usando los selectores de `lectura.py` y lee `browser_console_messages`; `evaluar` puro con siete aserciones (`ASERCIONES`, cada una con su tool), clasificación datos/maquetación consultando la story bible; `render_de_entorno` elige `RenderVisualMCP` o `SinNavegador`; umbrales `render_visual.*`; `docs/browser-mcp.md`; dependencia `mcp`; 449 pruebas (5 contra el servidor MCP real)
 ## Pendiente
 
 - **P47 partido en P47a y P47b** por el cambio de contrato TO-045 que resuelve la parada; después, P48 y P49 en orden.
@@ -231,6 +232,9 @@ registrada.
 | A-113 | P47a | Una versión rechazada ocupa su número y la novela queda `Detenida`, sin intento siguiente | Es lo que ya hacía un gate en rojo (A-47, A-79); la vigente sigue siendo la anterior | TO-045 |
 | A-114 | P47a | Sin servidor MCP configurado, `render_visual` falla con ese motivo | Es la implementación de producción, no un doble: sin navegador no se publica | TO-045 |
 | A-115 | P47a | Una reanudación que encuentra la candidata ya escrita la reutiliza | La reanudación no duplica y el contenido de la candidata no cambia | TO-045 |
+| A-116 | P47b | Un hallazgo de datos y uno de maquetación detienen igual la generación; la clase, el rol dueño y la tool van en el detalle del score y en el audit log | Todo gate en rojo detiene (A-47, A-79, A-113) y el gate no reescribe capítulos, así que ninguno gasta intentos | TO-046 (F5) |
+| A-117 | P47b | Las pruebas contra el servidor MCP real se saltan, diciendo por qué, si no está en marcha en `STORYMAKER_PRUEBAS_MCP_URL` (por defecto `http://localhost:8931/mcp`); `evaluar` se prueba entero sin navegador | La suite no depende de un proceso externo; el paso exige correrlas con el servidor en marcha, y así se cerró | TO-046 (F5) |
+| A-118 | P47b | Playwright MCP fijado a 0.0.82; los errores de consola se cuentan por la cabecera, no por el prefijo `[ERROR]` | El formato de texto de las tools es el contrato del harness; una excepción no capturada sale sin prefijo | TO-046 (F5) |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -299,8 +303,8 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P47a cerrado (TO-045); sigue el P47b**. Rama `backend-v1`,
-suite en verde (428 pruebas). Al retomar: seguir por el P47b del plan. Sin servidor MCP, `render_visual` falla y ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P47b cerrado; sigue el P48**. Rama `backend-v1`,
+suite en verde (449 pruebas). Al retomar: seguir por el P48 del plan. Para `render_visual` real, arrancar el servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash

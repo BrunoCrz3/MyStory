@@ -1179,7 +1179,8 @@ uv run --env-file ../.env python -m app.commons.db.migrar
 ```bash
 uv run --env-file ../.env python -m app                          # o, en desarrollo:
 uv run --env-file ../.env uvicorn app.main:app --reload --port 8000
-npx -y @playwright/mcp --port 8931                               # para render_visual (F5), en otra terminal
+npx -y @playwright/mcp@0.0.82 --headless --isolated --browser msedge --host 127.0.0.1 --port 8931
+                                  # para render_visual (F5), en otra terminal; PLAYWRIGHT_MCP_URL=http://localhost:8931/mcp
 ```
 
 **Pruebas**

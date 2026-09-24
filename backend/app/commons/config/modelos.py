@@ -193,6 +193,11 @@ class Export(_Estricto):
     tolerancia_recuento_palabras: float
 
 
+class RenderVisualUmbrales(_Estricto):
+    espera_lista_segundos: float
+    timeout_llamada_segundos: float
+
+
 class ModeloFormal(_Estricto):
     capitulos: int
     reintentos: int
@@ -229,6 +234,7 @@ class Umbrales(_Estricto):
     coste: Coste
     modelo: Modelo
     formal: Formal
+    render_visual: RenderVisualUmbrales
     export: Export
     modelo_formal: ModeloFormal
     recuperacion: Recuperacion

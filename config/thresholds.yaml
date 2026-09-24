@@ -487,6 +487,22 @@ formal:
   lean_timeout_segundos: null    # [bloqueado] TO-016 · falta medirlo; irrelevante mientras gate_activo sea false
 
 # ---------------------------------------------------------------------------
+# render_visual
+# ---------------------------------------------------------------------------
+# TO-026, TO-045. El gate pinta la versión candidata con el servidor Playwright MCP. Son
+# esperas, no puntuaciones: el validador es booleano. Si la página no llega a
+# `data-estado = lista` dentro de la espera, falla; si una llamada al servidor tarda más que
+# su tope, también, y nunca se reintenta en silencio.
+
+render_visual:
+  # [provisional — calibrar tras la demo] La lectura carga la versión entera en un solo
+  # documento (CL-01): diez capítulos por la API local tardan menos de un segundo.
+  espera_lista_segundos: 20
+  # [provisional — calibrar tras la demo] Tope de una llamada al servidor MCP; la navegación
+  # arranca el navegador la primera vez, que es lo más lento.
+  timeout_llamada_segundos: 60
+
+# ---------------------------------------------------------------------------
 # Export a PDF
 # ---------------------------------------------------------------------------
 # TO-025. El PDF se genera bajo demanda, una vez por versión, y en ese momento corre
