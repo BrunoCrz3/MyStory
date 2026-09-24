@@ -237,3 +237,16 @@ def promesas_pendientes_hasta(
         (novel_id, version, numero, numero),
     ).fetchall()
     return [f["enunciado"] for f in filas]
+
+
+def existe_novela(con: sqlite3.Connection, *, novel_id: str) -> bool:
+    return con.execute("SELECT 1 FROM obra WHERE novel_id = ?", (novel_id,)).fetchone() is not None
+
+
+def existe_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> bool:
+    """Una versión publicada. Como el JOIN con `capitulo` (A-20), la lectura cruza una tabla
+    de otra feature por SQL: `canon/` no importa `versioning/` (A-93)."""
+    fila = con.execute(
+        "SELECT 1 FROM version_novela WHERE novel_id = ? AND version = ?", (novel_id, version)
+    ).fetchone()
+    return fila is not None

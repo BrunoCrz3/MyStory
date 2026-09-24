@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable
+from uuid import UUID
 
 from app.canon import repository
 from app.canon.models import (
@@ -23,6 +24,9 @@ from app.canon.models import (
     ResultadoConsolidacion,
     Snapshot,
 )
+from app.canon.schemas import HechoVigente
+from app.commons.db import BaseDatos
+from app.commons.errores import NovelaNoEncontrada, VersionNoEncontrada
 from app.commons.tiempo import ahora
 
 __all__ = [
@@ -189,3 +193,31 @@ def promesas_pendientes_al_cierre(
         for p in promesas_de(con, novel_id=novel_id, version=version, capitulo_ids=capitulo_ids)
         if p.estado == "pendiente"
     ]
+
+
+async def listar_hechos(
+    db: BaseDatos, novel_id: str, version: int, *, capitulo: int | None = None
+) -> list[HechoVigente]:
+    """Los hechos vigentes en una versión publicada, por vigencia (RF-CANON-03, TO-028); con
+    `capitulo`, solo los que ese capítulo usa."""
+
+    def leer(con: sqlite3.Connection) -> list[HechoVigente]:
+        if not repository.existe_novela(con, novel_id=novel_id):
+            raise NovelaNoEncontrada(novel_id=novel_id)
+        if not repository.existe_version(con, novel_id=novel_id, version=version):
+            raise VersionNoEncontrada(f"la novela no tiene versión {version}", novel_id=novel_id)
+        return [
+            HechoVigente(
+                hecho_id=UUID(h.hecho_id),
+                enunciado=h.enunciado,
+                estado=h.estado,
+                origen=h.origen,
+                capitulo_establece=h.capitulo_establece,
+                capitulos_usan=h.capitulos_usan,
+                fragmento_soporte=h.fragmento_soporte,
+            )
+            for h in hechos_vigentes(con, novel_id=novel_id, version=version)
+            if capitulo is None or capitulo in h.capitulos_usan
+        ]
+
+    return await db.ejecutar(leer)

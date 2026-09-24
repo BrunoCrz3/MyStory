@@ -8,7 +8,6 @@ PENDIENTES: frozenset[str] = frozenset(
     {
         "obtenerFicha",
         "obtenerPortada",
-        "listarHechos",
         "crearSolicitudCambio",
         "obtenerSolicitudCambio",
         "confirmarSolicitudCambio",

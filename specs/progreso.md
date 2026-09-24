@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P39 · Hechos por versión |
+| Paso actual | P40 · Solicitud de cambio por hecho y análisis de impacto |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P38 |
+| Último commit de paso | P39 |
 
 ## Coste real
 
@@ -73,10 +73,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P36** — Migración 0011 (`fragmento_sospechoso`); `intake/saneamiento.py` con `patrones.txt` (expresión, tabulador, motivo) por frase y línea; `intake/extraccion.py` (tool `extraer_hechos_texto_libre`, rol entrevistador, texto saneado dentro de `<texto_libre_no_confiable>`, solo hechos con fragmento literal); `validarBrief` devuelve fragmentos y hechos; `registrar_brief` guarda el brief saneado y los fragmentos; comprobador `violaciones_ejecucion` con meta-prueba; corpus de inyección entero detectado; 381 pruebas
 - **P37** — `quality/validadores/{invencion_destinatario,temas_excluidos}.py` sobre los campos del judge; `ContextoJudge` (soporte: rasgos, recuerdos, elementos, texto libre saneado, premisa y dedicatoria); `evaluar_judge` los añade como `editor` y `juzgar` emite sus scores; `calidad.invencion_soporte_minimo: 0.5`; los dos cuentan hasta cero y cierran siempre; 388 pruebas
 - **P38** — Cierre de F3: `tests/e2e/test_f3.py` (brief adversarial por HTTP: validar devuelve el fragmento, crear lo registra, y ninguna petición de toda la generación con dobles lo contiene; el texto libre restante solo dentro de su delimitador); `tests/humo/test_adversarial_real.py` (opcional real); judge calibrado a 10000 (A-92); TO-043 y RI-016; bloque § 4.5 con N = 3 en verde (389 pruebas, cobertura 96,4 %); F3 subida. Segundo humo adversarial, con el judge calibrado, lanzado al cerrar: su resultado se anota aparte
+- **P39** — `canon/router.py` y `canon/schemas.py` (`HechoVigente` idéntico al `Hecho` del contrato); `GET …/versiones/{version}/hechos` por vigencia, con `?capitulo=` sobre `capitulos_usan` del puente; 404 `novela-no-encontrada` y `version-no-encontrada`; `listarHechos` fuera de PENDIENTES; 392 pruebas
 
 ## Pendiente
 
-- Siguiente: **P39 · Hechos por versión**, y después el resto hasta el P49 en orden.
+- Siguiente: **P40 · Solicitud de cambio por hecho y análisis de impacto**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -194,6 +195,7 @@ registrada.
 | A-90 | P37 | Una afirmación sobre el destinatario tiene apoyo si al menos `calidad.invencion_soporte_minimo` (0,5) de sus palabras con contenido están en el brief o el texto libre | D-13 pide un cotejo determinista y RNF-14 la cifra en config; la mitad tolera que el capítulo lo cuente con otras palabras | TO-043 |
 | A-91 | P37 | Una afirmación o un tema cuya cita no está en el capítulo no cuenta como invención; un tema que el brief no excluye tampoco | Sería una invención del judge, no del texto; y el validador solo mide lo que el comprador vetó | TO-043 |
 | A-92 | P38 | `max_tokens_por_rol.judge` 3000 → 10000 | El humo adversarial real mostró que el judge se truncaba siempre (salida medida 5.017) y agotaba el capítulo | TO-041 |
+| A-93 | P39 | `canon/` comprueba por SQL que la novela y la versión publicada existen (`obra`, `version_novela`) | Como el JOIN con `capitulo` de A-20: `canon/` solo importa `commons/`, y el plan pone la ruta en `canon/router.py` | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -258,14 +260,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P38 cerrado (F3 completa y subida), siguiente P39**. Rama `backend-v1`,
-suite en verde (389 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P39 cerrado, siguiente P40**. Rama `backend-v1`,
+suite en verde (392 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 389 pruebas en verde al cerrar P38
+uv run pytest -q          # 392 pruebas en verde al cerrar P39
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

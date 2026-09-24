@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from app.canon import router as canon
 from app.commons import salud
 from app.commons.config import Config, cargar_config
 from app.commons.db import BaseDatos, ruta_db
@@ -102,6 +103,7 @@ def crear_app(
     app.include_router(novel.router)
     app.include_router(generacion.router)
     app.include_router(lectura.router)
+    app.include_router(canon.router)
     registrar_errores(app)
     return app
 
