@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P14 · Prompts, versión de prompt y skill de runtime |
+| Paso actual | P15 · Canon: consolidación, uso por capítulo y vigencia |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P13 |
+| Último commit de paso | P14 |
 
 ## Coste real
 
@@ -44,10 +44,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P11** — guardrail/: Guardrail con las cinco normalizaciones a los dos lados (tokenización con posiciones en el original, raíces con plural y diminutivos), niveles global (lista), perfil (edad y ocasión) y novela, gana el más específico, expresiones de varias palabras; suite propia de 17 pruebas incluida la de cada transformación apagada
 - **P12** — Migraciones 0001_obra, 0002_encargo, 0003_palabra_prohibida; intake/ con BriefNovela y sus objetos idénticos al contrato y su persistencia; guardrail/ guarda el nivel novela; novel/ con POST, GET y listado de /novelas conformes al contrato (201 con Location, 404 novela-no-encontrada, paginación, 422 sin crear nada), sin ninguna llamada al modelo; aislamiento por novel_id
 - **P13** — process/transiciones: las dos máquinas como dato (18 acciones) con aplicar() que rechaza lo que no está; pruebas que comparan la tabla con los stateDiagram de domain-knowledge.md, con la tabla de architecture.md y con los enum del contrato, más una propiedad con hypothesis
+- **P14** — app/prompts/: un prompt por rol (texto libre y brief siempre como datos), cargador con hash de blob de git sobre el contenido leído (coincide con git hash-object), sync idempotente por hash a Langfuse con etiqueta git-<hash>; skill de runtime personalizacion-natural sin cifras ni rúbrica, cargada por planner, writer y editor; la rúbrica solo en el prompt del judge
 
 ## Pendiente
 
-- Siguiente: **P14 · Prompts, versión de prompt y skill de runtime**, y después el resto hasta el P49 en orden.
+- Siguiente: **P15 · Canon: consolidación, uso por capítulo y vigencia**, y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -90,6 +91,8 @@ registrada.
 | A-15 | P11 | La ñ no se trata como acento | `año` y `ano` son palabras distintas en español | TO-039 |
 | A-16 | P12 | `brief_novela.contenido` guarda el BriefNovela validado entero y las tablas del Bloque A son su desglose consultable, escritos en la misma transacción | La API devuelve el brief tal como llegó; las tablas sostienen las consultas de la story bible | TO-039 |
 | A-17 | P13 | La tabla de acciones de architecture.md gana la columna Máquina y nombra las seis transiciones de la novela que el diagrama dibujaba sin nombre (FijarEsquema, CerrarEscritura, DevolverAlEditor, Conservar, Regenerar, CerrarRegeneracion) | Escribiendo→Validando existe en las dos máquinas; sin la columna, la tabla es ambigua | TO-039 |
+| A-18 | P14 | Los prompts de sistema son texto fijo por rol, sin huecos: todo dato de la novela llega en el mensaje de usuario, por capas y marcado como datos | Así ningún prompt contiene un dato de novela y el hash identifica el prompt, no la novela | TO-039 |
+| A-19 | P14 | La versión en Langfuse se etiqueta `git-<hash>` y sync la busca por esa etiqueta | Es lo que hace la sincronización idempotente sin guardar estado local | TO-039 |
 
 ## Parada
 
