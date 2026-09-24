@@ -28,6 +28,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P27 | Humo 2: capítulos 1 y 2 aceptados en el cuarto intento por un falso positivo de `nombres_exactos`; parado a mano en el capítulo 3 para no gastar ni pasar el tope de latencia. Base apartada como `data/storymaker-demo-intentos-p27.db` | 1,55 | 2,36 |
 | 2026-09-24 | P27 | Humo 3, **verde**: novela publicada como versión 1, diez capítulos, 25 llamadas, 1.647 s (`coste_usd` de la generación, nominal) | 5,06 | 7,42 |
 | 2026-09-24 | P38 | Humo adversarial opcional (base temporal): **ninguna de las 18 peticiones llevó la instrucción inyectada**, pero la novela se detuvo en el capítulo 1 porque el judge se truncaba con `max_tokens` 3000 (A-92) | 1,55 | 8,97 |
+| 2026-09-24 | P38 | Humo adversarial 2 (judge calibrado): otra vez ninguna petición con la instrucción; se detuvo en el capítulo 1 por `limite-de-intentos-agotado`. La base temporal se perdió en la rotación de pytest; sospecha fundada: `invencion_destinatario` sin la edad, la ocasión ni la relación del comprador en su soporte (arreglado, A-98) | 2,39 | 11,36 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -202,6 +203,7 @@ registrada.
 | A-95 | P40 | El análisis añade el capítulo que estableció el hecho a los que lo usan, y marca como derivados los hechos que establecen los capítulos afectados | El que establece también lo cuenta; y lo que se reescribe puede cambiar lo que esos capítulos establecieron | TO-044 |
 | A-96 | P40 | Sin tabla `contradiccion_canon` en la migración 0012 | Ningún paso del plan 1 la escribe | TO-044 |
 | A-97 | P41 | A igual similitud, el candidato es el hecho establecido antes; `hecho_candidato` devuelve su enunciado y la solicitud guarda su id | El original es el que se quiere cambiar; el contrato lo tipa como texto y la confirmación necesita el id | TO-044 |
+| A-98 | P41 | El soporte de `invencion_destinatario` es el brief entero —edad en cifra y en letra, fecha de nacimiento, ocasión, quién regala, firma— más el texto libre saneado | La edad o «su hermana» vienen del brief; sin ellas el validador, que cierra siempre, contaba como invención lo que el comprador dijo | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes

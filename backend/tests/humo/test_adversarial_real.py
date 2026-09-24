@@ -1,14 +1,17 @@
 """Opcional del cierre de F3 (P38): el brief adversarial generado con el modelo real.
 
-Marcado `real`. En una base temporal, no en la de la demo: esta novela no se reutiliza. Se
+Marcado `real`. En una base propia de `data/`, no en la de la demo: esta novela no se
+reutiliza, pero la base se conserva para diagnosticar (pytest rota sus temporales). Se
 comprueba lo mismo que el e2e con dobles —ninguna petición lleva la instrucción inyectada— y
-además que la novela real se publica. El coste queda en `data/humo-adversarial-<fecha>.json`.
+además que la novela real se publica. El coste y los validadores que cierran y fallan en cada
+intento quedan en `data/humo-adversarial-<fecha>.json`.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import sqlite3
 import time
 from datetime import UTC, datetime
 from pathlib import Path
@@ -39,11 +42,34 @@ class ClienteQueGuarda(ClienteMedido):
         return await super().generar(peticion, recuento)
 
 
-def test_la_generacion_real_no_recibe_la_instruccion(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def _fallos_que_cierran(base: Path) -> list[dict[str, Any]]:
+    con = sqlite3.connect(base)
+    con.row_factory = sqlite3.Row
+    try:
+        return [
+            {
+                "intento": i["intento"],
+                "decision": i["decision"],
+                "fallos": [
+                    {"validador": s["validador"], "valor": s["valor"], "detalle": s["detalle"]}
+                    for s in con.execute(
+                        "SELECT validador, valor, detalle FROM score WHERE informe_id = ?"
+                        " AND pasa = 0 AND cierra_el_paso = 1 ORDER BY orden",
+                        (i["id"],),
+                    )
+                ],
+            }
+            for i in con.execute("SELECT id, intento, decision FROM informe_critica ORDER BY rowid")
+        ]
+    finally:
+        con.close()
+
+
+def test_la_generacion_real_no_recibe_la_instruccion(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = cargar_config()
-    monkeypatch.setenv("STORYMAKER_DB_PATH", str(tmp_path / "adversarial.db"))
+    INFORMES.mkdir(exist_ok=True)
+    base = INFORMES / f"humo-adversarial-{datetime.now(UTC):%Y%m%dT%H%M%S}.db"
+    monkeypatch.setenv("STORYMAKER_DB_PATH", str(base))
     motivo = motivo_para_saltar(cfg)
     if motivo is not None:
         pytest.skip(motivo)
@@ -67,6 +93,8 @@ def test_la_generacion_real_no_recibe_la_instruccion(
     finally:
         informe["medidas"] = [m.__dict__ for m in cliente.medidas]
         informe["peticiones"] = len(cliente.peticiones)
+        if base.exists():
+            informe["informes"] = _fallos_que_cierran(base)
         INFORMES.mkdir(exist_ok=True)
         ruta.write_text(json.dumps(informe, ensure_ascii=False, indent=2, default=str), "utf-8")
         print(f"\ninforme: {ruta}  base: {os.environ['STORYMAKER_DB_PATH']}")

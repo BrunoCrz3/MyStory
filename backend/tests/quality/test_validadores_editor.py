@@ -131,3 +131,31 @@ async def test_el_ciclo_emite_los_dos_scores_con_el_brief_como_soporte(entorno: 
     assert _por_nombre(r.todos, "temas_excluidos").valor == 1
     assert [s.valor for s in entorno.trazas.scores_de("invencion_destinatario")] == [1.0]
     assert [s.valor for s in entorno.trazas.scores_de("temas_excluidos")] == [1.0]
+
+
+@pytest.mark.anyio
+async def test_lo_que_dice_el_brief_no_es_invencion_aunque_no_sea_rasgo_ni_recuerdo(
+    entorno: Entorno,
+) -> None:
+    # Humo adversarial real del P38: la edad, la ocasión y quién regala vienen del brief, y
+    # contarlas como invención suspendía el capítulo en todos los intentos.
+    novela = await novela_planificada(entorno)
+    edad = "Marta cumple treinta y cuatro años este otoño."
+    hermana = "Su hermana le había escrito para el cumpleaños."
+    texto = prosa(1200, extra=f"{edad} {hermana}")
+    entorno.modelo.encolar(
+        "judge",
+        _salida(
+            [
+                {"afirmacion": "Marta cumple treinta y cuatro años", "fragmento": edad},
+                {"afirmacion": "Marta tiene una hermana que le escribe", "fragmento": hermana},
+                {"afirmacion": "Celebra su cumpleaños", "fragmento": hermana},
+            ],
+            [],
+        ),
+    )
+    r = await juzgar(
+        entorno.recursos, novel_id=novela, version=1, numero=1, titulo="t", texto=texto
+    )
+    v = _por_nombre(r.todos, "invencion_destinatario")
+    assert v.valor == 0 and v.pasa, v.detalle
