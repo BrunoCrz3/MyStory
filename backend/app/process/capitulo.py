@@ -25,7 +25,7 @@ from app.context import service as context
 from app.guardrail import service as guardrail
 from app.intake.service import BriefNovela, leer_brief
 from app.novel import service as novel
-from app.policy.service import PolicyEngine, Veredicto
+from app.policy.service import DecisionCapitulo, PolicyEngine, Veredicto
 from app.process import hooks
 from app.process.schemas import BorradorCapitulo
 from app.process.transiciones import aplicar
@@ -98,6 +98,39 @@ async def _leer(
         return datos, cap
 
     return await r.db.ejecutar(leer)
+
+
+def _decidir_y_registrar(
+    con: sqlite3.Connection,
+    *,
+    motor: PolicyEngine,
+    novel_id: str,
+    capitulo_id: str,
+    intentos: int,
+    resultados: list[quality.ResultadoValidador],
+    reescrituras_por_guardrail: int,
+) -> DecisionCapitulo:
+    """La decisión del policy engine y el informe de crítica del intento, en una transacción."""
+    decision = motor.decidir_capitulo(
+        con,
+        novel_id=novel_id,
+        capitulo_id=capitulo_id,
+        intentos=intentos,
+        veredictos=[
+            Veredicto(nombre=v.nombre, pasa=v.pasa, cierra_el_paso=v.cierra_el_paso, valor=v.valor)
+            for v in resultados
+        ],
+        reescrituras_por_guardrail=reescrituras_por_guardrail,
+    )
+    quality.registrar_informe(
+        con,
+        novel_id=novel_id,
+        capitulo_id=capitulo_id,
+        intento=intentos,
+        decision=decision.accion,
+        resultados=resultados,
+    )
+    return decision
 
 
 def _tarea(r: Recursos, numero: int, informe: list[str]) -> str:
@@ -206,19 +239,12 @@ async def ciclo_capitulo(
 
             decision = await r.db.en_transaccion(
                 partial(
-                    motor.decidir_capitulo,
+                    _decidir_y_registrar,
+                    motor=motor,
                     novel_id=novel_id,
                     capitulo_id=cid,
                     intentos=capitulo.intentos,
-                    veredictos=[
-                        Veredicto(
-                            nombre=v.nombre,
-                            pasa=v.pasa,
-                            cierra_el_paso=v.cierra_el_paso,
-                            valor=v.valor,
-                        )
-                        for v in resultados
-                    ],
+                    resultados=resultados,
                     reescrituras_por_guardrail=reescrituras_por_guardrail,
                 )
             )

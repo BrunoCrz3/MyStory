@@ -39,3 +39,33 @@ class ResultadoValidador(BaseModel):
     cierra_el_paso: bool
     detalle: str
     defectos: list[Defecto] = Field(default_factory=list)
+
+
+class Score(BaseModel):
+    """Resultado de un validador ejecutado, uno por validador y por intento (RF-OBS-03)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    validador: str
+    valor: float
+    pasa: bool
+    cierra_el_paso: bool
+    detalle: str
+
+
+DecisionInforme = Literal["aceptar", "devolver", "agotar", "detener"]
+
+
+class InformeCritica(BaseModel):
+    """Defectos detectados, clasificados y priorizados en un intento de un capítulo, con los
+    scores de los validadores que corrieron y la decisión del policy engine."""
+
+    model_config = ConfigDict(frozen=True)
+
+    informe_id: str
+    capitulo_id: str
+    intento: int
+    decision: DecisionInforme
+    creado_en: str
+    defectos: list[Defecto]
+    scores: list[Score]

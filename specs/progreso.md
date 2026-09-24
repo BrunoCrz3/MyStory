@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P28 · Registro de validadores e informe de crítica |
+| Paso actual | P29 · Hook de capítulo: validadores contra el canon |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P27 |
+| Último commit de paso | P28 |
 
 ## Coste real
 
@@ -61,10 +61,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P25** — Migración 0009_version (version_novela, version_capitulo, triggers de inmutabilidad también sobre título, texto y palabras de un capítulo publicado); versioning/ con gate F1 (`estructura_edicion`, `elementos_obligatorios`, score por validador), publicar con hash SHA-256 del contenido canónico y `modificado` por fila distinta (D-05), y las cuatro rutas de lectura; puerto `Publicador` en process/service.py inyectado desde el lifespan; el orquestador publica en una transacción (Publicar + Conservar) y deja `version_resultante`; gate en rojo → DevolverAlEditor + Detener; el guion del doble declara los elementos del brief; 245 pruebas
 - **P26** — `ejemplos/brief-ejemplo.json` (el `example` de `BriefNovela`, con prueba de igualdad); `tests/humo/test_novela_real.py` marcado `real` sobre `STORYMAKER_DB_PATH` que se salta con motivo si falta la credencial; `tests/herramientas/casetes.py` con `TransporteGrabador` (lista blanca de cabeceras) y `reproductor`; `tests/arquitectura/test_sin_secretos.py` sobre lo versionado y los casetes, con meta-pruebas; 254 pruebas
 - **P27** — Cierre de F1: e2e con proceso real (novela por HTTP y reanudación tras matar el proceso en el capítulo 5; el arnés escribe la salida del hijo en fichero para no bloquear); proveedor `claude_code` contenido (I-04, TO-040); etiqueta de prompt al límite de Langfuse; `nombres_exactos` sin falsos positivos por palabras comunes (A-60); topes calibrados en real (A-58, A-59, A-61); TO-039 y TO-041; humo real verde; 288 pruebas, cobertura 96 %
+- **P28** — Migración 0010_calidad (`informe_critica`, `defecto`, `score`; sin tabla `validador`, A-62); `quality/registro.py` con los 26 validadores del índice, comprobado contra `verification.md` leído del fichero; `registrar_informe` en la transacción de la decisión del policy engine, que falla si un resultado no corre donde dice el registro; `informes_de_capitulo` y `ultimo_informe`; 296 pruebas
 
 ## Pendiente
 
-- Siguiente: **P28 · Registro de validadores e informe de crítica**, y después el resto hasta el P49 en orden.
+- Siguiente: **P29 · Hook de capítulo: validadores contra el canon**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -151,6 +152,8 @@ registrada.
 | A-59 | P27 | `coste.latencia_maxima_novela` 1800 → 3600 | 55–75 s por llamada medidos con `claude_code`; treinta minutos detendrían una novela sana | TO-041 |
 | A-60 | P27 | `nombres_exactos` no marca una diferencia solo de mayúsculas, y solo toma como forma de nombre las palabras en mayúscula del nombre declarado | El humo real suspendía capítulos por «boya» (el perro se llama Boya) y «varadero» («Varadero de Remedios»); un modelo no escribe un nombre propio en minúscula, y lo que sí hace —otra grafía, un casi-nombre— se sigue cazando. Residuo declarado en O-02 | TO-041 |
 | A-61 | P27 | Segunda calibración con la novela completa: redactor y editor 16000, extractor 8000, margen 16000 (estado 12000, anticontexto 6000), `margen_estimacion` 1,35 | Redactor hasta 8.149 y dos topes de 9.000 alcanzados (el CLI reintenta dentro del turno); extractor 4.955; la estimación quedaba un 5–7 % por debajo en prompts de ~20.000 | TO-041 |
+| A-62 | P28 | Sin tabla `validador`: el registro vive en `quality/registro.py` y una prueba lo compara con el índice de `verification.md` | Es un catálogo sin novela; una tabla sin `novel_id` rompería RD-01 y la prueba del P05 | TO-042 |
+| A-63 | P28 | `informe_critica` no es única por (capítulo, intento) y se ordena por intento y orden de inserción | Una reanudación tras un corte entre aceptar y extraer reescribe con el mismo intento (A-44); la propiedad de reanudación lo cazó | TO-042 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -215,14 +218,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P27 cerrado (F1 completa y subida), siguiente P28**. Rama `backend-v1`,
-suite en verde (288 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P28 cerrado, siguiente P29**. Rama `backend-v1`,
+suite en verde (296 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 288 pruebas en verde al cerrar P27
+uv run pytest -q          # 296 pruebas en verde al cerrar P28
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
@@ -252,7 +255,7 @@ del paso. Mensaje: `PNN: Verbo en imperativo…` más la línea `Co-Authored-By`
   checkpoint), `process/planificar.py`, `process/transiciones.py` (tabla).
 - `_cerrar` corre el gate y publica (P25). La publicación es `versioning/service.Publicacion`,
   inyectada en `Worker` desde `main.py`; en pruebas, `entorno.orquestador()`.
-- Migraciones hasta `0009_version.sql`; la siguiente es `0010_calidad.sql` (P28).
+- Migraciones hasta `0010_calidad.sql`; la siguiente es `0011_saneamiento_brief.sql` (P36). Informe de crítica: `quality.registrar_informe` desde `process/capitulo._decidir_y_registrar`.
 
 **Notas del P24** (hecho; se conservan para el P27):
 

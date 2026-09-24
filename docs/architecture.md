@@ -808,7 +808,7 @@ es correcta sin acotar a una—, y ninguna lleva `user_id` ni `tenant_id`.
 | Defecto | `defecto` | `clasificacion` local o sistémico |
 | Palabra prohibida | `palabra_prohibida` | `nivel` en los tres valores |
 | Coincidencia | `coincidencia` | |
-| Validador | `validador` | `tipo`, `punto_ejecucion`, `score_langfuse` |
+| Validador | — | Catálogo sin novela: vive en `quality/registro.py` con tipo, punto de ejecución y score, comprobado contra el índice de `verification.md`. Una tabla sin `novel_id` rompería RD-01 (A-62) |
 | Score | `score` | valor por validador y traza |
 | Versión de novela | `version_novela` | `version_anterior_id` |
 | Versión ↔ Capítulo | `version_capitulo` | `modificado` booleano: la marca de capítulo cambiado |
