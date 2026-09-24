@@ -160,6 +160,13 @@ guardrail:
     plurales: true
     variantes_simples: true
 
+  # Cortes de edad del nivel `perfil` (definitions.md § Guardrail). Hasta la primera edad,
+  # la lista infantil; hasta la segunda, la adolescente. Las palabras viven en
+  # `backend/app/guardrail/listas/perfil.yaml`; aquí solo las cifras (RNF-14).
+  perfil:
+    edad_maxima_infantil: 11       # [decisión] coincide con el corte de legibilidad infantil (<12)
+    edad_maxima_adolescente: 17    # [decisión] mayoría de edad
+
   # TO-014: NO es un contador aparte, es un SUBLÍMITE dentro de max_intentos_capitulo.
   # Dos pasadas consecutivas sin limpiar el texto detienen la generación sin esperar
   # al tercer intento: un modelo que no quita una palabra en dos pasadas no la quita.

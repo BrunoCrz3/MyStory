@@ -1,0 +1,22 @@
+# Nivel `global` del guardrail: insultos y términos ofensivos, iguales para toda novela.
+# Una forma por línea, en su forma canónica: la normalización cubre mayúsculas, acentos,
+# signos intercalados, plurales y diminutivos regulares, así que no hace falta listar variantes.
+# Punto ciego declarado (verification.md O-08): la lista demuestra el mecanismo, no es
+# exhaustiva.
+idiota
+imbécil
+estúpido
+gilipollas
+cabrón
+capullo
+subnormal
+retrasado
+mierda
+joder
+coño
+puta
+hostia
+maricón
+zorra
+cretino
+tarado

@@ -1,0 +1,45 @@
+# Nivel `perfil` del guardrail: el léxico inadecuado que el comprador no puede enumerar y el
+# sistema sí puede derivar de la edad del destinatario y del tipo de ocasión
+# (definitions.md § Guardrail). Los cortes de edad viven en config/thresholds.yaml
+# § guardrail.perfil; aquí solo las palabras.
+#
+# `infantil` se aplica hasta `edad_maxima_infantil` e incluye también `adolescente`.
+
+adolescente:
+  - sexo
+  - drogas
+  - cocaína
+  - porro
+  - suicidio
+  - violación
+  - prostituta
+
+infantil:
+  - cerveza
+  - vino
+  - borracho
+  - alcohol
+  - tabaco
+  - cigarro
+  - sangre
+  - cadáver
+  - asesinato
+  - matar
+  - pistola
+
+ocasiones:
+  cumpleanos: []
+  boda:
+    - divorcio
+    - infidelidad
+    - amante
+  aniversario:
+    - divorcio
+    - infidelidad
+  jubilacion:
+    - despido
+    - decrepitud
+  nacimiento:
+    - aborto
+    - muerte súbita
+  otra: []

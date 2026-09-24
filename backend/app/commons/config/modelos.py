@@ -76,9 +76,15 @@ class Normalizacion(_Estricto):
     variantes_simples: bool
 
 
+class PerfilGuardrail(_Estricto):
+    edad_maxima_infantil: int
+    edad_maxima_adolescente: int
+
+
 class Guardrail(_Estricto):
     niveles: list[Literal["global", "perfil", "novela"]]
     normalizacion: Normalizacion
+    perfil: PerfilGuardrail
     max_reescrituras: int
 
 
