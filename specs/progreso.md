@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P01 |
-| Estado del paso | `no-iniciado` · `pruebas-escritas` · `en-verde` · `cerrado` |
+| Paso actual | P02 · Pruebas de arquitectura |
+| Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | — |
+| Último commit de paso | P01 |
 
 ## Coste real
 
@@ -31,12 +31,11 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 
 Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
-- (nada todavía)
+- **P01** — Esqueleto (pyproject, crear_app, lifespan), test de conformidad estructural con PENDIENTES y meta-prueba de 8 mutaciones; 12 pruebas
 
 ## Pendiente
 
-- P01 a P49, en orden. Siguiente: **P01 · Esqueleto del proyecto y test de conformidad**,
-  en cuanto el frontmatter del plan diga `estado: aprobada`.
+- Siguiente: **P02 · Pruebas de arquitectura**, y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
