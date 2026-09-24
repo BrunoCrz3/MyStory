@@ -84,6 +84,14 @@ def _comprobar(config: Config) -> list[str]:
     if u.formal.gate_activo and u.formal.lean_timeout_segundos is None:
         problemas.append("formal.lean_timeout_segundos es null con formal.gate_activo en true")
 
+    precios = u.coste.precio_usd_por_millon
+    for rol in ROLES:
+        modelo = config.modelos.roles.de(rol).id
+        if modelo not in precios:
+            problemas.append(
+                f"coste.precio_usd_por_millon.{modelo} falta: el rol {rol} no tendría coste"
+            )
+
     if config.modelos.roles.judge.id == config.modelos.roles.redactor.id:
         problemas.append("roles.judge.id no puede ser el mismo modelo que roles.redactor (TO-013)")
 

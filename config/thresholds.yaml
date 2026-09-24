@@ -132,6 +132,11 @@ orquestacion:
     factor: 2                     # con max_intentos_trabajo=3 el peor caso son ~14s de espera
     jitter: true
 
+  # [provisional — calibrar tras la demo] Timeout de una llamada al modelo, en segundos
+  # (RNF-05). Cinco minutos cubren un capítulo con razonamiento a effort alto sin streaming;
+  # una llamada que tarda más es un cuelgue, y cuenta como fallo de infraestructura.
+  timeout_llamada_segundos: 300
+
 # ---------------------------------------------------------------------------
 # Guardrail de palabras prohibidas
 # ---------------------------------------------------------------------------
@@ -381,6 +386,18 @@ coste:
   # redactor en el modelo alto, más judge y editor, más reintentos. Es un tope de
   # seguridad para que un bucle caro se detenga solo, no una estimación del coste real.
   coste_maximo_novela: 8.0
+
+  # Dólares por millón de tokens, por identificador de `config/models.yaml` (D-18). El coste
+  # de cada llamada sale de aquí y de `usage`; el arranque falla si un rol usa un modelo sin
+  # precio. Comprobados contra la tabla de precios oficial de la API el 2026-09-24; al
+  # cambiar de modelo hay que volver a comprobarlos, igual que los identificadores.
+  precio_usd_por_millon:
+    claude-opus-5-5:
+      entrada: 4.0
+      salida: 20.0
+    claude-sonnet-5:
+      entrada: 2.0
+      salida: 10.0
 
 # ---------------------------------------------------------------------------
 # Salida del modelo por rol

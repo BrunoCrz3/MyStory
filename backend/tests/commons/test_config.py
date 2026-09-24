@@ -138,3 +138,11 @@ def test_arranque_falla_con_umbral_nulo(
         TestClient(crear_app()),
     ):
         pass
+
+
+def test_modelo_sin_precio_falla(config_con: Callable[[Mutador], Path]) -> None:
+    def mutar(u: dict[str, Any], m: dict[str, Any]) -> None:
+        m["roles"]["extractor"]["id"] = "claude-modelo-sin-precio"
+
+    with pytest.raises(ConfigInvalida, match="claude-modelo-sin-precio"):
+        cargar_config(config_con(mutar))

@@ -65,6 +65,7 @@ class Orquestacion(_Estricto):
     max_intentos_capitulo: int
     max_intentos_trabajo: int
     backoff: Backoff
+    timeout_llamada_segundos: float
 
 
 class Normalizacion(_Estricto):
@@ -220,7 +221,7 @@ class Umbrales(_Estricto):
     embeddings: Embeddings | None = None
 
 
-Effort = Literal["low", "medium", "high", "max"]
+Effort = Literal["low", "medium", "high", "xhigh", "max"]
 
 
 class ModeloDeRol(_Estricto):
@@ -253,3 +254,7 @@ class Config(_Estricto):
     def max_tokens(self, rol: Rol) -> int:
         valor: int = getattr(self.umbrales.modelo.max_tokens_por_rol, rol)
         return valor
+
+    def coste_usd(self, modelo: str, tokens_entrada: int, tokens_salida: int) -> float:
+        precio = self.umbrales.coste.precio_usd_por_millon[modelo]
+        return (tokens_entrada * precio.entrada + tokens_salida * precio.salida) / 1_000_000
