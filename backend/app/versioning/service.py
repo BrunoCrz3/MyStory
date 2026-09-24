@@ -20,9 +20,18 @@ from app.intake.service import leer_brief
 from app.novel import service as novel
 from app.process import service as process
 from app.process.service import VeredictoGate
+from app.versioning import ficha as _ficha
 from app.versioning import gate, repository
+from app.versioning import portada as _portada
 from app.versioning.huella import contenido, hash_contenido, hash_de_version
-from app.versioning.schemas import Capitulo, CapituloIndice, Version, VersionResumen
+from app.versioning.schemas import (
+    Capitulo,
+    CapituloIndice,
+    Ficha,
+    Portada,
+    Version,
+    VersionResumen,
+)
 
 __all__ = [
     "Capitulo",
@@ -237,3 +246,19 @@ async def obtener_capitulo(db: BaseDatos, novel_id: str, version: int, numero: i
     return await db.ejecutar(
         partial(_obtener_capitulo, novel_id=novel_id, version=version, numero=numero)
     )
+
+
+async def obtener_ficha(db: BaseDatos, novel_id: str, version: int) -> Ficha:
+    def leer(con: sqlite3.Connection) -> Ficha:
+        _exigir_version(con, novel_id, version)
+        return _ficha.ficha(con, novel_id=novel_id, version=version)
+
+    return await db.ejecutar(leer)
+
+
+async def obtener_portada(db: BaseDatos, novel_id: str, version: int) -> Portada:
+    def leer(con: sqlite3.Connection) -> Portada:
+        fila = _exigir_version(con, novel_id, version)
+        return _portada.portada(con, novel_id=novel_id, version_fila=fila)
+
+    return await db.ejecutar(leer)

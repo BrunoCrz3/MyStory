@@ -99,3 +99,24 @@ class SolicitudCambio(BaseModel):
     hecho_candidato: str | None = None
     analisis_impacto: AnalisisImpacto | None = opcional()
     version_resultante: Positivo | None = None
+
+
+# --- Ficha y portada (RF-VER-04, RF-VER-05) ----------------------------------------------
+
+
+class EntradaFicha(BaseModel):
+    nombre: str
+    descripcion: str | None = None
+    capitulos: list[Positivo]
+
+
+class Ficha(BaseModel):
+    personajes: list[EntradaFicha]
+    lugares: list[EntradaFicha]
+
+
+class Portada(BaseModel):
+    titulo: str
+    dedicatoria: Dedicatoria
+    destinatario: str | None = opcional()
+    ocasion: str | None = None

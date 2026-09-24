@@ -324,3 +324,34 @@ def leer_capitulo_anterior(
         (novel_id, numero, version),
     ).fetchone()
     return None if fila is None else str(fila["id"])
+
+
+def leer_apariciones(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_ids: list[str]
+) -> tuple[list[tuple[str, str]], list[tuple[str, str]]]:
+    """`(nombre, capitulo_id)` de personajes y de lugares que aparecen en esos capítulos: por
+    los eventos que narran y por el POV y el lugar del propio capítulo."""
+    if not capitulo_ids:
+        return [], []
+    marcas = ", ".join("?" for _ in capitulo_ids)
+    personajes = con.execute(
+        "SELECT p.nombre, ec.capitulo_id FROM evento_capitulo ec"
+        " JOIN evento_personaje ep ON ep.evento_id = ec.evento_id AND ep.novel_id = ec.novel_id"
+        " JOIN personaje p ON p.id = ep.personaje_id"
+        f" WHERE ec.novel_id = ? AND ec.capitulo_id IN ({marcas})"
+        " UNION SELECT p.nombre, c.id FROM capitulo c JOIN personaje p ON p.id = c.pov_personaje_id"
+        f" WHERE c.novel_id = ? AND c.id IN ({marcas})",
+        (novel_id, *capitulo_ids, novel_id, *capitulo_ids),
+    ).fetchall()
+    lugares = con.execute(
+        "SELECT l.nombre, ec.capitulo_id FROM evento_capitulo ec"
+        " JOIN evento e ON e.id = ec.evento_id JOIN lugar l ON l.id = e.lugar_id"
+        f" WHERE ec.novel_id = ? AND ec.capitulo_id IN ({marcas})"
+        " UNION SELECT l.nombre, c.id FROM capitulo c JOIN lugar l ON l.id = c.lugar_id"
+        f" WHERE c.novel_id = ? AND c.id IN ({marcas})",
+        (novel_id, *capitulo_ids, novel_id, *capitulo_ids),
+    ).fetchall()
+    return (
+        [(str(f[0]), str(f[1])) for f in personajes],
+        [(str(f[0]), str(f[1])) for f in lugares],
+    )

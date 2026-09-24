@@ -409,3 +409,19 @@ def capitulo_vigente(
 ) -> str | None:
     """La fila del capítulo `numero` que leía la novela antes de `version` (D-05)."""
     return repository.leer_capitulo_anterior(con, novel_id=novel_id, numero=numero, version=version)
+
+
+def apariciones(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_ids: list[str]
+) -> tuple[dict[str, set[str]], dict[str, set[str]]]:
+    """En qué filas de capítulo aparece cada personaje y cada lugar (RF-VER-04)."""
+    personajes, lugares = repository.leer_apariciones(
+        con, novel_id=novel_id, capitulo_ids=capitulo_ids
+    )
+    por_personaje: dict[str, set[str]] = {}
+    for nombre, cid in personajes:
+        por_personaje.setdefault(nombre, set()).add(cid)
+    por_lugar: dict[str, set[str]] = {}
+    for nombre, cid in lugares:
+        por_lugar.setdefault(nombre, set()).add(cid)
+    return por_personaje, por_lugar

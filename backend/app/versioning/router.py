@@ -13,7 +13,9 @@ from app.process.service import Generacion
 from app.versioning import confirmar, service, solicitud
 from app.versioning.schemas import (
     Capitulo,
+    Ficha,
     NuevaSolicitudCambio,
+    Portada,
     SolicitudCambio,
     Version,
     VersionResumen,
@@ -105,6 +107,30 @@ async def obtener_solicitud_cambio(
     novel_id: UUID, solicitud_id: UUID, r: Annotated[Recursos, Depends(recursos)]
 ) -> SolicitudCambio:
     return await solicitud.obtener_solicitud(r.db, str(novel_id), str(solicitud_id))
+
+
+@router.get(
+    "/novelas/{novel_id}/versiones/{version}/ficha",
+    operation_id="obtenerFicha",
+    response_model=Ficha,
+    responses=problemas(404, 500),
+)
+async def obtener_ficha(
+    novel_id: UUID, version: NumeroVersion, r: Annotated[Recursos, Depends(recursos)]
+) -> Ficha:
+    return await service.obtener_ficha(r.db, str(novel_id), version)
+
+
+@router.get(
+    "/novelas/{novel_id}/versiones/{version}/portada",
+    operation_id="obtenerPortada",
+    response_model=Portada,
+    responses=problemas(404, 500),
+)
+async def obtener_portada(
+    novel_id: UUID, version: NumeroVersion, r: Annotated[Recursos, Depends(recursos)]
+) -> Portada:
+    return await service.obtener_portada(r.db, str(novel_id), version)
 
 
 _LOCATION = {

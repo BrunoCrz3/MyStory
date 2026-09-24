@@ -6,8 +6,6 @@ Cada paso que implementa un endpoint lo saca de aquí. El P49 exige que quede va
 
 PENDIENTES: frozenset[str] = frozenset(
     {
-        "obtenerFicha",
-        "obtenerPortada",
         "exportarVersion",
         "descargarExport",
     }
