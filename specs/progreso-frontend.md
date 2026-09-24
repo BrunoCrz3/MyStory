@@ -16,7 +16,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 | Paso actual | Estado | Intentos |
 | --- | --- | --- |
-| F13 | pendiente | 0 |
+| F14 | pendiente | 0 |
 
 **Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
 `BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
@@ -38,6 +38,7 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 | F10 | «Hechos de este capítulo» con `listarHechos`, panel de cambio que pide el análisis de impacto y solo regenera al confirmar; 409 con enlace a la generación viva (2 intentos en rojo: un fichero sin reescribir y una aserción ambigua) |
 | F11 | Seleccionar texto dentro de `capitulo-texto` ofrece «Pedir cambio»; envía `fragmento` y muestra el `hecho_candidato` con la misma confirmación. Una selección que se sale del texto del capítulo no cuenta |
 | F12 | «Descargar PDF» con `exportarVersion`: enlace a `descargarExport` si está disponible, «Volver a comprobar» sin sondeo si está en curso, aviso si falló, y la paridad si viene |
+| F13 | Prueba que lee la tabla CL-03 de `spec1.md` y comprueba cada fila (número, padre, atributos, contenido); `lectura.css` con `@media print` (CL-04) y los controles marcados con `data-controles` |
 
 ## Para la sesión del backend
 
@@ -91,3 +92,4 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
 - **FA-02** (F02, decidido por el agente — revisar): `gen:api` usa un script propio (`scripts/generar-api.mjs`) sobre la API de `openapi-typescript` en vez de su CLI, para que la prueba de CA-01 compare con la misma función que escribe el fichero.
 - **FA-03** (F05, decidido por el agente — revisar): los constructores de ruta viven en `shared/config/rutas.ts` (la skill FSD pone ahí las constantes de ruta), para que `AvisoProblema` de `shared/ui` enlace al progreso sin importar de `app/`. Un cuerpo de error que no es `problem+json` —un proxy caído— se pinta como `error-interno` con su status real, sin inventar detalle.
 - **FA-04** (F10, decidido por el agente — revisar): el `oneOf` de `NuevaSolicitudCambio` se genera como `& (unknown | unknown)`, que no restringe nada. La regla «exactamente uno de `hecho_id` o `fragmento`» la garantiza el tipo `OrigenCambio` de `pages/lectura/model/`, no el tipo generado. No es insuficiencia del contrato: el backend lo valida.
+- **FA-05** (F13, decidido por el agente — revisar): la prueba del contrato de lectura **lee la tabla CL-03 de `specs/spec1.md`** en cada ejecución en vez de copiarla, y falla si la tabla gana o pierde una fila que la prueba no cubra. Los controles interactivos llevan el atributo `data-controles`, que es lo que la hoja de impresión oculta. No es un `data-testid` y no forma parte del contrato de lectura.

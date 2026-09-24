@@ -11,6 +11,7 @@ import { Indice } from './Indice'
 import { PanelCambio } from './PanelCambio'
 import { Portada } from './Portada'
 import { SelectorVersion } from './SelectorVersion'
+import '../lectura.css'
 
 /**
  * La versión entera en un solo documento (spec1.md § 4.4, CL-01): portada, índice, ficha y
