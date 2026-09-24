@@ -173,6 +173,20 @@ Capturas en `.playwright-mcp/`, sin versionar.
     a `#2b2118` sobre `#f8f3ea`. Es una diferencia mínima, que el P49 del backend verá en
     el render real.
 
+**Interceptaciones olvidadas.** Tras la inspección, el navegador del MCP seguía mostrando la
+novela de prueba sin backend, y parecía que la aplicación traía datos de ejemplo. No los trae:
+
+- `src/` no importa nada de `tests/`, lo que ya vigila CA-14.
+- El bundle de `npm run build` no contiene ni el título ni el identificador de prueba.
+- La única coincidencia en `src/` es un comentario JSDoc de `shared/api/schema.d.ts`, que
+  `gen:api` copia del ejemplo de `BriefNovela` de `openapi.yaml`. No es un dato en tiempo
+  de ejecución.
+
+La causa eran las rutas de `page.route` que quedaron registradas en la pestaña. Se quitaron
+con `page.unrouteAll()`. Sin ellas, la lectura queda en `data-estado="error"` y la lista de
+novelas de la entrevista muestra su `AvisoProblema`. **Regla para la próxima inspección:**
+cerrar cada sesión con `page.unrouteAll()`, o cerrar la pestaña.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e
