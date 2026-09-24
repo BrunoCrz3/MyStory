@@ -758,6 +758,11 @@ datos personales reales a los prompts y a las trazas, que es un requisito de pri
 no estaba en ningún documento y que nadie había pedido. Preguntar quién llama obligó a
 mirar qué viaja.
 
-**Sigue pendiente**: que el desarrollador apruebe la spec y el contrato —los dos están en
-`borrador` y sin eso no se escribe `specs/plan1.md` ni una línea de código—, y revisar
-TO-035, en particular si la tabla de trabajos es dominio o materialización.
+**Aprobadas el 2026-09-24 por Bruno Cruz.** `specs/spec1.md` pasa a `aprobada` y
+**`specs/openapi.yaml` queda aprobado con ella**, en la misma fecha: el contrato es parte de
+la spec y no un anexo, así que a partir de aquí cambiarlo es cambiar la spec. La versión del
+contrato deja de ser `1.0.0-borrador` y pasa a `1.0.0`.
+
+**Sigue pendiente**: `specs/plan1.md`, que nace en `borrador` y sin el cual no se escribe
+una línea de código; y revisar TO-035, en particular si la tabla de trabajos es dominio o
+materialización.

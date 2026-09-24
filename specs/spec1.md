@@ -1,7 +1,8 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: Bruno Cruz
 fecha: 2026-09-24
+contrato-aprobado-con-ella: specs/openapi.yaml
 ---
 
 # SRS 1 — Backend v1 de storyMaker
@@ -10,8 +11,14 @@ Especificación de requisitos del backend en su primera versión, inspirada en
 ISO/IEC/IEEE 29148. Documento único: alcance, requisitos funcionales y no funcionales,
 contrato de interfaz, datos, fases de construcción y trazabilidad.
 
-> **Estado: borrador.** No se escribe código hasta que esta spec esté `aprobada` y exista
-> un `specs/plan1.md` también aprobado (`CLAUDE.md` § Ciclo de cambio).
+> **Estado: aprobada** el 2026-09-24 por Bruno Cruz.
+>
+> **`specs/openapi.yaml` queda aprobado con ella, en la misma fecha**: el contrato es parte
+> de esta spec, no un anexo, y aprobar una sin el otro dejaría al frontend construyendo
+> contra algo revocable. A partir de aquí, cambiar el contrato es cambiar la spec.
+>
+> Falta `specs/plan1.md`, que nace en `borrador`: **no se escribe código hasta que ese plan
+> esté aprobado** (`CLAUDE.md` § Ciclo de cambio).
 
 ---
 
