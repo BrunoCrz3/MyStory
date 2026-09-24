@@ -132,8 +132,13 @@ class Entorno:
 
 @pytest.fixture
 def entorno(tmp_path: Path) -> Entorno:
+    return crear_entorno(tmp_path / "entorno.db")
+
+
+def crear_entorno(ruta: Path) -> Entorno:
+    """Recursos con los dos dobles sobre la base de `ruta`, migrada."""
     config = cargar_config()
-    db = BaseDatos(tmp_path / "entorno.db")
+    db = BaseDatos(ruta)
     db.ejecutar_sync(aplicar_migraciones)
     modelo = ModeloGuionizado(config)
     trazas = RegistroTrazas()

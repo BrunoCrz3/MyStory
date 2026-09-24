@@ -30,7 +30,7 @@ def hay_esquema(con: sqlite3.Connection, *, novel_id: str) -> bool:
 CONSULTAS_TRANSVERSALES = {
     "reclamar_siguiente",
     "contar_en_cola",
-    "trabajos_huerfanos",
+    "devolver_huerfanos",
     "leer_trabajo_por_id",
 }
 
@@ -113,9 +113,12 @@ def contar_en_cola(con: sqlite3.Connection) -> int:
     return n
 
 
-def trabajos_huerfanos(con: sqlite3.Connection) -> list[str]:
-    """Trabajos que estaban en curso cuando el proceso murió."""
-    return [f["id"] for f in con.execute("SELECT id FROM trabajo WHERE estado_cola = 'en-curso'")]
+def devolver_huerfanos(con: sqlite3.Connection) -> list[str]:
+    """Trabajos que estaban en curso cuando el proceso murió: vuelven a la cola, sin copia."""
+    filas = con.execute(
+        "UPDATE trabajo SET estado_cola = 'pendiente' WHERE estado_cola = 'en-curso' RETURNING id"
+    ).fetchall()
+    return [str(f["id"]) for f in filas]
 
 
 def actualizar_trabajo(

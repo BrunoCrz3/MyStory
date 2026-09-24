@@ -2,7 +2,8 @@
 
 Arranca con el `lifespan` y se para con él. Reclama trabajos de la tabla con una
 actualización condicional atómica y los ejecuta de uno en uno. No sondea con una espera fija:
-duerme hasta que alguien encola y le avisa, y al arrancar mira si ya había pendientes.
+duerme hasta que alguien encola y le avisa, y al arrancar mira si ya había pendientes. Lo
+que estaba en curso cuando el proceso anterior murió vuelve antes a la cola (RF-PROC-06).
 """
 
 from __future__ import annotations
@@ -45,6 +46,9 @@ class Worker:
                 await self._tarea
 
     async def _bucle(self) -> None:
+        huerfanos = await self.r.db.ejecutar(cola.devolver_huerfanos)
+        if huerfanos:
+            _log.warning("se retoman %d generaciones interrumpidas", len(huerfanos))
         while not self._parar:
             self._hay_trabajo.clear()
             generacion_id = await self.r.db.ejecutar(cola.reclamar)

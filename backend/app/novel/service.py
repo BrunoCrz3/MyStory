@@ -264,6 +264,17 @@ def fijar_estado_capitulo(
     )
 
 
+def devolver_a_pendiente(
+    con: sqlite3.Connection, *, novel_id: str, version: int, estados: tuple[str, ...]
+) -> list[int]:
+    """Reanudación: los capítulos en `estados` vuelven a `Pendiente` sin tocar sus intentos.
+
+    No es una transición de la máquina: es deshacer un estado que ningún proceso vivo sostiene
+    (TO-023). Devuelve los números normalizados.
+    """
+    return repository.devolver_a_pendiente(con, novel_id=novel_id, version=version, estados=estados)
+
+
 def sumar_consumo(
     con: sqlite3.Connection,
     *,

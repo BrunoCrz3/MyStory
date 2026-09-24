@@ -34,6 +34,15 @@ def reclamar(con: sqlite3.Connection) -> str | None:
     return repository.reclamar_siguiente(con)
 
 
+def devolver_huerfanos(con: sqlite3.Connection) -> list[str]:
+    """Al arrancar: lo que estaba en curso cuando murió el proceso vuelve a `pendiente`.
+
+    Solo es correcto con un único worker por base, que es lo que garantiza el cerrojo de
+    instancia (A-13): ningún otro proceso puede estar ejecutando esos trabajos.
+    """
+    return repository.devolver_huerfanos(con)
+
+
 def _vista(con: sqlite3.Connection, r: Recursos, t: dict[str, Any]) -> Generacion:
     novel_id = t["novel_id"]
     total = novel.total_capitulos(con, novel_id=novel_id)

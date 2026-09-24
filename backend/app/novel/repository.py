@@ -185,6 +185,18 @@ def actualizar_estado_capitulo(
     )
 
 
+def devolver_a_pendiente(
+    con: sqlite3.Connection, *, novel_id: str, version: int, estados: tuple[str, ...]
+) -> list[int]:
+    marcas = ", ".join("?" for _ in estados)
+    filas = con.execute(
+        f"UPDATE capitulo SET estado = 'Pendiente' WHERE novel_id = ? AND version = ?"
+        f" AND estado IN ({marcas}) RETURNING numero",
+        (novel_id, version, *estados),
+    ).fetchall()
+    return sorted(int(f["numero"]) for f in filas)
+
+
 def sumar_consumo(
     con: sqlite3.Connection,
     *,

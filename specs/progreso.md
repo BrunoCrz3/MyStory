@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P24 · Checkpoint y reanudación |
+| Paso actual | P25 · Gate mínimo, publicación y lectura por versión |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P23 |
+| Último commit de paso | P24 |
 
 ## Coste real
 
@@ -54,6 +54,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P21** — Migración 0008_trabajo (trabajo con índice único parcial de un vivo por novela, checkpoint); process/cola: encolar comprueba generación viva (409 con el id vivo), transición Planificar, estimación contra el pool (422 trabajo-no-cabe-en-pool) y responde 202 con Location; reclamar con UPDATE condicional atómico; Generacion idéntico al contrato con es_terminal e intervalo de sondeo de config; listar y obtener; /salud cuenta trabajos en cola; opcional() omite None al serializar
 - **P22** — process/orquestador: por cada trabajo una traza en la sesión de la novela; Planificar → planificador → FijarEsquema → ciclo y aceptación de cada capítulo con checkpoint en la transacción de aceptar → CerrarEscritura; detenciones registradas en audit log; consumo acumulado por variable de contexto; process/worker: único, en el lifespan, reclama atómicamente, duerme hasta que encolar le avisa y se para con el lifespan; transición Detener desde Planificando añadida a los diagramas y la tabla
 - **P23** — commons/llm/llamar: reintento de fallos de infraestructura en contar y generar con retroceso exponencial y jitter (reloj y azar inyectables), max_intentos_trabajo reintentos tras la primera llamada, contador propio en Consumo.reintentos_infra que no gasta intentos del capítulo; orquestador: topes coste_maximo_novela y latencia_maxima_novela tras planificar y tras cada capítulo, fallos de infraestructura agotados y ContextoNoCabe detienen con error-interno e informe en audit log; intentos_infra en el trabajo
+- **P24** — Reanudación: el worker devuelve a `pendiente` al arrancar los trabajos `en-curso` (UPDATE … RETURNING, sin copia); `Orquestador.estado_inicial` normaliza a `Pendiente` los capítulos en Escribiendo, Validando o Reescribiendo sin tocar sus intentos; un corte entre guardar y fijar el esquema no replanifica; `CerrarEscritura` solo desde Escribiendo; propiedad con hypothesis (uno o dos cortes en redactor o extractor): aceptados en prefijo, mismo `capitulo_id`, un snapshot por capítulo, un solo trabajo; 237 pruebas
 
 ## Pendiente
 
@@ -125,6 +126,9 @@ registrada.
 | A-40 | P22 | El worker espera a un evento que encolar dispara, en vez de sondear la base con una espera fija | Evita una cifra de sondeo y no gasta consultas en vacío | TO-039 |
 | A-41 | P22 | Tokens y coste se acumulan por trabajo en una variable de contexto que el llamador rellena en cada llamada | Dos novelas a la vez no mezclan sus cuentas y ningún servicio tiene que pasarlas a mano | TO-039 |
 | A-42 | P23 | Coste, latencia y reintentos de infraestructura agotados detienen con detenida_por = error-interno y el motivo en el audit log | El catálogo cerrado no tiene un tipo propio para ellos y no se inventa uno | TO-039 |
+| A-44 | P24 | Reanudar no reinicia los `intentos` del capítulo que se normaliza a `Pendiente` | Un proceso que cae una y otra vez en el mismo capítulo sigue acotado por `max_intentos_capitulo` (regla 14) | TO-039 |
+| A-45 | P24 | Si la novela está en `Planificando` y el esquema ya existe, no se replanifica: solo `FijarEsquema`; `CerrarEscritura` solo si la novela sigue en `Escribiendo` | Son los dos cortes entre transacciones del orquestador; replanificar duplicaría el esquema y cerrar dos veces es transición inválida | TO-039 |
+| A-46 | P24 | Los huérfanos se devuelven a la cola al arrancar el worker, no en cada reclamación | Solo es seguro con un único proceso por base, que garantiza el cerrojo de instancia (A-13) | TO-039 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -189,14 +193,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P23 cerrado (commit `17cb8bf`), siguiente P24**, rama `backend-v1`,
-suite en verde (230 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P24 cerrado, siguiente P25**, rama `backend-v1`,
+suite en verde (237 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 230 pruebas en verde al cerrar P23
+uv run pytest -q          # 237 pruebas en verde al cerrar P24
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
@@ -228,9 +232,9 @@ del paso. Mensaje: `PNN: Verbo en imperativo…` más la línea `Co-Authored-By`
   sustituye** por gate (`estructura_edicion`, `elementos_obligatorios`) y publicación.
 - Migraciones hasta `0008_trabajo.sql`; la siguiente es `0009_version.sql` (P25).
 
-**Notas para el P24** (checkpoint y reanudación, RF-PROC-06, TO-023):
+**Notas del P24** (hecho; se conservan para el P27):
 
-- Al arrancar, los trabajos `en-curso` (`repository.trabajos_huerfanos`) vuelven a
+- Al arrancar, los trabajos `en-curso` (`cola.devolver_huerfanos`, hecho en P24) vuelven a
   `pendiente` para que el worker los retome; el orquestador ya salta los capítulos
   `Aceptado`.
 - La reanudación **no es una transición**: `orquestador.estado_inicial` normaliza a

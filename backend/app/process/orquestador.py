@@ -28,6 +28,9 @@ from app.process.transiciones import aplicar
 
 _log = logging.getLogger("storymaker.orquestador")
 
+# Estados de un capítulo que solo existen mientras un proceso lo está trabajando.
+_A_MEDIAS = ("Escribiendo", "Validando", "Reescribiendo")
+
 
 class GeneracionDetenida(Exception):
     """Fin deliberado de una generación: se registra y la novela queda `Detenida`."""
@@ -130,15 +133,35 @@ class Orquestador:
             finally:
                 await self._guardar_consumo(t, consumo)
 
+    async def estado_inicial(self, novel_id: str, version: int) -> list[int]:
+        """Reanudación desde el checkpoint (RF-PROC-06, TO-023).
+
+        Los aceptados se quedan como están y el bucle los salta; el capítulo que el proceso
+        anterior dejó a medias vuelve a `Pendiente` escribiendo el estado directamente, porque
+        su borrador murió con el proceso y ningún estado intermedio es reanudable. No hay
+        arista en la tabla de transiciones, y es a propósito: no es un paso de la historia.
+        """
+        normalizados = await self.r.db.en_transaccion(
+            partial(
+                novel.devolver_a_pendiente, novel_id=novel_id, version=version, estados=_A_MEDIAS
+            )
+        )
+        if normalizados:
+            _log.warning("novela %s: capítulos %s vuelven a Pendiente", novel_id, normalizados)
+        return normalizados
+
     async def _inicial(self, t: dict[str, Any], consumo: Consumo) -> None:
         novel_id, version = t["novel_id"], t["version_objetivo"]
+        await self.estado_inicial(novel_id, version)
         estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=novel_id))
         if estado == "Configurando":
             await self._mover_novela(t, "Planificar")
             estado = "Planificando"
         if estado == "Planificando":
-            await planificar(self.r, novel_id=novel_id, version=version)
-            self._comprobar_topes(t, consumo)
+            # Un corte entre guardar el esquema y fijarlo no replanifica: el esquema ya está.
+            if not await self.r.db.ejecutar(partial(repository.hay_esquema, novel_id=novel_id)):
+                await planificar(self.r, novel_id=novel_id, version=version)
+                self._comprobar_topes(t, consumo)
             await self._mover_novela(t, "FijarEsquema")
 
         total = await self.r.db.ejecutar(partial(novel.total_capitulos, novel_id=novel_id))
@@ -168,7 +191,9 @@ class Orquestador:
             await self._guardar_consumo(t, consumo)
             self._comprobar_topes(t, consumo)
 
-        await self._mover_novela(t, "CerrarEscritura")
+        estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=novel_id))
+        if estado == "Escribiendo":
+            await self._mover_novela(t, "CerrarEscritura")
         await self._cerrar(t)
 
     async def _cerrar(self, t: dict[str, Any]) -> None:
