@@ -381,7 +381,7 @@ Quien acepta es el policy engine, no una persona, y cada una de sus decisiones q
 
 ## Estados
 
-Las dos máquinas son las de la especificación formal del harness, una a una. Ningún estado intermedio se añade en el código sin actualizar antes este diagrama.
+Las máquinas del capítulo y de la novela son las de la especificación formal del harness, una a una; la de la versión, también, como variable de estado del mismo módulo. Ningún estado intermedio se añade en el código sin actualizar antes este diagrama.
 
 **Capítulo:**
 
@@ -422,6 +422,19 @@ stateDiagram-v2
   Detenida --> [*]
 ```
 
+**Versión de novela:**
+
+```mermaid
+stateDiagram-v2
+  [*] --> candidata: todos los capítulos aceptados
+  candidata --> publicada: pasa el gate completo, render_visual incluido
+  candidata --> rechazada: falla algún validador del gate
+  publicada --> [*]
+  rechazada --> [*]
+```
+
+Una versión existe antes de publicarse porque `render_visual` tiene que pintarla: la lectura la pide por su número, y el gate la valida en el mismo render que después se entrega. Las dos salidas son terminales: una `publicada` es inmutable, y una `rechazada` se conserva para el diagnóstico pero **nunca es la versión vigente**, ni aparece en el listado del lector ni se exporta. La máquina es de `versioning/` y no del orquestador: la novela solo ve `Publicar` cuando la versión ya pasó.
+
 `Publicada` no es terminal: una novela publicada sigue viva mientras el lector pueda pedir cambios. Lo que sí es invariante es que salir de `Publicada` nunca destruye la versión anterior, y que la única entrada a `Publicando` pasa por el gate.
 
 ## Solicitud de cambio
@@ -437,7 +450,7 @@ flowchart TD
   RT --> RG[Regeneración dirigida<br/>solo esos capítulos]
   RG --> HOK[Hooks y rol editor]
   HOK --> GT[Gate de publicación]
-  GT -->|falla| RG
+  GT -->|falla| RCH[Versión candidata rechazada<br/>la anterior sigue vigente]
   GT -->|pasa| NV[Versión de novela nueva]
   NV --> MRC[Marca de capítulo modificado]
   NV --> EXP[Export a PDF<br/>mismo render que la lectura]

@@ -318,7 +318,7 @@ El autor humano ha salido del bucle de producción: la generación es automátic
 | Brief de capítulo | Encargo concreto de un capítulo |
 | Borrador | Salida de una generación, aún no aceptada |
 | Informe de crítica | Defectos detectados, clasificados y priorizados |
-| Versión de novela | Estado publicado del texto, con los capítulos que lo componen |
+| Versión de novela | Estado del texto con los capítulos que lo componen. Nace `candidata`; pasa a `publicada` solo si pasa el gate completo, `render_visual` incluido, y si no queda `rechazada`. Solo una `publicada` es la versión vigente |
 | Checkpoint | Último capítulo completado, desde el que se reanuda una generación interrumpida |
 
 **Versionado y regeneración**
