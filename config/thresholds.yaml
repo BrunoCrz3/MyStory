@@ -62,12 +62,12 @@ contexto:
   capas:
     invariante: 10000      # Premisa, brief de novela, dedicatoria, guía de estilo, voz narrativa
     estructural: 4000      # Brief de capítulo y restricción de destino
-    estado: 18000          # Snapshot al cierre del capítulo N-1, nunca texto bruto
+    estado: 14000          # Snapshot al cierre del capítulo N-1, nunca texto bruto · A-58: cede 4.000 al margen
     local: 14000           # Últimos capítulos literales
     recuperado: 30000      # Filtrado por entidades del brief de capítulo, luego similitud
     estilo: 8000           # Muestras de voz de los personajes presentes
-    anticontexto: 10000    # Repeticiones, clichés vetados y palabras prohibidas de la novela
-    margen: 6000           # Reserva para la respuesta y el desbordamiento
+    anticontexto: 8000     # Repeticiones, clichés vetados y palabras prohibidas de la novela · A-58: cede 2.000 al margen
+    margen: 12000          # Reserva para la respuesta y el desbordamiento · A-58: cubre el max_tokens del planificador
 
   # Orden en que se comprime cuando el ensamblado no cabe. Se para en cuanto quepa.
   # `invariante` y la restricción de destino (dentro de `estructural`) no aparecen
@@ -392,10 +392,12 @@ validadores:
 # lo informan, como cualquier otro límite de `CLAUDE.md` regla 14.
 
 coste:
-  # [provisional — calibrar tras la demo] Treinta minutos para diez capítulos en serie más
-  # el gate. Sale de la demo, no de una medición: por encima de eso no se puede enseñar en
-  # directo. Se revisa con la primera novela real cronometrada.
-  latencia_maxima_novela: 1800
+  # [provisional — calibrar tras la demo] Una hora para diez capítulos en serie más el gate.
+  # A-59 (P27): la primera medición real dio 55–75 s por llamada con el proveedor
+  # claude_code, que arranca un proceso por llamada; con planificador, redactor, extractor y
+  # alguna reescritura por capítulo, treinta minutos quedaban justos y un tope de seguridad
+  # no puede detener una novela sana. Se revisa con la primera novela real cronometrada.
+  latencia_maxima_novela: 3600
 
   # [provisional — calibrar tras la demo] Dólares por novela. Diez capítulos con el
   # redactor en el modelo alto, más judge y editor, más reintentos. Es un tope de
@@ -426,18 +428,23 @@ coste:
 # no se cumple, el arranque falla en voz alta: un margen corto no da un error claro, da
 # respuestas truncadas a mitad de capítulo que parecen un problema de calidad.
 #
-# Todos son [provisional — calibrar tras la demo] y NINGUNO supera `margen` = 6000. El
-# criterio común: un capítulo de 1.500 palabras en español ronda los 2.100 tokens, así que
-# lo que sobra hasta el tope es espacio de razonamiento.
+# Todos son [provisional — calibrar tras la demo] y NINGUNO supera `margen`. El criterio
+# común: un capítulo de 1.500 palabras en español ronda los 2.100 tokens, así que lo que
+# sobra hasta el tope es espacio de razonamiento.
+#
+# A-58 (P27, I-02): MEDIDOS con la primera ejecución real el 2026-09-24 (proveedor
+# claude_code, effort de models.yaml). El planificador sacó 7.725 tokens de salida (1.882 de
+# razonamiento) y se truncaba con 4.000; el redactor, 4.911 y 4.222. Cada tope medido queda
+# en torno a 1,5–1,8 veces lo observado. El judge no se ha medido todavía (P31).
 
 modelo:
   max_tokens_por_rol:
     entrevistador: 2000   # [provisional] turnos de conversación y el brief estructurado; nunca prosa larga
-    planificador: 4000    # [provisional] diez briefs de capítulo con su restricción de destino, de una vez
-    redactor: 6000        # [provisional] el mayor de los seis: 2.100 de capítulo más razonamiento. Igual al margen
-    editor: 6000          # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
+    planificador: 12000   # [provisional] diez briefs de capítulo con su restricción de destino, de una vez · medido 7.725. Igual al margen
+    redactor: 9000        # [provisional] 2.100 de capítulo más razonamiento · medido 4.911
+    editor: 9000          # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
     judge: 3000           # [provisional] seis puntuaciones con su justificación, sin prosa
-    extractor: 3000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto
+    extractor: 6000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto · sin medir: se dobla por prudencia tras el truncado del planificador
   # Proveedor `claude_code` (I-04, TO-040): el CLI no tiene `count_tokens`, así que el
   # recuento previo es una ESTIMACIÓN por caracteres con margen, hecha antes de llamar
   # igual que con la API. Por lo alto a propósito: una estimación corta dejaría pasar un

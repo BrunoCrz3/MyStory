@@ -23,7 +23,8 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
 | --- | --- | --- | --- | --- |
-| — | — | — | 0 | 0 |
+| 2026-09-24 | P27 | Humo 1 (`proveedor: claude_code`): el planificador se truncó con `max_tokens` 4000 y la novela quedó `Detenida` (error-interno). La generación registró 0 USD porque la llamada fallida no devuelve `usage`; **estimación nominal ≤ 0,40 USD** (Opus 5.5, hasta 4 × 4000 tokens de salida con los reintentos del CLI) | 0,40 | 0,40 |
+| 2026-09-24 | P27 | Medición puntual en base temporal (planificador y dos redactor del capítulo 1, topes altos en memoria) para fijar I-02 | 0,41 | 0,81 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `—`, `novel_id` `—`.
 
@@ -142,6 +143,8 @@ registrada.
 | A-55 | P27 | Coste = `total_cost_usd` del CLI (nominal), o precios de config si no viene | Cuenta la caché y la llamada auxiliar del CLI | TO-040 |
 | A-56 | P27 | El binario sale de `STORYMAKER_CLAUDE_CODE` o del PATH; un `.cmd` se sustituye por su `claude.exe` o se rechaza | `cmd.exe` no escapa bien los argumentos | TO-040 |
 | A-57 | P27 | Se pasa `--json-schema` y se valida después con Pydantic | Guía la forma; la garantía es `schema_valido` | TO-040 |
+| A-58 | P27 | `max_tokens_por_rol` medido (I-02): planificador 12000, redactor y editor 9000, extractor 6000; judge sin tocar hasta medirlo (P31). `contexto.capas.margen` 6000 → 12000, cediendo estado 18000 → 14000 y anticontexto 10000 → 8000; recuperado intacto | El planificador sacó 7.725 tokens y se truncaba con 4.000; el redactor 4.911. Recuperado no se toca porque TO-015 descansa en que la novela entera cabe en él | TO-041 |
+| A-59 | P27 | `coste.latencia_maxima_novela` 1800 → 3600 | 55–75 s por llamada medidos con `claude_code`; treinta minutos detendrían una novela sana | TO-041 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
