@@ -119,7 +119,7 @@ son `shared/`, ningún código se usa hoy desde dos páginas (skill FSD § 2).
 | F11 | Cambio por fragmento | `tests/pages/lectura/cambio-fragmento.test.tsx` | CA-09 | hecho |
 | F12 | PDF | `tests/pages/lectura/pdf.test.tsx` | CA-13 | hecho |
 | F13 | Contrato de lectura completo e impresión | `tests/pages/lectura/contrato-lectura.test.tsx` | CA-15, CA-16 | hecho |
-| F14 | Entrevista: formulario y crear | `tests/pages/entrevista/crear.test.tsx` | CA-04 | pendiente |
+| F14 | Entrevista: formulario y crear | `tests/pages/entrevista/crear.test.tsx` | CA-04 | hecho |
 | F15 | Entrevista: resultado de validación | `tests/pages/entrevista/validacion.test.tsx` | CA-02, CA-03 | pendiente |
 | F16 | Arranque conjunto | `npm run build` | — | pendiente |
 

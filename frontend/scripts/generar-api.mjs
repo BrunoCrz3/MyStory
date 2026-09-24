@@ -15,7 +15,9 @@ const CABECERA = `/**
 `
 
 export async function generarTipos() {
-  const ast = await openapiTS(pathToFileURL(RUTA_CONTRATO))
+  // Un campo con `default` no es obligatorio en el contrato: si no llega, lo pone el backend.
+  // `openapi-typescript` 7 lo hace obligatorio salvo que se le diga lo contrario.
+  const ast = await openapiTS(pathToFileURL(RUTA_CONTRATO), { defaultNonNullable: false })
   return CABECERA + astToString(ast)
 }
 

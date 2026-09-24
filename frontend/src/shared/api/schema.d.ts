@@ -659,7 +659,7 @@ export interface components {
              * @default formulario
              * @enum {string}
              */
-            origen: "formulario" | "texto-libre";
+            origen?: "formulario" | "texto-libre";
         };
         /**
          * TextoLibre
@@ -678,17 +678,17 @@ export interface components {
              * @default tercera
              * @enum {string}
              */
-            persona: "primera" | "segunda" | "tercera";
+            persona?: "primera" | "segunda" | "tercera";
             /**
              * @default pasado
              * @enum {string}
              */
-            tiempo_verbal: "presente" | "pasado";
+            tiempo_verbal?: "presente" | "pasado";
             /**
              * @default interna
              * @enum {string}
              */
-            focalizacion: "interna" | "externa" | "cero";
+            focalizacion?: "interna" | "externa" | "cero";
         };
         /**
          * BriefNovela
@@ -819,7 +819,7 @@ export interface components {
              * @default formulario
              * @enum {string}
              */
-            origen: "formulario" | "texto-libre";
+            origen?: "formulario" | "texto-libre";
         };
         /**
          * TextoLibreParcial
@@ -997,7 +997,7 @@ export interface components {
              *     versión y capítulo, y es lo que la lectura marca.
              * @default false
              */
-            modificado: boolean;
+            modificado?: boolean;
         };
         /**
          * CapituloIndice
