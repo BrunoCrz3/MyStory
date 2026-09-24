@@ -1279,6 +1279,71 @@ Ninguna cambia el contrato ni la ontología. A-03 es la que más pesa: fija cuá
 validador mientras se calibra, y al pasar `cerrar_el_paso` a `true` todos los umbrales con
 score tienen que estar rellenos o el arranque falla.
 
+---
+
+## TO-039 — Decisiones menores del agente al ejecutar la F1 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/`, `backend/tests/`, `config/thresholds.yaml`, `docs/architecture.md`, `docs/domain-knowledge.md`
+
+### Problema
+
+El plan 1 deja al agente todo lo que no es condición de parada, con la obligación de
+registrarlo. Estas son las decisiones de la F1 que no estaban en el plan (`specs/progreso.md`
+§ Decisiones, A-14 a A-51). Las del proveedor `claude_code`, A-52 a A-57, van en TO-040
+junto al cambio aprobado que las motiva.
+
+### Elección
+
+| Id | Paso | Decisión | Por qué |
+| --- | --- | --- | --- |
+| A-14 | P11 | Los cortes de edad del nivel perfil (11 y 17) van a `guardrail.perfil` de thresholds.yaml; las palabras, a `guardrail/listas/` | RNF-14: las cifras en config; las listas son datos del guardrail |
+| A-15 | P11 | La ñ no se trata como acento | `año` y `ano` son palabras distintas en español |
+| A-16 | P12 | `brief_novela.contenido` guarda el BriefNovela validado entero y las tablas del Bloque A son su desglose consultable, escritos en la misma transacción | La API devuelve el brief tal como llegó; las tablas sostienen las consultas de la story bible |
+| A-17 | P13 | La tabla de acciones de architecture.md gana la columna Máquina y nombra las seis transiciones de la novela que el diagrama dibujaba sin nombre (FijarEsquema, CerrarEscritura, DevolverAlEditor, Conservar, Regenerar, CerrarRegeneracion) | Escribiendo→Validando existe en las dos máquinas; sin la columna, la tabla es ambigua |
+| A-18 | P14 | Los prompts de sistema son texto fijo por rol, sin huecos: todo dato de la novela llega en el mensaje de usuario, por capas y marcado como datos | Así ningún prompt contiene un dato de novela y el hash identifica el prompt, no la novela |
+| A-19 | P14 | La versión en Langfuse se etiqueta `git-<hash>` y sync la busca por esa etiqueta | Es lo que hace la sincronización idempotente sin guardar estado local |
+| A-20 | P15 | Las lecturas de canon/ hacen JOIN por SQL con `capitulo` para devolver números; canon/ no importa novel/ y el snapshot lo arma con los presentes y ubicaciones que pasa process/ | La story bible es una vista sobre tablas de canon/ y novel/; la regla de importación es de módulos |
+| A-21 | P15 | Un hecho descartado se cierra con version_hasta = version_desde, intervalo vacío | Así la vigencia lo excluye de toda versión sin filtrar por estatus (TO-028) |
+| A-22 | P15 | La marca de consolidado de un capítulo es su snapshot: si existe, consolidar no escribe | Idempotencia por capítulo y versión sin tabla extra |
+| A-23 | P16 | policy/ recibe hechos y coincidencias por Protocol estructural y los resultados de validadores como Veredicto propio | Evita aristas policy → canon, guardrail y quality, que el grafo de architecture.md no tiene |
+| A-24 | P16 | Un hecho que repite el enunciado de uno vigente se descarta con la regla duplicado-de-hecho-vigente | El extractor tiende a reproponer lo ya sabido y el canon no debe duplicarse |
+| A-25 | P17 | El system de cada llamada es el prompt del rol más sus skills; todo dato de la novela va en el mensaje de usuario dentro de <capa> y el texto libre dentro de <texto_libre_no_confiable>, con < y > escapados | RNF-09 y D-18 sin ambigüedad: nada de la novela puede cerrar una etiqueta |
+| A-26 | P17 | El límite de entrada de una petición es contexto.total menos contexto.capas.margen | El margen es la reserva de respuesta y cubre max_tokens de todo rol (RF-CTX-05) |
+| A-27 | P17 | `prosa.longitud_ngrama: 5` en thresholds.yaml; el anticontexto veta los n-gramas que ya aparecen dos veces | El comentario de repeticion_ngramas hablaba de 5-gramas sin que la cifra estuviera en config |
+| A-28 | P18 | El conversor de salida estructurada quita longitudes, rangos y títulos y marca obligatoria toda propiedad; lo quitado se comprueba al validar con el mismo modelo Pydantic | La salida estructurada admite un subconjunto de JSON Schema; la validación posterior es schema_valido |
+| A-29 | P18 | La lectura de la story bible para un rol se envuelve en el span consultar_story_bible en vez de ofrecer la tool al modelo | El orquestador entrega el contexto ya ensamblado; el span deja la lectura en la traza |
+| A-30 | P18 | Aristas process → novel y process → intake añadidas al grafo de architecture.md | La prueba de importaciones las cazó; el orquestador crea capítulos y lee el brief, y no hay ciclo |
+| A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no |
+| A-32 | P19 | El contador de intentos cuenta las reescrituras hechas: al agotar no se suma la que ya no se hace | Un capítulo agotado muestra las reescrituras gastadas, igual que el ejemplo Detenida del contrato |
+| A-33 | P19 | La capa Local lleva todos los capítulos anteriores por recencia y el ensamblador los resume o los quita al desbordar; Recuperado excluye solo el capítulo anterior | Así no hace falta una cifra de cuántos capítulos literales entran: manda el presupuesto de la capa |
+| A-34 | P20 | El extractor cita hechos y promesas conocidos por alias cortos (H1, P1) que el código traduce a identificadores | Copiar UUID es frágil para un modelo; un alias que no existe se ignora |
+| A-35 | P20 | El momento de un evento es número de capítulo × 100 + su orden en el capítulo | Sin analepsis en v1 la fábula sigue al discurso; basta un orden total para Lean |
+| A-36 | P21 | Una generación inexistente en una novela existente responde 404 novela-no-encontrada con el generacion_id en las extensiones | El catálogo es cerrado y no tiene generacion-no-encontrada |
+| A-37 | P21 | La estimación de un trabajo al encolar es contexto.total: el tamaño de su llamada más grande, margen incluido | architecture.md § Presupuesto dice que la estimación es el contexto ensamblado, y ninguno supera ese total |
+| A-38 | P21 | `orquestacion.intervalo_sondeo_segundos: 3` en thresholds.yaml | Es una cifra del contrato de sondeo (TO-031) y RNF-14 la quiere en config |
+| A-39 | P22 | Transición Detener desde Planificando, añadida a domain-knowledge.md, architecture.md y la tabla | Materializa D-23, aprobada con el plan: el planificador que agota sus intentos detiene la novela, y el diagrama no la dibujaba |
+| A-40 | P22 | El worker espera a un evento que encolar dispara, en vez de sondear la base con una espera fija | Evita una cifra de sondeo y no gasta consultas en vacío |
+| A-41 | P22 | Tokens y coste se acumulan por trabajo en una variable de contexto que el llamador rellena en cada llamada | Dos novelas a la vez no mezclan sus cuentas y ningún servicio tiene que pasarlas a mano |
+| A-42 | P23 | Coste, latencia y reintentos de infraestructura agotados detienen con detenida_por = error-interno y el motivo en el audit log | El catálogo cerrado no tiene un tipo propio para ellos y no se inventa uno |
+| A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador |
+| A-44 | P24 | Reanudar no reinicia los `intentos` del capítulo que se normaliza a `Pendiente` | Un proceso que cae una y otra vez en el mismo capítulo sigue acotado por `max_intentos_capitulo` (regla 14) |
+| A-45 | P24 | Si la novela está en `Planificando` y el esquema ya existe, no se replanifica: solo `FijarEsquema`; `CerrarEscritura` solo si la novela sigue en `Escribiendo` | Son los dos cortes entre transacciones del orquestador; replanificar duplicaría el esquema y cerrar dos veces es transición inválida |
+| A-46 | P24 | Los huérfanos se devuelven a la cola al arrancar el worker, no en cada reclamación | Solo es seguro con un único proceso por base, que garantiza el cerrojo de instancia (A-13) |
+| A-47 | P25 | Gate en rojo en F1: DevolverAlEditor y Detener en la misma transacción, `detenida_por = error-interno` y los validadores fallidos en el audit log | En F1 no hay editor que corrija la novela entera y todo reintento tiene límite; el P32 lo sustituye por la corrección |
+| A-48 | P25 | El gate y la publicación se inyectan en el orquestador por el puerto `Publicador` de process/service.py; un capítulo inexistente en una versión responde 404 `version-no-encontrada` con `capitulo` | versioning → process ya existe y la arista inversa sería un ciclo; el catálogo de problemas es cerrado |
+| A-49 | P25 | `listar_versiones` va en `CONSULTAS_TRANSVERSALES` de versioning/repository.py: filtra por `novel_id` pero no por `version` | El historial mira todas las versiones a la vez |
+| A-50 | P26 | El barrido de secretos busca en todo fichero versionado claves con forma de clave (`sk-ant-…`, `sk-lf-…`, `pk-lf-…`) y los valores de las variables secretas de `.env.example` (nombre con KEY, SECRET, TOKEN o PASSWORD); los nombres de cabecera `x-api-key` y `authorization`, solo en los casetes | Las palabras sueltas aparecen legítimamente en el plan y en las skills, y las variables no secretas (`STORYMAKER_ENV`) tienen valores que el repo contiene |
+| A-51 | P26 | El grabador de casetes conserva solo una lista blanca de cabeceras (`content-type`, `anthropic-version`, `request-id`) y vive en `tests/herramientas/casetes.py` | Una lista negra dejaría pasar una cabecera de autenticación nueva del SDK |
+
+### Consecuencias
+
+Ninguna cambia el contrato ni añade una clase a la ontología. Tres tocan documentos semilla y
+ya están reflejadas en ellos: A-17 (la tabla de acciones gana la columna Máquina y nombra seis
+transiciones), A-30 (dos aristas más en el grafo de importación) y A-39 (`Detener` desde
+`Planificando`, que materializa D-23). Las que más pesan al revisar son A-26 (el límite de
+entrada es `contexto.total` menos el margen), A-32 (el contador de intentos cuenta
+reescrituras hechas) y A-47 (un gate en rojo en F1 detiene la novela, hasta que el P32 ponga
+la corrección del editor).
 
 ---
 
