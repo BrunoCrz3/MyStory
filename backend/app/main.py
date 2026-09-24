@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.commons.config import Config, cargar_config
+from app.commons.db import BaseDatos, ruta_db
+from app.commons.db.migrar import aplicar_migraciones
 from app.commons.errores import registrar_errores
 
 TITULO = "storyMaker — API del backend v1"
@@ -32,6 +34,9 @@ def crear_app(config: Config | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.config = config if config is not None else cargar_config()
+        db = BaseDatos(ruta_db())
+        db.ejecutar_sync(aplicar_migraciones)
+        app.state.db = db
         yield
 
     app = FastAPI(
