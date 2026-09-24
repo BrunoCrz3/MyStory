@@ -1,0 +1,431 @@
+/* Lectura de una versión. La parte de impresión es CL-04 de spec1.md § 4.4: el export a PDF
+   del backend emula `print` antes de `page.pdf()`, así que lo que sale de aquí es el PDF. */
+
+.portada {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.portada-dedicatoria-bloque {
+  font-style: italic;
+  margin: 1.5rem auto;
+  max-width: 30rem;
+}
+
+.capitulo {
+  margin: 2.5rem 0;
+}
+
+.capitulo-cabecera {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.capitulo-texto {
+  /* El texto se pinta tal cual llega, saltos de línea incluidos: nada de añadir marcado. */
+  white-space: pre-wrap;
+}
+
+.marca-modificado {
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 1rem;
+  background: #fff1c2;
+  color: #5c4400;
+}
+
+/* Controles de lectura. Todos llevan `data-controles` y no se imprimen, así que sus estilos
+   no alcanzan al PDF. */
+
+.capitulo-controles {
+  display: flex;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: var(--espacio-3);
+  font-size: var(--texto-pequeno);
+}
+
+.panel-cambio {
+  position: sticky;
+  bottom: 0;
+  background: var(--color-hoja);
+  border: 1px solid var(--color-borde-suave);
+  padding: var(--espacio-4);
+}
+
+.panel-cambio textarea {
+  display: block;
+  width: 100%;
+  min-height: 4rem;
+}
+
+.selector-version,
+.descarga-pdf {
+  display: block;
+  margin: var(--espacio-2) 0;
+}
+
+/* Pantalla: la edición cuidada. Nada de este bloque llega a la impresión. */
+@media screen {
+  /* Barra de lectura: versión y PDF en una línea, sobre un filete fino. */
+  .selector-version,
+  .descarga-pdf {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--espacio-2);
+    margin: 0 var(--espacio-4) var(--espacio-3) 0;
+    vertical-align: middle;
+    font-size: var(--texto-pequeno);
+    color: var(--color-tinta-suave);
+  }
+
+  /* El texto de la opción puede ser largo: el selector nunca pasa del ancho disponible. */
+  .selector-version {
+    max-width: 100%;
+  }
+
+  .selector-version select {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    text-overflow: ellipsis;
+  }
+
+  .descarga-pdf p {
+    margin: 0;
+  }
+
+  .descarga-pdf a {
+    display: inline-block;
+    padding: var(--espacio-2) var(--espacio-4);
+    background: var(--color-burdeos);
+    color: var(--color-hoja);
+    border-radius: var(--radio);
+    text-decoration: none;
+  }
+
+  .descarga-pdf a:hover {
+    background: var(--color-burdeos-hondo);
+    color: var(--color-hoja);
+  }
+
+  /* Portada: la cubierta, con doble marco dorado y la dedicatoria en cursiva. */
+  .portada {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: min(34rem, 70vh);
+    margin: var(--espacio-4) 0 var(--espacio-7);
+    padding: var(--espacio-7) var(--espacio-6);
+    background: var(--color-hoja);
+    border: 1px solid var(--color-oro);
+    outline: 1px solid var(--color-oro);
+    outline-offset: -0.75rem;
+    border-radius: var(--radio-pequeno);
+    box-shadow: var(--sombra-hoja);
+  }
+
+  .portada h1 {
+    margin: 0 0 var(--espacio-5);
+    font-size: clamp(2rem, 1.2rem + 3.5vw, 3rem);
+    color: var(--color-burdeos);
+  }
+
+  .portada h1::after {
+    display: block;
+    margin-top: var(--espacio-4);
+    font-size: 1.25rem;
+    color: var(--color-oro);
+    content: '❦';
+    content: '❦' / '';
+  }
+
+  .portada-para {
+    margin: 0;
+    font-size: var(--texto-h3);
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+  }
+
+  .portada-ocasion {
+    margin: var(--espacio-1) 0 0;
+    color: var(--color-tinta-suave);
+  }
+
+  .portada-dedicatoria-bloque {
+    margin: var(--espacio-6) auto 0;
+    font-size: var(--texto-lectura);
+    line-height: var(--interlineado-lectura);
+  }
+
+  .portada-dedicatoria-bloque p {
+    margin: 0;
+  }
+
+  .portada-dedicatoria-bloque footer {
+    margin-top: var(--espacio-3);
+    font-style: normal;
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+    color: var(--color-tinta-suave);
+  }
+
+  .portada-dedicatoria-bloque footer::before {
+    content: '— ';
+  }
+
+  /* Índice y ficha: páginas de guarda, en la medida de lectura. */
+  [data-testid='indice'],
+  .ficha {
+    max-width: var(--ancho-lectura);
+    margin: 0 auto var(--espacio-7);
+  }
+
+  [data-testid='indice'] h2,
+  .ficha h2 {
+    text-align: center;
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+  }
+
+  [data-testid='indice'] ol {
+    margin: 0;
+    /* Sitio para el numeral más ancho, «VIII.». */
+    padding-left: var(--espacio-7);
+    list-style: upper-roman;
+  }
+
+  [data-testid='indice'] li {
+    padding: var(--espacio-2) 0;
+    border-bottom: 1px dotted var(--color-borde-suave);
+  }
+
+  [data-testid='indice'] li::marker {
+    color: var(--color-tinta-suave);
+  }
+
+  [data-testid='indice'] a {
+    font-size: var(--texto-h3);
+  }
+
+  .ficha {
+    padding-top: var(--espacio-4);
+    border-top: 3px double var(--color-oro);
+  }
+
+  .ficha ul {
+    margin: 0 0 var(--espacio-5);
+    padding: 0;
+    list-style: none;
+  }
+
+  .ficha li {
+    padding: var(--espacio-3) 0;
+    border-bottom: 1px dotted var(--color-borde-suave);
+  }
+
+  .ficha li strong {
+    font-weight: normal;
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+    font-size: var(--texto-h3);
+    color: var(--color-burdeos);
+  }
+
+  .ficha-capitulos {
+    display: block;
+    font-size: var(--texto-pequeno);
+    color: var(--color-tinta-suave);
+  }
+
+  /* Capítulos: medida limitada, interlineado amplio, capitular y fleurón entre capítulos. */
+  .capitulo {
+    max-width: var(--ancho-lectura);
+    margin: 0 auto var(--espacio-7);
+    scroll-margin-top: var(--espacio-5);
+  }
+
+  .capitulo::before {
+    display: block;
+    margin-bottom: var(--espacio-6);
+    text-align: center;
+    font-size: 1.25rem;
+    color: var(--color-oro);
+    content: '❦';
+    content: '❦' / '';
+  }
+
+  .capitulo-cabecera {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--espacio-2);
+    margin-bottom: var(--espacio-5);
+    text-align: center;
+  }
+
+  .capitulo-cabecera h2 {
+    margin: 0;
+    font-size: var(--texto-h2);
+  }
+
+  /* flow-root contiene la capitular flotante sin añadir nada al texto. */
+  .capitulo-texto {
+    display: flow-root;
+    font-size: var(--texto-lectura);
+    line-height: var(--interlineado-lectura);
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+
+  .capitulo-texto::first-letter {
+    float: left;
+    margin: 0.08em var(--espacio-2) 0 0;
+    font-size: 3.4em;
+    line-height: 0.85;
+    color: var(--color-burdeos);
+  }
+
+  .marca-modificado {
+    display: inline-block;
+    font-family: var(--fuente-texto);
+    font-size: var(--texto-pequeno);
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+    padding: 0 var(--espacio-3);
+    background: var(--color-aviso-velo);
+    color: var(--color-aviso);
+    border: 1px solid var(--color-aviso);
+    border-radius: 1rem;
+  }
+
+  /* Controles del capítulo: discretos, que no compitan con el texto. */
+  .capitulo-controles {
+    padding-top: var(--espacio-3);
+    border-top: 1px solid var(--color-borde-suave);
+  }
+
+  .capitulo-controles button {
+    min-height: 2.5rem;
+    padding: var(--espacio-1) var(--espacio-3);
+  }
+
+  .hechos-del-capitulo {
+    flex: 1 1 100%;
+  }
+
+  .hechos-del-capitulo ul {
+    margin: var(--espacio-2) 0 0;
+    padding: var(--espacio-2) var(--espacio-4);
+    list-style: none;
+    background: var(--color-hoja);
+    border: 1px solid var(--color-borde-suave);
+    border-radius: var(--radio);
+  }
+
+  .hechos-del-capitulo li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espacio-2);
+    padding: var(--espacio-2) 0;
+  }
+
+  .hechos-del-capitulo li + li {
+    border-top: 1px dotted var(--color-borde-suave);
+  }
+
+  /* Petición de cambio: una hoja que sube desde el pie, sin tapar toda la lectura. */
+  .panel-cambio {
+    box-sizing: border-box;
+    max-width: var(--ancho-lectura);
+    max-height: 70vh;
+    margin: 0 auto;
+    overflow-y: auto;
+    padding: var(--espacio-4) var(--espacio-5) var(--espacio-5);
+    border-top: 3px solid var(--color-burdeos);
+    border-radius: var(--radio) var(--radio) 0 0;
+    box-shadow: var(--sombra-flotante);
+  }
+
+  .panel-cambio h2 {
+    margin: 0 0 var(--espacio-2);
+    font-size: var(--texto-h3);
+    font-variant-caps: small-caps;
+    letter-spacing: var(--espacio-versalitas);
+  }
+
+  .panel-cambio q {
+    font-style: italic;
+  }
+
+  .panel-cambio label {
+    display: grid;
+    gap: var(--espacio-1);
+    margin-bottom: var(--espacio-3);
+    font-size: var(--texto-pequeno);
+    color: var(--color-tinta-suave);
+  }
+
+  .panel-cambio button {
+    margin: var(--espacio-2) var(--espacio-2) 0 0;
+  }
+
+  .panel-cambio form button[type='submit']:not(:disabled),
+  .analisis-impacto button:not(:disabled) {
+    background: var(--color-burdeos);
+    color: var(--color-hoja);
+  }
+
+  .panel-cambio form button[type='submit']:hover:not(:disabled),
+  .analisis-impacto button:hover:not(:disabled) {
+    background: var(--color-burdeos-hondo);
+  }
+
+  .analisis-impacto {
+    padding: var(--espacio-2) var(--espacio-4);
+    background: var(--color-papel);
+    border-left: 4px solid var(--color-oro);
+    border-radius: 0 var(--radio) var(--radio) 0;
+  }
+
+  /* Móvil: menos marco, misma medida cómoda. */
+  @media (max-width: 30rem) {
+    .portada {
+      padding: var(--espacio-6) var(--espacio-5);
+      outline-offset: -0.5rem;
+    }
+
+    .panel-cambio {
+      padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
+    }
+
+    .capitulo-texto {
+      font-size: var(--texto-base);
+    }
+  }
+}
+
+@media print {
+  /* Todos los capítulos visibles, aunque en pantalla alguno se pliegue. */
+  [data-testid="capitulo"] {
+    display: block !important;
+    break-before: page;
+  }
+
+  /* Navegación, selector de versión, petición de cambio y PDF no se imprimen. */
+  [data-controles] {
+    display: none !important;
+  }
+
+  .marca-modificado {
+    border: 1px solid #5c4400;
+    background: none;
+  }
+}

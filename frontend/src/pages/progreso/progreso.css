@@ -1,0 +1,102 @@
+/* Progreso: los datos de la generación como el colofón de un libro, en una hoja cosida al
+   papel. Los colores y medidas salen de shared/ui/tema.css. */
+
+.progreso {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  margin: 0 auto var(--espacio-5);
+  max-width: var(--ancho-lectura);
+  padding: var(--espacio-3) var(--espacio-5);
+  background: var(--color-hoja);
+  border: 1px solid var(--color-borde-suave);
+  border-top: 3px solid var(--color-burdeos);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-hoja);
+}
+
+.progreso dt,
+.progreso dd {
+  margin: 0;
+  padding: var(--espacio-2) 0;
+  border-bottom: 1px dotted var(--color-borde-suave);
+}
+
+.progreso dt:last-of-type,
+.progreso dd:last-of-type {
+  border-bottom: none;
+}
+
+.progreso dt {
+  padding-right: var(--espacio-4);
+  font-variant-caps: small-caps;
+  letter-spacing: var(--espacio-versalitas);
+  color: var(--color-tinta-suave);
+}
+
+.progreso dd {
+  overflow-wrap: anywhere;
+}
+
+/* Estado y avance, en tamaño de titular: es lo que el lector viene a mirar. */
+.progreso dt:nth-of-type(-n + 3) + dd {
+  font-size: var(--texto-h3);
+}
+
+.progreso dt:nth-of-type(2) + dd {
+  color: var(--color-burdeos);
+}
+
+.progreso + p[role='status'] {
+  max-width: var(--ancho-lectura);
+  margin: 0 auto var(--espacio-4);
+  text-align: center;
+  font-style: italic;
+  color: var(--color-tinta-suave);
+}
+
+/* Enlace a la versión resultante: la llamada principal, como un botón relleno. */
+.pagina-progreso > p:has(> a:only-child) {
+  text-align: center;
+}
+
+.pagina-progreso > p > a:only-child {
+  display: inline-block;
+  padding: var(--espacio-3) var(--espacio-5);
+  background: var(--color-burdeos);
+  color: var(--color-hoja);
+  border-radius: var(--radio);
+  text-decoration: none;
+}
+
+.pagina-progreso > p > a:only-child:hover {
+  background: var(--color-burdeos-hondo);
+  color: var(--color-hoja);
+}
+
+.pagina-progreso > .aviso-problema,
+.pagina-progreso > p[role='status'][aria-live='polite'] {
+  max-width: var(--ancho-lectura);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pagina-progreso > p[role='status'][aria-live='polite'] {
+  text-align: center;
+}
+
+/* Móvil: cada dato bajo su nombre, para que los identificadores largos no aprieten. */
+@media (max-width: 30rem) {
+  .progreso {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--espacio-2) var(--espacio-4);
+  }
+
+  .progreso dt {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .progreso dd {
+    padding-top: 0;
+  }
+}
