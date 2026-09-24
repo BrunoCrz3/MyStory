@@ -22,8 +22,17 @@ cd backend
 uv sync
 ```
 
-`.env` nunca se commitea. Sin `ANTHROPIC_API_KEY` el sistema arranca pero no genera; sin las
-variables de Langfuse genera igual y `GET /salud` dice `degradado`.
+`.env` nunca se commitea. Quién atiende las llamadas al modelo lo dice `proveedor` en
+`config/models.yaml` (TO-040):
+
+- `claude_code` (el valor actual): el CLI de Claude Code como subproceso, con la sesión ya
+  iniciada en la máquina y **todas sus herramientas desactivadas**. No necesita clave. Si
+  `claude` en el PATH es el envoltorio `.cmd` de npm, se usa el binario nativo que envuelve;
+  si no se encuentra, indica su ruta en `STORYMAKER_CLAUDE_CODE`.
+- `api`: la API de Claude con `ANTHROPIC_API_KEY`. Sin la clave el sistema arranca pero no
+  genera.
+
+Sin las variables de Langfuse genera igual y `GET /salud` dice `degradado`.
 
 ## Arranque
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class _Estricto(BaseModel):
@@ -172,8 +172,14 @@ class MaxTokensPorRol(_Estricto):
     extractor: int
 
 
+class ClaudeCode(_Estricto):
+    caracteres_por_token: float = Field(gt=0)
+    margen_estimacion: float = Field(ge=1)
+
+
 class Modelo(_Estricto):
     max_tokens_por_rol: MaxTokensPorRol
+    claude_code: ClaudeCode
 
 
 class Formal(_Estricto):
@@ -250,8 +256,12 @@ class Roles(_Estricto):
         return modelo
 
 
+Proveedor = Literal["api", "claude_code"]
+
+
 class Modelos(_Estricto):
     version: int
+    proveedor: Proveedor
     roles: Roles
 
 

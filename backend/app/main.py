@@ -17,7 +17,7 @@ from app.commons.db import BaseDatos, ruta_db
 from app.commons.db.cerrojo import CerrojoInstancia
 from app.commons.db.migrar import aplicar_migraciones
 from app.commons.errores import registrar_errores
-from app.commons.llm import ClienteAnthropic, ClienteModelo
+from app.commons.llm import ClienteModelo, crear_cliente
 from app.commons.llm.llamar import LlamadorModelo
 from app.commons.llm.pool import PoolEnVuelo
 from app.commons.observabilidad import Trazador, TrazadorLangfuse
@@ -67,7 +67,7 @@ def crear_app(
             db.ejecutar_sync(aplicar_migraciones)
             traz = trazador if trazador is not None else TrazadorLangfuse()
             pool = PoolEnVuelo(cfg.umbrales.en_vuelo.total)
-            cliente = cliente_modelo if cliente_modelo is not None else ClienteAnthropic(cfg)
+            cliente = cliente_modelo if cliente_modelo is not None else crear_cliente(cfg)
             recursos = Recursos(
                 config=cfg,
                 db=db,

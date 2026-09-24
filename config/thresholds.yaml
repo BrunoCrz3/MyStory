@@ -438,6 +438,14 @@ modelo:
     editor: 6000          # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
     judge: 3000           # [provisional] seis puntuaciones con su justificación, sin prosa
     extractor: 3000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto
+  # Proveedor `claude_code` (I-04, TO-040): el CLI no tiene `count_tokens`, así que el
+  # recuento previo es una ESTIMACIÓN por caracteres con margen, hecha antes de llamar
+  # igual que con la API. Por lo alto a propósito: una estimación corta dejaría pasar un
+  # prompt que no cabe. El recuento real llega después, en el `usage` del CLI, e incluye
+  # unos 2.600 tokens de entrada propios del CLI que no son nuestro prompt.
+  claude_code:
+    caracteres_por_token: 3.0   # [provisional — calibrar tras la demo] español con el tokenizador actual ronda 3,5–4
+    margen_estimacion: 1.2      # [provisional — calibrar tras la demo] se multiplica sobre la estimación
 
 # ---------------------------------------------------------------------------
 # Verificación formal

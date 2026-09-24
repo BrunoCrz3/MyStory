@@ -1,4 +1,5 @@
-"""Costura con el proveedor: un `Protocol` con una sola implementación de producción.
+"""Costura con el proveedor: un `Protocol` con dos implementaciones de producción, la API
+(`proveedor.py`) y el CLI de Claude Code (`claude_code.py`), elegidas por configuración.
 
 El doble vive en `tests/dobles/` y se inyecta desde fuera (TO-034). Aquí no hay ninguno.
 """

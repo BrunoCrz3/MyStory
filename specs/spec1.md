@@ -3,7 +3,7 @@ estado: aprobada
 aprobada-por: Bruno Cruz
 fecha: 2026-09-24
 contrato-aprobado-con-ella: specs/openapi.yaml
-modificada: 2026-09-24 · TO-037 · cambio aprobado por el desarrollador
+modificada: 2026-09-24 · TO-037 y TO-040 · cambios aprobados por el desarrollador
 ---
 
 # SRS 1 — Backend v1 de storyMaker
@@ -277,7 +277,9 @@ el contexto en las siete capas de la ontología, cada una de su fuente.
 
 **RF-CTX-02 [demo]** · El sistema deberá contar los tokens **antes** de llamar al modelo,
 con el contador del proveedor, y **fallar en voz alta** si el ensamblado no cabe tras
-degradar. Nunca truncar en silencio.
+degradar. Nunca truncar en silencio. Con `proveedor: claude_code` (TO-040) no hay contador
+del proveedor antes de la llamada: el recuento previo es una **estimación por lo alto** con
+el margen de `modelo.claude_code`, y el real llega después en el `usage` del CLI.
 
 > *Dado* un ensamblado que supera `contexto.total`, *cuando* se ha degradado en el orden
 > de `contexto.degradacion` y sigue sin caber, *entonces* el trabajo falla con un error
@@ -653,6 +655,21 @@ Las cifras se referencian; ninguna se copia.
 | **RNF-13** | Coste y latencia por novela bajo umbral; superarlo detiene e informa | § `coste` |
 | **RNF-14** | `config/` es la **fuente única de cifras**: ninguna se duplica en documentos ni se escribe suelta en el código | — |
 | **RNF-15** | El arranque **falla en voz alta** si falta un umbral que se usa para cerrar el paso, o si el margen no cubre el `max_tokens` de algún rol | § `modelo`, § `medicion` |
+
+**Proveedor del modelo (TO-040, aprobado por el desarrollador el 2026-09-24).** `proveedor`
+en `config/models.yaml` elige entre la API (`api`) y el CLI de Claude Code como subproceso
+(`claude_code`). Con `claude_code` cambian tres requisitos, y el cambio es deliberado:
+
+- **RF-CTX-02 y RNF-01**: el recuento previo es una estimación con margen, no el del proveedor;
+  «contar antes de llamar» se sigue cumpliendo, con la estimación.
+- **RNF-13**: el coste que se registra y que vigila `coste_maximo_novela` es **nominal**, a
+  precio de lista; la sesión no se factura por llamada.
+- **Schema estricto** (`verification.md` A-68, O-01): no hay modo `strict`; la salida se
+  valida después con Pydantic y un fallo de schema cuenta como intento fallido.
+
+Y endurece **RNF-09**: el CLI se lanza sin ninguna herramienta, en una carpeta temporal vacía,
+con el texto de la novela solo por la entrada estándar (`architecture.md` § Proveedor del
+modelo).
 
 ### 6.1 Privacidad
 

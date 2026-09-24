@@ -641,6 +641,44 @@ agotados los intentos de trabajo, escala.
 
 ---
 
+## Proveedor del modelo
+
+`commons/llm/` define el `Protocol` `ClienteModelo` con **dos implementaciones de
+producción**, y `proveedor` en `config/models.yaml` elige cuál se usa (TO-040, cambio de
+arquitectura aprobado por el desarrollador el 2026-09-24). Ninguna otra pieza sabe cuál está
+activa: el ensamblador, el pool, el llamador y el trazador son los mismos.
+
+| | `api` · `ClienteAnthropic` | `claude_code` · `ClienteClaudeCode` |
+| --- | --- | --- |
+| Credencial | `ANTHROPIC_API_KEY` | La sesión de Claude Code iniciada en la máquina |
+| Recuento previo | `messages.count_tokens`, exacto | **Estimación** por caracteres con margen (`modelo.claude_code`), por lo alto |
+| Recuento posterior | `usage` de la respuesta | `usage` del JSON del CLI, que suma unos 2.600 tokens de entrada propios del CLI |
+| Tope de salida | `max_tokens` de la petición | `CLAUDE_CODE_MAX_OUTPUT_TOKENS` en el entorno del subproceso |
+| Salida estructurada | `output_config.format` con JSON Schema | `--json-schema`, **sin modo estricto**: la forma la garantiza la validación Pydantic posterior, y un fallo de schema es un intento fallido (`schema_valido`) |
+| Coste en Langfuse | Real, con los precios de `coste.precio_usd_por_millon` | **Nominal**: el `total_cost_usd` que calcula el CLI a precio de lista; la sesión no se factura por llamada |
+
+**Lo que cuesta este proveedor.** El recuento que decide si un prompt cabe deja de ser el del
+proveedor, así que la regla «contar antes» se cumple con una estimación deliberadamente alta y
+el margen de error lo absorbe `contexto.capas.margen`. El coste que vigila `coste_maximo_novela`
+es nominal. Y la sesión tiene los límites de uso del plan con que se inició, que no son los de
+la API: una novela puede detenerse por límite de uso, y eso se clasifica como fallo de
+infraestructura con su contador propio.
+
+**Contención del subproceso**, obligatoria porque el mensaje lleva texto libre del comprador:
+sin herramientas (`--tools ""`), sin MCP (`--strict-mcp-config`), sin hooks, skills, plugins,
+CLAUDE.md ni ficheros de configuración del usuario (`--safe-mode`, `--setting-sources ""`,
+`--disable-slash-commands`), sin permisos que conceder (`--permission-mode dontAsk`,
+`--permission-prompts none`) y sin sesión persistente. La carpeta de trabajo es una temporal
+vacía, nunca el repositorio. El texto de la petición va **solo por la entrada estándar**, así
+que nada de la novela llega a la línea de órdenes; el system va en un fichero de otra carpeta
+temporal. El entorno del hijo no lleva credenciales de Langfuse, configuración del sistema ni
+`ANTHROPIC_API_KEY`. Y el envoltorio `.cmd` de npm no se ejecuta nunca, porque `cmd.exe` no
+escapa bien los argumentos: se usa el binario nativo o no se llama. Lo prueban
+`tests/commons/test_claude_code.py`, con el corpus de inyección contra un doble del
+subproceso, y `tests/humo/test_claude_code_contencion.py`, contra el CLI de verdad.
+
+---
+
 ## Memoria a corto y largo plazo
 
 Dos memorias con vidas distintas. Confundirlas es lo que hace que un borrador rechazado
@@ -995,6 +1033,7 @@ dedicatoria e índice, y recuento de palabras dentro de tolerancia.
 | **Secretos en el repositorio** | Solo `.env.example`, con los nombres de las variables y ningún valor. `.env` está en `.gitignore` |
 | **Exposición en red sin autenticación** | El backend escucha **solo en la interfaz local** mientras no haya autenticación, y se niega a arrancar con un `host` que no lo sea salvo que se pase una opción explícita. El alcance deja las cuentas fuera, así que detrás de la API no hay nada más |
 | **Ejecución de lo que devuelve el modelo** | Ningún camino del código ejecuta, evalúa ni lanza como proceso la salida del modelo: es prosa que se guarda |
+| **Inyección que actúe sobre la máquina** con `proveedor: claude_code` | El CLI corre sin ninguna herramienta, sin MCP ni personalizaciones, en una carpeta temporal vacía, y el texto de la novela solo le llega por la entrada estándar (§ Proveedor del modelo) |
 
 **Lo que esto no cubre.** El aislamiento por `novel_id` depende de que cada consulta lo lleve,
 y eso lo comprueban `A-83` y `A-84` de `verification.md`, que exigen `novel_id` y `version`

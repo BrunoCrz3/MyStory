@@ -1279,3 +1279,53 @@ Ninguna cambia el contrato ni la ontología. A-03 es la que más pesa: fija cuá
 validador mientras se calibra, y al pasar `cerrar_el_paso` a `true` todos los umbrales con
 score tienen que estar rellenos o el arranque falla.
 
+
+---
+
+## TO-040 — Proveedor del modelo vía Claude Code, sin clave de API
+
+**Fecha:** 2026-09-24 · **Estado:** **cambio de arquitectura aprobado por el desarrollador** (I-04 de `specs/progreso.md`); los detalles de implementación A-52…A-57, **decididos por el agente — revisar** · **Afecta a:** `backend/app/commons/llm/`, `backend/app/main.py`, `config/models.yaml`, `config/thresholds.yaml` § `modelo.claude_code`, `.env.example`, `docs/architecture.md` § Proveedor del modelo, `specs/spec1.md` § 6, `docs/verification.md` (A-09, A-68, P-72, A-104)
+
+### Problema
+
+No hay clave de la API de Anthropic, y sin ella no hay prueba de humo real (condición de
+parada 1 del plan) ni ninguna novela generada. La máquina sí tiene una sesión de Claude Code
+iniciada.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| Esperar a tener clave | Nada cambia en la arquitectura | Bloquea el cierre de F1 y todo lo que depende de una novela real (F4, F5, el PDF) |
+| **CLI de Claude Code como subproceso** | Usa la sesión existente; el resto del sistema no se entera, porque es otra implementación del mismo `Protocol` | Recuento previo estimado, coste nominal, sin schema estricto, límites del plan; y un agente con herramientas al que hay que quitárselas todas |
+
+### Elección
+
+**Segunda implementación de `ClienteModelo`**, `ClienteClaudeCode`, elegida con
+`proveedor: claude_code` en `config/models.yaml`. `ClienteAnthropic` se mantiene intacto y
+`proveedor: api` vuelve a él sin tocar código.
+
+| Id | Detalle de implementación | Por qué |
+| --- | --- | --- |
+| A-52 | `proveedor` vive en `config/models.yaml`, no en `thresholds.yaml` | No es una cifra: es la misma clase de dato que el identificador del modelo |
+| A-53 | Recuento previo = caracteres de system, mensaje y schema ÷ `caracteres_por_token` × `margen_estimacion`, **sin** sumar los ~2.600 tokens propios del CLI | El presupuesto gobierna lo que enviamos; sumar el sobrecoste a cada pieza contada por separado la inflaría varias veces |
+| A-54 | Tope de salida con `CLAUDE_CODE_MAX_OUTPUT_TOKENS`; el truncado se reconoce por el mensaje «output token maximum» del CLI y es `SalidaTruncada` | El CLI no tiene `max_tokens`; se comprobó en real que corta y lo dice así |
+| A-55 | Coste = `total_cost_usd` del CLI; si no viene, los precios de `config/` | Es nominal en los dos casos, pero el del CLI cuenta la caché y la llamada auxiliar que hace |
+| A-56 | El binario se resuelve de `STORYMAKER_CLAUDE_CODE` o del PATH, y un envoltorio `.cmd` se sustituye por el `claude.exe` que envuelve o se rechaza | `cmd.exe` no escapa bien los argumentos (la orden lleva el JSON Schema) |
+| A-57 | Se pasa `--json-schema` aunque no sea estricto, y la salida se valida después con el mismo modelo Pydantic | Guía al modelo hacia la forma; la garantía sigue siendo `schema_valido` |
+
+**Contención** (obligatoria, punto 2 de I-04): `--tools ""`, `--strict-mcp-config`,
+`--safe-mode`, `--setting-sources ""`, `--disable-slash-commands`, `--permission-mode
+dontAsk`, `--permission-prompts none`, `--no-session-persistence`; carpeta de trabajo
+temporal y vacía; texto solo por la entrada estándar; entorno sin credenciales. Probada con el
+corpus de inyección contra un doble del subproceso y contra el CLI real.
+
+### Consecuencias
+
+- **Conteo estimado**: RF-CTX-02 se cumple con una estimación por lo alto; el error lo absorbe
+  el margen, y el humo registra estimado frente a real para calibrar las dos cifras.
+- **Coste nominal**: la condición de parada 4 (40 USD) y `coste_maximo_novela` vigilan un coste
+  a precio de lista que nadie factura; siguen siendo el tope, pero ya no miden dinero gastado.
+- **Límites del plan**: la sesión tiene los límites de uso de la suscripción, no los de la API.
+  Un límite alcanzado es un fallo de infraestructura con su contador y, agotado, detiene.
+- **Latencia**: cada llamada arranca un proceso; unos segundos por llamada que la API no tenía.

@@ -887,3 +887,34 @@ solo aparecieron al ejecutar: el SDK de Anthropic 1.x va sobre `httpx2`, no sobr
 los casetes tienen que usar su transporte; y en Windows el proceso hijo escribe sus errores en
 cp1252, así que las pruebas de extremo a extremo fuerzan UTF-8.
 
+
+---
+
+## RI-013 — El modelo se llama a través de Claude Code
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/commons/llm/{claude_code,fabrica}.py`,
+`backend/app/main.py`, `config/models.yaml`, `config/thresholds.yaml`, `.env.example`,
+`README.md`, `docs/architecture.md`, `specs/spec1.md`, `docs/verification.md`,
+`docs/trade-offs.md` (TO-040)
+
+### Causa
+
+No hay clave de la API y el cierre de F1 exige una novela real. El desarrollador aprobó usar
+la sesión de Claude Code de la máquina (I-04).
+
+### Qué cambió
+
+`ClienteModelo` tiene una segunda implementación que lanza el CLI de Claude Code sin
+herramientas, sin MCP, sin personalizaciones, en una carpeta temporal vacía y con el texto
+solo por la entrada estándar. `proveedor` en `config/models.yaml` la elige, y hoy vale
+`claude_code`. El recuento previo pasa a ser una estimación con margen, el coste es nominal y
+la salida estructurada se valida después. La spec, la arquitectura y las filas de
+verificación afectadas lo dicen.
+
+### Efecto
+
+28 pruebas nuevas con un doble del subproceso, nueve de ellas con el corpus de inyección, y
+una prueba real de contención: con la orden de producción, el CLI de verdad no leyó un fichero
+canario, no escribió ni ejecutó nada aunque el texto se lo pedía. Dos datos que solo salieron
+al probar en real: el CLI añade unos 2.600 tokens de entrada propios a cada llamada, y respeta
+`CLAUDE_CODE_MAX_OUTPUT_TOKENS` cortando la respuesta y diciéndolo en el resultado.

@@ -15,6 +15,14 @@
 
 version: 1
 
+# Quién atiende las llamadas (I-04, TO-040, aprobado por el desarrollador el 2026-09-24):
+#   api          la API de Claude con `ANTHROPIC_API_KEY` (`ClienteAnthropic`)
+#   claude_code  el CLI de Claude Code como subproceso, con la sesión ya iniciada en la
+#                máquina y TODAS sus herramientas desactivadas (`ClienteClaudeCode`)
+# Con `claude_code` el recuento previo es una estimación, el coste es nominal y el schema
+# se valida después con Pydantic: no hay modo estricto (docs/architecture.md § Proveedor).
+proveedor: claude_code
+
 roles:
 
   # Lleva la entrevista y produce el brief validado. La entrevista es híbrida (TO-027):
