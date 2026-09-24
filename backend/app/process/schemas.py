@@ -6,9 +6,14 @@ que puede faltar se declara nulable.
 
 from __future__ import annotations
 
-from typing import Literal
+from datetime import datetime
+from typing import Annotated, Literal
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.commons.esquemas import opcional
+from app.novel.service import EstadoNovela
 
 TipoRestriccion = Literal["estado_final", "revelacion", "posicion_personaje"]
 TipoAlcance = Literal["personaje", "lugar", "promesa", "hilo"]
@@ -115,3 +120,27 @@ class Extraccion(_Salida):
     ubicaciones: list[Ubicacion]
     resumen: str
     gancho_cierre: str
+
+
+class Generacion(BaseModel):
+    """Una generación completa, inicial o dirigida: el recurso que el frontend sondea."""
+
+    generacion_id: UUID
+    novel_id: UUID
+    tipo: Literal["inicial", "dirigida"]
+    estado: EstadoNovela
+    es_terminal: bool
+    intervalo_sondeo_segundos: Annotated[int, Field(ge=1)] | None
+    capitulo_actual: Annotated[int, Field(ge=1)] | None = None
+    capitulos_aceptados: Annotated[int, Field(ge=0)]
+    total_capitulos: Annotated[int, Field(ge=1)]
+    capitulos_a_regenerar: list[Annotated[int, Field(ge=1)]] | None = opcional()
+    intentos_capitulo_actual: Annotated[int, Field(ge=0)] | None = opcional()
+    checkpoint: Annotated[int, Field(ge=0)] | None = None
+    tokens_consumidos: Annotated[int, Field(ge=0)] | None = opcional()
+    coste_usd: Annotated[float, Field(ge=0)] | None = opcional()
+    traza_langfuse_id: str | None = None
+    detenida_por: str | None = None
+    version_resultante: Annotated[int, Field(ge=1)] | None = None
+    iniciada_en: datetime
+    terminada_en: datetime | None = None

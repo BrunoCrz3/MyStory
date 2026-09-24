@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P21 · Cola de trabajos y endpoints de generación |
+| Paso actual | P22 · Orquestador y worker en el lifespan |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P20 |
+| Último commit de paso | P21 |
 
 ## Coste real
 
@@ -51,10 +51,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P18** — process/planificar: esquema estricto por output_config.format (conversor Pydantic → JSON Schema cerrado), validación de schema y de dominio (número de capítulos, destinatario exacto, POV, lugares y alcances existentes, títulos únicos, obligatorios repartidos), reintento con el motivo hasta el límite y detención, score schema_valido por intento; persiste título, reparto, restricciones, briefs de capítulo y filas Pendiente en una transacción; context/service con las piezas de Invariante y Anticontexto
 - **P19** — process/capitulo: ciclo escribir → hook de policy (schema_valido, palabras_prohibidas con coincidencias en tabla y audit log) → hook de capítulo (longitud, nombres_exactos en quality/) → decisión del policy engine → reescritura con el informe; cada cambio de estado por la tabla de transiciones; dos pasadas con palabra vetada detienen; agotar a max_intentos; score por validador ejecutado; consumo acumulado por capítulo; context/piezas_redactor con las siete capas
 - **P20** — process/aceptar: extracción estructurada después de aceptar (alias H1/P1 para hechos y promesas conocidos, reintento acotado), y una transacción que aplica Aceptar, guarda texto y palabras, consolida canon con el policy decidiendo cada hecho (duplicados descartados), resumen, snapshot, eventos con personajes y lugar, elementos aparecidos; aceptar dos veces es transicion-invalida sin llamar al extractor; un borrador rechazado no deja rastro
+- **P21** — Migración 0008_trabajo (trabajo con índice único parcial de un vivo por novela, checkpoint); process/cola: encolar comprueba generación viva (409 con el id vivo), transición Planificar, estimación contra el pool (422 trabajo-no-cabe-en-pool) y responde 202 con Location; reclamar con UPDATE condicional atómico; Generacion idéntico al contrato con es_terminal e intervalo de sondeo de config; listar y obtener; /salud cuenta trabajos en cola; opcional() omite None al serializar
 
 ## Pendiente
 
-- Siguiente: **P21 · Cola de trabajos y endpoints de generación**, y después el resto hasta el P49 en orden.
+- Siguiente: **P22 · Orquestador y worker en el lifespan**, y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -115,6 +116,9 @@ registrada.
 | A-33 | P19 | La capa Local lleva todos los capítulos anteriores por recencia y el ensamblador los resume o los quita al desbordar; Recuperado excluye solo el capítulo anterior | Así no hace falta una cifra de cuántos capítulos literales entran: manda el presupuesto de la capa | TO-039 |
 | A-34 | P20 | El extractor cita hechos y promesas conocidos por alias cortos (H1, P1) que el código traduce a identificadores | Copiar UUID es frágil para un modelo; un alias que no existe se ignora | TO-039 |
 | A-35 | P20 | El momento de un evento es número de capítulo × 100 + su orden en el capítulo | Sin analepsis en v1 la fábula sigue al discurso; basta un orden total para Lean | TO-039 |
+| A-36 | P21 | Una generación inexistente en una novela existente responde 404 novela-no-encontrada con el generacion_id en las extensiones | El catálogo es cerrado y no tiene generacion-no-encontrada | TO-039 |
+| A-37 | P21 | La estimación de un trabajo al encolar es contexto.total: el tamaño de su llamada más grande, margen incluido | architecture.md § Presupuesto dice que la estimación es el contexto ensamblado, y ninguno supera ese total | TO-039 |
+| A-38 | P21 | `orquestacion.intervalo_sondeo_segundos: 3` en thresholds.yaml | Es una cifra del contrato de sondeo (TO-031) y RNF-14 la quiere en config | TO-039 |
 
 ## Parada
 

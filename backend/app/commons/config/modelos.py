@@ -66,6 +66,7 @@ class Orquestacion(_Estricto):
     max_intentos_trabajo: int
     backoff: Backoff
     timeout_llamada_segundos: float
+    intervalo_sondeo_segundos: int
 
 
 class Normalizacion(_Estricto):

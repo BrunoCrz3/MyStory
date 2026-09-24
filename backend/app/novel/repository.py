@@ -273,3 +273,15 @@ def insertar_elemento_en_capitulo(
         " VALUES (?, ?, ?)",
         (novel_id, elemento_id, capitulo_id),
     )
+
+
+def actualizar_estado_obra(con: sqlite3.Connection, *, novel_id: str, estado: str) -> None:
+    con.execute("UPDATE obra SET estado = ? WHERE novel_id = ?", (estado, novel_id))
+
+
+def contar_aceptados(con: sqlite3.Connection, *, novel_id: str, version: int) -> int:
+    n: int = con.execute(
+        "SELECT count(*) FROM capitulo WHERE novel_id = ? AND version = ? AND estado = 'Aceptado'",
+        (novel_id, version),
+    ).fetchone()[0]
+    return n

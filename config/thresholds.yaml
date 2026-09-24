@@ -137,6 +137,11 @@ orquestacion:
   # una llamada que tarda más es un cuelgue, y cuenta como fallo de infraestructura.
   timeout_llamada_segundos: 300
 
+  # [provisional — calibrar tras la demo] Cada cuánto conviene que el frontend vuelva a
+  # preguntar por una generación viva (TO-031). Tres segundos: un capítulo tarda minutos, así
+  # que sondear más rápido no enseña nada nuevo y solo gasta peticiones.
+  intervalo_sondeo_segundos: 3
+
 # ---------------------------------------------------------------------------
 # Guardrail de palabras prohibidas
 # ---------------------------------------------------------------------------

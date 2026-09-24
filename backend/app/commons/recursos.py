@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from fastapi import Request
@@ -20,6 +21,8 @@ class Recursos:
     pool: PoolEnVuelo
     trazador: Trazador
     llamador: LlamadorModelo
+    # Lo registra `main`: `commons/` no importa `process/`, que es quien conoce la cola.
+    contar_cola: Callable[[], Awaitable[int]] | None = None
 
 
 def recursos(request: Request) -> Recursos:

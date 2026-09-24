@@ -30,9 +30,14 @@ def _sin_nulo(extra: dict[str, Any]) -> Any:
     return ajustar
 
 
+def _es_nulo(valor: Any) -> bool:
+    return valor is None
+
+
 def opcional(**extra: Any) -> Any:
-    """Campo que puede faltar y no puede ser `null` en el contrato."""
-    return Field(default=None, json_schema_extra=_sin_nulo(extra))
+    """Campo que puede faltar y no puede ser `null` en el contrato: si vale `None`, se omite
+    al serializar."""
+    return Field(default=None, json_schema_extra=_sin_nulo(extra), exclude_if=_es_nulo)
 
 
 def sin_nulo(**extra: Any) -> Any:

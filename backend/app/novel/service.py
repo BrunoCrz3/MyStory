@@ -42,9 +42,12 @@ __all__ = [
     "ReglaMundo",
     "capitulo_en_curso",
     "capitulos_aceptados",
+    "contar_aceptados",
     "crear_capitulo",
     "crear_novela",
+    "estado_de_obra",
     "fijar_estado_capitulo",
+    "fijar_estado_obra",
     "fijar_titulo",
     "guardar_texto_aceptado",
     "listar_novelas",
@@ -57,6 +60,8 @@ __all__ = [
     "registrar_reparto",
     "reglas_del_mundo",
     "sumar_consumo",
+    "total_capitulos",
+    "version_vigente",
 ]
 
 
@@ -345,3 +350,30 @@ def registrar_elementos_en_capitulo(
                 elemento_id=por_enunciado[enunciado],
                 capitulo_id=capitulo_id,
             )
+
+
+def estado_de_obra(con: sqlite3.Connection, *, novel_id: str) -> str | None:
+    obra = repository.leer_obra(con, novel_id=novel_id)
+    return None if obra is None else str(obra["estado"])
+
+
+def total_capitulos(con: sqlite3.Connection, *, novel_id: str) -> int:
+    obra = repository.leer_obra(con, novel_id=novel_id)
+    if obra is None:
+        raise NovelaNoEncontrada(f"no existe la novela {novel_id}", novel_id=novel_id)
+    total: int = obra["total_capitulos"]
+    return total
+
+
+def fijar_estado_obra(con: sqlite3.Connection, *, novel_id: str, estado: str) -> None:
+    """Escribe el estado que ha decidido la máquina de la novela de `process/`."""
+    repository.actualizar_estado_obra(con, novel_id=novel_id, estado=estado)
+
+
+def contar_aceptados(con: sqlite3.Connection, *, novel_id: str, version: int) -> int:
+    """Capítulos escritos para `version` que ya están aceptados."""
+    return repository.contar_aceptados(con, novel_id=novel_id, version=version)
+
+
+def version_vigente(con: sqlite3.Connection, *, novel_id: str) -> int | None:
+    return _version_vigente(con, novel_id=novel_id)

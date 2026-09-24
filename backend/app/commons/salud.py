@@ -43,4 +43,5 @@ async def obtener_salud(r: Annotated[Recursos, Depends(recursos)]) -> Salud:
         cerrar_el_paso=u.medicion.cerrar_el_paso,
         tokens_en_vuelo=r.pool.ocupado,
         tokens_en_vuelo_total=r.pool.total,
+        trabajos_en_cola=await r.contar_cola() if r.contar_cola is not None else None,
     )

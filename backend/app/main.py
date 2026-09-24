@@ -23,6 +23,8 @@ from app.commons.llm.pool import PoolEnVuelo
 from app.commons.observabilidad import Trazador, TrazadorLangfuse
 from app.commons.recursos import Recursos
 from app.novel import router as novel
+from app.process import cola
+from app.process import router as generacion
 
 TITULO = "storyMaker — API del backend v1"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -63,13 +65,15 @@ def crear_app(
             traz = trazador if trazador is not None else TrazadorLangfuse()
             pool = PoolEnVuelo(cfg.umbrales.en_vuelo.total)
             cliente = cliente_modelo if cliente_modelo is not None else ClienteAnthropic(cfg)
-            app.state.recursos = Recursos(
+            recursos = Recursos(
                 config=cfg,
                 db=db,
                 pool=pool,
                 trazador=traz,
                 llamador=LlamadorModelo(cfg, cliente, pool, traz),
             )
+            recursos.contar_cola = lambda: cola.trabajos_en_cola(recursos)
+            app.state.recursos = recursos
             try:
                 yield
             finally:
@@ -86,6 +90,7 @@ def crear_app(
     )
     app.include_router(salud.router)
     app.include_router(novel.router)
+    app.include_router(generacion.router)
     registrar_errores(app)
     return app
 
