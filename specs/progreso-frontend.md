@@ -70,6 +70,12 @@ stdio, con `cmd /c npx` porque en Windows `npx` no se lanza directamente. Es otr
 del paso 3 del arranque conjunto: aquel es el Playwright MCP por HTTP que usa el backend para
 `render_visual`, y este es el navegador del agente de desarrollo.
 
+**Navegador: Edge.** Al reiniciar, el servidor aparecía cargado, pero `browser_navigate`
+fallaba con «Chromium distribution 'chrome' is not found»: `@playwright/mcp` usa por defecto
+el canal `chrome` y en esta máquina no hay Google Chrome, pero sí Microsoft Edge 153. Por
+decisión del desarrollador se añade `--browser msedge` a los argumentos (opción válida en la
+0.0.82, comprobado con `--help`). No descarga ningún navegador.
+
 ## Para la sesión del backend
 
 - **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e
@@ -130,3 +136,6 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
   `claude mcp --help`). Se crea ese fichero con `@playwright/mcp@0.0.82` fijado. Al integrar,
   el layout de `CLAUDE.md` debe decir `.mcp.json` en vez de `.claude/mcp.json ▸ previsto`.
   Es una dependencia de herramienta, no de la aplicación: no entra en `package.json`.
+  Lanza **Edge** (`--browser msedge`), no Chrome, porque la máquina de desarrollo no tiene
+  Chrome instalado (decidido por el desarrollador frente a instalar Chrome o el Chromium de
+  Playwright).

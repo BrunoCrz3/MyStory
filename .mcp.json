@@ -7,7 +7,9 @@
         "/c",
         "npx",
         "-y",
-        "@playwright/mcp@0.0.82"
+        "@playwright/mcp@0.0.82",
+        "--browser",
+        "msedge"
       ],
       "env": {}
     }
