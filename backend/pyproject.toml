@@ -22,6 +22,7 @@ dev = [
     "pyyaml>=6",
     "types-PyYAML>=6",
     "types-jsonschema>=4.26.0.20260518",
+    "hypothesis>=6.168.1",
 ]
 
 [tool.uv]
