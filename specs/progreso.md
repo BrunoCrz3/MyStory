@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P42 · Confirmación, retcon y obsolescencia |
+| Paso actual | P43 · Regeneración dirigida y publicación de la versión nueva |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 |
+| Intentos fallidos en el paso actual | 0 de 3 (el P42 cerró con 1) |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P41 |
+| Último commit de paso | P42 |
 
 ## Coste real
 
@@ -77,10 +77,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P39** — `canon/router.py` y `canon/schemas.py` (`HechoVigente` idéntico al `Hecho` del contrato); `GET …/versiones/{version}/hechos` por vigencia, con `?capitulo=` sobre `capitulos_usan` del puente; 404 `novela-no-encontrada` y `version-no-encontrada`; `listarHechos` fuera de PENDIENTES; 392 pruebas
 - **P40** — Migración 0012 (`solicitud_cambio`, `analisis_impacto`, `retcon`); `versioning/solicitud.py` e `impacto.py`: la solicitud por hecho se registra con su análisis (capítulos que usan el hecho más el que lo estableció; hechos derivados de esos capítulos) sin crear trabajo ni llamar al modelo; 409 con generación viva, 404 `hecho-no-encontrado`; `NuevaSolicitudCambio` con su `oneOf`; router `regeneracion` aparte; `crearSolicitudCambio` y `obtenerSolicitudCambio` fuera de PENDIENTES; 398 pruebas
 - **P41** — `versioning/candidato.py` (Jaccard sobre tokens normalizados contra el `fragmento_soporte` de los hechos que usa el capítulo de origen; a igual similitud, el establecido antes); `regeneracion.similitud_hecho_candidato: 0.5` provisional y sección `regeneracion` obligatoria; la solicitud por fragmento guarda el candidato, su análisis y queda pendiente de confirmación; sin candidato no propone nada; 402 pruebas
+- **P42** — `canon/retcon.py` (cierra usos y hecho viejo en v+1, abre el nuevo en v+1, fila de `retcon`); `versioning/confirmar.py`: en una transacción, retcon, `Obsoletar` solo los capítulos del análisis en la versión publicada, `encolar` una generación `dirigida` con `capitulos_a_regenerar` y solicitud `confirmada`; `POST …/confirmacion` 202 con Location; confirmar dos veces es 409; `Detener` desde `Regenerando` en diagrama, tabla y código; el orquestador entra en `Regenerando` y se detiene hasta el P43; 406 pruebas
 
 ## Pendiente
 
-- Siguiente: **P42 · Confirmación, retcon y obsolescencia**, y después el resto hasta el P49 en orden.
+- Siguiente: **P43 · Regeneración dirigida y publicación de la versión nueva**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -204,6 +205,9 @@ registrada.
 | A-96 | P40 | Sin tabla `contradiccion_canon` en la migración 0012 | Ningún paso del plan 1 la escribe | TO-044 |
 | A-97 | P41 | A igual similitud, el candidato es el hecho establecido antes; `hecho_candidato` devuelve su enunciado y la solicitud guarda su id | El original es el que se quiere cambiar; el contrato lo tipa como texto y la confirmación necesita el id | TO-044 |
 | A-98 | P41 | El soporte de `invencion_destinatario` es el brief entero —edad en cifra y en letra, fecha de nacimiento, ocasión, quién regala, firma— más el texto libre saneado | La edad o «su hermana» vienen del brief; sin ellas el validador, que cierra siempre, contaba como invención lo que el comprador dijo | TO-044 |
+| A-99 | P42 | El hecho nuevo del retcon nace `adoptado` con `origen: brief` y sin fragmento; la fila de `retcon` dice de dónde viene | Lo pide el comprador, como el brief, y `origen` no admite otro valor sin tocar la ontología | TO-044 |
+| A-100 | P42 | Transición `Detener` desde `Regenerando`, en `domain-knowledge.md`, `architecture.md` y la tabla | Una regeneración que agota un capítulo tiene que poder detenerse (regla 14, RF-PROC-08); no es un estado ni un nombre nuevo, como A-39 | TO-044 |
+| A-101 | P42 | El retcon cierra en v+1 los usos abiertos del hecho viejo antes de cerrarlo | RD-05: un uso no puede sobrevivir a su hecho; en v+1 los capítulos reescritos usarán el nuevo | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -268,14 +272,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P41 cerrado, siguiente P42**. Rama `backend-v1`,
-suite en verde (402 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P42 cerrado, siguiente P43**. Rama `backend-v1`,
+suite en verde (406 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 402 pruebas en verde al cerrar P41
+uv run pytest -q          # 406 pruebas en verde al cerrar P42
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

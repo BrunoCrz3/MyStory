@@ -389,3 +389,16 @@ def contar_aceptados(con: sqlite3.Connection, *, novel_id: str, version: int) ->
 
 def version_vigente(con: sqlite3.Connection, *, novel_id: str) -> int | None:
     return _version_vigente(con, novel_id=novel_id)
+
+
+def estado_capitulo(con: sqlite3.Connection, *, novel_id: str, capitulo_id: str) -> str | None:
+    return repository.leer_estado_capitulo(con, novel_id=novel_id, capitulo_id=capitulo_id)
+
+
+def cambiar_estado_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, estado: str
+) -> None:
+    """Escribe el estado que ha decidido la máquina de `process/` sin tocar los intentos."""
+    repository.actualizar_solo_estado_capitulo(
+        con, novel_id=novel_id, capitulo_id=capitulo_id, estado=estado
+    )

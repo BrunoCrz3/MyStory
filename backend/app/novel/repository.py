@@ -297,3 +297,19 @@ def contar_aceptados(con: sqlite3.Connection, *, novel_id: str, version: int) ->
         (novel_id, version),
     ).fetchone()[0]
     return n
+
+
+def leer_estado_capitulo(con: sqlite3.Connection, *, novel_id: str, capitulo_id: str) -> str | None:
+    fila = con.execute(
+        "SELECT estado FROM capitulo WHERE novel_id = ? AND id = ?", (novel_id, capitulo_id)
+    ).fetchone()
+    return None if fila is None else str(fila["estado"])
+
+
+def actualizar_solo_estado_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, estado: str
+) -> None:
+    con.execute(
+        "UPDATE capitulo SET estado = ? WHERE novel_id = ? AND id = ?",
+        (estado, novel_id, capitulo_id),
+    )

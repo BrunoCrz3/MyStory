@@ -136,7 +136,10 @@ class Orquestador:
         ):
             await self._actualizar(t, traza_langfuse_id=traza.traza_id)
             try:
-                await self._inicial(t, consumo)
+                if t["tipo"] == "dirigida":
+                    await self._dirigida(t, consumo)
+                else:
+                    await self._inicial(t, consumo)
             except GateEnRojo as g:
                 await self._detener(t, g.motivo, g.detalle, devolver_al_editor=True)
             except GeneracionDetenida as d:
@@ -171,6 +174,17 @@ class Orquestador:
         if normalizados:
             _log.warning("novela %s: capítulos %s vuelven a Pendiente", novel_id, normalizados)
         return normalizados
+
+    async def _dirigida(self, t: dict[str, Any], consumo: Consumo) -> None:
+        """Regeneración dirigida (RF-VER-08). El camino `Regenerando` llega con el P43: hasta
+        entonces la novela entra en `Regenerando` y se detiene en voz alta, sin tocar nada de
+        la versión publicada."""
+        estado = await self.r.db.ejecutar(partial(novel.estado_de_obra, novel_id=t["novel_id"]))
+        if estado == "Publicada":
+            await self._mover_novela(t, "Regenerar")
+        raise GeneracionDetenida(
+            "error-interno", "la regeneración dirigida todavía no está implementada (P43)"
+        )
 
     async def _inicial(self, t: dict[str, Any], consumo: Consumo) -> None:
         novel_id, version = t["novel_id"], t["version_objetivo"]

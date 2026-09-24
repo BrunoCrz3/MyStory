@@ -24,6 +24,7 @@ from app.canon.models import (
     ResultadoConsolidacion,
     Snapshot,
 )
+from app.canon.retcon import aplicar_retcon
 from app.canon.schemas import HechoVigente
 from app.commons.db import BaseDatos
 from app.commons.errores import NovelaNoEncontrada, VersionNoEncontrada
@@ -40,6 +41,7 @@ __all__ = [
     "PromesaNueva",
     "ResultadoConsolidacion",
     "Snapshot",
+    "aplicar_retcon",
     "capitulos_que_usan",
     "consolidar",
     "fragmento_literal",

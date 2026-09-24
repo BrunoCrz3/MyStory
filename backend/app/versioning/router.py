@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, Response
 
 from app.commons.errores import problemas
 from app.commons.recursos import Recursos, recursos
-from app.versioning import service, solicitud
+from app.process.service import Generacion
+from app.versioning import confirmar, service, solicitud
 from app.versioning.schemas import (
     Capitulo,
     NuevaSolicitudCambio,
@@ -104,3 +105,29 @@ async def obtener_solicitud_cambio(
     novel_id: UUID, solicitud_id: UUID, r: Annotated[Recursos, Depends(recursos)]
 ) -> SolicitudCambio:
     return await solicitud.obtener_solicitud(r.db, str(novel_id), str(solicitud_id))
+
+
+_LOCATION = {
+    "Location": {
+        "description": "URI del recurso de progreso.",
+        "schema": {"type": "string", "format": "uri-reference"},
+    }
+}
+
+
+@regeneracion.post(
+    "/novelas/{novel_id}/solicitudes-cambio/{solicitud_id}/confirmacion",
+    operation_id="confirmarSolicitudCambio",
+    status_code=202,
+    response_model=Generacion,
+    responses={202: {"headers": _LOCATION}, **problemas(404, 409, 422, 500)},
+)
+async def confirmar_solicitud_cambio(
+    novel_id: UUID,
+    solicitud_id: UUID,
+    response: Response,
+    r: Annotated[Recursos, Depends(recursos)],
+) -> Generacion:
+    generacion = await confirmar.confirmar(r, str(novel_id), str(solicitud_id))
+    response.headers["Location"] = f"/novelas/{novel_id}/generaciones/{generacion.generacion_id}"
+    return generacion

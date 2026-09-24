@@ -418,6 +418,7 @@ stateDiagram-v2
   Publicando --> Publicada: versión conservada
   Publicada --> Regenerando: solicitud de cambio
   Regenerando --> Validando: capítulos afectados reescritos
+  Regenerando --> Detenida: un capítulo reescrito agota sus intentos
   Detenida --> [*]
 ```
 

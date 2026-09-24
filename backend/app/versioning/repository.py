@@ -221,3 +221,12 @@ def leer_solicitud(
         (novel_id, solicitud_id),
     ).fetchone()
     return fila
+
+
+def fijar_estado_solicitud(
+    con: sqlite3.Connection, *, novel_id: str, solicitud_id: str, estado: str
+) -> None:
+    con.execute(
+        "UPDATE solicitud_cambio SET estado = ? WHERE novel_id = ? AND id = ?",
+        (estado, novel_id, solicitud_id),
+    )

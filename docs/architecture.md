@@ -447,6 +447,7 @@ en silencio.
 | `CerrarRegeneracion` | Novela | `Regenerando` | `Validando` | `orquestador.cerrar_regeneracion` · afectados reescritos |
 | `Detener` | Novela | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
 | `Detener` | Novela | `Planificando` | `Detenida` | `orquestador.detener` · el planificador agota sus intentos (D-23) |
+| `Detener` | Novela | `Regenerando` | `Detenida` | `orquestador.detener` · un capítulo reescrito agota sus intentos (A-100) |
 
 `Escribiendo` y `Validando` existen en las dos máquinas con sentidos distintos, y por eso la
 tabla dice de qué máquina es cada fila. Las seis acciones de la novela que el diagrama de

@@ -58,6 +58,7 @@ TRANSICIONES: tuple[Transicion, ...] = (
     ),
     Transicion("Detener", "Novela", "Escribiendo", "Detenida", "orquestador.detener"),
     Transicion("Detener", "Novela", "Planificando", "Detenida", "orquestador.detener"),
+    Transicion("Detener", "Novela", "Regenerando", "Detenida", "orquestador.detener"),
 )
 
 _INDICE: dict[tuple[Maquina, str | None, str], str] = {
