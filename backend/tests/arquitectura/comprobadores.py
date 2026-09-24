@@ -236,3 +236,24 @@ def violaciones_parametros(raiz: Path = RAIZ_APP) -> list[str]:
                 elif kw["version"] is not None:
                     problemas.append(f"{nombre}: `version` no puede tener valor por defecto")
     return problemas
+
+
+def violaciones_camino_al_modelo(raiz: Path = RAIZ_APP) -> list[str]:
+    """RNF-08: fuera de `commons/llm/` nadie llama a `generar` ni a `contar_tokens`.
+
+    El único camino es `LlamadorModelo.llamar()`, que abre el span; una llamada directa al
+    cliente sería una llamada al modelo sin span.
+    """
+    problemas = []
+    permitido = raiz / "commons" / "llm"
+    for fichero, arbol in _modulos(raiz):
+        if permitido in fichero.parents:
+            continue
+        for nodo in ast.walk(arbol):
+            if (
+                isinstance(nodo, ast.Call)
+                and isinstance(nodo.func, ast.Attribute)
+                and nodo.func.attr in ("generar", "contar_tokens")
+            ):
+                problemas.append(f"{fichero.name}:{nodo.lineno} llama a .{nodo.func.attr}()")
+    return problemas

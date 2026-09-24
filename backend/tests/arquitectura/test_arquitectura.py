@@ -100,3 +100,12 @@ def test_meta_parametros(tmp_path: Path) -> None:
     )
     problemas = c.violaciones_parametros(tmp_path)
     assert len(problemas) == 3, problemas
+
+
+def test_nadie_llama_al_modelo_sin_pasar_por_el_llamador() -> None:
+    assert c.violaciones_camino_al_modelo() == []
+
+
+def test_meta_llamada_directa_al_cliente(tmp_path: Path) -> None:
+    _escribir(tmp_path, "process/service.py", "async def f(c, p):\n    await c.generar(p, 1)\n")
+    assert c.violaciones_camino_al_modelo(tmp_path)
