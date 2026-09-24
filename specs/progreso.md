@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P44 · Cierre de F4 |
+| Paso actual | P45 · Ficha y portada |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 (el P43 cerró con 2) |
+| Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P43 |
+| Último commit de paso | P44 |
 
 ## Coste real
 
@@ -30,6 +30,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P38 | Humo adversarial opcional (base temporal): **ninguna de las 18 peticiones llevó la instrucción inyectada**, pero la novela se detuvo en el capítulo 1 porque el judge se truncaba con `max_tokens` 3000 (A-92) | 1,55 | 8,97 |
 | 2026-09-24 | P38 | Humo adversarial 2 (judge calibrado): otra vez ninguna petición con la instrucción; se detuvo en el capítulo 1 por `limite-de-intentos-agotado`. La base temporal se perdió en la rotación de pytest; sospecha fundada: `invencion_destinatario` sin la edad, la ocasión ni la relación del comprador en su soporte (arreglado, A-98) | 2,39 | 11,36 |
 | 2026-09-24 | P38 | Humo adversarial 3 (con el soporte del brief entero): sin la instrucción en ninguna petición, y otra vez detenido en el capítulo 1; el informe muestra que `invencion_destinatario` marca paráfrasis de los rasgos del brief y detalles de trama (se arregla aparte, A-108) | 2,79 | 14,15 |
+| 2026-09-24 | P44 | Regeneración real «el perro se llama Nala» sobre la novela del humo: reescribió y aceptó los capítulos 1 a 4 y se detuvo en el 6 por `ContextoNoCabe` del extractor (A-110); la base de demo se restaura desde `data/storymaker-demo-antes-f4.db` | 3,01 | 17,16 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -80,10 +81,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P41** — `versioning/candidato.py` (Jaccard sobre tokens normalizados contra el `fragmento_soporte` de los hechos que usa el capítulo de origen; a igual similitud, el establecido antes); `regeneracion.similitud_hecho_candidato: 0.5` provisional y sección `regeneracion` obligatoria; la solicitud por fragmento guarda el candidato, su análisis y queda pendiente de confirmación; sin candidato no propone nada; 402 pruebas
 - **P42** — `canon/retcon.py` (cierra usos y hecho viejo en v+1, abre el nuevo en v+1, fila de `retcon`); `versioning/confirmar.py`: en una transacción, retcon, `Obsoletar` solo los capítulos del análisis en la versión publicada, `encolar` una generación `dirigida` con `capitulos_a_regenerar` y solicitud `confirmada`; `POST …/confirmacion` 202 con Location; confirmar dos veces es 409; `Detener` desde `Regenerando` en diagrama, tabla y código; el orquestador entra en `Regenerando` y se detiene hasta el P43; 406 pruebas
 - **P43** — Camino `Regenerando` del orquestador: fila nueva en la versión objetivo solo para los afectados (la vieja se queda `Obsoleto`), canon de la fila vieja retirado desde esa versión salvo lo que usa un no afectado, aviso del cambio al redactor, `CerrarRegeneracion`, gate y publicación; snapshot derivado por versión; `regeneracion_fiel` en el gate desde la versión 2 (cambian exactamente los obsoletos y la anterior conserva su hash); la solicitud queda `aplicada` con su versión; `versioning/huella.py`; 410 pruebas
+- **P44** — Cierre de F4: `tests/e2e/test_f4.py` («el perro se llama Nala» por HTTP: versión 2 con los capítulos 2 y 7 reescritos, los otros ocho idénticos byte a byte, la 1 entera con su hash y su hecho viejo, solicitud `aplicada`); `es_terminal` según la cola (A-109); `tests/humo/test_regeneracion_real.py`; TO-044 y RI-017; bloque § 4.5 con N = 4 en verde (413 pruebas, cobertura 96,4 %); F4 subida. La regeneración real sobre la novela del humo se detuvo una vez por el contexto del extractor (arreglado aparte, A-110) y se relanzó sobre la base restaurada: su resultado se anota aparte
 
 ## Pendiente
 
-- Siguiente: **P44 · Cierre de F4**, y después el resto hasta el P49 en orden.
+- Siguiente: **P45 · Ficha y portada**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -216,6 +218,8 @@ registrada.
 | A-105 | P43 | El redactor de un capítulo reescrito recibe en la tarea qué hecho cambió (viejo y nuevo) | El contexto lleva el nuevo en el snapshot, pero sin el aviso el capítulo no sabe qué debe cambiar | TO-044 |
 | A-106 | P43 | `regeneracion_fiel`: la versión nueva cambia exactamente los capítulos que la anterior tiene `Obsoleto`, y el hash de la anterior se recalcula igual | Es comprobable sin saber qué trabajo publica, y cubre las dos promesas de F4: nada más cambia y nada se pierde | TO-044 |
 | A-108 | P43 | `invencion_destinatario` cuenta solo si el judge dice que la afirmación no tiene apoyo (campo `apoyo`) y el cotejo por palabras tampoco lo encuentra; el prompt del judge excluye la trama | El humo adversarial real marcaba paráfrasis de rasgos del brief («cabezota» por «tozuda») y detalles de trama, y el capítulo agotaba sus intentos | TO-044 |
+| A-109 | P44 | `es_terminal` de una generación exige que el orquestador la haya cerrado (`estado_cola = terminado`), además de un estado terminal | Una regeneración recién encolada sobre una novela `Publicada` salía terminal antes de empezar; el e2e de F4 lo destapó | TO-044 |
+| A-110 | P44 | Los hechos y promesas conocidos del extractor van en la capa Estado, no en la Estructural | Son estado del mundo y crecen con la novela; en la Estructural, que no se degrada, detuvieron la regeneración real con ContextoNoCabe | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -229,7 +233,7 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | **aplicada**: tokens por llamada en `data/humo-20260924T163649.json`; ajustes A-58 y A-61 |
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
-| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F3 subidas** (F3 al cerrar el P38) |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F4 subidas** (F4 al cerrar el P44) |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
@@ -280,14 +284,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P43 cerrado, siguiente P44**. Rama `backend-v1`,
-suite en verde (410 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P44 cerrado (F4 completa y subida), siguiente P45**. Rama `backend-v1`,
+suite en verde (414 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 410 pruebas en verde al cerrar P43
+uv run pytest -q          # 414 pruebas en verde al cerrar P44
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

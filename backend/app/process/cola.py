@@ -56,7 +56,9 @@ def _vista(con: sqlite3.Connection, r: Recursos, t: dict[str, Any]) -> Generacio
             con, novel_id=novel_id, numero=t["capitulo_actual"], version=t["version_objetivo"]
         )
         intentos = cap.intentos if cap is not None else 0
-    terminal = es_terminal(t["estado"])
+    # Terminal es lo que el orquestador cerró, no el estado de la novela: una regeneración
+    # recién encolada sobre una novela `Publicada` todavía no ha empezado (A-109).
+    terminal = t["estado_cola"] == "terminado" and es_terminal(t["estado"])
     return Generacion(
         generacion_id=t["id"],
         novel_id=novel_id,

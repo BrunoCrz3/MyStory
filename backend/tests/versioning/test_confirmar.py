@@ -58,6 +58,8 @@ async def test_confirmar_aplica_el_retcon_marca_obsoletos_y_encola_la_dirigida(
 
     g = await confirmar.confirmar(entorno.recursos, novela, sid)
     assert g.tipo == "dirigida" and g.capitulos_a_regenerar == [2, 7]
+    # Recién encolada sobre una novela `Publicada`, no ha terminado: se sondea (A-109).
+    assert g.es_terminal is False and g.intervalo_sondeo_segundos is not None
 
     [fila] = entorno.consultar(
         "SELECT estado, version_desde, version_hasta FROM hecho WHERE id = ?", viejo.hecho_id

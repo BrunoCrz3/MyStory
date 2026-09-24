@@ -1551,3 +1551,43 @@ libre se proponen en la validación pero no entran en el canon; si se quiere que
 los use como hechos adoptados, hace falta decidir quién los persiste y cuándo los adopta el
 policy engine. Y D-20 conserva su residuo declarado: una inyección parafraseada esquiva los
 patrones, y lo que la contiene es que el texto libre viaja siempre como datos.
+
+---
+
+## TO-044 — Decisiones menores del agente al ejecutar la F4 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/canon/`, `backend/app/versioning/`, `backend/app/process/`, `backend/app/quality/validadores/invencion_destinatario.py`, `backend/app/commons/db/migrations/0012_regeneracion.sql`, `docs/domain-knowledge.md`, `docs/architecture.md`, `config/thresholds.yaml` § `regeneracion`
+
+### Problema
+
+Las decisiones de la F4 (regeneración) que no estaban en el plan, y dos arreglos que los humos
+reales destaparon en validadores anteriores: `specs/progreso.md` § Decisiones, A-93 a A-109.
+
+### Elección
+
+| Id | Paso | Decisión | Por qué |
+| --- | --- | --- | --- |
+| A-93 | P39 | `canon/` comprueba por SQL que la novela y la versión publicada existen (`obra`, `version_novela`) | Como el JOIN con `capitulo` de A-20: `canon/` solo importa `commons/`, y el plan pone la ruta en `canon/router.py` |
+| A-94 | P40 | Una solicitud inexistente responde 404 `novela-no-encontrada` con el motivo en `detail` | El catálogo es cerrado y no tiene `solicitud-no-encontrada` (como A-36) |
+| A-95 | P40 | El análisis añade el capítulo que estableció el hecho a los que lo usan, y marca como derivados los hechos que establecen los capítulos afectados | El que establece también lo cuenta; y lo que se reescribe puede cambiar lo que esos capítulos establecieron |
+| A-96 | P40 | Sin tabla `contradiccion_canon` en la migración 0012 | Ningún paso del plan 1 la escribe |
+| A-97 | P41 | A igual similitud, el candidato es el hecho establecido antes; `hecho_candidato` devuelve su enunciado y la solicitud guarda su id | El original es el que se quiere cambiar; el contrato lo tipa como texto y la confirmación necesita el id |
+| A-98 | P41 | El soporte de `invencion_destinatario` es el brief entero —edad en cifra y en letra, fecha de nacimiento, ocasión, quién regala, firma— más el texto libre saneado | La edad o «su hermana» vienen del brief; sin ellas el validador, que cierra siempre, contaba como invención lo que el comprador dijo |
+| A-99 | P42 | El hecho nuevo del retcon nace `adoptado` con `origen: brief` y sin fragmento; la fila de `retcon` dice de dónde viene | Lo pide el comprador, como el brief, y `origen` no admite otro valor sin tocar la ontología |
+| A-100 | P42 | Transición `Detener` desde `Regenerando`, en `domain-knowledge.md`, `architecture.md` y la tabla | Una regeneración que agota un capítulo tiene que poder detenerse (regla 14, RF-PROC-08); no es un estado ni un nombre nuevo, como A-39 |
+| A-101 | P42 | El retcon cierra en v+1 los usos abiertos del hecho viejo antes de cerrarlo | RD-05: un uso no puede sobrevivir a su hecho; en v+1 los capítulos reescritos usarán el nuevo |
+| A-102 | P43 | Antes de reescribir un capítulo, su fila vieja deja de usar hechos desde la versión nueva y cierra los que estableció si ninguna otra fila abierta los usa | Lo que siga usando un capítulo no afectado no puede cerrarse (RD-05) ni debe: su texto no cambia |
+| A-103 | P43 | La regeneración crea una fila nueva en la versión objetivo; la de la versión publicada se queda `Obsoleto` y `Reencolar` no se usa | D-05 y la inmutabilidad: reencolar la fila vieja sería reescribir un capítulo publicado |
+| A-104 | P43 | El snapshot se deriva siempre para la versión que se lee: presentes y ubicaciones guardados, hechos por vigencia | D-12 ya lo define como derivado; sin esto, la reescritura del 7 leería el hecho retconeado en el snapshot del 6 |
+| A-105 | P43 | El redactor de un capítulo reescrito recibe en la tarea qué hecho cambió (viejo y nuevo) | El contexto lleva el nuevo en el snapshot, pero sin el aviso el capítulo no sabe qué debe cambiar |
+| A-106 | P43 | `regeneracion_fiel`: la versión nueva cambia exactamente los capítulos que la anterior tiene `Obsoleto`, y el hash de la anterior se recalcula igual | Es comprobable sin saber qué trabajo publica, y cubre las dos promesas de F4: nada más cambia y nada se pierde |
+| A-108 | P43 | `invencion_destinatario` cuenta solo si el judge dice que la afirmación no tiene apoyo (campo `apoyo`) y el cotejo por palabras tampoco lo encuentra; el prompt del judge excluye la trama | El humo adversarial real marcaba paráfrasis de rasgos del brief («cabezota» por «tozuda») y detalles de trama, y el capítulo agotaba sus intentos |
+| A-109 | P44 | `es_terminal` de una generación exige que el orquestador la haya cerrado (`estado_cola = terminado`), además de un estado terminal | Una regeneración recién encolada sobre una novela `Publicada` salía terminal antes de empezar; el e2e de F4 lo destapó |
+
+### Consecuencias
+
+Una toca la ontología sin nombre nuevo: A-100 añade la arista `Regenerando → Detenida` al
+diagrama de estados, como A-39 añadió `Planificando → Detenida`. Las que más pesan al revisar
+son A-102 y A-103, que fijan qué se retira del canon al reescribir un capítulo y por qué la
+fila publicada se queda `Obsoleto` en vez de reencolarse, y A-108, que cambia qué cuenta como
+invención sobre el destinatario tras ver en real que el cotejo por palabras marcaba paráfrasis.

@@ -1012,3 +1012,33 @@ validadores que cuentan hasta cero y cierran siempre: `invencion_destinatario` y
 El e2e de F3 recorre el brief adversarial por HTTP —validar, crear, generar— y comprueba que
 ninguna petición de toda la generación contiene la instrucción inyectada, y que el texto libre
 que queda viaja siempre dentro de su delimitador. Todo el corpus de inyección se detecta.
+
+---
+
+## RI-017 — F4 del plan 1: cambiar un hecho sin tocar lo demás
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/canon/`, `backend/app/versioning/`,
+`backend/app/process/orquestador.py`, `backend/app/commons/db/migrations/0012_regeneracion.sql`,
+`docs/domain-knowledge.md`, `docs/architecture.md`, `docs/verification.md`,
+`docs/trade-offs.md` (TO-044)
+
+### Causa
+
+Quinta fase del plan 1: que el lector pueda pedir un cambio sobre la novela publicada y
+obtenga una versión nueva que reescribe solo lo que depende de ese cambio, sin perder la
+anterior.
+
+### Qué cambió
+
+Hechos por versión (P39); solicitud por hecho o por fragmento con su análisis de impacto sobre
+`usa`, sin regenerar nada (P40, P41); confirmación con retcon por vigencia, obsolescencia de
+los capítulos afectados y regeneración dirigida encolada (P42); el camino `Regenerando` del
+orquestador, el snapshot derivado por versión y `regeneracion_fiel` en el gate (P43). Por el
+camino, dos humos reales arreglaron `invencion_destinatario` (A-98, A-108) y el e2e de F4 la
+vista de una generación recién encolada (A-109).
+
+### Efecto
+
+El e2e de F4 cambia «el perro se llama Nala» por HTTP: la versión 2 reescribe los capítulos 2
+y 7, sirve los otros ocho idénticos byte a byte, y la versión 1 sigue entera con su hash y su
+hecho viejo.
