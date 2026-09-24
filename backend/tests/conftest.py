@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
-import httpx
+import httpx2
 import jsonschema
 import pytest
 from fastapi import FastAPI
@@ -53,14 +53,14 @@ def cliente(app: FastAPI) -> Iterator[TestClient]:
         yield c
 
 
-ValidarContrato = Callable[[httpx.Response, str], None]
+ValidarContrato = Callable[[httpx2.Response, str], None]
 
 
 @pytest.fixture
 def validar_contra_contrato() -> ValidarContrato:
     """Valida código, medio y cuerpo de una respuesta contra el schema aprobado."""
 
-    def validar(respuesta: httpx.Response, op_id: str) -> None:
+    def validar(respuesta: httpx2.Response, op_id: str) -> None:
         medio = respuesta.headers.get("content-type", "").split(";")[0].strip()
         schema = schema_de_respuesta(_CONTRATO, op_id, respuesta.status_code, medio)
         if schema is None or medio not in ("application/json", "application/problem+json"):
