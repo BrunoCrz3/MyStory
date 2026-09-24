@@ -22,6 +22,7 @@ from app.commons.llm.llamar import LlamadorModelo
 from app.commons.llm.pool import PoolEnVuelo
 from app.commons.observabilidad import Trazador, TrazadorLangfuse
 from app.commons.recursos import Recursos
+from app.intake import router as intake
 from app.novel import router as novel
 from app.process import cola
 from app.process import router as generacion
@@ -97,6 +98,7 @@ def crear_app(
         lifespan=lifespan,
     )
     app.include_router(salud.router)
+    app.include_router(intake.router)
     app.include_router(novel.router)
     app.include_router(generacion.router)
     app.include_router(lectura.router)

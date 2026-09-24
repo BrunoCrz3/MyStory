@@ -7,14 +7,18 @@ from __future__ import annotations
 
 import sqlite3
 
-from app.intake import repository
+from app.commons.config import Config
+from app.commons.errores import BriefInvalido
+from app.intake import repository, validacion
 from app.intake.schemas import (
     BriefNovela,
+    BriefNovelaParcial,
     Comprador,
     Dedicatoria,
     Destinatario,
     ElementoPersonalizado,
     Ocasion,
+    ResultadoValidacionBrief,
     TextoLibre,
     VozNarrativa,
 )
@@ -29,8 +33,10 @@ __all__ = [
     "TextoLibre",
     "VozNarrativa",
     "elementos_personalizados",
+    "exigir_brief_valido",
     "leer_brief",
     "registrar_brief",
+    "validar_brief",
 ]
 
 
@@ -50,3 +56,22 @@ def elementos_personalizados(
 ) -> list[tuple[str, str, bool]]:
     """`(id, enunciado, obligatorio)` de cada elemento personalizado del brief."""
     return repository.leer_elementos(con, novel_id=novel_id)
+
+
+def validar_brief(config: Config, brief: BriefNovelaParcial) -> ResultadoValidacionBrief:
+    """Analiza un brief parcial sin crear nada (RF-INTAKE-01)."""
+    return validacion.validar(config, brief)
+
+
+def exigir_brief_valido(config: Config, brief: BriefNovela) -> None:
+    """Un `BriefNovela` que cumple el schema pero no vale como encargo —un campo en blanco,
+    dos campos que se contradicen— es `brief-invalido`, antes de escribir nada."""
+    resultado = validacion.validar(config, BriefNovelaParcial.model_validate(brief.model_dump()))
+    if resultado.valido:
+        return
+    raise BriefInvalido(
+        f"Hay {len(resultado.datos_faltantes)} datos vacíos y "
+        f"{len(resultado.contradicciones)} contradicciones sin resolver.",
+        datos_faltantes=[d.model_dump(exclude_none=True) for d in resultado.datos_faltantes],
+        contradicciones=[c.model_dump(exclude_none=True) for c in resultado.contradicciones],
+    )

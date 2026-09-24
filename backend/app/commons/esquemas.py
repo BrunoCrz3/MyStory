@@ -25,6 +25,9 @@ def _sin_nulo(extra: dict[str, Any]) -> Any:
                 raise TypeError(f"opcional() espera X | None, no {alternativas!r}")
             schema.update(otras[0])
         schema.pop("default", None)
+        if "enum" in extra:
+            # Un `Literal` de un solo valor genera `const`; el contrato lo escribe como `enum`.
+            schema.pop("const", None)
         schema.update(extra)
 
     return ajustar

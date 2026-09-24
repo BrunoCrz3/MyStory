@@ -91,6 +91,7 @@ def _novela(con: sqlite3.Connection, *, novel_id: str) -> Novela:
 
 
 async def crear_novela(db: BaseDatos, config: Config, brief: BriefNovela) -> Novela:
+    intake.exigir_brief_valido(config, brief)
     novel_id = str(uuid.uuid4())
     momento = ahora()
 

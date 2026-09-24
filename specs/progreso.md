@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P35 · Validación del brief parcial |
+| Paso actual | P36 · Texto libre como contenido no confiable |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P34 |
+| Último commit de paso | P35 |
 
 ## Coste real
 
@@ -68,10 +68,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P32** — Ciclo por intento: redactor → hook de policy (si falla, se decide sin judge ni editor) → hook de capítulo → judge → si falla algo que cierra, `process/editor.corregir` (contrato en `quality/editor.py`, piezas en `context.piezas_editor` con informe y anticontexto) → el corregido vuelve a pasar policy, capítulo y judge → decisión; defecto sistémico del editor al audit log (`defecto-sistemico-como-local`, D-14); prompt del editor con la clasificación; dobles con judge y editor por defecto (`guion_revision`); 343 pruebas
 - **P33** — `versioning/gate.py` con `estructura_edicion`, `elementos_obligatorios` y `cierre_arco` (mitad programática: promesas pendientes al cierre ≤ `continuidad.promesas_pendientes_al_cerrar`); el gate en rojo registra en el audit log las transiciones `DevolverAlEditor` y `Detener`; pruebas con una promesa sin pagar (no publica) y pagada por alias `P1` (publica); 345 pruebas
 - **P34** — Cierre de F2: `tests/e2e/test_f2.py` (capítulo 3 corto en borrador y en corrección, vuelve al redactor y se acepta; la traza de la generación tiene los nueve scores de los hooks, los seis del judge con justificación y los tres del gate); TO-042 y RI-015; bloque § 4.5 con N = 2 en verde (346 pruebas, cobertura 96,2 %); F2 subida
+- **P35** — `BriefNovelaParcial` y sus seis parciales, `DatoFaltante`, `ContradiccionBrief`, `FragmentoSospechoso`, `ResultadoValidacionBrief` idénticos al contrato; `intake/validacion.py` con los obligatorios derivados de `BriefNovela` (comparados con los `required` del contrato) y una pregunta de reintento por obligatorio; `intake/reglas.py` (edad-vs-tono, edad-vs-genero, fecha-vs-edad, identificador con forma de correo); `POST /briefs/validacion`; `crearNovela` responde 400 `brief-invalido` antes de escribir; `validarBrief` fuera de PENDIENTES; 363 pruebas
 
 ## Pendiente
 
-- Siguiente: **P35 · Validación del brief parcial**, y después el resto hasta el P49 en orden.
+- Siguiente: **P36 · Texto libre como contenido no confiable**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -177,6 +178,10 @@ registrada.
 | A-78 | P32 | Un informe por intento con los resultados del borrador que se decide (el corregido si hubo editor); la traza guarda también los del borrador antes de corregir | La tabla no admite otra decisión que aceptar, devolver, agotar o detener, y la migración 0010 ya está commiteada | TO-042 |
 | A-79 | P33 | El gate en rojo sigue deteniendo tras `DevolverAlEditor` (A-47): el editor corrige capítulos, y arreglar un fallo del gate exige reescribir capítulos aceptados con retcon (F4, P42–P43) | Sin retcon, «corregir» la novela en el gate dejaría un canon que no cuadra con el texto; queda para cuando exista la regeneración dirigida | TO-042 |
 | A-80 | P33 | El gate corre solo la mitad programática de `cierre_arco`; la semántica es el «arco» del judge en cada capítulo | `versioning/` no tiene arista a `quality/`, y con la medición cerrada el judge ya suspende el último capítulo antes del gate | TO-042 |
+| A-81 | P35 | Las contradicciones de edad usan el corte `guardrail.perfil.edad_maxima_adolescente` y listas cortas de marcadores de tono y género en `intake/reglas.py` | La cifra ya está en config (RNF-14) y una lista auditable es lo que pide una regla determinista; lo que no capture lo mide `adecuacion_tono` | TO-043 |
+| A-82 | P35 | Un `comprador.identificador` con forma de correo es una contradicción de tipo `otra` sobre ese campo | El contrato no tiene patrón para el identificador ni un tipo propio, y no se edita (RNF-16) | TO-043 |
+| A-83 | P35 | Los faltantes de una lista se nombran con su índice (`elementos_personalizados[2].enunciado`) y una lista ausente no obliga a nada | El formulario necesita saber qué elemento repreguntar; los elementos de una lista que no llega no existen | TO-043 |
+| A-84 | P35 | `commons.esquemas.opcional(enum=[…])` quita el `const` que Pydantic genera para un `Literal` de un solo valor | El contrato escribe `origen: enum [texto-libre]` y la conformidad compara la forma exacta | TO-043 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -241,14 +246,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P34 cerrado (F2 completa y subida), siguiente P35**. Rama `backend-v1`,
-suite en verde (346 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P35 cerrado, siguiente P36**. Rama `backend-v1`,
+suite en verde (363 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 346 pruebas en verde al cerrar P34
+uv run pytest -q          # 363 pruebas en verde al cerrar P35
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
