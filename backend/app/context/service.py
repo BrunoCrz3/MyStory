@@ -13,12 +13,14 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict
 
+from app.canon import service as canon
 from app.commons.config import Config
 from app.context import repository
 from app.context.ensamblador import Contador, Ensamblado, Ensamblador, Pieza
 from app.context.fuentes import ContadorProveedor, expresiones_repetidas, recuperar_fragmentos
 from app.guardrail import service as guardrail
 from app.intake.service import BriefNovela
+from app.novel import service as novel
 
 __all__ = [
     "BriefCapitulo",
@@ -32,6 +34,7 @@ __all__ = [
     "guardar_resumen",
     "piezas_anticontexto",
     "piezas_invariante",
+    "piezas_redactor",
     "recuperar_fragmentos",
     "registrar_brief_capitulo",
     "resumen_de",
@@ -234,3 +237,122 @@ def guardar_resumen(
 
 def resumen_de(con: sqlite3.Connection, *, novel_id: str, capitulo_id: str) -> str | None:
     return repository.leer_resumen(con, novel_id=novel_id, capitulo_id=capitulo_id)
+
+
+def _render_snapshot(snapshot: canon.Snapshot) -> str:
+    lineas = [f"Al cierre del capítulo {snapshot.numero}:"]
+    if snapshot.personajes_presentes:
+        lineas.append("Presentes: " + ", ".join(snapshot.personajes_presentes))
+    for quien, donde in snapshot.ubicaciones.items():
+        lineas.append(f"{quien} está en {donde}")
+    if snapshot.hechos:
+        lineas.append("Es verdad en la novela:")
+        lineas += [f"- {h}" for h in snapshot.hechos]
+    if snapshot.promesas_pendientes:
+        lineas.append("Promesas abiertas ante el lector:")
+        lineas += [f"- {p}" for p in snapshot.promesas_pendientes]
+    return "\n".join(lineas)
+
+
+def piezas_redactor(
+    con: sqlite3.Connection,
+    config: Config,
+    *,
+    novel_id: str,
+    version: int,
+    numero: int,
+    brief: BriefNovela,
+    brief_capitulo: BriefCapitulo,
+    palabras_novela: list[str],
+) -> dict[str, list[Pieza]]:
+    """Las siete capas del contexto del redactor para el capítulo `numero` (RF-CTX-01)."""
+    cap = config.umbrales.capitulo
+    anteriores = [
+        c
+        for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+        if c.numero < numero
+    ]
+    bc = brief_capitulo
+    estructural = [
+        Pieza(
+            etiqueta=f"Brief del capítulo {numero}",
+            texto="\n".join(
+                [
+                    f"Título provisional: {bc.titulo_provisional}",
+                    f"Función dramática: {bc.funcion_dramatica}",
+                    f"Punto de vista: {bc.pov}",
+                    f"Lugar: {bc.lugar}",
+                    f"Longitud: de {cap.longitud_min_palabras} "
+                    f"a {cap.longitud_max_palabras} palabras",
+                ]
+            ),
+            prioridad=10,
+        ),
+        Pieza(
+            etiqueta="Restricción de destino (se cumple al terminar el capítulo)",
+            texto=f"[{bc.restriccion_tipo}] {bc.restriccion_enunciado}",
+            prioridad=10,
+        ),
+    ]
+    if bc.elementos:
+        estructural.append(
+            Pieza(
+                etiqueta="Elementos personalizados que este capítulo integra",
+                texto="\n".join(f"- {e}" for e in bc.elementos),
+                prioridad=10,
+            )
+        )
+
+    estado = [Pieza(etiqueta="Estado de entrada", texto=bc.estado_entrada, prioridad=10)]
+    if anteriores:
+        previo = anteriores[-1]
+        snapshot = canon.snapshot_de(
+            con, novel_id=novel_id, version=version, capitulo_id=previo.capitulo_id
+        )
+        if snapshot is not None:
+            estado.append(Pieza(texto=_render_snapshot(snapshot), prioridad=9))
+
+    local = [
+        Pieza(
+            etiqueta=f"Capítulo {c.numero}: {c.titulo or ''}",
+            texto=c.texto,
+            resumen=resumen_de(con, novel_id=novel_id, capitulo_id=c.capitulo_id),
+            prioridad=c.numero,
+        )
+        for c in anteriores
+    ]
+    recuperado = recuperar_fragmentos(
+        con,
+        novel_id=novel_id,
+        version=version,
+        entidades=bc.entidades,
+        antes_de=numero,
+        excluir={numero - 1},
+        maximo=config.umbrales.recuperacion.max_fragmentos,
+    )
+    presentes = {bc.pov, *(a["nombre"] for a in bc.alcance if a["tipo"] == "personaje")}
+    estilo = [
+        Pieza(
+            etiqueta=f"Voz de {p.nombre}",
+            texto=p.voz or "",
+            prioridad=10 if p.nombre == bc.pov else 5,
+        )
+        for p in novel.personajes(con, novel_id=novel_id)
+        if p.nombre in presentes and p.voz
+    ]
+    ventana = config.umbrales.contexto.anticontexto_ventana_capitulos
+    anticontexto = piezas_anticontexto(
+        config,
+        brief,
+        palabras_novela=palabras_novela,
+        textos_recientes=[c.texto for c in anteriores[-ventana:]],
+    )
+    return {
+        "invariante": piezas_invariante(brief),
+        "estructural": estructural,
+        "estado": estado,
+        "local": local,
+        "recuperado": recuperado,
+        "estilo": estilo,
+        "anticontexto": anticontexto,
+    }

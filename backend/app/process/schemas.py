@@ -69,3 +69,10 @@ class Esquema(_Salida):
     lugares: list[LugarPlan]
     hilos: list[HiloPlan]
     capitulos: list[PlanCapitulo]
+
+
+class BorradorCapitulo(_Salida):
+    """Salida del redactor y del editor: el capítulo aún no aceptado."""
+
+    titulo: str
+    texto: str

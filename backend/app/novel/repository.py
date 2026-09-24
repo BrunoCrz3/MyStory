@@ -163,3 +163,40 @@ def leer_lugares(con: sqlite3.Connection, *, novel_id: str) -> list[dict[str, An
         (novel_id,),
     ).fetchall()
     return [dict(f) for f in filas]
+
+
+def leer_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
+) -> dict[str, Any] | None:
+    fila = con.execute(
+        "SELECT id, numero, version, estado, intentos, titulo, texto FROM capitulo"
+        " WHERE novel_id = ? AND numero = ? AND version = ?",
+        (novel_id, numero, version),
+    ).fetchone()
+    return None if fila is None else dict(fila)
+
+
+def actualizar_estado_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, estado: str, intentos: int
+) -> None:
+    con.execute(
+        "UPDATE capitulo SET estado = ?, intentos = ? WHERE novel_id = ? AND id = ?",
+        (estado, intentos, novel_id, capitulo_id),
+    )
+
+
+def sumar_consumo(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    tokens_entrada: int,
+    tokens_salida: int,
+    coste_usd: float,
+) -> None:
+    con.execute(
+        "UPDATE capitulo SET tokens_entrada = tokens_entrada + ?,"
+        " tokens_salida = tokens_salida + ?, coste_usd = coste_usd + ?"
+        " WHERE novel_id = ? AND id = ?",
+        (tokens_entrada, tokens_salida, coste_usd, novel_id, capitulo_id),
+    )

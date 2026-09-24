@@ -30,22 +30,27 @@ from app.novel.schemas import ListaNovelas, Novela, NovelaResumen
 __all__ = [
     "ESTADOS_TERMINALES_NOVELA",
     "CapituloAceptado",
+    "CapituloEnCurso",
     "EstadoCapitulo",
     "EstadoNovela",
     "HiloTrama",
     "Lugar",
     "Personaje",
     "ReglaMundo",
+    "capitulo_en_curso",
     "capitulos_aceptados",
     "crear_capitulo",
     "crear_novela",
+    "fijar_estado_capitulo",
     "fijar_titulo",
     "listar_novelas",
     "lugares",
+    "nombres_de_la_obra",
     "obtener_novela",
     "personajes",
     "registrar_reparto",
     "reglas_del_mundo",
+    "sumar_consumo",
 ]
 
 
@@ -211,4 +216,65 @@ def lugares(con: sqlite3.Connection, *, novel_id: str) -> list[Lugar]:
     return [
         Lugar(nombre=f["nombre"], geografia=f["geografia"], atmosfera=f["atmosfera"])
         for f in repository.leer_lugares(con, novel_id=novel_id)
+    ]
+
+
+class CapituloEnCurso(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    capitulo_id: str
+    numero: int
+    version: int
+    estado: str
+    intentos: int
+
+
+def capitulo_en_curso(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
+) -> CapituloEnCurso | None:
+    f = repository.leer_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+    if f is None:
+        return None
+    return CapituloEnCurso(
+        capitulo_id=f["id"],
+        numero=f["numero"],
+        version=f["version"],
+        estado=f["estado"],
+        intentos=f["intentos"],
+    )
+
+
+def fijar_estado_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, estado: str, intentos: int
+) -> None:
+    """Escribe el estado que ha decidido la máquina de estados de `process/`."""
+    repository.actualizar_estado_capitulo(
+        con, novel_id=novel_id, capitulo_id=capitulo_id, estado=estado, intentos=intentos
+    )
+
+
+def sumar_consumo(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    tokens_entrada: int,
+    tokens_salida: int,
+    coste_usd: float,
+) -> None:
+    """Acumula tokens y coste de una llamada en su capítulo (RF-OBS-04)."""
+    repository.sumar_consumo(
+        con,
+        novel_id=novel_id,
+        capitulo_id=capitulo_id,
+        tokens_entrada=tokens_entrada,
+        tokens_salida=tokens_salida,
+        coste_usd=coste_usd,
+    )
+
+
+def nombres_de_la_obra(con: sqlite3.Connection, *, novel_id: str) -> list[str]:
+    """Nombres de personajes y lugares tal como los escribe la story bible."""
+    return [p.nombre for p in personajes(con, novel_id=novel_id)] + [
+        lugar.nombre for lugar in lugares(con, novel_id=novel_id)
     ]
