@@ -9,10 +9,18 @@ from fastapi import APIRouter, Depends, Path
 
 from app.commons.errores import problemas
 from app.commons.recursos import Recursos, recursos
-from app.versioning import service
-from app.versioning.schemas import Capitulo, Version, VersionResumen
+from app.versioning import service, solicitud
+from app.versioning.schemas import (
+    Capitulo,
+    NuevaSolicitudCambio,
+    SolicitudCambio,
+    Version,
+    VersionResumen,
+)
 
 router = APIRouter(tags=["lectura"])
+# Las solicitudes de cambio y su confirmación son de la regeneración, no de la lectura.
+regeneracion = APIRouter(tags=["regeneracion"])
 
 NumeroVersion = Annotated[int, Path(ge=1)]
 NumeroCapitulo = Annotated[int, Path(ge=1)]
@@ -71,3 +79,28 @@ async def obtener_capitulo(
     r: Annotated[Recursos, Depends(recursos)],
 ) -> Capitulo:
     return await service.obtener_capitulo(r.db, str(novel_id), version, numero)
+
+
+@regeneracion.post(
+    "/novelas/{novel_id}/solicitudes-cambio",
+    operation_id="crearSolicitudCambio",
+    status_code=201,
+    response_model=SolicitudCambio,
+    responses=problemas(404, 409, 422, 500),
+)
+async def crear_solicitud_cambio(
+    novel_id: UUID, nueva: NuevaSolicitudCambio, r: Annotated[Recursos, Depends(recursos)]
+) -> SolicitudCambio:
+    return await solicitud.crear_solicitud(r.db, str(novel_id), nueva)
+
+
+@regeneracion.get(
+    "/novelas/{novel_id}/solicitudes-cambio/{solicitud_id}",
+    operation_id="obtenerSolicitudCambio",
+    response_model=SolicitudCambio,
+    responses=problemas(404, 500),
+)
+async def obtener_solicitud_cambio(
+    novel_id: UUID, solicitud_id: UUID, r: Annotated[Recursos, Depends(recursos)]
+) -> SolicitudCambio:
+    return await solicitud.obtener_solicitud(r.db, str(novel_id), str(solicitud_id))

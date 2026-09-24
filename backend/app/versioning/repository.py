@@ -7,6 +7,7 @@ módulos (A-20). Nada de aquí escribe fuera de `version_novela` y `version_capi
 
 from __future__ import annotations
 
+import json
 import sqlite3
 import uuid
 from typing import Any
@@ -154,3 +155,66 @@ def capitulos_de_version(
         (novel_id, version),
     ).fetchall()
     return [dict(f) for f in filas]
+
+
+def insertar_solicitud(
+    con: sqlite3.Connection,
+    *,
+    solicitud_id: str,
+    novel_id: str,
+    version_base: int,
+    hecho_id: str | None,
+    fragmento: str | None,
+    enunciado_nuevo: str,
+    capitulo_origen: int,
+    ahora: str,
+) -> None:
+    con.execute(
+        "INSERT INTO solicitud_cambio (id, novel_id, version_base, hecho_id, fragmento,"
+        " enunciado_nuevo, capitulo_origen, creada_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            solicitud_id,
+            novel_id,
+            version_base,
+            hecho_id,
+            fragmento,
+            enunciado_nuevo,
+            capitulo_origen,
+            ahora,
+        ),
+    )
+
+
+def insertar_analisis(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    solicitud_id: str,
+    capitulos: list[int],
+    derivados: list[str],
+    ahora: str,
+) -> None:
+    con.execute(
+        "INSERT INTO analisis_impacto (id, novel_id, solicitud_id, capitulos_afectados,"
+        " hechos_derivados, creado_en) VALUES (?, ?, ?, ?, ?, ?)",
+        (
+            str(uuid.uuid4()),
+            novel_id,
+            solicitud_id,
+            json.dumps(capitulos),
+            json.dumps(derivados),
+            ahora,
+        ),
+    )
+
+
+def leer_solicitud(
+    con: sqlite3.Connection, *, novel_id: str, solicitud_id: str
+) -> sqlite3.Row | None:
+    fila: sqlite3.Row | None = con.execute(
+        "SELECT s.*, a.capitulos_afectados, a.hechos_derivados FROM solicitud_cambio s"
+        " LEFT JOIN analisis_impacto a ON a.solicitud_id = s.id AND a.novel_id = s.novel_id"
+        " WHERE s.novel_id = ? AND s.id = ?",
+        (novel_id, solicitud_id),
+    ).fetchone()
+    return fila

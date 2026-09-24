@@ -12,6 +12,8 @@ import sqlite3
 from dataclasses import dataclass
 from typing import Protocol
 
+from app.process import repository
+
 
 @dataclass(frozen=True)
 class VeredictoGate:
@@ -40,3 +42,9 @@ class Publicador(Protocol):
         """Escribe la versión inmutable dentro de la transacción del llamante; devuelve su
         hash."""
         ...
+
+
+def trabajo_vivo(con: sqlite3.Connection, *, novel_id: str) -> str | None:
+    """El trabajo pendiente o en curso de la novela, si lo hay: con él no se admite otro
+    (RF-PROC-03) ni una solicitud de cambio (RF-VER-06)."""
+    return repository.trabajo_vivo(con, novel_id=novel_id)

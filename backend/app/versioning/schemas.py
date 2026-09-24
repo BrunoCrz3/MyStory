@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
+from app.canon.service import HechoVigente
 from app.commons.esquemas import opcional
 from app.intake.service import Dedicatoria
 from app.novel.service import EstadoCapitulo
@@ -56,3 +57,45 @@ class Version(BaseModel):
     hash: str | None = None
     dedicatoria: Dedicatoria | None = opcional()
     capitulos: list[CapituloIndice]
+
+
+# --- Solicitud de cambio (RF-VER-06…RF-VER-09) ------------------------------------------
+
+
+class NuevaSolicitudCambio(BaseModel):
+    """El lector pide un cambio: **exactamente uno** de `hecho_id` o `fragmento`."""
+
+    model_config = {
+        "json_schema_extra": {"oneOf": [{"required": ["hecho_id"]}, {"required": ["fragmento"]}]}
+    }
+
+    hecho_id: UUID | None = None
+    fragmento: Annotated[str, Field(max_length=2000)] | None = None
+    enunciado_nuevo: Annotated[str, Field(min_length=1, max_length=500)]
+    capitulo_origen: Positivo
+
+    @model_validator(mode="after")
+    def _uno_de_los_dos(self) -> NuevaSolicitudCambio:
+        if (self.hecho_id is None) == (self.fragmento is None):
+            raise ValueError("hace falta exactamente uno de hecho_id o fragmento")
+        return self
+
+
+class AnalisisImpacto(BaseModel):
+    capitulos_afectados: list[Positivo]
+    hechos_derivados: list[UUID] | None = opcional()
+
+
+EstadoSolicitud = Literal["pendiente-de-confirmacion", "confirmada", "aplicada", "descartada"]
+
+
+class SolicitudCambio(BaseModel):
+    solicitud_id: UUID
+    novel_id: UUID
+    enunciado_nuevo: str
+    capitulo_origen: Positivo
+    estado: EstadoSolicitud
+    hecho_afectado: HechoVigente | None = opcional()
+    hecho_candidato: str | None = None
+    analisis_impacto: AnalisisImpacto | None = opcional()
+    version_resultante: Positivo | None = None

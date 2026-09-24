@@ -103,6 +103,7 @@ def crear_app(
     app.include_router(novel.router)
     app.include_router(generacion.router)
     app.include_router(lectura.router)
+    app.include_router(lectura.regeneracion)
     app.include_router(canon.router)
     registrar_errores(app)
     return app
