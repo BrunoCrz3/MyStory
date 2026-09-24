@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sqlite3
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +27,7 @@ from app.versioning.service import Publicacion
 from tests.contrato.normalizar import cargar_contrato, schema_de_respuesta
 from tests.dobles.guiones import guion_revision
 from tests.dobles.modelo import ModeloGuionizado
+from tests.dobles.render import RenderGuionizado
 from tests.dobles.trazador import RegistroTrazas
 
 _CONTRATO = cargar_contrato()
@@ -80,6 +81,7 @@ class Instancia:
     modelo: ModeloGuionizado
     trazas: RegistroTrazas
     app: FastAPI
+    render: RenderGuionizado
 
 
 @pytest.fixture
@@ -88,9 +90,10 @@ def instancia() -> Iterator[Instancia]:
     modelo = ModeloGuionizado(config)
     guion_revision(modelo)
     trazas = RegistroTrazas()
-    app = crear_app(config, cliente_modelo=modelo, trazador=trazas)
+    render = RenderGuionizado()
+    app = crear_app(config, cliente_modelo=modelo, trazador=trazas, render_visual=render)
     with TestClient(app) as c:
-        yield Instancia(cliente=c, modelo=modelo, trazas=trazas, app=app)
+        yield Instancia(cliente=c, modelo=modelo, trazas=trazas, app=app, render=render)
 
 
 ValidarContrato = Callable[[httpx2.Response, str], None]
@@ -120,6 +123,7 @@ class Entorno:
     recursos: Recursos
     modelo: ModeloGuionizado
     trazas: RegistroTrazas
+    render: RenderGuionizado = field(default_factory=RenderGuionizado)
 
     async def crear_novela(self, brief: dict[str, Any]) -> str:
         from app.intake.service import BriefNovela
@@ -132,7 +136,7 @@ class Entorno:
 
     def orquestador(self) -> Orquestador:
         """El orquestador de producción, con la publicación de `versioning/`."""
-        return Orquestador(self.recursos, Publicacion(self.recursos.config))
+        return Orquestador(self.recursos, Publicacion(self.recursos.config, self.render))
 
     def consultar(self, sql: str, *parametros: Any) -> list[sqlite3.Row]:
         return self.recursos.db.ejecutar_sync(lambda con: con.execute(sql, parametros).fetchall())

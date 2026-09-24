@@ -29,7 +29,7 @@ from app.process import cola
 from app.process import router as generacion
 from app.process.worker import Worker
 from app.versioning import router as lectura
-from app.versioning.service import Publicacion
+from app.versioning.service import Publicacion, RenderVisual
 
 TITULO = "storyMaker — API del backend v1"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -50,12 +50,14 @@ def crear_app(
     *,
     cliente_modelo: ClienteModelo | None = None,
     trazador: Trazador | None = None,
+    render_visual: RenderVisual | None = None,
 ) -> FastAPI:
     """Crea la aplicación.
 
     Sin `config`, la lee de `config/` al arrancar, y si no vale el arranque falla en voz alta
-    (RNF-15). `cliente_modelo` y `trazador` existen para que las pruebas inyecten sus dobles;
-    en producción se usan las implementaciones de `commons/`.
+    (RNF-15). `cliente_modelo`, `trazador` y `render_visual` existen para que las pruebas
+    inyecten sus dobles; en producción se usan las implementaciones de `commons/` y, para
+    `render_visual`, la de `versioning/` (TO-045).
     """
 
     @asynccontextmanager
@@ -78,7 +80,7 @@ def crear_app(
                 llamador=LlamadorModelo(cfg, cliente, pool, traz),
             )
             recursos.contar_cola = lambda: cola.trabajos_en_cola(recursos)
-            worker = Worker(recursos, Publicacion(cfg))
+            worker = Worker(recursos, Publicacion(cfg, render_visual))
             recursos.avisar_trabajo = worker.avisar
             app.state.recursos = recursos
             app.state.worker = worker

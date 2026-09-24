@@ -48,9 +48,14 @@ class VersionResumen(BaseModel):
     motivo: str | None = None
 
 
+# TO-045: `candidata` mientras el gate la valida; `publicada` o `rechazada` cuando decide.
+EstadoVersion = Literal["candidata", "publicada", "rechazada"]
+
+
 class Version(BaseModel):
     version: Positivo
     novel_id: UUID
+    estado: EstadoVersion
     titulo: str | None = None
     publicada_en: datetime
     version_anterior: Positivo | None = None

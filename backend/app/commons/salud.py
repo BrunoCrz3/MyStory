@@ -11,7 +11,7 @@ from app.commons.errores import problemas
 from app.commons.esquemas import opcional
 from app.commons.recursos import Recursos, recursos
 
-VERSION_API = "1.1.0"
+VERSION_API = "1.2.0"
 
 router = APIRouter()
 

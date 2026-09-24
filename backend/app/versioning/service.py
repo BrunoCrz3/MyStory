@@ -1,9 +1,9 @@
-"""Versiones de la novela: gate de publicación, publicación inmutable y lectura por versión.
+"""Versiones de la novela: candidata, gate de publicación, publicación inmutable y lectura.
 
-El gate corre sin modelo (`architecture.md` § Hooks y policy engine). En F1 ejecuta
-`estructura_edicion` y `elementos_obligatorios`; las fases siguientes añaden los suyos (D-17).
-Publicar escribe la versión y sus vínculos en la transacción de quien publica, y el hash del
-contenido es lo que hace comprobable que después no cambia (RNF-07).
+La versión se escribe `candidata` con sus vínculos, y el hash del contenido es lo que hace
+comprobable que después no cambia (RNF-07). El gate corre sin modelo sobre ella
+(`architecture.md` § Hooks y policy engine), `render_visual` incluido, y solo si todo pasa la
+versión se publica; si no, queda `rechazada` (TO-045, RNF-19).
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import Any
 
 from app.commons.config import Config
 from app.commons.db import BaseDatos
-from app.commons.errores import NovelaNoEncontrada, VersionNoEncontrada
+from app.commons.errores import NovelaNoEncontrada, TransicionInvalida, VersionNoEncontrada
 from app.commons.tiempo import ahora
 from app.intake.service import leer_brief
 from app.novel import service as novel
@@ -24,6 +24,7 @@ from app.versioning import ficha as _ficha
 from app.versioning import gate, repository
 from app.versioning import portada as _portada
 from app.versioning.huella import contenido, hash_contenido, hash_de_version
+from app.versioning.render_visual import RenderVisual, SinNavegador
 from app.versioning.schemas import (
     Capitulo,
     CapituloIndice,
@@ -36,6 +37,8 @@ from app.versioning.schemas import (
 __all__ = [
     "Capitulo",
     "Publicacion",
+    "RenderVisual",
+    "SinNavegador",
     "Version",
     "VersionResumen",
     "hash_de_version",
@@ -60,36 +63,27 @@ def candidatos(con: sqlite3.Connection, *, novel_id: str, version: int) -> dict[
 
 
 class Publicacion:
-    """Implementación del puerto `Publicador` de `process/`."""
+    """Implementación del puerto `Publicador` de `process/` (TO-045).
 
-    def __init__(self, config: Config) -> None:
+    `render` es el puerto de `render_visual`; sin él, `SinNavegador`, que no deja publicar.
+    """
+
+    def __init__(self, config: Config, render: RenderVisual | None = None) -> None:
         self.config = config
+        self.render: RenderVisual = render if render is not None else SinNavegador()
 
-    def gate(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> list[VeredictoGate]:
-        filas = candidatos(con, novel_id=novel_id, version=version)
-        ids = list(filas.values())
-        capitulos = contenido(con, novel_id=novel_id, ids=ids)
-        veredictos = [
-            gate.estructura_edicion(con, novel_id=novel_id, capitulos=capitulos),
-            gate.elementos_obligatorios(con, novel_id=novel_id, ids=ids),
-            gate.cierre_arco(self.config, con, novel_id=novel_id, version=version, ids=ids),
-        ]
-        if version > 1:
-            # D-17: desde la segunda versión, el gate comprueba que la regeneración fue fiel.
-            veredictos.append(
-                gate.regeneracion_fiel(con, novel_id=novel_id, version=version, candidatos=filas)
-            )
-        return veredictos
-
-    def publicar(
-        self,
-        con: sqlite3.Connection,
-        *,
-        novel_id: str,
-        version: int,
-        generacion_id: str,
-        motivo: str | None,
+    def proponer(
+        self, con: sqlite3.Connection, *, novel_id: str, version: int, generacion_id: str
     ) -> str:
+        existente = repository.leer_version(con, novel_id=novel_id, version=version)
+        if existente is not None:
+            # A-115: una reanudación encuentra la candidata ya escrita y la reutiliza; sus
+            # capítulos están aceptados y su contenido no ha cambiado.
+            if existente["estado"] != "candidata":
+                raise TransicionInvalida(
+                    f"la versión {version} ya está {existente['estado']}", novel_id=novel_id
+                )
+            return str(existente["hash"])
         filas = candidatos(con, novel_id=novel_id, version=version)
         anterior = (
             repository.leer_version(con, novel_id=novel_id, version=version - 1)
@@ -108,7 +102,7 @@ class Publicacion:
             version_anterior_id=None if anterior is None else anterior["id"],
             titulo=titulo,
             hash_contenido=huella,
-            motivo=motivo,
+            motivo=None,
             generacion_id=generacion_id,
             ahora=ahora(),
         )
@@ -122,15 +116,46 @@ class Publicacion:
                 # D-05: un capítulo no reescrito es la misma fila; cambió si la fila es otra.
                 modificado=anterior is not None and previos.get(numero) != capitulo_id,
             )
+        return huella
+
+    def gate(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> list[VeredictoGate]:
+        filas = candidatos(con, novel_id=novel_id, version=version)
+        ids = list(filas.values())
+        capitulos = contenido(con, novel_id=novel_id, ids=ids)
+        veredictos = [
+            gate.estructura_edicion(con, novel_id=novel_id, capitulos=capitulos),
+            gate.elementos_obligatorios(con, novel_id=novel_id, ids=ids),
+            gate.cierre_arco(self.config, con, novel_id=novel_id, version=version, ids=ids),
+        ]
+        if version > 1:
+            # D-17: desde la segunda versión, el gate comprueba que la regeneración fue fiel.
+            veredictos.append(
+                gate.regeneracion_fiel(con, novel_id=novel_id, version=version, candidatos=filas)
+            )
+        return veredictos
+
+    async def render_visual(self, *, novel_id: str, version: int) -> VeredictoGate:
+        return await self.render(novel_id=novel_id, version=version)
+
+    def publicar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+        repository.decidir_version(
+            con, novel_id=novel_id, version=version, estado="publicada", ahora=ahora()
+        )
         # Una regeneración dirigida cierra la solicitud que la pidió (RF-VER-08).
+        fila = repository.leer_version(con, novel_id=novel_id, version=version)
+        assert fila is not None and fila["estado"] == "publicada"
         solicitud_id = process.solicitud_de_trabajo(
-            con, novel_id=novel_id, trabajo_id=generacion_id
+            con, novel_id=novel_id, trabajo_id=fila["generacion_id"]
         )
         if solicitud_id is not None:
             repository.aplicar_solicitud(
                 con, novel_id=novel_id, solicitud_id=solicitud_id, version_resultante=version
             )
-        return huella
+
+    def rechazar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+        repository.decidir_version(
+            con, novel_id=novel_id, version=version, estado="rechazada", ahora=ahora()
+        )
 
 
 # --- Lectura ---------------------------------------------------------------------------
@@ -146,7 +171,7 @@ def _exigir_version(con: sqlite3.Connection, novel_id: str, version: int) -> dic
     fila = repository.leer_version(con, novel_id=novel_id, version=version)
     if fila is None:
         raise VersionNoEncontrada(
-            f"la novela {novel_id} no tiene la versión {version} publicada", novel_id=novel_id
+            f"la novela {novel_id} no tiene la versión {version}", novel_id=novel_id
         )
     return fila
 
@@ -192,6 +217,7 @@ def _obtener_version(con: sqlite3.Connection, *, novel_id: str, version: int) ->
     return Version(
         version=fila["version"],
         novel_id=novel_id,
+        estado=fila["estado"],
         titulo=fila["titulo"],
         publicada_en=fila["publicada_en"],
         version_anterior=fila["version_anterior"],

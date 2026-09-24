@@ -21,6 +21,7 @@ from app.commons.llm import Peticion, Recuento, Respuesta
 from app.main import crear_app
 from tests.dobles.guiones import guion_completo
 from tests.dobles.modelo import ModeloGuionizado
+from tests.dobles.render import RenderGuionizado
 from tests.dobles.trazador import RegistroTrazas
 
 
@@ -38,7 +39,9 @@ def crear() -> FastAPI:
     cfg = cargar_config()
     modelo = ModeloConRetardo(cfg, float(os.environ.get("STORYMAKER_E2E_RETARDO_S", "0")))
     guion_completo(modelo)
-    return crear_app(cfg, cliente_modelo=modelo, trazador=RegistroTrazas())
+    return crear_app(
+        cfg, cliente_modelo=modelo, trazador=RegistroTrazas(), render_visual=RenderGuionizado()
+    )
 
 
 if __name__ == "__main__":

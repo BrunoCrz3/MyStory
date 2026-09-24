@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P47a · Estado de versión y gate sobre la candidata (TO-045) |
-| Estado del paso | en curso; la parada del P47 está **resuelta** con el cambio de contrato TO-045 (§ Parada) |
+| Paso actual | P47b · `render_visual` con Playwright MCP |
+| Estado del paso | sin empezar; P47a cerrado (la parada del P47 está **resuelta** con TO-045, § Parada) |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P46 |
+| Último commit de paso | P47a |
 
 ## Coste real
 
@@ -87,6 +87,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P45** — `versioning/ficha.py` (personajes y lugares con los capítulos donde aparecen en esa versión, por eventos, POV y lugar del capítulo; descripción de rol y deseo o de atmósfera y geografía) y `portada.py` (título de la versión, dedicatoria, destinatario, ocasión); `novel.apariciones`; `obtenerFicha` y `obtenerPortada` fuera de PENDIENTES; la ficha de la versión 1 y la de la 2 difieren tras una regeneración; 416 pruebas
 - **P46** — `versioning/lectura.py`: ruta, estados de `data-estado` y los 14 selectores de CL-03 como un único dato, comparado con la tabla de la spec leída del fichero; `url()` y `selector()`; prueba de arquitectura: `data-testid` solo en `lectura.py`; `tests/fixtures/lectura/pagina.py` genera la página de prueba desde una versión publicada (con `@media print` y opciones para romperla); `STORYMAKER_LECTURA_URL` en `.env.example`; 420 pruebas
 
+- **P47a** — contrato 1.2.0 (TO-045): migración `0013_estado_version.sql` (`estado` con `CHECK`, existentes `publicada`, trigger que solo admite `candidata → publicada | rechazada`); `Version.estado`; `novel.version_vigente` y `listarVersiones` solo con publicadas; puerto `Publicador` con `proponer`, `gate`, `render_visual`, `publicar` y `rechazar`; `versioning/render_visual.py` con el puerto y `SinNavegador` (A-114); el orquestador escribe la candidata, corre el gate completo sobre ella y publica o rechaza en la transacción que detiene; `crear_app(render_visual=…)`; doble `tests/dobles/render.py`; `VERSION_API` 1.2.0; 428 pruebas
 ## Pendiente
 
 - **P47 partido en P47a y P47b** por el cambio de contrato TO-045 que resuelve la parada; después, P48 y P49 en orden.
@@ -298,8 +299,8 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P46 cerrado; parada del P47 resuelta con TO-045; P47a en curso**. Rama `backend-v1`,
-suite en verde (420 pruebas). Al retomar: seguir por el P47a del plan. Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P47a cerrado (TO-045); sigue el P47b**. Rama `backend-v1`,
+suite en verde (428 pruebas). Al retomar: seguir por el P47b del plan. Sin servidor MCP, `render_visual` falla y ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash

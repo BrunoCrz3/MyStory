@@ -68,7 +68,9 @@ __all__ = [
 
 def _version_vigente(con: sqlite3.Connection, *, novel_id: str) -> int | None:
     fila = con.execute(
-        "SELECT max(version) FROM version_novela WHERE novel_id = ?", (novel_id,)
+        # Solo una publicada es la vigente: una candidata o una rechazada, nunca (RNF-19).
+        "SELECT max(version) FROM version_novela WHERE novel_id = ? AND estado = 'publicada'",
+        (novel_id,),
     ).fetchone()
     valor: int | None = fila[0]
     return valor

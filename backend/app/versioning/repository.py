@@ -1,4 +1,5 @@
-"""SQL de `versioning/`: versiones publicadas, sus vínculos y la vista de lectura.
+"""SQL de `versioning/`: versiones —candidatas, publicadas o rechazadas—, sus vínculos y la
+vista de lectura.
 
 La vista de lectura une por SQL tablas de otras dueñas —capítulo, personaje, lugar, resumen,
 brief de capítulo—: la story bible es una vista sobre tablas, y la regla de importación es de
@@ -76,7 +77,7 @@ def listar_versiones(con: sqlite3.Connection, *, novel_id: str) -> list[dict[str
     filas = con.execute(
         "SELECT v.*, a.version AS version_anterior FROM version_novela v"
         " LEFT JOIN version_novela a ON a.id = v.version_anterior_id"
-        " WHERE v.novel_id = ? ORDER BY v.version DESC",
+        " WHERE v.novel_id = ? AND v.estado = 'publicada' ORDER BY v.version DESC",
         (novel_id,),
     ).fetchall()
     return [dict(f) for f in filas]
@@ -106,7 +107,8 @@ def insertar_version(
     version_id = str(uuid.uuid4())
     con.execute(
         "INSERT INTO version_novela (id, novel_id, version, version_anterior_id, titulo, hash,"
-        " motivo, generacion_id, publicada_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        " motivo, generacion_id, publicada_en, estado)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'candidata')",
         (
             version_id,
             novel_id,
@@ -120,6 +122,19 @@ def insertar_version(
         ),
     )
     return version_id
+
+
+def decidir_version(
+    con: sqlite3.Connection, *, novel_id: str, version: int, estado: str, ahora: str
+) -> None:
+    """El gate decide: `candidata` pasa a `publicada` (con su fecha) o a `rechazada`. El
+    trigger de la migración 0013 rechaza cualquier otro cambio."""
+    con.execute(
+        "UPDATE version_novela SET estado = ?,"
+        " publicada_en = CASE WHEN ? = 'publicada' THEN ? ELSE publicada_en END"
+        " WHERE novel_id = ? AND version = ? AND estado = 'candidata'",
+        (estado, estado, ahora, novel_id, version),
+    )
 
 
 def insertar_vinculo(

@@ -52,7 +52,9 @@ async def test_un_elemento_obligatorio_ausente_no_publica(entorno: Entorno) -> N
     novela, gid = await generar_entera(entorno)
 
     assert _obra(entorno, novela) == "Detenida"
-    assert entorno.consultar("SELECT * FROM version_novela WHERE novel_id = ?", novela) == []
+    # TO-045: la versión existió como candidata y queda rechazada, nunca publicada.
+    versiones = entorno.consultar("SELECT estado FROM version_novela WHERE novel_id = ?", novela)
+    assert [f["estado"] for f in versiones] == ["rechazada"]
     t = entorno.consultar("SELECT * FROM trabajo WHERE id = ?", gid)[0]
     assert t["version_resultante"] is None and t["detenida_por"] == "error-interno"
     assert [s.valor for s in entorno.trazas.scores_de("elementos_obligatorios")] == [0.0]

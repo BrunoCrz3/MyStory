@@ -97,7 +97,7 @@ Los **tipos** son los cuatro de la ontología: `programático`, `semántico`, `f
 | Coherencia de edad | formal-Lean | gate de publicación | `lean_edad` | O-15 |
 | Cumplimiento de elementos obligatorios | programático | gate de publicación | `elementos_obligatorios` | O-04, O-18 |
 | Cierre del arco | programático + semántico | gate de publicación | `cierre_arco` | O-34, O-35, O-36, O-40, O-41, O-43 |
-| Render visual | programático | gate de publicación, sobre la versión candidata (TO-045) | `render_visual` | O-09, O-10, O-59, O-60, A-106 |
+| Render visual | programático | gate de publicación | `render_visual` | O-09, O-10, O-59, O-60, A-106 |
 | Paridad PDF ↔ web | programático | export | `paridad_pdf_web` | O-16 |
 | **Invención sobre el destinatario** | programático + semántico | rol editor | `invencion_destinatario` | O-20 |
 | **Temas excluidos** | semántico | rol editor | `temas_excluidos` | O-21 |

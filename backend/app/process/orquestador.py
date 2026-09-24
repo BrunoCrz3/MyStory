@@ -45,7 +45,7 @@ class GeneracionDetenida(Exception):
 
 
 class GateEnRojo(GeneracionDetenida):
-    """El gate de publicación no pasa: la versión no se publica (RF-QUA-03).
+    """El gate de publicación no pasa: la candidata queda `rechazada` (RF-QUA-03, TO-045).
 
     El editor corrige capítulos, no la novela entera: arreglar un fallo del gate —una promesa
     sin pagar— exige reescribir capítulos ya aceptados, y eso es el retcon de F4. Así que la
@@ -307,15 +307,29 @@ class Orquestador:
         await self._cerrar(t)
 
     async def _cerrar(self, t: dict[str, Any]) -> None:
-        """Gate de publicación y, si pasa, la versión inmutable (RF-VER-01, RF-QUA-03).
+        """La versión candidata, el gate sobre ella y, si pasa, la publicación (RF-VER-01,
+        RF-QUA-03, RNF-19, TO-045).
 
-        Publicar, escribir la versión y conservarla van en una sola transacción: una versión
-        a medio escribir no existe, y la reanudación nunca encuentra la novela en `Publicando`.
+        La candidata se escribe antes del gate porque `render_visual` tiene que pintarla: la
+        lectura la pide por su número. Ninguna versión pasa a `publicada` sin que pasen todos
+        los validadores; si falla uno, queda `rechazada` en la misma transacción que detiene la
+        novela, y nunca es la vigente. Publicar y conservar van en una sola transacción: la
+        reanudación nunca encuentra la novela en `Publicando`.
         """
         novel_id, version = t["novel_id"], t["version_objetivo"]
+
+        def proponer(con: sqlite3.Connection) -> str:
+            return self.publicador.proponer(
+                con, novel_id=novel_id, version=version, generacion_id=t["id"]
+            )
+
+        await self.r.db.en_transaccion(proponer)
         with self.r.trazador.span("gate_publicacion", metadata={"version": version}):
             veredictos = await self.r.db.ejecutar(
                 partial(self.publicador.gate, novel_id=novel_id, version=version)
+            )
+            veredictos.append(
+                await self.publicador.render_visual(novel_id=novel_id, version=version)
             )
             for v in veredictos:
                 self.r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
@@ -326,9 +340,7 @@ class Orquestador:
         def publicar(con: sqlite3.Connection) -> None:
             actual = novel.estado_de_obra(con, novel_id=novel_id)
             destino = aplicar("Novela", aplicar("Novela", actual, "Publicar"), "Conservar")
-            self.publicador.publicar(
-                con, novel_id=novel_id, version=version, generacion_id=t["id"], motivo=None
-            )
+            self.publicador.publicar(con, novel_id=novel_id, version=version)
             novel.fijar_estado_obra(con, novel_id=novel_id, estado=destino)
             repository.actualizar_trabajo(
                 con,
@@ -354,8 +366,10 @@ class Orquestador:
             actual = novel.estado_de_obra(con, novel_id=t["novel_id"])
             transiciones = []
             if devolver_al_editor:
-                # El diagrama devuelve la novela al editor (Escribiendo). Corregir la novela
-                # entera exige retcon (F4), así que por ahora se detiene ahí mismo (A-47, A-79).
+                # El gate falló: la candidata queda rechazada y nunca será la vigente (TO-045).
+                # El diagrama devuelve la novela al editor (Escribiendo); corregir la novela
+                # entera exige retcon, así que se detiene ahí mismo (A-47, A-79, A-113).
+                self.publicador.rechazar(con, novel_id=t["novel_id"], version=t["version_objetivo"])
                 actual = aplicar("Novela", actual, "DevolverAlEditor")
                 transiciones.append("DevolverAlEditor")
             destino = aplicar("Novela", actual, "Detener")

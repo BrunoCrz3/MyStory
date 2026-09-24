@@ -39,21 +39,30 @@ class VeredictoGate:
 
 
 class Publicador(Protocol):
-    def gate(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> list[VeredictoGate]:
-        """Corre los validadores del gate sobre la versión que se va a publicar."""
+    """La versión nace `candidata`, el gate corre sobre ella y solo entonces se publica o se
+    rechaza (TO-045, RNF-19). Los métodos síncronos corren en la transacción del llamante."""
+
+    def proponer(
+        self, con: sqlite3.Connection, *, novel_id: str, version: int, generacion_id: str
+    ) -> str:
+        """Escribe la versión `candidata` con sus vínculos, o reutiliza la que ya hay; devuelve
+        su hash."""
         ...
 
-    def publicar(
-        self,
-        con: sqlite3.Connection,
-        *,
-        novel_id: str,
-        version: int,
-        generacion_id: str,
-        motivo: str | None,
-    ) -> str:
-        """Escribe la versión inmutable dentro de la transacción del llamante; devuelve su
-        hash."""
+    def gate(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> list[VeredictoGate]:
+        """Corre los validadores del gate que leen la base sobre la candidata."""
+        ...
+
+    async def render_visual(self, *, novel_id: str, version: int) -> VeredictoGate:
+        """Pinta la candidata en la página `lectura` y afirma el contrato (TO-026)."""
+        ...
+
+    def publicar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+        """La candidata pasa a `publicada`, y la solicitud que la pidió, a `aplicada`."""
+        ...
+
+    def rechazar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+        """La candidata pasa a `rechazada`: nunca será la vigente."""
         ...
 
 

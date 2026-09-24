@@ -31,7 +31,7 @@ def test_salud_refleja_la_configuracion_y_el_pool() -> None:
     assert cuerpo["cerrar_el_paso"] is CONFIG.umbrales.medicion.cerrar_el_paso
     assert cuerpo["tokens_en_vuelo"] == 0
     assert cuerpo["tokens_en_vuelo_total"] == CONFIG.umbrales.en_vuelo.total
-    assert cuerpo["version_api"] == "1.1.0"
+    assert cuerpo["version_api"] == "1.2.0"
     assert cuerpo["estado"] == "ok"
 
 
