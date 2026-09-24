@@ -91,7 +91,7 @@ async def obtener_capitulo(
 async def crear_solicitud_cambio(
     novel_id: UUID, nueva: NuevaSolicitudCambio, r: Annotated[Recursos, Depends(recursos)]
 ) -> SolicitudCambio:
-    return await solicitud.crear_solicitud(r.db, str(novel_id), nueva)
+    return await solicitud.crear_solicitud(r.db, r.config, str(novel_id), nueva)
 
 
 @regeneracion.get(

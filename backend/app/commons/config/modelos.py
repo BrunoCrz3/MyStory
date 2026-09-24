@@ -203,7 +203,7 @@ class Recuperacion(_Estricto):
 
 
 class Regeneracion(_Estricto):
-    similitud_hecho_candidato: float
+    similitud_hecho_candidato: float = Field(gt=0, le=1)
 
 
 class Embeddings(BaseModel):
@@ -232,7 +232,7 @@ class Umbrales(_Estricto):
     export: Export
     modelo_formal: ModeloFormal
     recuperacion: Recuperacion
-    regeneracion: Regeneracion | None = None
+    regeneracion: Regeneracion
     embeddings: Embeddings | None = None
 
 

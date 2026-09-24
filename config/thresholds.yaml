@@ -532,3 +532,13 @@ embeddings:
   modelo: bge-m3          # alternativa aprobada: multilingual-e5-large
   version: null           # [inactivo en v1] versión concreta del modelo
   dimension: null         # [inactivo en v1] debe coincidir con la declarada en la tabla vec0
+
+# ---------------------------------------------------------------------------
+# Regeneración
+# ---------------------------------------------------------------------------
+# D-19. Cuando el lector pide un cambio seleccionando un fragmento, el hecho candidato es el
+# que usa el capítulo de origen con más similitud de Jaccard, sobre tokens normalizados,
+# entre el fragmento y su `fragmento_soporte`. Por debajo de este umbral no se propone nada.
+
+regeneracion:
+  similitud_hecho_candidato: 0.5   # [provisional — calibrar tras la demo] la mitad de los tokens en común

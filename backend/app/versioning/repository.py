@@ -165,19 +165,22 @@ def insertar_solicitud(
     version_base: int,
     hecho_id: str | None,
     fragmento: str | None,
+    hecho_candidato_id: str | None,
     enunciado_nuevo: str,
     capitulo_origen: int,
     ahora: str,
 ) -> None:
     con.execute(
         "INSERT INTO solicitud_cambio (id, novel_id, version_base, hecho_id, fragmento,"
-        " enunciado_nuevo, capitulo_origen, creada_en) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        " hecho_candidato_id, enunciado_nuevo, capitulo_origen, creada_en)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             solicitud_id,
             novel_id,
             version_base,
             hecho_id,
             fragmento,
+            hecho_candidato_id,
             enunciado_nuevo,
             capitulo_origen,
             ahora,

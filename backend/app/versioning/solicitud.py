@@ -9,6 +9,7 @@ import uuid
 from uuid import UUID
 
 from app.canon import service as canon
+from app.commons.config import Config
 from app.commons.db import BaseDatos
 from app.commons.errores import (
     GeneracionEnCurso,
@@ -19,7 +20,7 @@ from app.commons.errores import (
 from app.commons.tiempo import ahora
 from app.novel import service as novel
 from app.process import service as process
-from app.versioning import impacto, repository
+from app.versioning import candidato, impacto, repository
 from app.versioning.schemas import AnalisisImpacto, NuevaSolicitudCambio, SolicitudCambio
 
 
@@ -54,7 +55,7 @@ def _leer(con: sqlite3.Connection, novel_id: str, solicitud_id: str) -> Solicitu
         for h in canon.hechos_vigentes(con, novel_id=novel_id, version=fila["version_base"])
     }
     afectado = vigentes.get(fila["hecho_id"]) if fila["hecho_id"] else None
-    candidato = vigentes.get(fila["hecho_candidato_id"]) if fila["hecho_candidato_id"] else None
+    propuesto = vigentes.get(fila["hecho_candidato_id"]) if fila["hecho_candidato_id"] else None
     analisis = None
     if fila["capitulos_afectados"] is not None:
         analisis = AnalisisImpacto(
@@ -68,14 +69,14 @@ def _leer(con: sqlite3.Connection, novel_id: str, solicitud_id: str) -> Solicitu
         capitulo_origen=fila["capitulo_origen"],
         estado=fila["estado"],
         hecho_afectado=_hecho_vigente(afectado) if afectado else None,
-        hecho_candidato=candidato.enunciado if candidato else None,
+        hecho_candidato=propuesto.enunciado if propuesto else None,
         analisis_impacto=analisis,
         version_resultante=fila["version_resultante"],
     )
 
 
 async def crear_solicitud(
-    db: BaseDatos, novel_id: str, nueva: NuevaSolicitudCambio
+    db: BaseDatos, config: Config, novel_id: str, nueva: NuevaSolicitudCambio
 ) -> SolicitudCambio:
     solicitud_id = str(uuid.uuid4())
 
@@ -97,6 +98,15 @@ async def crear_solicitud(
                     f"el hecho {nueva.hecho_id} no es vigente en la versión {version}",
                     novel_id=novel_id,
                 )
+        propuesto = None
+        if nueva.fragmento is not None:
+            # Por fragmento: se propone un candidato entre los hechos que usa el capítulo de
+            # origen, y la solicitud espera a que el lector lo confirme (TO-011).
+            propuesto = candidato.candidato(
+                nueva.fragmento,
+                [h for h in vigentes if nueva.capitulo_origen in h.capitulos_usan],
+                umbral=config.umbrales.regeneracion.similitud_hecho_candidato,
+            )
         momento = ahora()
         repository.insertar_solicitud(
             con,
@@ -105,12 +115,14 @@ async def crear_solicitud(
             version_base=version,
             hecho_id=hecho.hecho_id if hecho else None,
             fragmento=nueva.fragmento,
+            hecho_candidato_id=propuesto.hecho_id if propuesto else None,
             enunciado_nuevo=nueva.enunciado_nuevo,
             capitulo_origen=nueva.capitulo_origen,
             ahora=momento,
         )
-        if hecho is not None:
-            analisis = impacto.analizar(hecho, vigentes)
+        sobre = hecho or propuesto
+        if sobre is not None:
+            analisis = impacto.analizar(sobre, vigentes)
             repository.insertar_analisis(
                 con,
                 novel_id=novel_id,

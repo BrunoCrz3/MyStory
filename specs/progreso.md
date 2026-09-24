@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P41 · Solicitud por fragmento |
+| Paso actual | P42 · Confirmación, retcon y obsolescencia |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P40 |
+| Último commit de paso | P41 |
 
 ## Coste real
 
@@ -75,10 +75,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P38** — Cierre de F3: `tests/e2e/test_f3.py` (brief adversarial por HTTP: validar devuelve el fragmento, crear lo registra, y ninguna petición de toda la generación con dobles lo contiene; el texto libre restante solo dentro de su delimitador); `tests/humo/test_adversarial_real.py` (opcional real); judge calibrado a 10000 (A-92); TO-043 y RI-016; bloque § 4.5 con N = 3 en verde (389 pruebas, cobertura 96,4 %); F3 subida. Segundo humo adversarial, con el judge calibrado, lanzado al cerrar: su resultado se anota aparte
 - **P39** — `canon/router.py` y `canon/schemas.py` (`HechoVigente` idéntico al `Hecho` del contrato); `GET …/versiones/{version}/hechos` por vigencia, con `?capitulo=` sobre `capitulos_usan` del puente; 404 `novela-no-encontrada` y `version-no-encontrada`; `listarHechos` fuera de PENDIENTES; 392 pruebas
 - **P40** — Migración 0012 (`solicitud_cambio`, `analisis_impacto`, `retcon`); `versioning/solicitud.py` e `impacto.py`: la solicitud por hecho se registra con su análisis (capítulos que usan el hecho más el que lo estableció; hechos derivados de esos capítulos) sin crear trabajo ni llamar al modelo; 409 con generación viva, 404 `hecho-no-encontrado`; `NuevaSolicitudCambio` con su `oneOf`; router `regeneracion` aparte; `crearSolicitudCambio` y `obtenerSolicitudCambio` fuera de PENDIENTES; 398 pruebas
+- **P41** — `versioning/candidato.py` (Jaccard sobre tokens normalizados contra el `fragmento_soporte` de los hechos que usa el capítulo de origen; a igual similitud, el establecido antes); `regeneracion.similitud_hecho_candidato: 0.5` provisional y sección `regeneracion` obligatoria; la solicitud por fragmento guarda el candidato, su análisis y queda pendiente de confirmación; sin candidato no propone nada; 402 pruebas
 
 ## Pendiente
 
-- Siguiente: **P41 · Solicitud por fragmento**, y después el resto hasta el P49 en orden.
+- Siguiente: **P42 · Confirmación, retcon y obsolescencia**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -200,6 +201,7 @@ registrada.
 | A-94 | P40 | Una solicitud inexistente responde 404 `novela-no-encontrada` con el motivo en `detail` | El catálogo es cerrado y no tiene `solicitud-no-encontrada` (como A-36) | TO-044 |
 | A-95 | P40 | El análisis añade el capítulo que estableció el hecho a los que lo usan, y marca como derivados los hechos que establecen los capítulos afectados | El que establece también lo cuenta; y lo que se reescribe puede cambiar lo que esos capítulos establecieron | TO-044 |
 | A-96 | P40 | Sin tabla `contradiccion_canon` en la migración 0012 | Ningún paso del plan 1 la escribe | TO-044 |
+| A-97 | P41 | A igual similitud, el candidato es el hecho establecido antes; `hecho_candidato` devuelve su enunciado y la solicitud guarda su id | El original es el que se quiere cambiar; el contrato lo tipa como texto y la confirmación necesita el id | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -264,14 +266,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P40 cerrado, siguiente P41**. Rama `backend-v1`,
-suite en verde (398 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P41 cerrado, siguiente P42**. Rama `backend-v1`,
+suite en verde (402 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 398 pruebas en verde al cerrar P40
+uv run pytest -q          # 402 pruebas en verde al cerrar P41
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
