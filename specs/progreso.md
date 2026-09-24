@@ -83,7 +83,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 ## Pendiente
 
-- Siguiente: **P44 · Cierre de F4** (antes, arreglar `invencion_destinatario`, A-108), y después el resto hasta el P49 en orden.
+- Siguiente: **P44 · Cierre de F4**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -215,6 +215,7 @@ registrada.
 | A-104 | P43 | El snapshot se deriva siempre para la versión que se lee: presentes y ubicaciones guardados, hechos por vigencia | D-12 ya lo define como derivado; sin esto, la reescritura del 7 leería el hecho retconeado en el snapshot del 6 | TO-044 |
 | A-105 | P43 | El redactor de un capítulo reescrito recibe en la tarea qué hecho cambió (viejo y nuevo) | El contexto lleva el nuevo en el snapshot, pero sin el aviso el capítulo no sabe qué debe cambiar | TO-044 |
 | A-106 | P43 | `regeneracion_fiel`: la versión nueva cambia exactamente los capítulos que la anterior tiene `Obsoleto`, y el hash de la anterior se recalcula igual | Es comprobable sin saber qué trabajo publica, y cubre las dos promesas de F4: nada más cambia y nada se pierde | TO-044 |
+| A-108 | P43 | `invencion_destinatario` cuenta solo si el judge dice que la afirmación no tiene apoyo (campo `apoyo`) y el cotejo por palabras tampoco lo encuentra; el prompt del judge excluye la trama | El humo adversarial real marcaba paráfrasis de rasgos del brief («cabezota» por «tozuda») y detalles de trama, y el capítulo agotaba sus intentos | TO-044 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes

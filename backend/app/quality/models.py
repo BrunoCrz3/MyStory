@@ -72,12 +72,14 @@ class InformeCritica(BaseModel):
 
 
 class AfirmacionDestinatario(BaseModel):
-    """Un hecho personal que el capítulo afirma sobre el destinatario, con su cita (D-13)."""
+    """Un hecho personal que el capítulo afirma sobre el destinatario, con su cita y, a juicio
+    del judge, dónde se apoya (D-13, A-108)."""
 
     model_config = ConfigDict(extra="forbid")
 
     afirmacion: str
     fragmento: str
+    apoyo: Literal["brief", "texto-libre", "ninguno"]
 
 
 class TemaExcluidoVisto(BaseModel):

@@ -1,12 +1,14 @@
 """`invencion_destinatario` (O-20, PO-1, D-13): ningún hecho personal sobre el destinatario
 que no venga del brief o del texto libre.
 
-El judge lista cada afirmación personal con su cita; aquí está la mitad programática, que
-coteja cada una con el soporte —rasgos, recuerdos, elementos personalizados, texto libre
-saneado— y **cuenta** las que no tienen apoyo. Una afirmación tiene apoyo si al menos
-`calidad.invencion_soporte_minimo` de sus palabras con contenido están en el soporte. Una
-cita que no está en el capítulo no cuenta: sería una invención del judge, no del texto.
-Cuenta hasta `calidad.invencion_destinatario`, que es cero, y cierra el paso siempre.
+El judge lista cada afirmación personal con su cita y dice dónde se apoya (la mitad
+semántica: sabe que «cabezota» es «tozuda»). Aquí está la mitad programática, que coteja cada
+una con el soporte —el brief entero y el texto libre saneado— por palabras con contenido
+(`calidad.invencion_soporte_minimo`). **Cuenta como invención solo si las dos mitades
+coinciden** en que no hay apoyo: el cotejo por palabras solo marcaba las paráfrasis, y el
+judge solo puede equivocarse con lo que el brief dice con todas las letras (A-108). Una cita
+que no está en el capítulo no cuenta: sería una invención del judge, no del texto. Cuenta
+hasta `calidad.invencion_destinatario`, que es cero, y cierra el paso siempre.
 """
 
 from __future__ import annotations
@@ -111,6 +113,8 @@ def invencion_destinatario(
     inventadas = []
     for a in afirmaciones:
         if not a.fragmento.strip() or _normal(a.fragmento) not in capitulo:
+            continue
+        if a.apoyo != "ninguno":
             continue
         palabras = _contenido(a.afirmacion, nombre)
         if palabras and len(palabras & soporte) / len(palabras) < minimo:

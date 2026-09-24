@@ -55,10 +55,15 @@ def _por_nombre(resultados: list[ResultadoValidador], nombre: str) -> ResultadoV
 def test_un_hecho_personal_ausente_del_brief_cuenta_uno_y_se_cita() -> None:
     salida = _salida(
         [
-            {"afirmacion": "Marta es cirujana en un hospital", "fragmento": INVENTADA},
+            {
+                "afirmacion": "Marta es cirujana en un hospital",
+                "fragmento": INVENTADA,
+                "apoyo": "ninguno",
+            },
             {
                 "afirmacion": "Marta aprendió a navegar en el Alondra",
                 "fragmento": "Aprendió a navegar en un barco llamado Alondra.",
+                "apoyo": "brief",
             },
         ],
         [],
@@ -73,7 +78,16 @@ def test_un_hecho_personal_ausente_del_brief_cuenta_uno_y_se_cita() -> None:
 
 
 def test_una_cita_que_no_esta_en_el_capitulo_no_cuenta() -> None:
-    salida = _salida([{"afirmacion": "Marta es piloto", "fragmento": "Marta pilotaba aviones"}], [])
+    salida = _salida(
+        [
+            {
+                "afirmacion": "Marta es piloto",
+                "fragmento": "Marta pilotaba aviones",
+                "apoyo": "ninguno",
+            }
+        ],
+        [],
+    )
     v = _por_nombre(evaluar_judge(CONFIG, salida, None, CONTEXTO).todos, "invencion_destinatario")
     assert v.valor == 0 and v.pasa
 
@@ -120,7 +134,7 @@ async def test_el_ciclo_emite_los_dos_scores_con_el_brief_como_soporte(entorno: 
     entorno.modelo.encolar(
         "judge",
         _salida(
-            [{"afirmacion": "Marta es cirujana", "fragmento": INVENTADA}],
+            [{"afirmacion": "Marta es cirujana", "fragmento": INVENTADA, "apoyo": "ninguno"}],
             [{"tema": "enfermedad", "aparece": True, "fragmento": HOSPITAL}],
         ),
     )
@@ -147,9 +161,17 @@ async def test_lo_que_dice_el_brief_no_es_invencion_aunque_no_sea_rasgo_ni_recue
         "judge",
         _salida(
             [
-                {"afirmacion": "Marta cumple treinta y cuatro años", "fragmento": edad},
-                {"afirmacion": "Marta tiene una hermana que le escribe", "fragmento": hermana},
-                {"afirmacion": "Celebra su cumpleaños", "fragmento": hermana},
+                {
+                    "afirmacion": "Marta cumple treinta y cuatro años",
+                    "fragmento": edad,
+                    "apoyo": "ninguno",
+                },
+                {
+                    "afirmacion": "Marta tiene una hermana que le escribe",
+                    "fragmento": hermana,
+                    "apoyo": "ninguno",
+                },
+                {"afirmacion": "Celebra su cumpleaños", "fragmento": hermana, "apoyo": "ninguno"},
             ],
             [],
         ),
@@ -159,3 +181,34 @@ async def test_lo_que_dice_el_brief_no_es_invencion_aunque_no_sea_rasgo_ni_recue
     )
     v = _por_nombre(r.todos, "invencion_destinatario")
     assert v.valor == 0 and v.pasa, v.detalle
+
+
+def test_una_parafrasis_de_lo_que_dice_el_brief_no_es_invencion() -> None:
+    # Humo adversarial real: el cotejo por palabras marcaba «cabezota» y «tozuda» como
+    # invención. Cuenta solo si el judge dice que no tiene apoyo Y el cotejo tampoco lo halla.
+    tozuda = "Es cabezota: una vez decide algo, no lo suelta."
+    texto = prosa(1200, extra=f"{tozuda} {INVENTADA}")
+    contexto = CONTEXTO.model_copy(update={"texto": texto})
+    salida = _salida(
+        [
+            {
+                "afirmacion": "Es cabezota, no suelta lo que decide",
+                "fragmento": tozuda,
+                "apoyo": "brief",
+            },
+            {"afirmacion": "Tiene un perro", "fragmento": tozuda, "apoyo": "ninguno"},
+            {"afirmacion": "Trabaja de cirujana", "fragmento": INVENTADA, "apoyo": "ninguno"},
+        ],
+        [],
+    )
+    v = _por_nombre(evaluar_judge(CONFIG, salida, None, contexto).todos, "invencion_destinatario")
+    # La paráfrasis tiene apoyo según el judge; el perro, según el cotejo; la cirujana, en
+    # ninguno de los dos: solo esa cuenta.
+    assert v.valor == 1 and "cirujana" in v.detalle and "cabezota" not in v.detalle
+
+
+def test_el_prompt_del_judge_pide_el_apoyo_y_excluye_la_trama() -> None:
+    from app.prompts import cargar_prompt
+
+    texto = cargar_prompt("judge").texto
+    assert "apoyo" in texto and "trama" in texto

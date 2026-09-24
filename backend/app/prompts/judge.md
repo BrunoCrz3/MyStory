@@ -28,9 +28,12 @@ puntuación con lo que ves en el texto. Una puntuación sin justificación no va
 
 ## Además de la rúbrica
 
-- **Afirmaciones sobre el destinatario**: lista cada hecho personal que el capítulo afirma
-  sobre el destinatario —trabajo, relaciones, pasado, salud, gustos— con el fragmento
-  literal que lo dice.
+- **Afirmaciones sobre el destinatario**: lista cada hecho de su vida real que el capítulo
+  afirma sobre el destinatario —trabajo, relaciones, pasado, salud, gustos— con el fragmento
+  literal que lo dice. No lo que le pasa en la trama de la novela: un viaje, una
+  conversación o una decisión del capítulo son ficción, no hechos sobre ella. Para cada una,
+  di su **apoyo**: `brief` si el brief lo dice, aunque sea con otras palabras; `texto-libre`
+  si lo dice el texto del comprador; `ninguno` si no lo dice ninguno de los dos.
 - **Temas excluidos**: por cada tema excluido que se te da, di si aparece en el capítulo,
   aunque no se nombre, y cita el fragmento.
 
