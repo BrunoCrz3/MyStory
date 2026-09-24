@@ -6,24 +6,29 @@ Fichero de retoma. Si la sesión se interrumpe, se sigue desde aquí.
 
 | Artefacto | Estado | Siguiente paso |
 | --- | --- | --- |
-| `specs/spec2-frontend.md` | `aprobada` (2026-09-24) | — |
+| `specs/spec2-frontend.md` | `aprobada` (2026-09-24), ajustada al commit `7d389a7` | — |
 | `specs/plan2-frontend.md` | `borrador` | El desarrollador lo aprueba |
 | `frontend/` | no existe | Se escribe con el plan aprobado |
 
 ## Pasos del plan
 
-Ver la tabla de `specs/plan2-frontend.md`. Ninguno empezado.
+Ver la tabla de `specs/plan2-frontend.md` § 3. Ninguno empezado.
 
-**Bloqueos**: B1 y B2 esperan a que el desarrollador avise del commit del backend en
-`Contexto-semilla-v2` (brief parcial para `validarBrief` y contrato de lectura en
-`spec1.md`). Hasta ese aviso no se hace el merge.
+| Paso actual | Estado | Intentos |
+| --- | --- | --- |
+| F01 | pendiente de que se apruebe el plan | 0 |
+
+**Sin bloqueos.** `Contexto-semilla-v2` (commit `7d389a7`: contrato 1.1.0 con
+`BriefNovelaParcial` y `spec1.md` § 4.4) está fusionado en `frontend-demo` desde el
+2026-09-24. Los antiguos B1 y B2 quedan dentro de F02, F07–F09 y F13–F15.
 
 ## Para la sesión del backend
 
-- **RF-INTAKE-01 choca con el schema** (G1). Resuelto por el desarrollador: el backend
-  separa un brief parcial para `validarBrief`. Se incorpora en B1.
-- **Contrato de lectura para Playwright**: lo fija el backend en `spec1.md`. La propuesta
-  provisional del frontend está en `spec2-frontend.md` § 4. Se incorpora en B2.
+- **RF-INTAKE-01 choca con el schema** (G1). Resuelto en el contrato 1.1.0 (TO-037) e
+  incorporado.
+- **Contrato de lectura**: el frontend implementa `spec1.md` § 4.4 tal cual, y su propuesta
+  provisional queda retirada. Para el P49 del backend: la lectura se sirve en
+  `http://127.0.0.1:5173`, que es el valor de `STORYMAKER_LECTURA_URL`.
 
 ## Para integrar en trade-offs y registro
 
@@ -40,9 +45,21 @@ Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
   Library (`react`, `user-event`, `jest-dom`) y `yaml`, además de `vite`,
   `@vitejs/plugin-react` y `typescript`.
 - **Validación del brief sin campos obligatorios** (G1, decidido por el desarrollador): el
-  arreglo va al contrato —brief parcial para `validarBrief`— y el frontend conserva una red
-  de seguridad: pinta `datos_faltantes` venga en la respuesta que venga, y el `detail` de un
-  `422` que no los traiga.
+  arreglo va al contrato —brief parcial para `validarBrief`, ya en 1.1.0 (TO-037)— y el
+  frontend conserva una red de seguridad: pinta `datos_faltantes` venga en la respuesta que
+  venga, y el `detail` de un `422` que no los traiga.
+- **Del brief parcial al completo sin `as`**: para llamar a `crearNovela`, un
+  estrechamiento de tipo que solo comprueba la presencia de los campos obligatorios del
+  schema, y solo tras un `valido: true` del backend. Es el puente de tipos entre las dos
+  formas de TO-037, no una regla de dominio.
+- **La propuesta de `data-testid` del frontend se retira** en favor de `spec1.md` § 4.4.
+  Diferían los nombres (`dedicatoria` → `portada-dedicatoria`, `marca-modificado` →
+  `capitulo-modificado`), la forma (el número va en `data-capitulo`, no en el
+  identificador) y faltaba la señal `data-estado`.
+- **La impresión se prueba sobre la hoja, no sobre el render**: `jsdom` no evalúa
+  `@media print`. El render impreso real lo comprueba el P49 del backend con Playwright.
+- **Puerto del frontend fijo en 5173** (`strictPort`), para que `STORYMAKER_LECTURA_URL`
+  no cambie entre arranques.
 - **Cliente generado con `openapi-typescript` + `openapi-fetch`**, frente a orval o
   `@hey-api/openapi-ts`: solo tipos y un `fetch` fino, sin plantillas de código que revisar.
 - **Proxy de Vite `/api` → `127.0.0.1:8000`**, frente a CORS en el backend: no toca el

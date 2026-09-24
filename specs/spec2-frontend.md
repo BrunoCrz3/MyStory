@@ -2,7 +2,8 @@
 estado: aprobada
 aprobada-por: Bruno Cruz
 fecha: 2026-09-24
-contrato: specs/openapi.yaml (aprobado con specs/spec1.md el 2026-09-24)
+contrato: specs/openapi.yaml 1.1.0 y specs/spec1.md § 4.4 (contrato de lectura)
+modificada: 2026-09-24 · ajuste al commit 7d389a7 del backend, pedido por el desarrollador
 ---
 
 # Spec 2 — Frontend de la demo
@@ -14,6 +15,12 @@ es el de `docs/definitions.md`, y la forma de cada dato es la de `specs/openapi.
 > **Estado: aprobada** el 2026-09-24 por el desarrollador, con las respuestas de § 7. No
 > hay código hasta que `specs/plan2-frontend.md` esté aprobado (`CLAUDE.md` § Ciclo de
 > cambio).
+>
+> **Ajustada el 2026-09-24 a petición del desarrollador**, al incorporar el commit `7d389a7`
+> del backend: `validarBrief` recibe `BriefNovelaParcial` (contrato 1.1.0, TO-037), y el
+> contrato de lectura deja de ser propuesta de esta spec y pasa a ser `spec1.md` § 4.4, que
+> el frontend implementa tal cual. Afecta a § 2, § 4 P1, § 4 «Contrato de lectura», § 5 y
+> § 7.
 
 ---
 
@@ -29,7 +36,7 @@ genera, leerla, pedir un cambio y descargarla. Hoy `frontend/` no existe.
 
 | # | Qué | Operaciones del contrato | Alcance § |
 | --- | --- | --- | --- |
-| P1 | **Entrevista**: formulario del `BriefNovela` y texto libre | `validarBrief`, `crearNovela`, `lanzarGeneracion`, `listarNovelas` | §1 |
+| P1 | **Entrevista**: formulario del brief y texto libre | `validarBrief` (`BriefNovelaParcial`), `crearNovela` (`BriefNovela`), `lanzarGeneracion`, `listarNovelas` | §1 |
 | P2 | **Progreso** de una generación, inicial o dirigida | `obtenerGeneracion`, `listarGeneraciones` | §3, §6 |
 | P3 | **Lectura**: índice navegable, portada con dedicatoria, ficha de personajes y lugares enlazada a sus capítulos | `obtenerNovela`, `obtenerVersion`, `listarCapitulos`, `obtenerPortada`, `obtenerFicha` | §2 |
 | P4 | **Petición de cambio** desde la lectura, por fragmento o por hecho, con confirmación | `listarHechos`, `crearSolicitudCambio`, `confirmarSolicitudCambio` | §2 |
@@ -80,16 +87,23 @@ frontend no depende de CORS y el backend no se toca.
 
 1. El formulario cubre todos los campos de `BriefNovela`. Las listas —rasgos, recuerdos,
    temas excluidos, palabras prohibidas, reglas del mundo— se escriben una por línea; los
-   `ElementoPersonalizado` y los `TextoLibre` se añaden y quitan como filas. Los campos
-   opcionales vacíos no se envían.
+   `ElementoPersonalizado` y los `TextoLibre` se añaden y quitan como filas. **El
+   formulario se serializa siempre como `BriefNovelaParcial`**, y un campo vacío no se
+   envía: es el backend quien lo devuelve como `Dato faltante`.
 2. **Validar** llama a `validarBrief` y pinta, sin reinterpretarlos: cada `DatoFaltante`
    junto a su campo con su `pregunta_reintento`, cada `ContradiccionBrief` con sus campos y
    su explicación, cada `FragmentoSospechoso` como descartado y los `hechos_extraidos`.
 3. **Crear y generar** solo se habilita cuando la última validación devolvió
-   `valido: true` y el formulario no ha cambiado desde entonces. Llama a `crearNovela` y,
-   con el `201`, a `lanzarGeneracion`, y navega al progreso.
-4. Un `400 brief-invalido` pinta sus `datos_faltantes` y `contradicciones` igual que el
-   paso 2. Todo otro error se pinta desde su `Problema`: `title`, `detail` y, si viene, el
+   `valido: true` y el formulario no ha cambiado desde entonces. Llama a `crearNovela` con
+   ese mismo brief como `BriefNovela` y, con el `201`, a `lanzarGeneracion`, y navega al
+   progreso. El paso de parcial a completo es un **estrechamiento de tipo** que comprueba
+   solo la presencia de los campos que el schema exige, para que TypeScript lo acepte sin
+   `as`; no decide nada que no haya decidido ya `valido: true`, y si falla se pinta como
+   error, no se corrige.
+4. Un `400 brief-invalido` pinta sus `contradicciones` igual que el paso 2. **Red de
+   seguridad** (G1): `datos_faltantes` se pintan junto a su campo vengan en la respuesta que
+   vengan —`200`, `400` o `422`—, y un `422` que no los traiga pinta su `detail` en la
+   cabecera del formulario. Todo otro error se pinta desde su `Problema`: `title`, `detail` y, si viene, el
    enlace a la `generacion_id` o la `traza_langfuse_id`.
 
 ### P2 · Progreso
@@ -136,16 +150,24 @@ frontend no depende de CORS y el backend no se toca.
 `descargarExport` de esa versión; con `en-curso`, dice que se está generando y ofrece
 «Volver a comprobar»; con `fallido`, lo dice. Muestra `paridad_pdf_web` si viene.
 
-### Interfaz hacia el backend que no está en el contrato
+### Contrato de lectura (`spec1.md` § 4.4)
 
-`render_visual` y el export del backend abren **este** render con Playwright
-(`docs/architecture.md` § Lectura web y export). Para que puedan hacerlo, el frontend fija
-—y documenta en `specs/progreso-frontend.md` para la sesión del backend—:
+`render_visual` y el export del backend abren **este** render con Playwright. Lo que
+necesitan está fijado en **`specs/spec1.md` § 4.4, CL-01…CL-05**, y el frontend lo implementa
+**tal cual**. La lista no se copia aquí, porque copiarla sería tener dos. Cambiarla es cambiar
+`spec1.md`. Lo que eso obliga a hacer en la página `lectura`:
 
-- la URL de lectura `/novelas/{novel_id}/versiones/{version}`;
-- selectores estables `data-testid`: `portada`, `dedicatoria`, `indice`,
-  `indice-capitulo-N`, `capitulo-N`, `ficha`, `ficha-enlace-capitulo-N`, `marca-modificado`;
-- una hoja `@media print` que oculta la navegación, los paneles de cambio y los botones.
+- **CL-01.** La ruta `/novelas/:novel_id/versiones/:version` pinta **la versión entera en un
+  solo documento**: portada, índice, ficha y todos los capítulos a la vez en el DOM. Ningún
+  capítulo se carga bajo demanda.
+- **CL-02.** El elemento raíz `lectura` lleva `data-estado` = `cargando`, `lista` o `error`,
+  y `lista` solo cuando han llegado versión, capítulos, portada y ficha.
+- **CL-03.** Todos los `data-testid` de la tabla, con sus atributos y su anidamiento.
+  `capitulo-texto` contiene **solo** `Capitulo.texto`: los controles de petición de cambio
+  van fuera de él, dentro del `capitulo`.
+- **CL-04.** Hoja `@media print`: todos los `capitulo` visibles, cada uno en página nueva, y
+  los controles interactivos —navegación, selector de versión, petición de cambio, PDF— sin
+  imprimir.
 
 ## 5. Criterios de aceptación
 
@@ -154,24 +176,27 @@ Todos se comprueban con `npm run test` y `npm run typecheck` en `frontend/`, sin
 | # | Dado / Cuando / Entonces |
 | --- | --- |
 | CA-01 | *Dado* `specs/openapi.yaml`, *cuando* se regenera el cliente, *entonces* el fichero generado coincide byte a byte con el commiteado |
-| CA-02 | *Dado* un `ResultadoValidacionBrief` con un `DatoFaltante` en `destinatario.nombre`, *cuando* se valida un brief sin nombre, *entonces* su `pregunta_reintento` aparece junto a ese campo y «Crear y generar» sigue deshabilitado. *Dado* un `422` sin `datos_faltantes`, *entonces* su `detail` aparece en la cabecera del formulario |
+| CA-02 | *Dado* un formulario sin nombre, *cuando* se valida, *entonces* se envía un `BriefNovelaParcial` sin `destinatario.nombre`, la `pregunta_reintento` del `DatoFaltante` del `200` aparece junto a ese campo y «Crear y generar» sigue deshabilitado. *Dado* un `422` sin `datos_faltantes`, *entonces* su `detail` aparece en la cabecera del formulario |
 | CA-03 | *Dado* un texto libre con un fragmento sospechoso, *cuando* se valida, *entonces* aparece marcado como descartado |
 | CA-04 | *Dado* un brief válido (el ejemplo del contrato), *cuando* se crea y genera, *entonces* se llaman `crearNovela` y `lanzarGeneracion` en ese orden y se navega al progreso |
 | CA-05 | *Dado* el ejemplo `enCurso`, *cuando* se abre el progreso, *entonces* se muestra 3 de 10 y se vuelve a pedir; *dado* el ejemplo `detenida`, *entonces* se muestra `limite-de-intentos-agotado` y no se vuelve a pedir |
-| CA-06 | *Dado* una versión con diez capítulos, *cuando* se abre la lectura, *entonces* el índice tiene diez entradas y cada una enlaza a su `#capitulo-N` |
+| CA-06 | *Dado* una versión con diez capítulos, *cuando* se abre la lectura, *entonces* hay diez `indice-entrada` con su `data-capitulo`, cada una enlaza a `#capitulo-N`, y diez `capitulo` con `id="capitulo-N"` |
 | CA-07 | *Dado* una ficha con un personaje en los capítulos 2 y 7, *entonces* hay enlaces a `#capitulo-2` y `#capitulo-7` |
-| CA-08 | *Dado* una portada, *entonces* la dedicatoria y su firma aparecen en la portada, y —tras incorporar el contrato de lectura— en el `data-testid` que fije `spec1.md` |
+| CA-08 | *Dado* una portada, *entonces* `portada-titulo` y `portada-dedicatoria` contienen `Portada.titulo` y `Dedicatoria.texto`, y la firma se muestra en la portada |
 | CA-09 | *Dado* el ejemplo `porFragmento`, *cuando* el lector selecciona texto del capítulo 3 y pide el cambio, *entonces* se envía ese cuerpo, se muestran el hecho candidato y los capítulos afectados, y **no** se llama a `confirmarSolicitudCambio` hasta pulsar «Confirmar» |
 | CA-10 | *Dado* el ejemplo `porHecho`, *cuando* el lector elige un hecho del capítulo 3, *entonces* se envía ese cuerpo y se exige la misma confirmación |
 | CA-11 | *Dado* un `409 generacion-en-curso` (el ejemplo del contrato), *entonces* se muestra con enlace a su `generacion_id` |
-| CA-12 | *Dado* una versión 2 con los capítulos 3 y 7 `modificado`, *entonces* solo esos dos llevan la marca, y el selector permite abrir la versión 1 |
+| CA-12 | *Dado* una versión 2 con los capítulos 3 y 7 `modificado`, *entonces* solo esas dos `indice-entrada` y esos dos `capitulo` contienen `capitulo-modificado`, y el selector permite abrir la versión 1 |
 | CA-13 | *Dado* un export `disponible`, *entonces* hay un enlace a `/api/novelas/{id}/versiones/{v}/export`; *dado* `en-curso`, *entonces* hay «Volver a comprobar» y no hay sondeo |
 | CA-14 | Ningún fichero de `src/` importa de `tests/`, ni usa `any`, ni importa de una capa superior o de otra página |
+| CA-15 | *Dado* una versión de diez capítulos con ficha, *cuando* carga, *entonces* `lectura` pasa de `data-estado="cargando"` a `lista` con `data-novel-id` y `data-version`, y cada fila de la tabla CL-03 de `spec1.md` se cumple en número, anidamiento, atributos y contenido; *dado* un `404`, *entonces* `data-estado="error"` |
+| CA-16 | La hoja de estilos de la lectura tiene reglas `@media print` que muestran todo `capitulo`, lo empiezan en página nueva y ocultan los controles interactivos (CL-04) |
 
 ## 6. Impacto
 
-**Ontología, esquema y API: ninguno.** No se añade clase, estado ni campo, y
-`specs/openapi.yaml` no se toca. **Preguntas de competencia que la demo hace visibles**: 1,
+**Ontología, esquema y API: ninguno desde esta spec.** No se añade clase, estado ni campo,
+y ni `specs/openapi.yaml` ni `spec1.md` se tocan desde aquí: el cambio a 1.1.0 y el contrato
+de lectura los hizo el backend (TO-037). **Preguntas de competencia que la demo hace visibles**: 1,
 3, 4, 11, 20, 21, 22, 28, 29 y 32 (`docs/definitions.md` § Preguntas de competencia).
 
 **Dependencias nuevas** (regla 6), todas en `frontend/package.json` y ninguna de servidor:
@@ -240,7 +265,13 @@ fuera de las fijadas añado `react-router-dom`, `openapi-fetch` y las de desarro
 > **Respuesta: (a).** Dependencias aprobadas tal como están en § 6, y anotadas en «Para
 > integrar».
 
-**Contrato de lectura para Playwright.** El backend fija en `specs/spec1.md` la URL de
-lectura, los `data-testid` y la hoja de impresión. **La lista de § 4 es provisional**: al
-incorporar ese commit se ajusta a la de `spec1.md` si difiere, y hasta entonces ninguna
-prueba depende de un `data-testid`.
+**Contrato de lectura para Playwright.** Lo fija el backend en `specs/spec1.md` § 4.4.
+**Incorporado el 2026-09-24** (commit `7d389a7`). La propuesta provisional de esta spec
+—`dedicatoria`, `indice-capitulo-N`, `capitulo-N`, `ficha-enlace-capitulo-N`,
+`marca-modificado`— **difería** en los nombres y en la forma (el número va en
+`data-capitulo`, no en el identificador) y no tenía la señal `data-estado`. Queda sustituida
+por la de `spec1.md`.
+
+**G1, incorporado el 2026-09-24** en el mismo commit: `validarBrief` recibe
+`BriefNovelaParcial` y `crearNovela` el `BriefNovela` completo. El `400 brief-invalido` ya
+no trae `datos_faltantes` en su ejemplo; la red de seguridad se mantiene igual.
