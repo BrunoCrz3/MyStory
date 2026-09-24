@@ -191,6 +191,7 @@ class Formal(_Estricto):
 
 class Export(_Estricto):
     tolerancia_recuento_palabras: float
+    timeout_segundos: float
 
 
 class RenderVisualUmbrales(_Estricto):

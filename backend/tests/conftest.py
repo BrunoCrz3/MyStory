@@ -29,6 +29,7 @@ from tests.dobles.guiones import guion_revision
 from tests.dobles.modelo import ModeloGuionizado
 from tests.dobles.render import RenderGuionizado
 from tests.dobles.trazador import RegistroTrazas
+from tests.fixtures.lectura.servidor import paginas  # noqa: F401  (fixture compartida)
 
 _CONTRATO = cargar_contrato()
 

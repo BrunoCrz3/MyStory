@@ -29,7 +29,12 @@ from app.process import cola
 from app.process import router as generacion
 from app.process.worker import Worker
 from app.versioning import router as lectura
-from app.versioning.service import Publicacion, RenderVisual, render_de_entorno
+from app.versioning.service import (
+    Publicacion,
+    RenderVisual,
+    render_de_entorno,
+    sanear_exportaciones,
+)
 
 TITULO = "storyMaker — API del backend v1"
 SERVIDORES = [{"url": "http://127.0.0.1:8000", "description": "Instancia local."}]
@@ -69,6 +74,7 @@ def crear_app(
         try:
             db = BaseDatos(ruta)
             db.ejecutar_sync(aplicar_migraciones)
+            db.ejecutar_sync(sanear_exportaciones)
             traz = trazador if trazador is not None else TrazadorLangfuse()
             pool = PoolEnVuelo(cfg.umbrales.en_vuelo.total)
             cliente = cliente_modelo if cliente_modelo is not None else crear_cliente(cfg)
@@ -107,6 +113,7 @@ def crear_app(
     app.include_router(generacion.router)
     app.include_router(lectura.router)
     app.include_router(lectura.regeneracion)
+    app.include_router(lectura.exportacion)
     app.include_router(canon.router)
     registrar_errores(app)
     return app

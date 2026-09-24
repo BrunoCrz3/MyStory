@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P48 · Export a PDF y paridad |
-| Estado del paso | sin empezar; P47b cerrado |
+| Paso actual | P49 · Cierre de F5 e integración con la lectura |
+| Estado del paso | sin empezar; P48 cerrado |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P47b |
+| Último commit de paso | P48 |
 
 ## Coste real
 
@@ -89,6 +89,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 - **P47a** — contrato 1.2.0 (TO-045): migración `0013_estado_version.sql` (`estado` con `CHECK`, existentes `publicada`, trigger que solo admite `candidata → publicada | rechazada`); `Version.estado`; `novel.version_vigente` y `listarVersiones` solo con publicadas; puerto `Publicador` con `proponer`, `gate`, `render_visual`, `publicar` y `rechazar`; `versioning/render_visual.py` con el puerto y `SinNavegador` (A-114); el orquestador escribe la candidata, corre el gate completo sobre ella y publica o rechaza en la transacción que detiene; `crear_app(render_visual=…)`; doble `tests/dobles/render.py`; `VERSION_API` 1.2.0; 428 pruebas
 - **P47b** — `versioning/render_visual.py`: cliente guionizado del servidor Playwright MCP (0.0.82, `--headless --isolated --browser msedge`, URL con `localhost`) sobre la candidata: navega, sondea `data-estado`, extrae el DOM con una llamada a `browser_evaluate` usando los selectores de `lectura.py` y lee `browser_console_messages`; `evaluar` puro con siete aserciones (`ASERCIONES`, cada una con su tool), clasificación datos/maquetación consultando la story bible; `render_de_entorno` elige `RenderVisualMCP` o `SinNavegador`; umbrales `render_visual.*`; `docs/browser-mcp.md`; dependencia `mcp`; 449 pruebas (5 contra el servidor MCP real)
+- **P48** — migración `0014_exportacion.sql` (una fila por versión; `disponible` inmutable por trigger); `versioning/export.py`: `page.pdf()` de Playwright (Chromium) sobre la lectura tras esperar a `lista` y emular `print`, del mismo render se lee el DOM para la paridad; `POST …/export` → `202` y generación en segundo plano, `200` si ya existe; `GET` → PDF o `404 export-no-disponible`; solo versiones `publicadas`; saneo al arrancar; CLI `python -m app.versioning.export <novel_id> <version>` (D-22); `versioning/paridad.py` con `pypdf`: capítulos y títulos por página, dedicatoria e índice antes del primero, palabras por capítulo dentro de tolerancia y enlaces internos (A-103), con su score; `export.timeout_segundos`; `PENDIENTES` vacía; dependencias `playwright` y `pypdf`; 459 pruebas
 ## Pendiente
 
 - **P47 partido en P47a y P47b** por el cambio de contrato TO-045 que resuelve la parada; después, P48 y P49 en orden.
@@ -235,6 +236,11 @@ registrada.
 | A-116 | P47b | Un hallazgo de datos y uno de maquetación detienen igual la generación; la clase, el rol dueño y la tool van en el detalle del score y en el audit log | Todo gate en rojo detiene (A-47, A-79, A-113) y el gate no reescribe capítulos, así que ninguno gasta intentos | TO-046 (F5) |
 | A-117 | P47b | Las pruebas contra el servidor MCP real se saltan, diciendo por qué, si no está en marcha en `STORYMAKER_PRUEBAS_MCP_URL` (por defecto `http://localhost:8931/mcp`); `evaluar` se prueba entero sin navegador | La suite no depende de un proceso externo; el paso exige correrlas con el servidor en marcha, y así se cerró | TO-046 (F5) |
 | A-118 | P47b | Playwright MCP fijado a 0.0.82; los errores de consola se cuentan por la cabecera, no por el prefijo `[ERROR]` | El formato de texto de las tools es el contrato del harness; una excepción no capturada sale sin prefijo | TO-046 (F5) |
+| A-119 | P48 | Un export `fallido` se relanza con el siguiente `POST`; uno `disponible` no se rehace nunca | Un fallo es de infraestructura o de paridad, no del contenido publicado; «una vez por versión» vale para el PDF entregado | TO-046 (F5) |
+| A-120 | P48 | Un export `en-curso` que sobrevive a un reinicio pasa a `fallido` al arrancar | Corre en segundo plano en el mismo proceso: si el proceso cae, nadie lo termina | TO-046 (F5) |
+| A-121 | P48 | Un PDF sin paridad queda `fallido` y no se sirve; se guarda en disco para el diagnóstico | Servirlo sería validar uno y entregar otro (TO-003) | TO-046 (F5) |
+| A-122 | P48 | El export corre como tarea de fondo de la petición, fuera de la cola de trabajos | No llama al modelo ni consume presupuesto en vuelo; la cola es de generaciones | TO-046 (F5) |
+| A-123 | P48 | El PDF sale del Chromium de Playwright y `render_visual` usa el navegador del servidor MCP (Edge en esta máquina): misma página, misma URL y mismo motor Chromium, pero dos procesos | «El mismo render» se sostiene por la página y el motor; `paridad_pdf_web` compara el PDF con el DOM del render del que sale | TO-046 (F5) |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -303,8 +309,8 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P47b cerrado; sigue el P48**. Rama `backend-v1`,
-suite en verde (449 pruebas). Al retomar: seguir por el P48 del plan. Para `render_visual` real, arrancar el servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P48 cerrado; sigue el P49**. Rama `backend-v1`,
+suite en verde (459 pruebas). Al retomar: seguir por el P49 del plan. Para `render_visual` real, arrancar el servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica en producción (A-114). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash

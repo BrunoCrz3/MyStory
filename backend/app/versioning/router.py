@@ -5,14 +5,16 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Response
+from fastapi.responses import FileResponse
 
 from app.commons.errores import problemas
 from app.commons.recursos import Recursos, recursos
 from app.process.service import Generacion
-from app.versioning import confirmar, service, solicitud
+from app.versioning import confirmar, export, service, solicitud
 from app.versioning.schemas import (
     Capitulo,
+    Exportacion,
     Ficha,
     NuevaSolicitudCambio,
     Portada,
@@ -157,3 +159,52 @@ async def confirmar_solicitud_cambio(
     generacion = await confirmar.confirmar(r, str(novel_id), str(solicitud_id))
     response.headers["Location"] = f"/novelas/{novel_id}/generaciones/{generacion.generacion_id}"
     return generacion
+
+
+# El export es de la salida, no de la lectura (RF-EXP-01, RF-EXP-02).
+exportacion = APIRouter(tags=["export"])
+
+
+@exportacion.post(
+    "/novelas/{novel_id}/versiones/{version}/export",
+    operation_id="exportarVersion",
+    status_code=202,
+    response_model=Exportacion,
+    response_model_exclude_none=False,
+    responses={
+        200: {"model": Exportacion, "description": "La versión ya estaba exportada."},
+        **problemas(404, 500),
+    },
+)
+async def exportar_version(
+    novel_id: UUID,
+    version: NumeroVersion,
+    response: Response,
+    tareas: BackgroundTasks,
+    r: Annotated[Recursos, Depends(recursos)],
+) -> Exportacion:
+    vista, hay_que_generar = await export.solicitar(r.db, str(novel_id), version)
+    if hay_que_generar:
+        tareas.add_task(export.generar, r, str(novel_id), version)
+    else:
+        response.status_code = 200
+    return vista
+
+
+@exportacion.get(
+    "/novelas/{novel_id}/versiones/{version}/export",
+    operation_id="descargarExport",
+    response_class=FileResponse,
+    responses={
+        200: {
+            "description": "El PDF.",
+            "content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}},
+        },
+        **problemas(404, 500),
+    },
+)
+async def descargar_export(
+    novel_id: UUID, version: NumeroVersion, r: Annotated[Recursos, Depends(recursos)]
+) -> FileResponse:
+    ruta = await export.descargar(r.db, str(novel_id), version)
+    return FileResponse(ruta, media_type="application/pdf", filename=f"novela-v{version}.pdf")

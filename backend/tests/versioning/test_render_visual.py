@@ -8,11 +8,8 @@ diciendo por qué.
 
 from __future__ import annotations
 
-import http.server
 import os
 import socket
-import threading
-from collections.abc import Iterator
 from typing import Any
 from urllib.parse import urlparse
 
@@ -34,6 +31,7 @@ from app.versioning.render_visual import (
 from tests.canon.test_hechos_por_version import publicada_con_uso
 from tests.conftest import Instancia
 from tests.fixtures.lectura.pagina import datos_de_version, pagina
+from tests.fixtures.lectura.servidor import Paginas
 
 MCP_URL = os.environ.get("STORYMAKER_PRUEBAS_MCP_URL", "http://localhost:8931/mcp")
 
@@ -205,40 +203,7 @@ mcp = pytest.mark.skipif(
 )
 
 
-class _Paginas:
-    """Un servidor HTTP local que sirve el HTML que cada prueba le da, en la ruta de CL-01."""
-
-    def __init__(self) -> None:
-        self.html: dict[str, str] = {}
-        paginas = self
-
-        class Manejador(http.server.BaseHTTPRequestHandler):
-            def do_GET(self) -> None:
-                cuerpo = paginas.html.get(self.path)
-                self.send_response(200 if cuerpo is not None else 404)
-                self.send_header("Content-Type", "text/html; charset=utf-8")
-                self.end_headers()
-                self.wfile.write((cuerpo or "no encontrada").encode("utf-8"))
-
-            def log_message(self, *args: object) -> None:
-                return
-
-        self.servidor = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Manejador)
-        self.base = f"http://127.0.0.1:{self.servidor.server_address[1]}"
-        threading.Thread(target=self.servidor.serve_forever, daemon=True).start()
-
-    def servir(self, novela: str, version: int, html: str) -> None:
-        self.html[urlparse(lectura.url(self.base, novela, version)).path] = html
-
-
-@pytest.fixture
-def paginas() -> Iterator[_Paginas]:
-    p = _Paginas()
-    yield p
-    p.servidor.shutdown()
-
-
-def _render(instancia: Instancia, paginas: _Paginas, espera: float = 5) -> RenderVisualMCP:
+def _render(instancia: Instancia, paginas: Paginas, espera: float = 5) -> RenderVisualMCP:
     config = cargar_config()
     return RenderVisualMCP(
         config,
@@ -252,7 +217,7 @@ def _render(instancia: Instancia, paginas: _Paginas, espera: float = 5) -> Rende
 @mcp
 @pytest.mark.anyio
 async def test_una_pagina_correcta_pasa_las_aserciones(
-    instancia: Instancia, paginas: _Paginas
+    instancia: Instancia, paginas: Paginas
 ) -> None:
     novela = publicada_con_uso(instancia)
     paginas.servir(novela, 1, pagina(datos_de_version(instancia.cliente, novela, 1)))
@@ -263,7 +228,7 @@ async def test_una_pagina_correcta_pasa_las_aserciones(
 
 @mcp
 @pytest.mark.anyio
-async def test_espera_a_lista_y_error_falla(instancia: Instancia, paginas: _Paginas) -> None:
+async def test_espera_a_lista_y_error_falla(instancia: Instancia, paginas: Paginas) -> None:
     novela = publicada_con_uso(instancia)
     datos = datos_de_version(instancia.cliente, novela, 1)
     paginas.servir(novela, 1, pagina(datos, estado="error"))
@@ -277,7 +242,7 @@ async def test_espera_a_lista_y_error_falla(instancia: Instancia, paginas: _Pagi
 
 @mcp
 @pytest.mark.anyio
-async def test_espera_a_que_la_pagina_pase_a_lista(instancia: Instancia, paginas: _Paginas) -> None:
+async def test_espera_a_que_la_pagina_pase_a_lista(instancia: Instancia, paginas: Paginas) -> None:
     """CL-02: una página que carga la versión después del primer pintado pasa si llega a
     `lista` dentro de la espera."""
     novela = publicada_con_uso(instancia)
@@ -294,7 +259,7 @@ async def test_espera_a_que_la_pagina_pase_a_lista(instancia: Instancia, paginas
 @mcp
 @pytest.mark.anyio
 async def test_un_selector_ausente_o_un_enlace_roto_fallan_en_el_navegador(
-    instancia: Instancia, paginas: _Paginas
+    instancia: Instancia, paginas: Paginas
 ) -> None:
     novela = publicada_con_uso(instancia)
     datos = datos_de_version(instancia.cliente, novela, 1)
@@ -310,7 +275,7 @@ async def test_un_selector_ausente_o_un_enlace_roto_fallan_en_el_navegador(
 
 @mcp
 @pytest.mark.anyio
-async def test_un_error_de_consola_falla(instancia: Instancia, paginas: _Paginas) -> None:
+async def test_un_error_de_consola_falla(instancia: Instancia, paginas: Paginas) -> None:
     novela = publicada_con_uso(instancia)
     html = pagina(datos_de_version(instancia.cliente, novela, 1))
     paginas.servir(novela, 1, html.replace("</body>", "<script>null.x()</script></body>"))

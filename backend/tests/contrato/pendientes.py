@@ -4,9 +4,4 @@ Cada paso que implementa un endpoint lo saca de aquí. El P49 exige que quede va
 (`specs/plan1.md` § 4.2).
 """
 
-PENDIENTES: frozenset[str] = frozenset(
-    {
-        "exportarVersion",
-        "descargarExport",
-    }
-)
+PENDIENTES: frozenset[str] = frozenset()

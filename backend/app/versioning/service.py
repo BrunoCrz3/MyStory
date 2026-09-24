@@ -23,6 +23,7 @@ from app.process.service import VeredictoGate
 from app.versioning import ficha as _ficha
 from app.versioning import gate, repository
 from app.versioning import portada as _portada
+from app.versioning.export import sanear as sanear_exportaciones
 from app.versioning.huella import contenido, hash_contenido, hash_de_version
 from app.versioning.render_visual import RenderVisual, SinNavegador, render_de_entorno
 from app.versioning.schemas import (
@@ -47,6 +48,7 @@ __all__ = [
     "obtener_capitulo",
     "obtener_version",
     "render_de_entorno",
+    "sanear_exportaciones",
 ]
 
 

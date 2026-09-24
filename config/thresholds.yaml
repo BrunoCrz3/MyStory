@@ -515,6 +515,10 @@ export:
   # veinte: suficiente para absorber guionado y saltos de página, poco para que se cuele
   # un párrafo perdido en el export.
   tolerancia_recuento_palabras: 0.02
+  # [provisional — calibrar tras la demo] Tope de la navegación, la espera a `lista` y
+  # `page.pdf()`. Diez capítulos se imprimen en unos segundos; el margen cubre arrancar
+  # el navegador en frío.
+  timeout_segundos: 120
 
 # ---------------------------------------------------------------------------
 # Comprobación del modelo del harness

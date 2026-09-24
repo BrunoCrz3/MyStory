@@ -3,7 +3,8 @@ vista de lectura.
 
 La vista de lectura une por SQL tablas de otras dueñas —capítulo, personaje, lugar, resumen,
 brief de capítulo—: la story bible es una vista sobre tablas, y la regla de importación es de
-módulos (A-20). Nada de aquí escribe fuera de `version_novela` y `version_capitulo`.
+módulos (A-20). Nada de aquí escribe fuera de `version_novela`, `version_capitulo` y
+`exportacion`.
 """
 
 from __future__ import annotations
@@ -15,7 +16,8 @@ from typing import Any
 
 # El historial mira todas las versiones de una novela a la vez: filtra por `novel_id`, y por
 # `version` no puede (A-49).
-CONSULTAS_TRANSVERSALES = {"listar_versiones"}
+# Al arrancar, los exports que quedaron `en-curso` de cualquier novela pasan a `fallido`.
+CONSULTAS_TRANSVERSALES = {"listar_versiones", "interrumpir_exportaciones"}
 
 
 def aceptados_de_version(
@@ -266,3 +268,53 @@ def estados_de_capitulos(
         (novel_id, *ids),
     ).fetchall()
     return {str(f["id"]): str(f["estado"]) for f in filas}
+
+
+# --- Export a PDF (P48) -------------------------------------------------------------------
+
+
+def leer_exportacion(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> dict[str, Any] | None:
+    fila = con.execute(
+        "SELECT * FROM exportacion WHERE novel_id = ? AND version = ?", (novel_id, version)
+    ).fetchone()
+    return None if fila is None else dict(fila)
+
+
+def iniciar_exportacion(
+    con: sqlite3.Connection, *, novel_id: str, version: int, ahora: str
+) -> None:
+    """Un export nuevo, o el relanzamiento de uno fallido (A-119), queda `en-curso`."""
+    con.execute(
+        "INSERT INTO exportacion (novel_id, version, estado, solicitado_en)"
+        " VALUES (?, ?, 'en-curso', ?)"
+        " ON CONFLICT (novel_id, version) DO UPDATE SET estado = 'en-curso', ruta = NULL,"
+        " generado_en = NULL, paridad_pdf_web = NULL, detalle = NULL,"
+        " solicitado_en = excluded.solicitado_en WHERE exportacion.estado = 'fallido'",
+        (novel_id, version, ahora),
+    )
+
+
+_COLUMNAS_CIERRE = frozenset({"estado", "ruta", "generado_en", "paridad_pdf_web", "detalle"})
+
+
+def cerrar_exportacion(
+    con: sqlite3.Connection, *, novel_id: str, version: int, cambios: dict[str, Any]
+) -> None:
+    assert set(cambios) <= _COLUMNAS_CIERRE, cambios
+    asignaciones = ", ".join(f"{c} = ?" for c in cambios)
+    con.execute(
+        f"UPDATE exportacion SET {asignaciones}"
+        " WHERE novel_id = ? AND version = ? AND estado = 'en-curso'",
+        (*cambios.values(), novel_id, version),
+    )
+
+
+def interrumpir_exportaciones(con: sqlite3.Connection, *, ahora: str) -> None:
+    con.execute(
+        "UPDATE exportacion SET estado = 'fallido',"
+        " detalle = 'interrumpido por un reinicio de la instancia a las ' || ?"
+        " WHERE estado = 'en-curso'",
+        (ahora,),
+    )

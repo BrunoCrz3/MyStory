@@ -125,3 +125,17 @@ class Portada(BaseModel):
     dedicatoria: Dedicatoria
     destinatario: str | None = opcional()
     ocasion: str | None = None
+
+
+# --- Export a PDF (RF-EXP-01, RF-EXP-02) ------------------------------------------------
+
+
+class Exportacion(BaseModel):
+    version: Positivo
+    estado: Literal["en-curso", "disponible", "fallido"]
+    url_descarga: str | None = Field(default=None, json_schema_extra={"format": "uri-reference"})
+    generado_en: datetime | None = None
+    paridad_pdf_web: bool | None = Field(
+        default=None,
+        description="Resultado del validador que compara el PDF con la lectura web.",
+    )
