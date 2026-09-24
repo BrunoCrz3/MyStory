@@ -5,6 +5,7 @@ import { AvisoProblema } from '@/shared/ui'
 import { useCapitulos, useFicha, usePortada, useVersion } from '../api/lectura'
 import type { OrigenCambio } from '../model/peticion-cambio'
 import { CapituloLeido } from './CapituloLeido'
+import { DescargaPdf } from './DescargaPdf'
 import { Ficha } from './Ficha'
 import { Indice } from './Indice'
 import { PanelCambio } from './PanelCambio'
@@ -32,6 +33,7 @@ export function LecturaPage() {
   return (
     <article data-testid="lectura" data-estado={estado} data-novel-id={novelId} data-version={versionTexto}>
       <SelectorVersion novelId={novelId} version={version} />
+      <DescargaPdf key={version} novelId={novelId} version={version} />
       {fallida && <AvisoProblema problema={problemaDe(fallida.error)} novelId={novelId} />}
       {portada.isSuccess && <Portada portada={portada.data} />}
       {datosVersion.isSuccess && <Indice capitulos={datosVersion.data.capitulos} />}
