@@ -61,3 +61,14 @@ class HiloTrama(BaseModel):
 
     nombre: str
     pregunta_dramatica: str | None = None
+
+
+class EventoNarrado(BaseModel):
+    """Un `Evento` de la fábula tal como lo narra un capítulo."""
+
+    model_config = ConfigDict(frozen=True)
+
+    descripcion: str
+    momento: int
+    lugar: str | None
+    personajes: list[str]

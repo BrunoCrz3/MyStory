@@ -200,3 +200,76 @@ def sumar_consumo(
         " WHERE novel_id = ? AND id = ?",
         (tokens_entrada, tokens_salida, coste_usd, novel_id, capitulo_id),
     )
+
+
+def guardar_texto_aceptado(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    titulo: str,
+    texto: str,
+    palabras: int,
+    gancho_cierre: str,
+    momento: str,
+    pov: str,
+    lugar: str,
+) -> None:
+    con.execute(
+        "UPDATE capitulo SET titulo = ?, texto = ?, palabras = ?, gancho_cierre = ?,"
+        " aceptado_en = ?,"
+        " pov_personaje_id = (SELECT id FROM personaje WHERE novel_id = ? AND nombre = ?),"
+        " lugar_id = (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?)"
+        " WHERE novel_id = ? AND id = ?",
+        (
+            titulo,
+            texto,
+            palabras,
+            gancho_cierre,
+            momento,
+            novel_id,
+            pov,
+            novel_id,
+            lugar,
+            novel_id,
+            capitulo_id,
+        ),
+    )
+
+
+def insertar_evento(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    descripcion: str,
+    momento: int,
+    lugar: str | None,
+    personajes: list[str],
+) -> None:
+    evento_id = str(uuid.uuid4())
+    con.execute(
+        "INSERT INTO evento (id, novel_id, descripcion, momento, lugar_id) VALUES"
+        " (?, ?, ?, ?, (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?))",
+        (evento_id, novel_id, descripcion, momento, novel_id, lugar),
+    )
+    con.execute(
+        "INSERT INTO evento_capitulo (novel_id, evento_id, capitulo_id) VALUES (?, ?, ?)",
+        (novel_id, evento_id, capitulo_id),
+    )
+    for nombre in personajes:
+        con.execute(
+            "INSERT OR IGNORE INTO evento_personaje (novel_id, evento_id, personaje_id)"
+            " SELECT ?, ?, id FROM personaje WHERE novel_id = ? AND nombre = ?",
+            (novel_id, evento_id, novel_id, nombre),
+        )
+
+
+def insertar_elemento_en_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, elemento_id: str, capitulo_id: str
+) -> None:
+    con.execute(
+        "INSERT OR IGNORE INTO elemento_capitulo (novel_id, elemento_id, capitulo_id)"
+        " VALUES (?, ?, ?)",
+        (novel_id, elemento_id, capitulo_id),
+    )

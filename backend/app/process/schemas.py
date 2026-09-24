@@ -76,3 +76,42 @@ class BorradorCapitulo(_Salida):
 
     titulo: str
     texto: str
+
+
+class HechoExtraido(_Salida):
+    enunciado: str
+    tipo: str
+    fragmento_soporte: str
+
+
+class EventoExtraido(_Salida):
+    descripcion: str
+    orden: int
+    lugar: str | None
+    personajes: list[str]
+
+
+class PromesaExtraida(_Salida):
+    enunciado: str
+    tipo: str
+
+
+class Ubicacion(_Salida):
+    personaje: str
+    lugar: str
+
+
+class Extraccion(_Salida):
+    """Lectura del capítulo aceptado. `hechos_usados` y `promesas_pagadas` citan los alias
+    (`H1`, `P1`) de la lista que recibe el extractor, no identificadores internos."""
+
+    hechos_nuevos: list[HechoExtraido]
+    hechos_usados: list[str]
+    eventos: list[EventoExtraido]
+    promesas_abiertas: list[PromesaExtraida]
+    promesas_pagadas: list[str]
+    elementos_presentes: list[str]
+    personajes_presentes: list[str]
+    ubicaciones: list[Ubicacion]
+    resumen: str
+    gancho_cierre: str

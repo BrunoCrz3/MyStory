@@ -28,6 +28,7 @@ __all__ = [
     "Ocasion",
     "TextoLibre",
     "VozNarrativa",
+    "elementos_personalizados",
     "leer_brief",
     "registrar_brief",
 ]
@@ -42,3 +43,10 @@ def registrar_brief(
 
 def leer_brief(con: sqlite3.Connection, *, novel_id: str) -> BriefNovela | None:
     return repository.leer_brief(con, novel_id=novel_id)
+
+
+def elementos_personalizados(
+    con: sqlite3.Connection, *, novel_id: str
+) -> list[tuple[str, str, bool]]:
+    """`(id, enunciado, obligatorio)` de cada elemento personalizado del brief."""
+    return repository.leer_elementos(con, novel_id=novel_id)

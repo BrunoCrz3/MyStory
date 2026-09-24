@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict
 from app.commons.config import Config
 from app.commons.db import BaseDatos
 from app.commons.errores import NovelaNoEncontrada
+from app.commons.texto import contar_palabras
 from app.commons.tiempo import ahora
 from app.guardrail import service as guardrail
 from app.intake import service as intake
@@ -20,6 +21,7 @@ from app.novel.models import (
     ESTADOS_TERMINALES_NOVELA,
     EstadoCapitulo,
     EstadoNovela,
+    EventoNarrado,
     HiloTrama,
     Lugar,
     Personaje,
@@ -33,6 +35,7 @@ __all__ = [
     "CapituloEnCurso",
     "EstadoCapitulo",
     "EstadoNovela",
+    "EventoNarrado",
     "HiloTrama",
     "Lugar",
     "Personaje",
@@ -43,11 +46,14 @@ __all__ = [
     "crear_novela",
     "fijar_estado_capitulo",
     "fijar_titulo",
+    "guardar_texto_aceptado",
     "listar_novelas",
     "lugares",
     "nombres_de_la_obra",
     "obtener_novela",
     "personajes",
+    "registrar_elementos_en_capitulo",
+    "registrar_eventos",
     "registrar_reparto",
     "reglas_del_mundo",
     "sumar_consumo",
@@ -278,3 +284,64 @@ def nombres_de_la_obra(con: sqlite3.Connection, *, novel_id: str) -> list[str]:
     return [p.nombre for p in personajes(con, novel_id=novel_id)] + [
         lugar.nombre for lugar in lugares(con, novel_id=novel_id)
     ]
+
+
+def guardar_texto_aceptado(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    titulo: str,
+    texto: str,
+    gancho_cierre: str,
+    pov: str,
+    lugar: str,
+) -> None:
+    """El texto de un capítulo solo se guarda al aceptarlo, en la transacción de consolidar."""
+    repository.guardar_texto_aceptado(
+        con,
+        novel_id=novel_id,
+        capitulo_id=capitulo_id,
+        titulo=titulo,
+        texto=texto,
+        palabras=contar_palabras(texto),
+        gancho_cierre=gancho_cierre,
+        momento=ahora(),
+        pov=pov,
+        lugar=lugar,
+    )
+
+
+def registrar_eventos(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, eventos: list[EventoNarrado]
+) -> None:
+    """Eventos de la fábula que narra el capítulo, con sus personajes y su lugar. Un nombre
+    que no está en la story bible se ignora: el extractor no crea entidades."""
+    for e in eventos:
+        repository.insertar_evento(
+            con,
+            novel_id=novel_id,
+            capitulo_id=capitulo_id,
+            descripcion=e.descripcion,
+            momento=e.momento,
+            lugar=e.lugar,
+            personajes=e.personajes,
+        )
+
+
+def registrar_elementos_en_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, enunciados: list[str]
+) -> None:
+    """Qué elementos personalizados aparecen en el capítulo: sostiene `elementos_obligatorios`."""
+    por_enunciado = {
+        enunciado: eid
+        for eid, enunciado, _ in intake.elementos_personalizados(con, novel_id=novel_id)
+    }
+    for enunciado in enunciados:
+        if enunciado in por_enunciado:
+            repository.insertar_elemento_en_capitulo(
+                con,
+                novel_id=novel_id,
+                elemento_id=por_enunciado[enunciado],
+                capitulo_id=capitulo_id,
+            )

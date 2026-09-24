@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P20 · Extractor y aceptación |
+| Paso actual | P21 · Cola de trabajos y endpoints de generación |
 | Estado del paso | `no-iniciado` |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P19 |
+| Último commit de paso | P20 |
 
 ## Coste real
 
@@ -50,10 +50,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P17** — context/ensamblador: siete capas por piezas, conteo con el contador del proveedor antes de llamar, compresión solo de la capa que desborda (resumen y luego fuera, por prioridad), degradación total en el orden de config, Invariante y Estructural no degradables, Invariante presupuestada por rol con su skill, texto libre en etiqueta de no confiable y escape de etiquetas; context/fuentes: recuperado filtrado por entidades antes de ordenar, anticontexto de n-gramas repetidos, ContadorProveedor con caché; novel/ sirve los capítulos aceptados de una versión
 - **P18** — process/planificar: esquema estricto por output_config.format (conversor Pydantic → JSON Schema cerrado), validación de schema y de dominio (número de capítulos, destinatario exacto, POV, lugares y alcances existentes, títulos únicos, obligatorios repartidos), reintento con el motivo hasta el límite y detención, score schema_valido por intento; persiste título, reparto, restricciones, briefs de capítulo y filas Pendiente en una transacción; context/service con las piezas de Invariante y Anticontexto
 - **P19** — process/capitulo: ciclo escribir → hook de policy (schema_valido, palabras_prohibidas con coincidencias en tabla y audit log) → hook de capítulo (longitud, nombres_exactos en quality/) → decisión del policy engine → reescritura con el informe; cada cambio de estado por la tabla de transiciones; dos pasadas con palabra vetada detienen; agotar a max_intentos; score por validador ejecutado; consumo acumulado por capítulo; context/piezas_redactor con las siete capas
+- **P20** — process/aceptar: extracción estructurada después de aceptar (alias H1/P1 para hechos y promesas conocidos, reintento acotado), y una transacción que aplica Aceptar, guarda texto y palabras, consolida canon con el policy decidiendo cada hecho (duplicados descartados), resumen, snapshot, eventos con personajes y lugar, elementos aparecidos; aceptar dos veces es transicion-invalida sin llamar al extractor; un borrador rechazado no deja rastro
 
 ## Pendiente
 
-- Siguiente: **P20 · Extractor y aceptación**, y después el resto hasta el P49 en orden.
+- Siguiente: **P21 · Cola de trabajos y endpoints de generación**, y después el resto hasta el P49 en orden.
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
   al P49 esa página no existe todavía, el PDF sigue aquí como **pendiente, no descartado**,
@@ -112,6 +113,8 @@ registrada.
 | A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no | TO-039 |
 | A-32 | P19 | El contador de intentos cuenta las reescrituras hechas: al agotar no se suma la que ya no se hace | Un capítulo agotado muestra las reescrituras gastadas, igual que el ejemplo Detenida del contrato | TO-039 |
 | A-33 | P19 | La capa Local lleva todos los capítulos anteriores por recencia y el ensamblador los resume o los quita al desbordar; Recuperado excluye solo el capítulo anterior | Así no hace falta una cifra de cuántos capítulos literales entran: manda el presupuesto de la capa | TO-039 |
+| A-34 | P20 | El extractor cita hechos y promesas conocidos por alias cortos (H1, P1) que el código traduce a identificadores | Copiar UUID es frágil para un modelo; un alias que no existe se ignora | TO-039 |
+| A-35 | P20 | El momento de un evento es número de capítulo × 100 + su orden en el capítulo | Sin analepsis en v1 la fábula sigue al discurso; basta un orden total para Lean | TO-039 |
 
 ## Parada
 

@@ -70,3 +70,12 @@ def leer_brief(con: sqlite3.Connection, *, novel_id: str) -> BriefNovela | None:
         "SELECT contenido FROM brief_novela WHERE novel_id = ?", (novel_id,)
     ).fetchone()
     return None if fila is None else BriefNovela.model_validate_json(fila["contenido"])
+
+
+def leer_elementos(con: sqlite3.Connection, *, novel_id: str) -> list[tuple[str, str, bool]]:
+    filas = con.execute(
+        "SELECT id, enunciado, obligatorio FROM elemento_personalizado WHERE novel_id = ?"
+        " ORDER BY orden",
+        (novel_id,),
+    ).fetchall()
+    return [(f["id"], f["enunciado"], bool(f["obligatorio"])) for f in filas]
