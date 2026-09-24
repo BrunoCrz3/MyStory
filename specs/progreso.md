@@ -10,7 +10,7 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
 | Paso actual | P47 · `render_visual` con Playwright MCP |
-| Estado del paso | `no-iniciado` |
+| Estado del paso | **detenido — condición de parada 2** (ver § Parada); sin código del P47 escrito |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
 | Último commit de paso | P46 |
@@ -31,6 +31,8 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P38 | Humo adversarial 2 (judge calibrado): otra vez ninguna petición con la instrucción; se detuvo en el capítulo 1 por `limite-de-intentos-agotado`. La base temporal se perdió en la rotación de pytest; sospecha fundada: `invencion_destinatario` sin la edad, la ocasión ni la relación del comprador en su soporte (arreglado, A-98) | 2,39 | 11,36 |
 | 2026-09-24 | P38 | Humo adversarial 3 (con el soporte del brief entero): sin la instrucción en ninguna petición, y otra vez detenido en el capítulo 1; el informe muestra que `invencion_destinatario` marca paráfrasis de los rasgos del brief y detalles de trama (se arregla aparte, A-108) | 2,79 | 14,15 |
 | 2026-09-24 | P44 | Regeneración real «el perro se llama Nala» sobre la novela del humo: reescribió y aceptó los capítulos 1 a 4 y se detuvo en el 6 por `ContextoNoCabe` del extractor (A-110); la base de demo se restaura desde `data/storymaker-demo-antes-f4.db` | 3,01 | 17,16 |
+| 2026-09-24 | P38 | Humo adversarial 4 (con A-108): **verde**, novela real publicada y ninguna de sus 40 peticiones con la instrucción inyectada | 7,03 | 24,19 |
+| 2026-09-24 | P44 | Regeneración real 2 sobre la novela del humo (con A-110): reescribió y aceptó los capítulos 1, 2, 3, 4 y 6, y el gate la detuvo por `cierre_arco` —promesas abiertas por los capítulos reescritos que los no afectados nunca pagan—; base restaurada a la versión 1 | 2,90 | 27,09 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -87,7 +89,8 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 ## Pendiente
 
-- Siguiente: **P47 · `render_visual` con Playwright MCP**, y después el resto hasta el P49 en orden.
+- **Detenido en el P47** por la condición de parada 2 (§ Parada). Cuando el desarrollador decida, se retoma el P47 y después el resto hasta el P49 en orden.
+- **Hueco conocido de F4, visto en real**: una regeneración dirigida reescribe capítulos que abren promesas nuevas; los capítulos no afectados pagaban las promesas de las filas viejas, así que al cerrar quedan pendientes y `cierre_arco` detiene la versión nueva. A-102 retira hechos y usos de la fila vieja pero no reconcilia promesas. Propuesta para decidir: al reescribir, cerrar las promesas abiertas por la fila vieja solo si ninguna fila no afectada las paga, y ofrecer al extractor del capítulo reescrito las promesas vivas por su alias para que las reabra en vez de duplicarlas el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -282,13 +285,43 @@ del P27 se ejecuta. Esto matiza I-01.
 
 ## Parada
 
-Vacío mientras no se active ninguna de las cuatro condiciones del plan § 1. Si se activa:
-condición, paso, qué se intentó y qué se necesita del desarrollador.
+**Condición 2 — un criterio de la spec no se puede cumplir sin tocar el contrato.** Paso
+**P47 · `render_visual` con Playwright MCP**, detectado al diseñarlo, antes de escribir código.
+
+**El conflicto.** RF-QUA-03 exige ejecutar `render_visual` en el **gate de publicación** y
+**no publicar** si falla. `render_visual` renderiza la página `lectura` del frontend (spec
+§ 4.4, CL-01…CL-05), que obtiene la versión por la API. Pero la API solo sirve versiones
+**publicadas**: una versión aún no publicada responde 404 `version-no-encontrada`, y ningún
+endpoint de `specs/openapi.yaml` expone una versión candidata. Publicar primero y renderizar
+después no vale: la versión ya sería inmutable (regla 15) y RF-QUA-03 se habría incumplido.
+
+**Qué se intentó.** Descartar cada salida que no toca el contrato: renderizar dentro de la
+transacción de publicación (el frontend es otro proceso y no ve lo no confirmado);
+publicar en `Publicando` y retirar si falla (las versiones no se borran); renderizar una
+página generada por el backend (valida los datos, no el frontend, que es lo que CL-05 pide).
+Ninguna cumple a la vez RF-QUA-03, el contrato y la inmutabilidad.
+
+**Qué se necesita del desarrollador**, una de estas tres (recomendada la B):
+
+- **A · Cambiar el contrato**: una lectura de la versión candidata (por ejemplo, que
+  `obtenerVersion` y sus subrecursos sirvan la versión mientras la novela está en
+  `Publicando`), para que el frontend la pinte antes de conservarla. Toca `openapi.yaml` y el
+  frontend.
+- **B · Cambiar la spec**: `render_visual` pasa del gate de publicación a un **gate de
+  entrega** sobre la versión ya publicada, que corre antes del export (el PDF solo se genera
+  si `render_visual` está en verde, y sale del mismo render, TO-003). Un fallo no despublica
+  —nada se sobrescribe— sino que bloquea la entrega y se corrige con una versión nueva. No
+  toca el contrato.
+- **C · Cambiar la spec de otra forma**: en el gate, `render_visual` sobre una página que
+  genera el backend desde la versión candidata (comprueba que los datos están), y la
+  comprobación del frontend real se hace en la entrega, como en B.
+
+Lo hecho hasta aquí está commiteado y subido; la suite, en verde (420 pruebas).
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P46 cerrado, siguiente P47**. Rama `backend-v1`,
-suite en verde (420 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P46 cerrado; detenido en el P47 por la condición de parada 2** (§ Parada). Rama `backend-v1`,
+suite en verde (420 pruebas). Al retomar: leer § Parada y aplicar la decisión del desarrollador antes de escribir el P47. Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
