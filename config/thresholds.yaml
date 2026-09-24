@@ -454,7 +454,7 @@ modelo:
     planificador: 12000   # [provisional] diez briefs de capítulo con su restricción de destino, de una vez · medido 7.725 y 7.397
     redactor: 16000       # [provisional] 2.100 de capítulo más razonamiento · medido hasta 8.149 y dos topes de 9.000 alcanzados. Igual al margen
     editor: 16000         # [provisional] reescribe el capítulo entero, así que necesita lo mismo que el redactor
-    judge: 3000           # [provisional] seis puntuaciones con su justificación, sin prosa
+    judge: 10000          # [provisional] seis puntuaciones con justificación, afirmaciones y temas · A-92: medido 5.017 en real; con 3.000 se truncaba siempre
     extractor: 8000       # [provisional] extracción estructurada contra schema; la salida son hechos, no texto · medido hasta 4.955
   # Proveedor `claude_code` (I-04, TO-040): el CLI no tiene `count_tokens`, así que el
   # recuento previo es una ESTIMACIÓN por caracteres con margen, hecha antes de llamar

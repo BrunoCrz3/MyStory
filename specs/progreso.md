@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P38 · Cierre de F3 |
+| Paso actual | P39 · Hechos por versión |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 (el P37 cerró con 1) |
+| Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P37 |
+| Último commit de paso | P38 |
 
 ## Coste real
 
@@ -27,6 +27,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P27 | Medición puntual en base temporal (planificador y dos redactor del capítulo 1, topes altos en memoria) para fijar I-02 | 0,41 | 0,81 |
 | 2026-09-24 | P27 | Humo 2: capítulos 1 y 2 aceptados en el cuarto intento por un falso positivo de `nombres_exactos`; parado a mano en el capítulo 3 para no gastar ni pasar el tope de latencia. Base apartada como `data/storymaker-demo-intentos-p27.db` | 1,55 | 2,36 |
 | 2026-09-24 | P27 | Humo 3, **verde**: novela publicada como versión 1, diez capítulos, 25 llamadas, 1.647 s (`coste_usd` de la generación, nominal) | 5,06 | 7,42 |
+| 2026-09-24 | P38 | Humo adversarial opcional (base temporal): **ninguna de las 18 peticiones llevó la instrucción inyectada**, pero la novela se detuvo en el capítulo 1 porque el judge se truncaba con `max_tokens` 3000 (A-92) | 1,55 | 8,97 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -71,10 +72,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P35** — `BriefNovelaParcial` y sus seis parciales, `DatoFaltante`, `ContradiccionBrief`, `FragmentoSospechoso`, `ResultadoValidacionBrief` idénticos al contrato; `intake/validacion.py` con los obligatorios derivados de `BriefNovela` (comparados con los `required` del contrato) y una pregunta de reintento por obligatorio; `intake/reglas.py` (edad-vs-tono, edad-vs-genero, fecha-vs-edad, identificador con forma de correo); `POST /briefs/validacion`; `crearNovela` responde 400 `brief-invalido` antes de escribir; `validarBrief` fuera de PENDIENTES; 363 pruebas
 - **P36** — Migración 0011 (`fragmento_sospechoso`); `intake/saneamiento.py` con `patrones.txt` (expresión, tabulador, motivo) por frase y línea; `intake/extraccion.py` (tool `extraer_hechos_texto_libre`, rol entrevistador, texto saneado dentro de `<texto_libre_no_confiable>`, solo hechos con fragmento literal); `validarBrief` devuelve fragmentos y hechos; `registrar_brief` guarda el brief saneado y los fragmentos; comprobador `violaciones_ejecucion` con meta-prueba; corpus de inyección entero detectado; 381 pruebas
 - **P37** — `quality/validadores/{invencion_destinatario,temas_excluidos}.py` sobre los campos del judge; `ContextoJudge` (soporte: rasgos, recuerdos, elementos, texto libre saneado, premisa y dedicatoria); `evaluar_judge` los añade como `editor` y `juzgar` emite sus scores; `calidad.invencion_soporte_minimo: 0.5`; los dos cuentan hasta cero y cierran siempre; 388 pruebas
+- **P38** — Cierre de F3: `tests/e2e/test_f3.py` (brief adversarial por HTTP: validar devuelve el fragmento, crear lo registra, y ninguna petición de toda la generación con dobles lo contiene; el texto libre restante solo dentro de su delimitador); `tests/humo/test_adversarial_real.py` (opcional real); judge calibrado a 10000 (A-92); TO-043 y RI-016; bloque § 4.5 con N = 3 en verde (389 pruebas, cobertura 96,4 %); F3 subida. Segundo humo adversarial, con el judge calibrado, lanzado al cerrar: su resultado se anota aparte
 
 ## Pendiente
 
-- Siguiente: **P38 · Cierre de F3**, y después el resto hasta el P49 en orden.
+- Siguiente: **P39 · Hechos por versión**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -191,6 +193,7 @@ registrada.
 | A-89 | P36 | El único proceso que el código puede lanzar es `anyio.run_process` en `commons/llm/claude_code.py` | RNF-09 prohíbe ejecutar la salida del modelo; el CLI recibe argumentos propios y la petición por stdin | TO-043 |
 | A-90 | P37 | Una afirmación sobre el destinatario tiene apoyo si al menos `calidad.invencion_soporte_minimo` (0,5) de sus palabras con contenido están en el brief o el texto libre | D-13 pide un cotejo determinista y RNF-14 la cifra en config; la mitad tolera que el capítulo lo cuente con otras palabras | TO-043 |
 | A-91 | P37 | Una afirmación o un tema cuya cita no está en el capítulo no cuenta como invención; un tema que el brief no excluye tampoco | Sería una invención del judge, no del texto; y el validador solo mide lo que el comprador vetó | TO-043 |
+| A-92 | P38 | `max_tokens_por_rol.judge` 3000 → 10000 | El humo adversarial real mostró que el judge se truncaba siempre (salida medida 5.017) y agotaba el capítulo | TO-041 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -204,7 +207,7 @@ paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que
 | I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | **aplicada**: tokens por llamada en `data/humo-20260924T163649.json`; ajustes A-58 y A-61 |
 | I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
 | I-04 | **Cambio aprobado por el desarrollador el 2026-09-24: proveedor del modelo vía Claude Code, sin clave de API.** Contenido completo en § «I-04 · Cambio aprobado» más abajo. Se aplica **al cerrar la F1 y antes de empezar la F2**: dentro del P27, **antes** de ejecutar el humo real, porque sin él el humo no se ejecuta (no hay `ANTHROPIC_API_KEY`) | Cierre de F1 (P27), antes del humo | **aplicada** en el P27 (commit «P27: Añadir el proveedor claude_code…»); TO-040, RI-013 |
-| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0, F1 y **F2 subidas** (F2 al cerrar el P34) |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 a **F3 subidas** (F3 al cerrar el P38) |
 | I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». TO-038 recoge A-01…A-13; **TO-039 recoge A-14…A-51** (escrita en el P27); TO-040, A-52…A-57. Las de F2 en adelante, en una entrada por fase | Cierre de cada fase | TO-039 **aplicada** en el P27; vigente para las fases siguientes |
 | I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
 | I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
@@ -255,14 +258,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P37 cerrado, siguiente P38**. Rama `backend-v1`,
-suite en verde (388 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P38 cerrado (F3 completa y subida), siguiente P39**. Rama `backend-v1`,
+suite en verde (389 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 388 pruebas en verde al cerrar P37
+uv run pytest -q          # 389 pruebas en verde al cerrar P38
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

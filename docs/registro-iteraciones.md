@@ -983,3 +983,32 @@ borrador y en la corrección—, lo ve volver al redactor y aceptarse, y encuent
 esa generación los scores de los nueve validadores de los hooks, los seis criterios del judge
 con su justificación y los tres del gate. Lo que queda por medir está anotado en
 `verification.md` (O-31, O-53, O-55, O-56).
+
+---
+
+## RI-016 — F3 del plan 1: el encargo y el texto libre
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/intake/`, `backend/app/quality/validadores/`,
+`backend/app/commons/db/migrations/0011_saneamiento_brief.sql`, `config/thresholds.yaml`,
+`docs/verification.md` (O-20), `docs/trade-offs.md` (TO-043)
+
+### Causa
+
+Cuarta fase del plan 1: validar el brief antes de crear nada, tratar el texto libre como
+contenido no confiable de principio a fin y vigilar en el rol editor lo que no se puede
+inventar ni tocar.
+
+### Qué cambió
+
+`validarBrief` acepta el brief parcial y responde con los datos faltantes —derivados del propio
+`BriefNovela` y comparados con el contrato—, las contradicciones por regla determinista, los
+fragmentos sospechosos y los hechos que el entrevistador lee del texto ya saneado (P35, P36).
+Crear una novela guarda el brief saneado y registra lo retirado. El judge alimenta dos
+validadores que cuentan hasta cero y cierran siempre: `invencion_destinatario` y
+`temas_excluidos` (P37).
+
+### Efecto
+
+El e2e de F3 recorre el brief adversarial por HTTP —validar, crear, generar— y comprueba que
+ninguna petición de toda la generación contiene la instrucción inyectada, y que el texto libre
+que queda viaja siempre dentro de su delimitador. Todo el corpus de inyección se detecta.

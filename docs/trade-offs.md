@@ -1447,6 +1447,13 @@ completo, con el `usage` de los dos intentos sumado: no hay `SalidaTruncada` y e
 los validadores como cualquier otro. El coste y la latencia de ese capítulo se doblan, y por
 eso el tope se sube en vez de dejar que el CLI lo resuelva.
 
+**Tercera calibración (A-92), el judge.** Era el único rol sin medir. En el humo adversarial
+del P38 se truncaba siempre con 3.000: cuando terminó, sacó 5.017 tokens (seis justificaciones,
+las afirmaciones sobre el destinatario, los temas y el razonamiento con effort alto). Con la
+salida truncada, `schema_valido` falla, el editor corrige, el judge vuelve a truncarse y el
+capítulo agota sus intentos. `max_tokens_por_rol.judge` pasa a 10.000; el margen de 16.000 ya
+lo cubre.
+
 **Recuperado no se toca** (30.000): TO-015 descarta `sqlite-vec` porque la novela entera
 cabe en esa capa, y quitarle presupuesto rompería la premisa.
 
@@ -1509,3 +1516,38 @@ los tres puntos, judge incluido), A-77 (en la fase de medición los defectos que
 llaman al editor) y A-79 (el gate en rojo sigue deteniendo la novela hasta que exista el
 retcon de F4). Quedan sin medir O-31, O-53, O-55 y O-56, anotados en sus filas de
 `verification.md`.
+
+---
+
+## TO-043 — Decisiones menores del agente al ejecutar la F3 del plan 1
+
+**Fecha:** 2026-09-24 · **Estado:** **decidido por el agente — revisar** · **Afecta a:** `backend/app/intake/`, `backend/app/quality/validadores/`, `backend/app/commons/esquemas.py`, `backend/app/commons/db/migrations/0011_saneamiento_brief.sql`, `config/thresholds.yaml` § `calidad`
+
+### Problema
+
+Las decisiones de la F3 (intake) que no estaban en el plan: `specs/progreso.md` § Decisiones,
+A-81 a A-91.
+
+### Elección
+
+| Id | Paso | Decisión | Por qué |
+| --- | --- | --- | --- |
+| A-81 | P35 | Las contradicciones de edad usan el corte `guardrail.perfil.edad_maxima_adolescente` y listas cortas de marcadores de tono y género en `intake/reglas.py` | La cifra ya está en config (RNF-14) y una lista auditable es lo que pide una regla determinista; lo que no capture lo mide `adecuacion_tono` |
+| A-82 | P35 | Un `comprador.identificador` con forma de correo es una contradicción de tipo `otra` sobre ese campo | El contrato no tiene patrón para el identificador ni un tipo propio, y no se edita (RNF-16) |
+| A-83 | P35 | Los faltantes de una lista se nombran con su índice (`elementos_personalizados[2].enunciado`) y una lista ausente no obliga a nada | El formulario necesita saber qué elemento repreguntar; los elementos de una lista que no llega no existen |
+| A-84 | P35 | `commons.esquemas.opcional(enum=[…])` quita el `const` que Pydantic genera para un `Literal` de un solo valor | El contrato escribe `origen: enum [texto-libre]` y la conformidad compara la forma exacta |
+| A-85 | P36 | Los hechos del texto libre se devuelven en la validación como propuestos y no se persisten; al canon solo entran los de capítulos aceptados | La respuesta del contrato no lleva estado y la novela aún no existe al validar; adoptar es del policy engine sobre capítulos (RF-CANON) |
+| A-86 | P36 | Sin tablas `dato_faltante` ni `contradiccion_brief` en la migración 0011 | Validar no crea nada y crear rechaza el brief que los tiene: ninguna novela persistida llega a tenerlos |
+| A-87 | P36 | La petición del entrevistador la arma `intake/` con el prompt del rol y una sola capa de datos, sin el ensamblador | `intake/` es hoja y no puede importar `context/`; el tamaño lo acotan las longitudes máximas del brief y el llamador rechaza lo que no cabe |
+| A-88 | P36 | El saneamiento parte por línea y por signo final seguido de espacio, y descarta la frase entera que casa | Un punto dentro de una palabra (`.env`) no puede partir la instrucción; descartar de más es el lado conservador |
+| A-89 | P36 | El único proceso que el código puede lanzar es `anyio.run_process` en `commons/llm/claude_code.py` | RNF-09 prohíbe ejecutar la salida del modelo; el CLI recibe argumentos propios y la petición por stdin |
+| A-90 | P37 | Una afirmación sobre el destinatario tiene apoyo si al menos `calidad.invencion_soporte_minimo` (0,5) de sus palabras con contenido están en el brief o el texto libre | D-13 pide un cotejo determinista y RNF-14 la cifra en config; la mitad tolera que el capítulo lo cuente con otras palabras |
+| A-91 | P37 | Una afirmación o un tema cuya cita no está en el capítulo no cuenta como invención; un tema que el brief no excluye tampoco | Sería una invención del judge, no del texto; y el validador solo mide lo que el comprador vetó |
+
+### Consecuencias
+
+Ninguna cambia el contrato ni la ontología. La que más pesa es A-85: los hechos del texto
+libre se proponen en la validación pero no entran en el canon; si se quiere que el planificador
+los use como hechos adoptados, hace falta decidir quién los persiste y cuándo los adopta el
+policy engine. Y D-20 conserva su residuo declarado: una inyección parafraseada esquiva los
+patrones, y lo que la contiene es que el texto libre viaja siempre como datos.
