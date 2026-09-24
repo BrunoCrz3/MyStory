@@ -12,6 +12,7 @@ import jsonschema
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from hypothesis import settings
 
 from app.commons.config import cargar_config
 from app.main import crear_app
@@ -20,6 +21,11 @@ from tests.dobles.modelo import ModeloGuionizado
 from tests.dobles.trazador import RegistroTrazas
 
 _CONTRATO = cargar_contrato()
+
+# Sin límite de tiempo por ejemplo: una propiedad no puede fallar por lo rápida que sea la
+# máquina que la ejecuta.
+settings.register_profile("storymaker", deadline=None)
+settings.load_profile("storymaker")
 
 # Variables que conectarían la suite con servicios reales. Se vacían en toda prueba: la
 # suite normal no llama al modelo ni a Langfuse (plan § 4.1).

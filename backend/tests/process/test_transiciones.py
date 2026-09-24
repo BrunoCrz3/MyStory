@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 import pytest
-from hypothesis import given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from app.commons.errores import TransicionInvalida
@@ -15,6 +15,7 @@ from tests.contrato.normalizar import cargar_contrato
 
 DOMINIO = (RAIZ_REPO / "docs" / "domain-knowledge.md").read_text(encoding="utf-8")
 ARQUITECTURA = (RAIZ_REPO / "docs" / "architecture.md").read_text(encoding="utf-8")
+ESTADOS_CAPITULO = set(cargar_contrato()["components"]["schemas"]["EstadoCapitulo"]["enum"])
 
 
 def _diagrama(etiqueta: str) -> set[tuple[str, str]]:
@@ -87,8 +88,9 @@ def test_una_transicion_valida_devuelve_su_destino() -> None:
 
 
 @given(st.lists(st.integers(min_value=0, max_value=20), max_size=30))
+@settings(deadline=None)
 def test_ninguna_secuencia_valida_sale_de_los_estados_declarados(elecciones: list[int]) -> None:
-    declarados = set(cargar_contrato()["components"]["schemas"]["EstadoCapitulo"]["enum"])
+    declarados = ESTADOS_CAPITULO
     estado = "Pendiente"
     for eleccion in elecciones:
         posibles = sorted(acciones_desde("Capitulo", estado))
