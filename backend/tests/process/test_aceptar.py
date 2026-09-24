@@ -140,3 +140,28 @@ async def test_aceptar_dos_veces_no_duplica(entorno: Entorno) -> None:
     with pytest.raises(TransicionInvalida):
         await aceptar(entorno.recursos, novel_id=novela, version=1, numero=1, resultado=resultado)
     assert entorno.consultar("SELECT count(*) AS n FROM hecho")[0]["n"] == antes
+
+
+@pytest.mark.anyio
+async def test_muchos_hechos_conocidos_no_impiden_extraer(entorno: Entorno) -> None:
+    # Humo real del P44: tras una regeneración, la lista de hechos conocidos del extractor
+    # pasaba de 4.000 tokens en la capa Estructural, que no se degrada, y la novela se detenía
+    # con ContextoNoCabe. Los hechos conocidos son estado del mundo: van en la capa Estado.
+    import uuid
+
+    novela = await novela_planificada(entorno)
+    relleno = "un detalle más de la historia que el lector ya conoce y que nadie discute"
+    entorno.recursos.db.en_transaccion_sync(
+        lambda con: con.executemany(
+            "INSERT INTO hecho (id, novel_id, enunciado, tipo, estado, origen, version_desde,"
+            " creado_en) VALUES (?, ?, ?, 'suceso', 'adoptado', 'brief', 1, '2026-01-01')",
+            [(str(uuid.uuid4()), novela, f"Hecho {i}: {relleno}") for i in range(250)],
+        )
+    )
+    cid = await _capitulo_aceptado(entorno, novela)
+    assert entorno.consultar("SELECT estado FROM capitulo WHERE id = ?", cid)[0]["estado"] == (
+        "Aceptado"
+    )
+    [peticion] = [p for p in entorno.modelo.peticiones if p.rol == "extractor"]
+    estado = peticion.mensajes[0].contenido.split('<capa nombre="estado">', 1)[1]
+    assert "Hechos ya conocidos" in estado.split("</capa>", 1)[0]

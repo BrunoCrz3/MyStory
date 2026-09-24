@@ -79,7 +79,9 @@ async def _extraer(
     novel_id: str,
 ) -> Extraccion:
     piezas = {
-        "estructural": [
+        # Lo conocido es estado del mundo, y crece con la novela: va en la capa Estado, que se
+        # comprime si no cabe, y no en la Estructural, que no se degrada nunca (P44, A-110).
+        "estado": [
             context.Pieza(
                 etiqueta="Hechos ya conocidos (cítalos por su alias)",
                 texto="\n".join(f"{a}: {h.enunciado}" for a, h in conocido.hechos.items())
@@ -92,6 +94,8 @@ async def _extraer(
                 or "(ninguna)",
                 prioridad=10,
             ),
+        ],
+        "estructural": [
             context.Pieza(
                 etiqueta="Elementos personalizados del encargo (cita el enunciado exacto)",
                 texto="\n".join(f"- {e}" for e in elementos) or "(ninguno)",
