@@ -8,7 +8,7 @@ import subprocess
 import pytest
 
 from app.prompts import PROMPT_DE_ROL, SKILLS_DE_ROL, cargar_prompt, cargar_skill
-from app.prompts.sync import sincronizar
+from app.prompts.sync import LIMITE_ETIQUETA_LANGFUSE, etiqueta_git, sincronizar
 from tests.arquitectura.comprobadores import RAIZ_APP, RAIZ_REPO
 from tests.dobles.prompts import RegistroPromptsEnMemoria
 from tests.fixtures.briefs import brief_ejemplo
@@ -88,3 +88,12 @@ def test_sync_es_idempotente_por_hash() -> None:
     assert segunda == []
     assert len(registro.publicados) == len(PROMPT_DE_ROL)
     assert all(p.hash_git in registro.etiquetas[p.nombre] for p in registro.publicados)
+
+
+def test_la_etiqueta_de_version_cabe_en_el_limite_de_langfuse() -> None:
+    # Langfuse rechaza con 400 una etiqueta de más de 36 caracteres, y `git-` más el hash
+    # completo de 40 ocupa 44: la sincronización real falló así en el P27.
+    prompt = cargar_prompt("writer")
+    etiqueta = etiqueta_git(prompt.hash_git)
+    assert len(etiqueta) <= LIMITE_ETIQUETA_LANGFUSE == 36
+    assert etiqueta.startswith("git-") and prompt.hash_git.startswith(etiqueta[4:])

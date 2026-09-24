@@ -16,6 +16,15 @@ from typing import Protocol
 
 from app.prompts.cargar import PROMPT_DE_ROL, PromptCargado, cargar_prompt
 
+# Langfuse rechaza etiquetas de más de 36 caracteres. `git-` y los 32 primeros caracteres del
+# hash caben justo, y 128 bits siguen identificando la versión sin colisión práctica.
+LIMITE_ETIQUETA_LANGFUSE = 36
+_PREFIJO = "git-"
+
+
+def etiqueta_git(hash_git: str) -> str:
+    return _PREFIJO + hash_git[: LIMITE_ETIQUETA_LANGFUSE - len(_PREFIJO)]
+
 
 class RegistroPrompts(Protocol):
     def existe(self, nombre: str, hash_git: str) -> bool: ...
@@ -38,7 +47,7 @@ class RegistroLangfuse:
 
     def existe(self, nombre: str, hash_git: str) -> bool:
         try:
-            self._cliente.get_prompt(nombre, label=f"git-{hash_git}", cache_ttl_seconds=0)
+            self._cliente.get_prompt(nombre, label=etiqueta_git(hash_git), cache_ttl_seconds=0)
         except Exception:
             return False
         return True
@@ -48,7 +57,7 @@ class RegistroLangfuse:
             name=prompt.nombre,
             prompt=prompt.texto,
             type="text",
-            labels=[f"git-{prompt.hash_git}"],
+            labels=[etiqueta_git(prompt.hash_git)],
             commit_message=f"git {prompt.hash_git}",
         )
 
@@ -77,7 +86,7 @@ def main() -> int:
     finally:
         registro.cerrar()
     for p in publicados:
-        print(f"publicado {p.nombre} git-{p.hash_git}")
+        print(f"publicado {p.nombre} {etiqueta_git(p.hash_git)}")
     print(f"{len(publicados)} prompts publicados; el resto ya estaba")
     return 0
 
