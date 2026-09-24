@@ -17,6 +17,7 @@ from functools import partial
 
 from pydantic import BaseModel, ConfigDict
 
+from app.canon import service as canon
 from app.commons.errores import NovelaNoEncontrada
 from app.commons.llm import SalidaInvalida, SalidaTruncada
 from app.commons.llm.esquema import esquema_de_salida
@@ -50,6 +51,27 @@ class _Datos:
     brief_capitulo: context.BriefCapitulo
     palabras: list[str]
     nombres: list[str]
+    hechos: list[str]
+    previstas: list[quality.EntidadPrevista]
+
+
+def _previstas(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, total: int, ya_nombrados: str
+) -> list[quality.EntidadPrevista]:
+    """Personajes y lugares cuya primera aparición en el plan es posterior a este capítulo y
+    que el canon todavía no ha nombrado (O-42)."""
+    primera: dict[str, int] = {}
+    for n in range(1, total + 1):
+        bc = context.brief_de_capitulo(con, novel_id=novel_id, numero=n)
+        if bc is None:
+            break
+        for nombre in (bc.pov, bc.lugar, *bc.entidades):
+            primera.setdefault(nombre, n)
+    return [
+        quality.EntidadPrevista(nombre=nombre, capitulo=n)
+        for nombre, n in primera.items()
+        if n > numero and nombre not in ya_nombrados
+    ]
 
 
 async def mover(
@@ -89,11 +111,28 @@ async def _leer(
                 novel_id=novel_id,
                 capitulo=numero,
             )
+        destinatario = brief.destinatario
+        hechos = [
+            h.enunciado
+            for h in canon.hechos_vigentes(
+                con, novel_id=novel_id, version=version, hasta_numero=numero - 1
+            )
+        ]
+        # La edad del brief es canon desde el principio, aunque ningún capítulo la cuente.
+        hechos.append(f"{destinatario.nombre} tiene {destinatario.edad} años.")
         datos = _Datos(
             brief=brief,
             brief_capitulo=bc,
             palabras=[p.forma for p in guardrail.palabras_de_novela(con, novel_id=novel_id)],
             nombres=novel.nombres_de_la_obra(con, novel_id=novel_id),
+            hechos=hechos,
+            previstas=_previstas(
+                con,
+                novel_id=novel_id,
+                numero=numero,
+                total=r.config.umbrales.obra.capitulos,
+                ya_nombrados=" ".join(hechos),
+            ),
         )
         return datos, cap
 
@@ -231,7 +270,13 @@ async def ciclo_capitulo(
                     resultados += quality.hook_capitulo(
                         config,
                         quality.EntradaHookCapitulo(
-                            titulo=borrador.titulo, texto=borrador.texto, nombres=datos.nombres
+                            titulo=borrador.titulo,
+                            texto=borrador.texto,
+                            nombres=datos.nombres,
+                            hechos=datos.hechos,
+                            reglas_mundo=datos.brief.reglas_mundo,
+                            alcance=datos.brief_capitulo.alcance,
+                            previstas=datos.previstas,
                         ),
                     )
             for v in resultados:

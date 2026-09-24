@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.commons.config import Config
 from app.commons.tiempo import ahora
@@ -16,9 +16,16 @@ from app.quality import repository
 from app.quality.models import Defecto, InformeCritica, ResultadoValidador, Score
 from app.quality.registro import comprobar
 from app.quality.validadores.basicos import longitud, nombres_exactos
+from app.quality.validadores.canon import (
+    EntidadPrevista,
+    consistencia_factica,
+    cumplimiento_brief,
+    reglas_mundo,
+)
 
 __all__ = [
     "Defecto",
+    "EntidadPrevista",
     "EntradaHookCapitulo",
     "InformeCritica",
     "ResultadoValidador",
@@ -38,12 +45,20 @@ class EntradaHookCapitulo(BaseModel):
     titulo: str
     texto: str
     nombres: list[str]
+    hechos: list[str] = Field(default_factory=list)
+    reglas_mundo: list[str] = Field(default_factory=list)
+    alcance: list[dict[str, str]] = Field(default_factory=list)
+    previstas: list[EntidadPrevista] = Field(default_factory=list)
 
 
 def hook_capitulo(config: Config, entrada: EntradaHookCapitulo) -> list[ResultadoValidador]:
+    texto = entrada.texto
     return [
-        longitud(config, entrada.texto),
-        nombres_exactos(entrada.texto, entrada.nombres),
+        longitud(config, texto),
+        nombres_exactos(texto, entrada.nombres),
+        consistencia_factica(config, texto, hechos=entrada.hechos, nombres=entrada.nombres),
+        cumplimiento_brief(config, texto, alcance=entrada.alcance, previstas=entrada.previstas),
+        reglas_mundo(texto, reglas=entrada.reglas_mundo),
     ]
 
 

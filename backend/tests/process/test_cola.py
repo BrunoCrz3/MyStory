@@ -8,14 +8,16 @@ import time
 import uuid
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.commons.config import cargar_config
 from app.commons.db import conectar
 from app.commons.db.migrar import aplicar_migraciones
 from app.main import crear_app
+from app.process import cola
 from app.process.cola import reclamar
-from tests.conftest import Instancia, ValidarContrato
+from tests.conftest import Entorno, Instancia, ValidarContrato
 from tests.fixtures.briefs import brief_ejemplo
 
 
@@ -97,10 +99,14 @@ def test_obtener_y_listar_cumplen_el_contrato(
     validar_contra_contrato(falta, "obtenerGeneracion")
 
 
-def test_la_salud_cuenta_los_trabajos_en_cola(instancia: Instancia) -> None:
-    novela = _novela(instancia)
-    instancia.cliente.post(f"/novelas/{novela}/generaciones")
-    assert instancia.cliente.get("/salud").json()["trabajos_en_cola"] == 1
+@pytest.mark.anyio
+async def test_la_salud_cuenta_los_trabajos_en_cola(entorno: Entorno) -> None:
+    # Sin worker: con él, el trabajo puede reclamarse antes de contar y la cuenta sería una
+    # carrera (salió intermitente en el P29). `/salud` usa esta misma función.
+    novela = await entorno.crear_novela(brief_ejemplo())
+    assert await cola.trabajos_en_cola(entorno.recursos) == 0
+    await cola.lanzar_generacion(entorno.recursos, novela)
+    assert await cola.trabajos_en_cola(entorno.recursos) == 1
 
 
 def test_dos_reclamaciones_simultaneas_solo_una_gana(tmp_path: Path) -> None:

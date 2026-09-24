@@ -60,8 +60,23 @@ def test_una_palabra_comun_al_principio_de_frase_no_es_un_nombre() -> None:
 
 def test_cada_validador_dice_si_cierra_el_paso() -> None:
     resultados = hook_capitulo(CONFIG, _entrada(prosa(1100)))
-    assert {r.nombre for r in resultados} == {"longitud", "nombres_exactos"}
-    assert all(r.cierra_el_paso for r in resultados)
+    assert [r.nombre for r in resultados] == [
+        "longitud",
+        "nombres_exactos",
+        "consistencia_factica",
+        "cumplimiento_brief",
+        "reglas_mundo",
+    ]
+    # Los booleanos cierran siempre; los que tienen score, solo fuera de medición (A-03).
+    medicion = CONFIG.umbrales.medicion.cerrar_el_paso
+    cierra = {r.nombre: r.cierra_el_paso for r in resultados}
+    assert cierra == {
+        "longitud": True,
+        "nombres_exactos": True,
+        "consistencia_factica": medicion,
+        "cumplimiento_brief": medicion,
+        "reglas_mundo": True,
+    }
 
 
 def test_una_palabra_comun_dentro_de_un_nombre_compuesto_no_es_un_nombre_mal_escrito() -> None:

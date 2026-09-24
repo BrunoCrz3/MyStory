@@ -12,7 +12,19 @@ from tests.conftest import Entorno
 from tests.fixtures.borradores import borrador
 from tests.fixtures.planificada import novela_planificada
 
-VALIDADORES_DEL_CICLO = ["schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"]
+VALIDADORES_DEL_CICLO = [
+    "schema_valido",
+    "palabras_prohibidas",
+    "longitud",
+    "nombres_exactos",
+    "consistencia_factica",
+    "cumplimiento_brief",
+    "reglas_mundo",
+]
+
+
+def _que_cierran(informe: quality.InformeCritica) -> list[bool]:
+    return [s.pasa for s in informe.scores if s.cierra_el_paso]
 
 
 def _informes(entorno: Entorno, novela: str, capitulo_id: str) -> list[quality.InformeCritica]:
@@ -31,16 +43,17 @@ async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entor
     primero, segundo = _informes(entorno, novela, r.capitulo_id)
     assert (primero.intento, primero.decision) == (0, "devolver")
     assert (segundo.intento, segundo.decision) == (1, "aceptar")
-    assert [d.dimension for d in primero.defectos] == ["longitud"]
-    assert "500 palabras" in primero.defectos[0].descripcion
-    assert segundo.defectos == []
+    assert "longitud" in [d.dimension for d in primero.defectos]
+    longitud = next(d for d in primero.defectos if d.dimension == "longitud")
+    assert "500 palabras" in longitud.descripcion
+    assert "longitud" not in [d.dimension for d in segundo.defectos]
     for informe in (primero, segundo):
         assert [s.validador for s in informe.scores] == VALIDADORES_DEL_CICLO
-    assert [s.pasa for s in primero.scores] == [True, True, False, True]
-    assert all(s.pasa for s in segundo.scores)
+    assert _que_cierran(primero) == [True, True, False, True, True]
+    assert all(_que_cierran(segundo))
     # Un score por validador ejecutado, igual en la base que en la traza (RF-OBS-03).
-    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 8
-    assert len(entorno.trazas.scores) == 8
+    assert len(entorno.consultar("SELECT id FROM score WHERE novel_id = ?", novela)) == 14
+    assert len(entorno.trazas.scores) == 14
 
 
 @pytest.mark.anyio
@@ -60,7 +73,7 @@ async def test_el_informe_del_ultimo_intento_de_un_capitulo_agotado_es_consultab
     )
     assert ultimo == informes[-1]
     assert ultimo.decision == "agotar"
-    assert [d.dimension for d in ultimo.defectos] == ["longitud"]
+    assert "longitud" in [d.dimension for d in ultimo.defectos]
 
 
 @pytest.mark.anyio

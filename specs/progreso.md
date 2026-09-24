@@ -9,11 +9,11 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan1.md` — **aprobado** por el desarrollador el 2026-09-24 |
-| Paso actual | P29 · Hook de capítulo: validadores contra el canon |
+| Paso actual | P30 · Hook de capítulo: validadores de texto y paralelismo |
 | Estado del paso | `no-iniciado` |
-| Intentos fallidos en el paso actual | 0 de 3 |
+| Intentos fallidos en el paso actual | 0 de 3 (el P29 cerró con 1) |
 | Rama | `backend-v1` (se crea en el P01) |
-| Último commit de paso | P28 |
+| Último commit de paso | P29 |
 
 ## Coste real
 
@@ -62,10 +62,11 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P26** — `ejemplos/brief-ejemplo.json` (el `example` de `BriefNovela`, con prueba de igualdad); `tests/humo/test_novela_real.py` marcado `real` sobre `STORYMAKER_DB_PATH` que se salta con motivo si falta la credencial; `tests/herramientas/casetes.py` con `TransporteGrabador` (lista blanca de cabeceras) y `reproductor`; `tests/arquitectura/test_sin_secretos.py` sobre lo versionado y los casetes, con meta-pruebas; 254 pruebas
 - **P27** — Cierre de F1: e2e con proceso real (novela por HTTP y reanudación tras matar el proceso en el capítulo 5; el arnés escribe la salida del hijo en fichero para no bloquear); proveedor `claude_code` contenido (I-04, TO-040); etiqueta de prompt al límite de Langfuse; `nombres_exactos` sin falsos positivos por palabras comunes (A-60); topes calibrados en real (A-58, A-59, A-61); TO-039 y TO-041; humo real verde; 288 pruebas, cobertura 96 %
 - **P28** — Migración 0010_calidad (`informe_critica`, `defecto`, `score`; sin tabla `validador`, A-62); `quality/registro.py` con los 26 validadores del índice, comprobado contra `verification.md` leído del fichero; `registrar_informe` en la transacción de la decisión del policy engine, que falla si un resultado no corre donde dice el registro; `informes_de_capitulo` y `ultimo_informe`; 296 pruebas
+- **P29** — `quality/validadores/canon.py`: `consistencia_factica` (edad en presente contra hechos vigentes y el brief, números en cifra y en letra), `cumplimiento_brief` (alcance nombrado, sin adelantar entidades que el plan presenta después) y `reglas_mundo` (exclusión de entidad por nombre, con plural; las de forma, no comprobables); `process/` les pasa hechos, reglas, alcance y previstas; la prueba de `/salud` con cola deja de ser una carrera; 307 pruebas
 
 ## Pendiente
 
-- Siguiente: **P29 · Hook de capítulo: validadores contra el canon**, y después el resto hasta el P49 en orden.
+- Siguiente: **P30 · Hook de capítulo: validadores de texto y paralelismo**, y después el resto hasta el P49 en orden.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **`ejemplos/novela-ejemplo.pdf` — entregable obligatorio del alcance, pendiente del paso
   de integración P49.** Se genera contra la página `lectura` real del frontend. Si al llegar
@@ -154,6 +155,10 @@ registrada.
 | A-61 | P27 | Segunda calibración con la novela completa: redactor y editor 16000, extractor 8000, margen 16000 (estado 12000, anticontexto 6000), `margen_estimacion` 1,35 | Redactor hasta 8.149 y dos topes de 9.000 alcanzados (el CLI reintenta dentro del turno); extractor 4.955; la estimación quedaba un 5–7 % por debajo en prompts de ~20.000 | TO-041 |
 | A-62 | P28 | Sin tabla `validador`: el registro vive en `quality/registro.py` y una prueba lo compara con el índice de `verification.md` | Es un catálogo sin novela; una tabla sin `novel_id` rompería RD-01 y la prueba del P05 | TO-042 |
 | A-63 | P28 | `informe_critica` no es única por (capítulo, intento) y se ordena por intento y orden de inserción | Una reanudación tras un corte entre aceptar y extraer reescribe con el mismo intento (A-44); la propiedad de reanudación lo cazó | TO-042 |
+| A-64 | P29 | La mitad programática de `consistencia_factica` coteja la edad en presente («tiene/cumple/sus/con N años») de cada personaje con los hechos vigentes y con la edad del brief | Es la contradicción enumerable que los hechos extraídos sí contienen; la edad en pasado es analepsis, no contradicción | TO-042 |
+| A-65 | P29 | `cumplimiento_brief` coteja el borrador (no hay snapshot de salida antes de extraer): que nombre las entidades del alcance y que no adelante a una entidad cuya primera aparición en el plan es posterior y que el canon no ha nombrado | El hook corre antes de la extracción; la fila O-30 hablaba del snapshot de salida | TO-042 |
+| A-66 | P29 | O-31 (personaje ausente en el snapshot anterior que actúa) no se implementa | El plan del P29 no lo pide y, sin la lista de entradas en escena del brief, marcaría toda reaparición legítima | TO-042 |
+| A-67 | P29 | La prueba de `trabajos_en_cola` corre sin worker | Con worker, el trabajo se reclama a veces antes de contar: era una carrera, no un fallo del código | TO-042 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
 ## Instrucciones pendientes
@@ -218,14 +223,14 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
-Estado al escribir esto: **P28 cerrado, siguiente P29**. Rama `backend-v1`,
-suite en verde (296 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
+Estado al escribir esto: **P29 cerrado, siguiente P30**. Rama `backend-v1`,
+suite en verde (307 pruebas). Todo lo hecho hasta el P23 está subido a `origin/backend-v1`;
 al cerrar la F1 se vuelve a subir (I-05).
 
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest -q          # 296 pruebas en verde al cerrar P28
+uv run pytest -q          # 307 pruebas en verde al cerrar P29
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y

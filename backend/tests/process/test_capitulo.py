@@ -29,8 +29,18 @@ async def test_un_borrador_valido_queda_listo_para_aceptar(entorno: Entorno) -> 
     assert r.borrador is not None and r.borrador.titulo == "La primera travesía"
     assert _estado(entorno, novela) == ("Validando", 0)
     nombres = [s.nombre for s in entorno.trazas.scores]
-    assert nombres == ["schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"]
-    assert all(s.valor == 1.0 for s in entorno.trazas.scores)
+    assert nombres == [
+        "schema_valido",
+        "palabras_prohibidas",
+        "longitud",
+        "nombres_exactos",
+        "consistencia_factica",
+        "cumplimiento_brief",
+        "reglas_mundo",
+    ]
+    cierran = {"schema_valido", "palabras_prohibidas", "longitud", "nombres_exactos"}
+    assert all(s.valor == 1.0 for s in entorno.trazas.scores if s.nombre in cierran)
+    assert entorno.trazas.scores_de("reglas_mundo")[0].valor == 1.0
     assert entorno.trazas.nombres("generacion")[-1] == "writer"
 
 
