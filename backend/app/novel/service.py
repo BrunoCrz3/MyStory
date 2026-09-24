@@ -6,6 +6,8 @@ from __future__ import annotations
 import sqlite3
 import uuid
 
+from pydantic import BaseModel, ConfigDict
+
 from app.commons.config import Config
 from app.commons.db import BaseDatos
 from app.commons.errores import NovelaNoEncontrada
@@ -24,9 +26,11 @@ from app.novel.schemas import ListaNovelas, Novela, NovelaResumen
 
 __all__ = [
     "ESTADOS_TERMINALES_NOVELA",
+    "CapituloAceptado",
     "EstadoCapitulo",
     "EstadoNovela",
     "ReglaMundo",
+    "capitulos_aceptados",
     "crear_capitulo",
     "crear_novela",
     "listar_novelas",
@@ -117,3 +121,24 @@ def reglas_del_mundo(con: sqlite3.Connection, *, novel_id: str) -> list[ReglaMun
 def crear_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, version: int) -> str:
     """Crea la fila del capítulo `numero` para la versión `version`, en `Pendiente` (D-05)."""
     return repository.insertar_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+
+
+class CapituloAceptado(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    capitulo_id: str
+    numero: int
+    titulo: str | None
+    texto: str
+
+
+def capitulos_aceptados(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[CapituloAceptado]:
+    """Los capítulos aceptados que lee una versión, en orden (memoria episódica)."""
+    return [
+        CapituloAceptado(
+            capitulo_id=f["id"], numero=f["numero"], titulo=f["titulo"], texto=f["texto"]
+        )
+        for f in repository.leer_capitulos_aceptados(con, novel_id=novel_id, version=version)
+    ]

@@ -124,6 +124,7 @@ class Continuidad(_Estricto):
 
 
 class Prosa(_Estricto):
+    longitud_ngrama: int
     repeticion_ngramas: int | None
     densidad_muletillas: float | None
     densidad_cliches: float | None

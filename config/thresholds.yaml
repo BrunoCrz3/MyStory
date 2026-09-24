@@ -328,6 +328,9 @@ continuidad:
 # capítulo entero.
 
 prosa:
+  # Palabras del n-grama con que se miden las repeticiones, aquí y en el anticontexto.
+  longitud_ngrama: 5   # [provisional — calibrar tras la demo]
+
   # Repeticiones admitidas de un mismo 5-grama entre capítulos distintos. Dos tolera la
   # coletilla de un personaje; tres ya es el modelo repitiéndose.
   repeticion_ngramas: 2

@@ -72,3 +72,19 @@ def insertar_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, ve
         (capitulo_id, novel_id, numero, version),
     )
     return capitulo_id
+
+
+def leer_capitulos_aceptados(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[dict[str, Any]]:
+    """La fila vigente de cada capítulo aceptado en una versión: la de versión más alta que no
+    la supera (D-05)."""
+    filas = con.execute(
+        "SELECT c.id, c.numero, c.titulo, c.texto FROM capitulo c"
+        " WHERE c.novel_id = :novel_id AND c.estado = 'Aceptado' AND c.version = ("
+        "   SELECT max(c2.version) FROM capitulo c2 WHERE c2.novel_id = c.novel_id"
+        "   AND c2.numero = c.numero AND c2.version <= :version AND c2.estado = 'Aceptado')"
+        " ORDER BY c.numero",
+        {"novel_id": novel_id, "version": version},
+    ).fetchall()
+    return [dict(f) for f in filas]
