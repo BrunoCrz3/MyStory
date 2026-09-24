@@ -127,6 +127,23 @@ registrada.
 | A-42 | P23 | Coste, latencia y reintentos de infraestructura agotados detienen con detenida_por = error-interno y el motivo en el audit log | El catálogo cerrado no tiene un tipo propio para ellos y no se inventa uno | TO-039 |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
 
+## Instrucciones pendientes
+
+Lo que el desarrollador ha pedido durante la ejecución y todavía no se ha aplicado, con el
+paso en que toca. **Esta lista manda sobre la memoria de la conversación**, que puede no estar.
+
+| # | Instrucción | Cuándo | Estado |
+| --- | --- | --- | --- |
+| I-01 | **Test de humo con modelo real solo si la credencial está en el entorno.** Si lo está: apuntar aquí la ruta de la base de la novela, su coste y la URL de la traza en Langfuse. Si no: apuntarlo y **seguir con las fases siguientes**, porque la suite no depende de él. Esta instrucción sustituye a la condición de parada 1 del plan | Cierre de F1 (P26–P27) | pendiente. En el shell de esta sesión `ANTHROPIC_API_KEY` **no** estaba; las variables `LANGFUSE_*` sí |
+| I-02 | **En el test de humo, registrar por capítulo los tokens de salida y los de razonamiento reales** (`Respuesta.tokens_salida` y `tokens_razonamiento`, que viene de `usage.output_tokens_details.thinking_tokens`). Si algún capítulo sale truncado (`SalidaTruncada`) o se acerca a `max_tokens`, **ajustar `modelo.max_tokens_por_rol`** y reequilibrar `contexto.capas` para que sigan sumando 100.000 con `margen ≥ max_tokens` de cada rol; marcarlo como decisión del agente y continuar | Cierre de F1 (P27), solo si hay humo real | pendiente |
+| I-03 | **Lean**: Lean 4 está instalado en la máquina del desarrollador y un `lake build` mínimo sin Mathlib, desde cero tras `lake clean`, tarda **2,6 segundos**. Fijar `formal.lean_timeout_segundos` con margen holgado, del orden de **10 veces** (≈ 26 s), y cambiar su marca de `[bloqueado]` a `[provisional — calibrar tras la demo]`. Activar `formal.gate_activo` y el chequeo incremental si el tiempo de la F5 lo permite; si no, dejarlo preparado y anotarlo aquí. En el shell de esta sesión `lean` y `lake` no estaban en el PATH de bash: buscarlos (p. ej. `~/.elan/bin`) antes de activar | F5 | pendiente |
+| I-04 | **Cambio de proveedor a Claude Code al cerrar la fase actual.** El desarrollador lo menciona como pedido, pero **no llegó ningún mensaje con esa instrucción en esta sesión**: no se sabe qué cambia ni dónde. No se aplica nada hasta que el desarrollador la reenvíe con su contenido | Al cerrar F1, si se reenvía | **no recibida** |
+| I-05 | Un commit por paso, en imperativo; **push al cerrar cada fase** (`git push origin backend-v1`) | Cierre de cada fase | F0 subida; F1 pendiente de push al cerrar |
+| I-06 | Decisiones menores a `docs/trade-offs.md` marcadas «decidido por el agente — revisar». **TO-038 recoge A-01…A-13. A-14…A-43 están anotadas como TO-039 pero esa entrada todavía no existe**: escribirla, con su RI, en el cierre de F1 (P27) | P27 | pendiente |
+| I-07 | `specs/openapi.yaml` no se modifica; si un paso parece exigirlo, detenerse y explicarlo. Ninguna credencial en el repo ni en los logs; el código lee la configuración del entorno según `.env.example` | Siempre | vigente |
+| I-08 | Al terminar la F5: actualizar la spec (requisitos cubiertos), `docs/verification.md` (filas que ya se ejecutan) y `docs/registro-iteraciones.md`; resumir qué funciona, qué no y qué queda post-demo | Cierre de F5 (P49) | pendiente |
+| I-09 | `ejemplos/novela-ejemplo.pdf` es entregable obligatorio: si falta la página `lectura`, queda **pendiente del paso de integración P49, no descartado** | P49 | pendiente |
+
 ## Parada
 
 Vacío mientras no se active ninguna de las cuatro condiciones del plan § 1. Si se activa:
@@ -134,12 +151,61 @@ condición, paso, qué se intentó y qué se necesita del desarrollador.
 
 ## Cómo reanudar
 
+Estado al escribir esto: **P23 cerrado (commit `17cb8bf`), siguiente P24**, rama `backend-v1`,
+suite en verde (230 pruebas). F0 está subida; F1 (P11–P27) está en commits locales y se sube
+al cerrar la fase.
+
 ```bash
 git switch backend-v1
 cd backend && uv sync
-uv run pytest          # debe estar en verde salvo el paso en curso
+uv run pytest -q          # 230 pruebas en verde al cerrar P23
 ```
 
-Después, ir al paso actual del plan. Si su estado es `pruebas-escritas`, las pruebas ya están
-y se sigue por el código; si es `en-verde`, falta ejecutar su «Hecho cuando», actualizar
-este fichero y hacer commit.
+**Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
+hay que comprobar el **código de salida**, no la última línea: un `| tail` enmascaró una vez
+un rojo y se commiteó (corregido en `96c65a1`).
+
+```bash
+cd backend
+uv run ruff format . && uv run ruff check --fix .   && uv run mypy app tests   && uv run pytest -q -rf; echo "salida=$?"   # salida=0 o no hay commit
+```
+
+**Actualizar este fichero al cerrar un paso**: fila de «Estado» (paso actual, último commit),
+un renglón en «Hecho», decisiones nuevas `A-NN` en «Decisiones», y todo en el mismo commit
+del paso. Mensaje: `PNN: Verbo en imperativo…` más la línea `Co-Authored-By`.
+
+**Dónde está cada pieza** (para no releer la conversación):
+
+- Contrato y conformidad: `tests/contrato/` (`pendientes.py` es la lista que cada endpoint
+  vacía; el P49 la exige vacía). Validación dinámica: fixture `validar_contra_contrato`.
+- Fixtures: `instancia` (app con HTTP y los dos dobles), `entorno` (recursos sin HTTP);
+  dobles en `tests/dobles/` (`ModeloGuionizado`, `RegistroTrazas`, `ContadorDeterminista`,
+  `guiones.guion_completo`); datos en `tests/fixtures/` (brief del contrato, esquema,
+  borradores, extracciones, `novela_planificada`).
+- Generación: `process/cola.py` (encolar, `Generacion`), `process/worker.py`,
+  `process/orquestador.py` (`_inicial`, `_detener`, `_comprobar_topes`, `_cerrar`),
+  `process/capitulo.py` (ciclo), `process/aceptar.py` (extracción y transacción con
+  checkpoint), `process/planificar.py`, `process/transiciones.py` (tabla).
+- `_cerrar` deja hoy la generación en `Validando` con el trabajo terminado: **el P25 lo
+  sustituye** por gate (`estructura_edicion`, `elementos_obligatorios`) y publicación.
+- Migraciones hasta `0008_trabajo.sql`; la siguiente es `0009_version.sql` (P25).
+
+**Notas para el P24** (checkpoint y reanudación, RF-PROC-06, TO-023):
+
+- Al arrancar, los trabajos `en-curso` (`repository.trabajos_huerfanos`) vuelven a
+  `pendiente` para que el worker los retome; el orquestador ya salta los capítulos
+  `Aceptado`.
+- La reanudación **no es una transición**: `orquestador.estado_inicial` normaliza a
+  `Pendiente` el capítulo que quedó en `Escribiendo`, `Validando` o `Reescribiendo`,
+  escribiendo el estado directamente (no hay arista en la tabla, y es a propósito).
+- La prueba de propiedad: para cualquier punto de corte, los aceptados son un prefijo
+  contiguo y ninguno se acepta dos veces (`UNIQUE (novel_id, numero, version)` en `capitulo`).
+- La prueba con proceso real (matar a mitad del capítulo 5) es del P27, con
+  `tests/e2e/app_con_dobles.py` y `tests/e2e/proceso.py`.
+
+**Trampas ya encontradas**: el SDK de Anthropic 1.x va sobre `httpx2` (casetes con
+`httpx2.MockTransport`); Opus 5.5 no admite `tool_choice` forzado ni desactivar el thinking
+(salida estructurada con `output_config.format`); en Windows los procesos hijo necesitan
+`PYTHONUTF8=1`; las lambdas dentro de bucles disparan B023 (usar `functools.partial`);
+hypothesis va sin `deadline` (perfil en `conftest.py`); un campo del contrato opcional y no
+nulable se declara con `commons.esquemas.opcional()`, que lo omite si es `None`.
