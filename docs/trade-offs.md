@@ -2582,3 +2582,28 @@ proveedor `claude_code`. El gate de Lean necesita lanzar `lake build`.
 | **B. Admitir `asyncio.create_subprocess_exec` solo en `versioning/lean/ejecutar.py`** | Lo que RNF-09 protege sigue protegido: los argumentos son fijos y el fichero no lleva texto de la novela (regla 11), así que la salida del modelo no llega a ningún proceso | La lista de excepciones crece en uno |
 
 **B**, con la excepción ligada a un fichero y a una llamada concretos, como la de TO-040.
+
+## TO-070 — `coste.latencia_maxima_novela` sube de 3.600 a 5.400 s
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (decisión del desarrollador) · **Afecta a:**
+`config/thresholds.yaml` § `coste.latencia_maxima_novela`
+
+### Problema
+
+Una generación inicial de diez capítulos se detuvo con `error-interno` a los 3.933 s, justo
+después de aceptar el capítulo 10 y antes del gate: el tope de una hora (TO-041, A-59) la cortó
+sin ningún fallo real. Era la primera novela cronometrada que lo superaba; el propio umbral
+estaba marcado para revisarse con esa medición.
+
+### Opciones y elección
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A. Mantener 3.600 s | El tope sigue ajustado | Las novelas completas medidas tardaron 2.708, 2.780, 3.403 y 3.933 s: deja fuera una de cada cuatro |
+| **B. Subir a 5.400 s** | Cubre las cuatro mediciones con margen para un reintento de infraestructura y alguna reescritura | Un bucle sin progreso tarda media hora más en detenerse |
+| C. Quitar el tope | Nunca detiene una novela sana | Contra la regla 14: todo límite tiene tope |
+
+**B**, provisional hasta calibrar tras la demo. El tope sigue siendo de seguridad, no una
+estimación de la duración. Que un tope agotado tras aceptar el último capítulo impida publicar lo
+ya escrito, y que se informe como `error-interno`, son dos defectos aparte, apuntados en
+`specs/progreso.md` § Post-demo para pasar por spec y plan.

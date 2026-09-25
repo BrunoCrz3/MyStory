@@ -1721,3 +1721,26 @@ la salida de `lake build` reproducidos en local.
 
 B2 queda cubierto y B1 en parte; B3, B4 y B5 siguen sin ejecutar. Las filas no son comparables
 entre sí en sentido estricto (brief repetido, commits distintos): el documento lo dice.
+
+## RI-042 — El tope de latencia detiene una novela completa antes del gate
+
+**Fecha:** 2026-09-25 · **Ficheros:** `config/thresholds.yaml`, `specs/progreso.md` (TO-070)
+
+### Causa
+
+Una generación nueva desde la demo aceptó los diez capítulos (1,21 M tokens, 8,17 USD
+estimados, un reintento de infraestructura en el planificador) y se detuvo con `error-interno`
+a los 3.933 s: el orquestador comprobó `coste.latencia_maxima_novela` (3.600 s) tras el
+capítulo 10 y no llegó al gate. La versión 1 no se propuso, y la novela quedó `Detenida`, un
+estado sin transición de salida: no se puede reanudar desde el checkpoint sin cambiar código.
+
+### Qué cambió
+
+`coste.latencia_maxima_novela` pasa a 5.400 s, provisional. Dos defectos a post-demo: el tope
+agotado tras aceptar el último capítulo debería dejar terminar el gate, y el motivo debería ser
+propio y visible, no `error-interno`.
+
+### Efecto
+
+Las cuatro novelas completas medidas (2.708 a 3.933 s) caben bajo el tope. La novela detenida
+sigue sin versión publicada.

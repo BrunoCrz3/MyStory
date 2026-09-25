@@ -405,7 +405,9 @@ coste:
   # claude_code, que arranca un proceso por llamada; con planificador, redactor, extractor y
   # alguna reescritura por capítulo, treinta minutos quedaban justos y un tope de seguridad
   # no puede detener una novela sana. Se revisa con la primera novela real cronometrada.
-  latencia_maxima_novela: 3600
+  # TO-070: 3600 → 5400, decisión del desarrollador. Las novelas completas medidas tardaron
+  # 2.708, 2.780, 3.403 y 3.933 s: una hora dejaba fuera una de cada cuatro.
+  latencia_maxima_novela: 5400
 
   # [provisional — calibrar tras la demo] Dólares por novela. Diez capítulos con el
   # redactor en el modelo alto, más judge y editor, más reintentos. Es un tope de
