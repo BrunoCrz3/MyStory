@@ -1311,3 +1311,33 @@ de la máquina no se cargaba por una ruta de Windows sin comillas.
 
 Suite del backend en verde. Queda para el desarrollador: corregir la línea de su `.env` que uv no
 lee, y decidir si el export usa Edge (TO-053).
+
+---
+
+## RI-027 — Comprobación del `.env` al arrancar
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/__main__.py`, `backend/tests/commons/test_env.py`,
+`backend/tests/e2e/proceso.py`, `backend/tests/e2e/test_f0.py`, `README.md`, `.env.example` (TO-054)
+
+### Causa
+
+El `.env` de la máquina Windows no se cargaba por una ruta con barras invertidas sin comillas, y
+el backend habría arrancado sin sus variables. El desarrollador corrigió la línea y pidió que el
+arranque falle en voz alta si vuelve a pasar.
+
+### Qué cambió
+
+`comprobar_env` en el lanzador, con cuatro pruebas escritas antes (en rojo por importación): pasa
+con todas las claves, falla nombrando solo las que faltan y sin valores, no hace nada sin `.env`,
+y `--sin-env` es una opción. Las pruebas e2e que lanzan `python -m app` pasan `--sin-env`.
+
+### Efecto
+
+Sin `--env-file`, `python -m app` sale con código 1 y la lista de claves; con el `.env` corregido,
+todas las variables con valor cargan. Nota en el README sobre las rutas de Windows.
+
+**Observado al pasar la suite en Windows:** una vez, `test_matar_el_proceso_a_mitad_y_rearrancar_acaba_publicada_sin_reescribir`
+(`tests/e2e/test_f1.py`) falló con `sqlite3.OperationalError: disk I/O error` al leer la base
+justo después de matar el proceso. Pasó en las tres repeticiones aisladas y en la suite siguiente
+(471 pasadas). Es intermitente y previo a este cambio (la prueba no pasa por el lanzador); queda
+anotado en la lista post-demo.

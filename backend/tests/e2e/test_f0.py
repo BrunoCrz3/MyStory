@@ -34,7 +34,7 @@ def test_arranque_con_umbral_de_cierre_nulo_falla_nombrando_la_clave(tmp_path: P
     (config / "thresholds.yaml").write_text(yaml.safe_dump(umbrales), encoding="utf-8")
 
     resultado = subprocess.run(
-        [sys.executable, "-m", "app", "--port", str(puerto_libre())],
+        [sys.executable, "-m", "app", "--sin-env", "--port", str(puerto_libre())],
         cwd=RAIZ_BACKEND,
         env=entorno(tmp_path / "e2e.db", STORYMAKER_CONFIG_DIR=str(config)),
         capture_output=True,

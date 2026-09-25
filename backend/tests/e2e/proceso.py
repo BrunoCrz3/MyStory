@@ -45,7 +45,8 @@ def backend(
     lee se llena con los logs de acceso de un sondeo y bloquea al servidor al escribir.
     """
     puerto = puerto_libre()
-    orden = [sys.executable, *(modulo or ["-m", "app"]), "--port", str(puerto)]
+    # `--sin-env`: la prueba construye su propio entorno y no carga el `.env` de la raíz.
+    orden = [sys.executable, *(modulo or ["-m", "app", "--sin-env"]), "--port", str(puerto)]
     with tempfile.TemporaryFile() as registro:
         proceso = subprocess.Popen(
             orden,

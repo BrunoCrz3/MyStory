@@ -39,9 +39,12 @@ npm install
 backend crea la carpeta y la base al arrancar y aplica las migraciones. Una ruta relativa en
 `STORYMAKER_DB_PATH` cuelga de la raíz del repositorio, se arranque desde donde se arranque.
 
-**Formato de `.env`.** El backend lo lee con `uv run --env-file`, y si una línea no se puede
-leer, uv descarta el fichero entero con solo un warning. Una ruta de Windows va con barras
-normales (`C:/ruta/claude.exe`) o entre comillas simples.
+> **Nota: en el `.env`, las rutas de Windows se escriben con barras normales (`/`) o entre
+> comillas simples**: `C:/ruta/claude.exe` o `'C:\ruta\claude.exe'`. El backend lee el `.env`
+> con `uv run --env-file`, y si una línea no se puede leer, uv descarta el fichero entero con
+> solo un warning. Por eso `python -m app` comprueba al arrancar que cada variable con valor en
+> el `.env` llegó al entorno y, si falta alguna, se niega a arrancar y dice cuáles (sin sus
+> valores). `--sin-env` salta la comprobación; `uvicorn --reload` no la hace.
 
 **En esta máquina, las URL van con `localhost`, no con `127.0.0.1`.** El servidor Playwright
 MCP solo acepta el `Host` `localhost:8931`, y las dos URL del gate se escriben igual:

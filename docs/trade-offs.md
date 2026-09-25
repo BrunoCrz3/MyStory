@@ -2002,3 +2002,38 @@ sola. Se deja como propuesta al desarrollador y no se cambia sin su decisión.
   comentario que atribuía el PDF al servidor MCP.
 - El README explica el arranque en Windows y remite a `docs/browser-mcp.md` como fuente del
   comando del servidor MCP, igual que `frontend/README.md`.
+
+---
+
+## TO-054 — El lanzador se niega a arrancar si el `.env` no llegó al entorno
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** · **Afecta a:** `backend/app/__main__.py`, `backend/tests/e2e/proceso.py`, `backend/tests/e2e/test_f0.py`, `README.md`, `.env.example`
+
+### Problema
+
+`uv run --env-file ../.env` descarta el fichero **entero** si no sabe leer una línea (en la
+migración a Windows, una ruta con barras invertidas sin comillas) y solo avisa con un warning. El
+backend arrancaba igual: sin Langfuse (`degradado`), sin servidor MCP —así que ninguna versión se
+habría publicado— y con la base por defecto en vez de la de la demo. Nada fallaba en voz alta.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Solo documentar el formato | Sin código | El fallo sigue siendo silencioso |
+| **B · El lanzador compara las claves con valor del `.env` con el entorno** y se niega a arrancar si falta alguna | Cubre el `.env` ilegible y el olvido de `--env-file`; no lee valores, solo nombres | No cubre `uvicorn --reload`, que no pasa por el lanzador |
+| C · El backend carga el `.env` con su propio parser | Independiente de uv | Dos lectores del mismo fichero que pueden discrepar; una dependencia o un parser más |
+| D · Comprobarlo en el lifespan de `crear_app` | Cubre también `uvicorn` | Las pruebas crean la app sin `.env` en el entorno: habría que desactivarlo en cada una |
+
+### Elección
+
+**B**, a petición del desarrollador. `python -m app` es el arranque de la demo (README). El
+mensaje nombra las claves que faltan, nunca sus valores (prueba), y dice cómo arreglarlo.
+`--sin-env` la salta para quien construye el entorno de otra forma: lo usan las pruebas de
+extremo a extremo, que lanzan el backend con un entorno propio.
+
+### Consecuencias
+
+- Un `.env` ilegible o un arranque sin `--env-file` ya no producen un backend que funciona a
+  medias: el proceso sale con código 1.
+- `uvicorn app.main:app --reload`, el arranque de desarrollo, no lo comprueba; el README lo dice.
