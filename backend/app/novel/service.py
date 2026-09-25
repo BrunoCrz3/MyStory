@@ -22,9 +22,11 @@ from app.novel.models import (
     EstadoCapitulo,
     EstadoNovela,
     EventoNarrado,
+    EventoVigente,
     HiloTrama,
     Lugar,
     Personaje,
+    PresenciaEnEvento,
     ReglaMundo,
 )
 from app.novel.schemas import ListaNovelas, Novela, NovelaResumen
@@ -36,6 +38,7 @@ __all__ = [
     "EstadoCapitulo",
     "EstadoNovela",
     "EventoNarrado",
+    "EventoVigente",
     "HiloTrama",
     "Lugar",
     "Personaje",
@@ -46,6 +49,7 @@ __all__ = [
     "crear_capitulo",
     "crear_novela",
     "estado_de_obra",
+    "eventos_de_version",
     "fijar_estado_capitulo",
     "fijar_estado_obra",
     "fijar_titulo",
@@ -59,6 +63,8 @@ __all__ = [
     "registrar_eventos",
     "registrar_reparto",
     "reglas_del_mundo",
+    "retirar_eventos",
+    "revertir_eventos",
     "sumar_consumo",
     "titulo_de_obra",
     "total_capitulos",
@@ -332,20 +338,66 @@ def guardar_texto_aceptado(
 
 
 def registrar_eventos(
-    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, eventos: list[EventoNarrado]
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    version: int,
+    capitulo_id: str,
+    eventos: list[EventoNarrado],
 ) -> None:
-    """Eventos de la fábula que narra el capítulo, con sus personajes y su lugar. Un nombre
-    que no está en la story bible se ignora: el extractor no crea entidades."""
+    """Eventos de la fábula que narra el capítulo, vigentes desde `version` (TO-066), con sus
+    personajes y su lugar. Un nombre que no está en la story bible se ignora: el extractor no
+    crea entidades."""
     for e in eventos:
         repository.insertar_evento(
             con,
             novel_id=novel_id,
             capitulo_id=capitulo_id,
+            version=version,
             descripcion=e.descripcion,
             momento=e.momento,
             lugar=e.lugar,
             personajes=e.personajes,
         )
+
+
+def eventos_de_version(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[EventoVigente]:
+    """La fábula de una versión: sus eventos vigentes en orden de narración, con quién está
+    en cada uno y la edad que el texto le declara (TO-066)."""
+    presentes: dict[str, list[PresenciaEnEvento]] = {}
+    for evento_id, personaje_id, edad in repository.leer_presencias(
+        con, novel_id=novel_id, version=version
+    ):
+        presentes.setdefault(evento_id, []).append(
+            PresenciaEnEvento(personaje_id=personaje_id, edad=edad)
+        )
+    return [
+        EventoVigente(
+            evento_id=f["id"],
+            capitulo_id=f["capitulo_id"],
+            numero=f["numero"],
+            momento=f["momento"],
+            anio=f["anio"],
+            lugar_id=f["lugar_id"],
+            presentes=presentes.get(f["id"], []),
+        )
+        for f in repository.leer_eventos_de_version(con, novel_id=novel_id, version=version)
+    ]
+
+
+def retirar_eventos(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, version: int
+) -> None:
+    """Antes de reescribir un capítulo en `version`, sus eventos viejos se cierran ahí: la
+    versión anterior conserva su fábula entera (TO-066, regla 15)."""
+    repository.retirar_eventos(con, novel_id=novel_id, capitulo_id=capitulo_id, version=version)
+
+
+def revertir_eventos(con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+    """Una candidata rechazada no deja eventos vigentes en ninguna otra versión (TO-062)."""
+    repository.revertir_eventos(con, novel_id=novel_id, version=version)
 
 
 def registrar_elementos_en_capitulo(

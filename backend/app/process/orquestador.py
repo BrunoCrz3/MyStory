@@ -308,6 +308,7 @@ class Orquestador:
         anterior = novel.capitulo_vigente(con, novel_id=novel_id, numero=numero, version=version)
         if anterior is not None:
             canon.retirar_capitulo(con, novel_id=novel_id, capitulo_id=anterior, version=version)
+            novel.retirar_eventos(con, novel_id=novel_id, capitulo_id=anterior, version=version)
         cap = novel.capitulo_en_curso(con, novel_id=novel_id, numero=numero, version=version)
         if cap is None:
             novel.crear_capitulo(con, novel_id=novel_id, numero=numero, version=version)

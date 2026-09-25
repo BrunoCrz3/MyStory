@@ -2527,3 +2527,37 @@ datos reales. **El caso real que se presenta es el del brief B2.** Las reglas de
 solo cruzan edad y fecha de nacimiento, no los años de los recuerdos, así que B2 no se detiene
 antes de escribir. Si hace falta construir un caso a mano, se presenta **marcado como
 provocado**, nunca como real.
+
+---
+
+## TO-068 — Decisiones de construcción del plan 4 (Lean)
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (fijadas por el plan aprobado; A-01 y A-02,
+**decidido por el agente — revisar**) · **Afecta a:** `specs/plan4-lean.md` § 3, migración
+`0016`, `novel/`, `versioning/lean/`, `formal/lean/`
+
+### Problema
+
+El plan 4 tiene que fijar dónde vive el código de Lean, cómo se enuncian los teoremas sin
+Mathlib y cómo entra la vigencia del evento en una tabla que ya tiene datos.
+
+### Elección
+
+Las catorce decisiones de `specs/plan4-lean.md` § 3 (L-D01 a L-D14), entre ellas: generador y
+ejecutor en `versioning/lean/`; el incremental por el `Publicador` para no invertir el grafo de
+importación; un teorema por evento e invariante cerrado con `by decide`; aritmética sin resta,
+porque la resta de `Nat` trunca y escondería un año anterior al nacimiento; y `metadata` en
+`Trazador.score` para distinguir gate e incremental.
+
+Y dos más, del L01:
+
+| ID | Opciones | Elección | Criterio |
+| --- | --- | --- | --- |
+| A-01 | Reconstruir `evento` con `version_desde NOT NULL` · `ADD COLUMN` nula más trigger | **Trigger** | Reconstruir exige `DROP TABLE` con tres tablas que la referencian y las claves foráneas activas dentro de la transacción de la migración |
+| A-02 | En el relleno, vaciar todo lo de una versión rechazada · solo lo de una regeneración rechazada | **Solo la regeneración** | TO-062 solo revierte en `rechazar_regeneracion`; una primera versión rechazada en el gate conserva su canon, y su fábula igual |
+
+### Consecuencias
+
+- Toda consulta de eventos lleva `novel_id` y `version`, como las de hechos (TO-028).
+- La comprobación sobre una copia de la base de la demo cuadra en todas las versiones
+  publicadas (`specs/progreso-lean.md`, L01).

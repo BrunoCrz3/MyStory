@@ -324,6 +324,7 @@ def _consolidar(
     novel.registrar_eventos(
         con,
         novel_id=novel_id,
+        version=version,
         capitulo_id=capitulo.capitulo_id,
         eventos=[
             novel.EventoNarrado(

@@ -72,3 +72,28 @@ class EventoNarrado(BaseModel):
     momento: int
     lugar: str | None
     personajes: list[str]
+
+
+class PresenciaEnEvento(BaseModel):
+    """Un personaje presente en un evento, con la edad que el texto le declara ahí, si la
+    declara (TO-064)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    personaje_id: str
+    edad: int | None
+
+
+class EventoVigente(BaseModel):
+    """Un `Evento` vigente en una versión, como lo lee la verificación formal: `momento` es el
+    orden de narración y `anio`, la cronología de la historia (TO-064, TO-066)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    evento_id: str
+    capitulo_id: str
+    numero: int
+    momento: int
+    anio: int | None
+    lugar_id: str | None
+    presentes: list[PresenciaEnEvento]

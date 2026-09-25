@@ -265,6 +265,7 @@ def insertar_evento(
     *,
     novel_id: str,
     capitulo_id: str,
+    version: int,
     descripcion: str,
     momento: int,
     lugar: str | None,
@@ -272,9 +273,9 @@ def insertar_evento(
 ) -> None:
     evento_id = str(uuid.uuid4())
     con.execute(
-        "INSERT INTO evento (id, novel_id, descripcion, momento, lugar_id) VALUES"
-        " (?, ?, ?, ?, (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?))",
-        (evento_id, novel_id, descripcion, momento, novel_id, lugar),
+        "INSERT INTO evento (id, novel_id, descripcion, momento, version_desde, lugar_id)"
+        " VALUES (?, ?, ?, ?, ?, (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?))",
+        (evento_id, novel_id, descripcion, momento, version, novel_id, lugar),
     )
     con.execute(
         "INSERT INTO evento_capitulo (novel_id, evento_id, capitulo_id) VALUES (?, ?, ?)",
@@ -286,6 +287,69 @@ def insertar_evento(
             " SELECT ?, ?, id FROM personaje WHERE novel_id = ? AND nombre = ?",
             (novel_id, evento_id, novel_id, nombre),
         )
+
+
+def _vigente(alias: str) -> str:
+    """Vigencia semiabierta, la misma que la del hecho (TO-028, TO-066)."""
+    return (
+        f"{alias}.version_desde <= :version AND "
+        f"({alias}.version_hasta IS NULL OR :version < {alias}.version_hasta)"
+    )
+
+
+def leer_eventos_de_version(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[dict[str, Any]]:
+    """Eventos vigentes en `version`, con su capítulo, en orden de narración."""
+    filas = con.execute(
+        "SELECT e.id, e.momento, e.anio, e.lugar_id, ec.capitulo_id, c.numero"
+        " FROM evento e JOIN evento_capitulo ec ON ec.evento_id = e.id"
+        " JOIN capitulo c ON c.id = ec.capitulo_id"
+        f" WHERE e.novel_id = :novel_id AND {_vigente('e')}"
+        " ORDER BY e.momento, e.id",
+        {"novel_id": novel_id, "version": version},
+    ).fetchall()
+    return [dict(f) for f in filas]
+
+
+def leer_presencias(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[tuple[str, str, int | None]]:
+    """`(evento_id, personaje_id, edad)` de los eventos vigentes en `version`."""
+    filas = con.execute(
+        "SELECT ep.evento_id, ep.personaje_id, ep.edad FROM evento_personaje ep"
+        " JOIN evento e ON e.id = ep.evento_id"
+        f" WHERE ep.novel_id = :novel_id AND {_vigente('e')}"
+        " ORDER BY ep.evento_id, ep.personaje_id",
+        {"novel_id": novel_id, "version": version},
+    ).fetchall()
+    return [(str(f[0]), str(f[1]), f[2]) for f in filas]
+
+
+def retirar_eventos(
+    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, version: int
+) -> None:
+    """Los eventos que narraba la fila vieja dejan de estar vigentes desde `version`."""
+    con.execute(
+        "UPDATE evento SET version_hasta = ?"
+        " WHERE novel_id = ? AND version_hasta IS NULL AND id IN"
+        " (SELECT evento_id FROM evento_capitulo WHERE novel_id = ? AND capitulo_id = ?)",
+        (version, novel_id, novel_id, capitulo_id),
+    )
+
+
+def revertir_eventos(con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+    """Deshace lo que `version` escribió en la fábula, como `canon` en el canon (TO-062): lo
+    que abrió queda con intervalo vacío y lo que cerró vuelve a estar abierto."""
+    con.execute(
+        "UPDATE evento SET version_hasta = version_desde WHERE novel_id = ? AND version_desde = ?",
+        (novel_id, version),
+    )
+    con.execute(
+        "UPDATE evento SET version_hasta = NULL"
+        " WHERE novel_id = ? AND version_hasta = ? AND version_desde < ?",
+        (novel_id, version, version),
+    )
 
 
 def insertar_elemento_en_capitulo(

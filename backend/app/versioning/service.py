@@ -169,6 +169,7 @@ class Publicacion:
         if existente is not None and existente["estado"] == "candidata":
             self.rechazar(con, novel_id=novel_id, version=version)
         canon.revertir_version(con, novel_id=novel_id, version=version)
+        novel.revertir_eventos(con, novel_id=novel_id, version=version)
 
 
 # --- Lectura ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 ---
-estado: borrador
-aprobada-por:
+estado: aprobada
+aprobada-por: el desarrollador, en la conversación del 2026-09-25 («aprobado»)
 fecha: 2026-09-25
 spec: specs/spec4-lean.md
 contrato: specs/openapi.yaml (no cambia)
@@ -15,9 +15,8 @@ ejecute de forma autónoma de principio a fin y pueda reanudarlo en frío desde
 `specs/progreso-lean.md`. Las reglas son las de `specs/plan1.md` § 0 y § 1; aquí se repiten
 solo donde cambian.
 
-> **Estado: borrador.** No se escribe código hasta que el desarrollador lo mueva a
-> `aprobada` (`CLAUDE.md` § Ciclo de cambio). El agente **comprueba el frontmatter antes del
-> L01**, no de memoria, y se detiene si no dice `aprobada`.
+> **Estado: aprobada** por el desarrollador el 2026-09-25. El agente **comprueba el
+> frontmatter antes del L01**, no de memoria, y se detiene si no dice `aprobada`.
 
 ---
 
@@ -306,10 +305,16 @@ Formato: **Cubre · Skill · Ficheros · Pruebas primero · Hecho cuando.**
 #### L10 · El caso B2
 
 - **Cubre** RF-LEAN-08, P-83, TO-067, spec § 3.11 y § 5.12 · **Skill** —
-- **Ficheros** `tests/fixtures/brief_b2.json` (ficticio: el destinatario conoce a alguien en
-  un año anterior al nacimiento que el mismo brief declara), `tests/humo/test_lean_b2_real.py`.
+- **Ficheros** `ejemplos/evaluacion/brief-b2-incoherencia-temporal.json` —**exactamente** el
+  brief que usará la evaluación, ficticio: el destinatario conoce a alguien en un año anterior
+  al nacimiento que el mismo brief declara—, `ejemplos/evaluacion/resultado-b2.json` y
+  `tests/humo/test_lean_b2_real.py`. (Ajuste del desarrollador al aprobar: sustituye a
+  `tests/fixtures/brief_b2.json` de L-D14.)
 - **Qué se hace**: comprobar el tope de coste; generar la novela B2 completa con el gate
-  activo sobre una base temporal; registrar coste en progreso.
+  activo sobre una base temporal; registrar coste en progreso. **El resultado se guarda para
+  que la evaluación lo reutilice sin regenerar** mientras el código no cambie: commit de
+  código con que se generó, traza de Langfuse, scores de todos los validadores, veredictos
+  del gate, versión, coste y desenlace, en `ejemplos/evaluacion/resultado-b2.json`.
 - **Tres desenlaces, todos documentados en `docs/red-team.md`**:
   1. Lean rechaza la versión y el resto del gate y de los validadores de capítulo estaban en
      verde: **caso real**.

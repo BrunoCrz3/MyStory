@@ -1628,3 +1628,25 @@ temporal.
 ### Efecto
 
 Solo documentación: la spec 4 queda lista para aprobar, y el código espera al plan.
+
+## RI-038 — El evento se versiona (L01 del plan 4)
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/commons/db/migrations/0016_evento_temporal.sql`,
+`backend/app/novel/`, `backend/app/process/`, `backend/app/versioning/service.py` (TO-066, TO-068)
+
+### Causa
+
+En la base de la demo, la novela regenerada tenía momentos duplicados en el capítulo 5: los
+eventos del capítulo sustituido seguían ahí. Lean no puede leer la cronología de una versión si
+la tabla no sabe de versiones.
+
+### Qué cambió
+
+Migración `0016`: año, edad declarada y vigencia del evento, con el relleno de lo existente.
+Una regeneración cierra los eventos del capítulo sustituido y el rechazo de una candidata los
+revierte, en la misma transacción que el canon.
+
+### Efecto
+
+504 pruebas en verde. Sobre una copia de la base real, cada versión publicada tiene exactamente
+los eventos de sus capítulos y ningún momento duplicado.
