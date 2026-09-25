@@ -12,7 +12,7 @@ from app.quality.models import Defecto, ResultadoValidador
 _TOKEN = re.compile(r"[^\W\d_]+", re.UNICODE)
 # Un marcador de sustitución en mayúsculas entre corchetes (`[NOMBRE_ANONIMIZADO]`), que un
 # modelo escribe en lugar del nombre (TO-056). Unos corchetes con texto corriente no lo son.
-_MARCADOR = re.compile(r"\[[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ_]{2,}\]")
+MARCADOR = re.compile(r"\[[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ_]{2,}\]")
 
 
 def longitud(config: Config, texto: str) -> ResultadoValidador:
@@ -92,7 +92,7 @@ def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
                 break
     errores += [
         f"«{m.group(0)}» es un marcador y no un nombre: escribe el nombre de la story bible"
-        for m in _MARCADOR.finditer(texto)
+        for m in MARCADOR.finditer(texto)
     ]
     unicos = sorted(set(errores))
     detalle = (

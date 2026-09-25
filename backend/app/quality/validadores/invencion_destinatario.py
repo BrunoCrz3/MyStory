@@ -18,6 +18,7 @@ import re
 from app.commons.config import Config
 from app.commons.texto import plano
 from app.quality.models import AfirmacionDestinatario, ContextoJudge, Defecto, ResultadoValidador
+from app.quality.validadores.basicos import MARCADOR
 
 _PALABRA = re.compile(r"\w+")
 # Palabras sin contenido, ya normalizadas (minúsculas y sin tildes, como `plano`).
@@ -103,6 +104,23 @@ def _normal(texto: str) -> str:
     return re.sub(r"\s+", " ", plano(texto)).strip()
 
 
+# Lo mínimo de cita literal, sin marcadores, para que la cita ancle en el capítulo.
+_LITERAL_MINIMO = 12
+
+
+def _cita_en(fragmento: str, capitulo: str) -> bool:
+    """Si la cita está en el capítulo. Un marcador (`[PROFESION_OCULTA]`) vale por el trozo que
+    sustituye: el judge puede escribirlo en lugar del texto literal (TO-058), y el resto de la
+    cita tiene que estar tal cual y en orden."""
+    trozos = [_normal(t) for t in MARCADOR.split(fragmento)]
+    if sum(len(t) for t in trozos) < _LITERAL_MINIMO:
+        return False
+    if len(trozos) == 1:
+        return trozos[0] in capitulo
+    patron = r".{1,200}?".join(re.escape(t) for t in trozos)
+    return re.search(patron, capitulo) is not None
+
+
 def invencion_destinatario(
     config: Config, afirmaciones: list[AfirmacionDestinatario], contexto: ContextoJudge
 ) -> ResultadoValidador:
@@ -112,11 +130,11 @@ def invencion_destinatario(
     minimo = config.umbrales.calidad.invencion_soporte_minimo
     inventadas = []
     for a in afirmaciones:
-        if not a.fragmento.strip() or _normal(a.fragmento) not in capitulo:
+        if not a.fragmento.strip() or not _cita_en(a.fragmento, capitulo):
             continue
         if a.apoyo != "ninguno":
             continue
-        palabras = _contenido(a.afirmacion, nombre)
+        palabras = _contenido(MARCADOR.sub(" ", a.afirmacion), nombre)
         if palabras and len(palabras & soporte) / len(palabras) < minimo:
             inventadas.append(a)
     cuenta = len(inventadas)

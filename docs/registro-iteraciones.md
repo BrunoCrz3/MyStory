@@ -1432,3 +1432,30 @@ decía 0 intentos. El backend no sumaba la corrección.
 
 Backend y frontend en verde. En la segunda generación del ensayo los capítulos corregidos
 tendrán `intentos > 0`.
+
+---
+
+## RI-031 — `invencion_destinatario` no contaba citas anonimizadas por el judge
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/quality/validadores/invencion_destinatario.py`,
+`backend/app/quality/validadores/basicos.py`, `backend/tests/quality/test_validadores_editor.py`,
+`docs/verification.md` (TO-058)
+
+### Causa
+
+Observación del desarrollador (los dos validadores del rol editor siempre en 0,00) y una
+demostración en memoria sobre un capítulo real con un tema excluido y un hecho inventado
+inyectados: `temas_excluidos` = 1 y suspende; `invencion_destinatario` = 0, porque el judge citó
+con `[PROFESION_OCULTA]` y la cita no casaba literalmente con el capítulo.
+
+### Qué cambió
+
+Dos pruebas primero: una cita con marcador cuyo resto está en el capítulo cuenta (en rojo), y
+un marcador no hace pasar una cita que no está (en verde ya antes). Después, `_cita_en`, y el
+marcador fuera del contenido de la afirmación. `docs/verification.md` declara la dirección de
+cada score.
+
+### Efecto
+
+Demostración repetida: `invencion_destinatario` = 1 y `temas_excluidos` = 1, los dos sin pasar y
+cerrando el paso; el capítulo suspende. Unificar la dirección de los scores queda post-demo.

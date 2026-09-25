@@ -150,7 +150,8 @@ primeros bloques son lo que el alcance exige para aprobar; el resto, por orden.
 | 11 | **Auditoría 002** | Sucesora de `docs/audits/001-coherencia-ontologia.md`, sobre el estado tras la demo | — |
 | 12 | **Exceso de filas `obligatorio` en `docs/verification.md`** | Hay más filas obligatorias de las que la demo puede cubrir; hay que revisar cuáles lo son de verdad | — |
 | 13 | **`disk I/O error` intermitente en `tests/e2e/test_f1.py`** al leer la base justo después de matar el proceso, en Windows | Visto una vez; pasa en las repeticiones (RI-027) | Decisión del desarrollador, 2026-09-25 |
-| 14 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
+| 14 | **Unificar la dirección de todos los scores** (por ejemplo, 1 = cumple) para Langfuse y la tabla brief × validador: hoy `invencion_destinatario` y `temas_excluidos` son recuentos con 0 = bien | Cambiaría los scores de Langfuse a mitad de ensayo; la dirección está declarada en `docs/verification.md` | Decisión del desarrollador (TO-058) |
+| 15 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
 
 ## Decisiones
 

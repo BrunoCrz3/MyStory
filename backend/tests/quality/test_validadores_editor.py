@@ -212,3 +212,37 @@ def test_el_prompt_del_judge_pide_el_apoyo_y_excluye_la_trama() -> None:
 
     texto = cargar_prompt("judge").texto
     assert "apoyo" in texto and "trama" in texto
+
+
+def test_una_cita_con_un_marcador_en_lugar_de_un_dato_cuenta_si_el_resto_esta() -> None:
+    """Ensayo de la demo (TO-058): el judge citó «…trabaja de [PROFESION_OCULTA] en el
+    hospital…» en lugar del texto literal. El marcador vale por lo que sustituye; el resto de la
+    cita tiene que estar en el capítulo."""
+    salida = _salida(
+        [
+            {
+                "afirmacion": "Ondina ejerce una profesión sanitaria",
+                "fragmento": "[NOMBRE_ANONIMIZADO] trabaja de [PROFESION_OCULTA] en el hospital "
+                "del puerto desde hace diez años.",
+                "apoyo": "ninguno",
+            }
+        ],
+        [],
+    )
+    v = _por_nombre(evaluar_judge(CONFIG, salida, None, CONTEXTO).todos, "invencion_destinatario")
+    assert v.valor == 1 and not v.pasa
+
+
+def test_un_marcador_no_hace_pasar_por_buena_una_cita_que_no_esta() -> None:
+    salida = _salida(
+        [
+            {
+                "afirmacion": "Ondina ejerce una profesión sanitaria",
+                "fragmento": "Ondina trabajaba de [PROFESION_OCULTA] en la base aérea.",
+                "apoyo": "ninguno",
+            }
+        ],
+        [],
+    )
+    v = _por_nombre(evaluar_judge(CONFIG, salida, None, CONTEXTO).todos, "invencion_destinatario")
+    assert v.valor == 0 and v.pasa

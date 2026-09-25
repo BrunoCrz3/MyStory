@@ -2166,3 +2166,44 @@ actual» y aclara que cuenta correcciones del editor y reescrituras, con 0 para 
   hasta el doble). Con 3, un capítulo que el editor no arregla se agota tras dos vueltas.
 - Un capítulo aceptado con `intentos > 0` es un capítulo que necesitó corrección: el dato sirve
   para la tabla brief × validador.
+
+---
+
+## TO-058 — Dirección de los scores y citas del judge con marcadores
+
+**Fecha:** 2026-09-25 · **Estado:** arreglo de bug con prueba previa (observación del
+desarrollador) · **Afecta a:** `backend/app/quality/validadores/invencion_destinatario.py`,
+`backend/app/quality/validadores/basicos.py`, `docs/verification.md` § Índice de validadores y
+O-20
+
+### Problema
+
+El desarrollador vio que `invencion_destinatario` y `temas_excluidos` puntúan siempre 0,00 en la
+primera novela del ensayo, y preguntó si detectan algo.
+
+- **Dirección.** Los dos son **recuentos** (0 = bien), no escalas 0–1: cualquier valor mayor que
+  cero suspende. Son los únicos. `legibilidad` es un índice INFLESZ, pero todavía no se emite. El
+  resto va de 0 a 1 con 1 = cumple. Nada lo declaraba.
+- **`temas_excluidos` sí demuestra algo en la demo**: el brief excluye `enfermedad`.
+- **Demostración en memoria** sobre el capítulo 5 real, con un tema excluido (un diagnóstico y
+  semanas de hospital) y un hecho personal ausente del brief (doce años de cirujana en otra
+  ciudad y un divorcio) inyectados a mitad del texto, sin guardar nada: `temas_excluidos` dio 1
+  y suspendió, pero **`invencion_destinatario` dio 0**. El judge sí marcó las dos afirmaciones sin
+  apoyo, pero escribió la cita como `…doce años como [PROFESION_OCULTA] en…`. Con `proveedor:
+  claude_code`, las instrucciones de privacidad de la organización también le llegan al judge
+  (TO-056). La mitad programática descarta toda cita que no esté literal en el capítulo (A-90),
+  así que la invención no contaba.
+
+### Opciones y elección
+
+| Decisión | Opciones | Elección |
+| --- | --- | --- |
+| Cita con marcador | A · Aceptar cualquier cita que contenga un marcador; **B · el marcador vale por el trozo que sustituye**, y el resto de la cita tiene que estar literal y en orden, con un mínimo de texto literal | **B**: sigue sin contar una cita inventada por el judge (prueba), y cuenta la que solo tiene un dato tapado. Las palabras de un marcador no cuentan como contenido de la afirmación |
+| Dirección de los scores | Unificarla ya; **declararla ahora y unificarla después** | **Declararla** en `docs/verification.md` § Índice de validadores. Unificarla (1 = cumple en todos) cambiaría los scores de Langfuse a mitad de ensayo: queda post-demo |
+
+### Consecuencias
+
+- Repetida la demostración con el arreglo, los dos dan 1, no pasan, cierran el paso, y el
+  capítulo suspende.
+- Tres llamadas al judge fuera de una generación, con un trazador local: no quedan en Langfuse
+  ni en la base de la demo, y su coste no se midió.
