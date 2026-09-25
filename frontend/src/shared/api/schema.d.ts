@@ -206,6 +206,9 @@ export interface paths {
          * Historial de versiones de una novela
          * @description Responde a RF-VER-01. Cada entrada dice a qué versión sucede y cuántos capítulos
          *     cambiaron respecto a ella, que es lo que la lectura marca.
+         *
+         *     Solo versiones `publicada`: las candidatas y las rechazadas no son historial del
+         *     lector (TO-045).
          */
         get: operations["listarVersiones"];
         put?: never;
@@ -238,6 +241,10 @@ export interface paths {
          * Una versión con su índice de capítulos
          * @description Responde a RF-VER-02. Es lo que alimenta el índice navegable: número, título y la
          *     marca `modificado` de cada capítulo respecto a la versión anterior.
+         *
+         *     Devuelve la versión en cualquier `estado`: una `candidata` también, porque la lectura
+         *     la pinta para que el gate la valide con `render_visual` antes de publicarla (TO-045).
+         *     Sus capítulos, su ficha, su portada y sus hechos se sirven igual.
          *
          *     **La versión anterior sigue siendo consultable entera** (`CLAUDE.md` regla 15):
          *     pedir la versión 1 después de publicar la 3 devuelve la 1 tal como se publicó.
@@ -548,6 +555,9 @@ export interface paths {
          *     Se genera **una vez por versión**, porque las versiones son inmutables (TO-025).
          *     Un segundo `POST` sobre una versión ya exportada devuelve `200` con el export que
          *     ya existe en vez de rehacerlo.
+         *
+         *     Solo se exporta una versión `publicada`: una candidata o una rechazada responde
+         *     `404 version-no-encontrada` (TO-045).
          */
         post: operations["exportarVersion"];
         delete?: never;
@@ -921,6 +931,7 @@ export interface components {
             /** @description Lo fija el planificador. Es `null` hasta que hay esquema. */
             titulo: string | null;
             estado: components["schemas"]["EstadoNovela"];
+            /** @description La última versión `publicada`. Una candidata o una rechazada nunca lo es. */
             version_vigente?: number | null;
             /** Format: date-time */
             creada_en: string;
@@ -931,6 +942,7 @@ export interface components {
             novel_id: string;
             titulo?: string | null;
             estado: components["schemas"]["EstadoNovela"];
+            /** @description La última versión `publicada`. Una candidata o una rechazada nunca lo es. */
             version_vigente?: number | null;
             /** @description Sale de `config/thresholds.yaml` § `obra.capitulos`. */
             total_capitulos?: number;
@@ -1024,8 +1036,18 @@ export interface components {
             version: number;
             /** Format: uuid */
             novel_id: string;
+            /**
+             * @description `candidata` mientras el gate la valida; `publicada` solo si el gate completo,
+             *     `render_visual` incluido, pasó; `rechazada` si falló, y entonces nunca se publica
+             *     ni es la versión vigente (TO-045).
+             * @enum {string}
+             */
+            estado: "candidata" | "publicada" | "rechazada";
             titulo?: string | null;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description Cuándo se publicó. En una candidata o una rechazada, cuándo se propuso.
+             */
             publicada_en: string;
             version_anterior?: number | null;
             /** @description Hash del contenido. Es lo que hace comprobable que una versión publicada no cambia. */

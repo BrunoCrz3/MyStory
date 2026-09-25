@@ -15,10 +15,15 @@ export function textoDeCapitulo(n: number): string {
     : `Texto del capítulo ${n}. El mar seguía allí.`
 }
 
-export function crearVersion(version: number, modificados: readonly number[] = []) {
+export function crearVersion(
+  version: number,
+  modificados: readonly number[] = [],
+  estado: Esquemas['Version']['estado'] = 'publicada',
+) {
   return {
     version,
     novel_id: NOVEL_ID,
+    estado,
     titulo: TITULO,
     publicada_en: '2026-09-23T10:30:00Z',
     version_anterior: version > 1 ? version - 1 : null,

@@ -12,8 +12,8 @@ describe('cliente generado desde specs/openapi.yaml (CA-01)', () => {
     expect(sinRetornos(commiteado)).toBe(sinRetornos(generado))
   })
 
-  it('se genera desde la versión 1.1.0 del contrato', () => {
+  it('se genera desde la versión 1.2.0 del contrato', () => {
     const contrato = parse(readFileSync(RUTA_CONTRATO, 'utf-8')) as { info: { version: string } }
-    expect(contrato.info.version).toBe('1.1.0')
+    expect(contrato.info.version).toBe('1.2.0')
   })
 })

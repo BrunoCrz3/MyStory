@@ -50,3 +50,28 @@ describe('capítulos modificados y versiones (CA-12)', () => {
     expect(screen.queryAllByTestId('capitulo-modificado')).toHaveLength(0)
   })
 })
+
+describe('versión candidata (TO-045, contrato 1.2.0)', () => {
+  it('la lectura abre una candidata por su URL, como la pinta render_visual', async () => {
+    const prueba = crearFetchDePrueba()
+    responderVersiones(prueba, { 1: [], 2: [3, 7], 3: [3] }, [3])
+    renderizar(<Rutas />, { ruta: `/novelas/${NOVEL_ID}/versiones/3`, prueba })
+
+    await waitFor(() => expect(screen.getByTestId('lectura')).toHaveAttribute('data-estado', 'lista'))
+    expect(screen.getByTestId('lectura')).toHaveAttribute('data-version', '3')
+    expect(screen.getAllByTestId('capitulo')).toHaveLength(10)
+    expect(numerosConMarca('indice-entrada')).toEqual(['3'])
+  })
+
+  it('el selector solo ofrece las versiones publicadas que da listarVersiones', async () => {
+    const prueba = crearFetchDePrueba()
+    responderVersiones(prueba, { 1: [], 2: [3, 7], 3: [3] }, [3])
+    renderizar(<Rutas />, { ruta: `/novelas/${NOVEL_ID}/versiones/3`, prueba })
+
+    const selector = await screen.findByRole('combobox', { name: 'Versión' })
+    const valores = within(selector)
+      .getAllByRole('option')
+      .map((opcion) => opcion.getAttribute('value'))
+    expect(valores).toEqual(['2', '1'])
+  })
+})
