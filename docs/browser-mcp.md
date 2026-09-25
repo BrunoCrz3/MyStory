@@ -265,3 +265,10 @@ de la entrevista».
 - **Cambiado:** sin cambios de estilo —la hoja de impresión y el PDF no cambian—. Se añaden dos
   comprobaciones: la aserción `desplazamiento` de `render_visual` en el gate, y la guarda
   estática `frontend/tests/desplazamiento.test.ts` sobre las hojas de `src/`.
+
+**Confirmado después** con la pantalla del desarrollador (1920×1080 al 125 % de escala): Edge ve
+la ventana como 1536×816 píxeles CSS, y el viewport de 1900×880 que se había fijado no cabía y
+se cortaba. Con `browser_resize` a **1520×700** —el ancho de la ventana menos el borde, y el alto
+menos la barra del navegador— la página se desplaza entera. **Regla para la próxima
+inspección:** en la ventana visible, no fijar un viewport mayor que la ventana; o cerrar la
+pestaña con `browser_close` al terminar para que no quede fijado.
