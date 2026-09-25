@@ -338,9 +338,9 @@ flowchart LR
 
 | Punto | Quién lo ejecuta | Qué corre | Coste |
 | --- | --- | --- | --- |
-| Hook de policy | `policy/` | Conformidad de schema y guardrail de palabras prohibidas | Determinista, sin modelo |
-| Hook de capítulo | `quality/` | Los validadores programáticos de continuidad y prosa, **en paralelo** | Determinista, sin modelo |
-| Rol editor | `quality/` | El `judge` puntúa la rúbrica; si algo que cierra el paso falla —en los hooks o en el judge—, el `editor` corrige y su versión vuelve a pasar **todos** los validadores, judge incluido | Una llamada, o tres si el editor corrige |
+| **Hook de policy** (alcance: «hook de policy») | `process/hook_policy.py`, span `hook_policy`; decide el policy engine | `schema_valido` y `palabras_prohibidas` | Determinista, sin modelo |
+| **Hook de capítulo** (alcance: «hook de validación del capítulo») | `quality.service.hook_capitulo`, span `hook_capitulo`; solo si pasa el de policy | Siete validadores programáticos **en paralelo**: `longitud`, `nombres_exactos`, `consistencia_factica`, `cumplimiento_brief`, `reglas_mundo`, `calidad_prosa`, `integridad_pov` | Determinista, sin modelo |
+| Rol editor | `quality/` | El `judge` puntúa la rúbrica —`consistencia_factica`, `adecuacion_tono`, `cierre_arco`, `coherencia_personajes`, `ritmo`, `personalizacion_natural`— y con su salida se cuentan `invencion_destinatario` y `temas_excluidos`; si algo que cierra el paso falla —en los hooks o en el judge—, el `editor` corrige y su versión vuelve a pasar **todos** los validadores, judge incluido | Una llamada, o tres si el editor corrige |
 | Gate de publicación | `versioning/` | Lean, elementos obligatorios, cierre del arco, estructura de edición, regeneración fiel desde la segunda versión y render visual, **sobre la versión candidata** | Subprocesos, sin modelo |
 
 **Invariante de publicación** (RNF-19, TO-045). Al aceptarse el último capítulo, la versión se
@@ -358,7 +358,8 @@ publicada | rechazada`.
 no se paga un juicio ni una corrección sobre un borrador sin schema o con una palabra vetada.
 Si falla el hook de capítulo, el judge corre igualmente, porque su crítica es parte del informe
 que recibe el editor. Lo que el policy engine decide es el resultado del **borrador
-corregido**; si sigue sin pasar, vuelve al redactor con `intentos + 1`. Un defecto que el
+corregido**; si sigue sin pasar, vuelve al redactor con `intentos + 1`. La corrección del editor
+gasta también un intento (TO-057). Un defecto que el
 editor clasifica como sistémico se trata como local (D-14) y queda en el audit log.
 
 **El policy engine es lo que sustituyó al autor humano.** Adopta o descarta un `Hecho`
@@ -958,6 +959,13 @@ RechazadaNuncaVigente ==
 `vigente` es la versión que la lectura muestra como actual. La acción `Publicar` exige el gate
 en verde y fija `estadoVersion` a `publicada` en el mismo paso; `DevolverAlEditor` la fija a
 `rechazada` sin tocar `vigente`.
+
+**Invariante de intentos** (TO-014, TO-057, TO-059). Un solo contador por capítulo que gastan
+dos acciones: la corrección del editor, dentro de `Validando` y sin cambiar de estado, y
+`Reescribir`. Ninguna de las dos se habilita con el contador en el límite, así que el `.cfg`
+comprueba `\A c \in Capitulos : intentos[c] <= MaxIntentos`, y con él el peor caso de
+`MaxIntentos + 1` generaciones por capítulo. `MaxIntentos` es `modelo_formal.reintentos` en el
+modelo pequeño y `orquestacion.max_intentos_capitulo` (hoy 5) en la novela real.
 
 **Dos abstracciones declaradas** (TO-023), porque una abstracción declarada es honesta y una
 omisión silenciosa no:

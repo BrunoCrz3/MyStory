@@ -125,7 +125,9 @@ replanificacion:
 # devuelva un 429 no es un defecto del capítulo.
 
 orquestacion:
-  max_intentos_capitulo: 3         # [decisión] TO-014 · contador acumulativo; peor caso 4 generaciones
+  max_intentos_capitulo: 5         # [provisional — calibrar tras la demo] TO-014, TO-059 · contador acumulativo que
+                                   # gastan corrección del editor y reescritura (TO-057); sube de 3 a 5 para compensarlo.
+                                   # Peor caso: 6 generaciones (redactor + editor) por capítulo, 60 por novela
   max_intentos_trabajo: 3          # [decisión] TO-014 · fallo de infraestructura; no gasta del anterior
   backoff:
     base_segundos: 2              # [provisional — calibrar tras la demo] 2s, 4s, 8s con jitter;

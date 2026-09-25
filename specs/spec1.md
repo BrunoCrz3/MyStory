@@ -259,7 +259,10 @@ sistema deberá reanudar desde el `Checkpoint` sin duplicar ni perder capítulos
 > que la spec TLA+ que la comparará.
 
 **RF-PROC-08 [demo]** · Cuando un capítulo agote `orquestacion.max_intentos_capitulo`, el
-sistema deberá dejarlo en `Agotado`, la novela en `Detenida`, e informar con el motivo.
+sistema deberá dejarlo en `Agotado`, la novela en `Detenida`, e informar con el motivo. El
+contador lo gastan por igual la corrección del editor y la reescritura del redactor (TO-057), así
+que el peor caso por capítulo es `max_intentos_capitulo + 1` generaciones entre redactor y editor
+(6 con el valor actual, 5; TO-059).
 
 > *Dado* un capítulo que falla la validación tantas veces como permita el límite, *cuando*
 > se agota, *entonces* la generación queda terminal, `detenida_por` lleva el `type` del

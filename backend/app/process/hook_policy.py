@@ -1,5 +1,9 @@
-"""Hook de policy: conformidad de schema y guardrail de palabras prohibidas, lo barato y
-determinista que corre antes que nada (`architecture.md` § Hooks y policy engine).
+"""**Hook de policy** del alcance («dos hooks: uno de validación del capítulo y otro de
+policy»): conformidad de schema y guardrail de palabras prohibidas, lo barato y determinista
+que corre antes que nada, en el span `hook_policy` (`architecture.md` § Hooks y policy engine).
+
+El otro, el **hook de validación del capítulo**, es `quality.service.hook_capitulo`: siete
+validadores programáticos en paralelo, en el span `hook_capitulo`, que solo corre si este pasa.
 
 Lo ejecuta `process/` porque es quien puede usar `guardrail/`; la decisión sobre el capítulo
 la toma después el policy engine con los veredictos (TO-039, A-31).

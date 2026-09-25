@@ -1459,3 +1459,30 @@ cada score.
 
 Demostración repetida: `invencion_destinatario` = 1 y `temas_excluidos` = 1, los dos sin pasar y
 cerrando el paso; el capítulo suspende. Unificar la dirección de los scores queda post-demo.
+
+---
+
+## RI-032 — Límite de intentos, nombres de los hooks e interferencia de la organización
+
+**Fecha:** 2026-09-25 · **Ficheros:** `config/thresholds.yaml`, `docs/trade-offs.md` (TO-014,
+TO-059, TO-060, TO-061), `specs/spec1.md`, `docs/architecture.md`, `docs/verification.md`,
+`docs/red-team.md` (nuevo), `backend/app/process/hook_policy.py`, `backend/app/quality/service.py`
+
+### Causa
+
+Tres observaciones del desarrollador durante la segunda generación del ensayo: TO-057 dejaba
+`max_intentos_capitulo: 3` en la mitad de oportunidades; los dos hooks del alcance no se
+reconocían en el código; y la anonimización de la organización tenía que quedar documentada.
+
+### Qué cambió
+
+- `max_intentos_capitulo` 3 → 5 `[provisional]`, con el peor caso nuevo (6 generaciones por
+  capítulo) en TO-014, RF-PROC-08 y la invariante TLA+ prevista. Se aplica desde la regeneración.
+- `process/hooks.py` → `process/hook_policy.py`; docstrings de los dos hooks; tabla de
+  `architecture.md` y puntos de ejecución de O-36, O-43 y O-45 corregidos. Sin cambio de
+  comportamiento.
+- TO-061 y `docs/red-team.md` (RT-001, RT-002). Ningún prompt cambia.
+
+### Efecto
+
+Suite en verde sin cambios de pruebas por el renombrado. El límite nuevo se ve en la regeneración.

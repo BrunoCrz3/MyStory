@@ -519,6 +519,13 @@ El peor caso acota el gasto y la forma de la invariante determina lo que TLC tie
 
 Cifras, las tres `[decisión]`: `max_intentos_capitulo: 3`, `max_reescrituras: 2`, `max_intentos_trabajo: 3`.
 
+> **Revisión (2026-09-25, TO-057 y TO-059).** El peor caso de arriba no contaba al editor. Desde
+> TO-057 su corrección gasta del mismo contador, y el peor caso es `max_intentos_capitulo + 1`
+> generaciones entre redactor y editor por capítulo. Para no reducir a la mitad las oportunidades
+> de un capítulo, `max_intentos_capitulo` sube a **5** `[provisional — calibrar tras la demo]`:
+> **6 generaciones por capítulo, 60 por novela**. La opción B sigue: un contador, dos condiciones
+> de parada.
+
 ---
 
 ## TO-015 — Sin `sqlite-vec` en v1
@@ -1313,7 +1320,7 @@ junto al cambio aprobado que las motiva.
 | A-28 | P18 | El conversor de salida estructurada quita longitudes, rangos y títulos y marca obligatoria toda propiedad; lo quitado se comprueba al validar con el mismo modelo Pydantic | La salida estructurada admite un subconjunto de JSON Schema; la validación posterior es schema_valido |
 | A-29 | P18 | La lectura de la story bible para un rol se envuelve en el span consultar_story_bible en vez de ofrecer la tool al modelo | El orquestador entrega el contexto ya ensamblado; el span deja la lectura en la traza |
 | A-30 | P18 | Aristas process → novel y process → intake añadidas al grafo de architecture.md | La prueba de importaciones las cazó; el orquestador crea capítulos y lee el brief, y no hay ciclo |
-| A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no |
+| A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py, hoy `process/hook_policy.py`, TO-060) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no |
 | A-32 | P19 | El contador de intentos cuenta las reescrituras hechas: al agotar no se suma la que ya no se hace | Un capítulo agotado muestra las reescrituras gastadas, igual que el ejemplo Detenida del contrato |
 | A-33 | P19 | La capa Local lleva todos los capítulos anteriores por recencia y el ensamblador los resume o los quita al desbordar; Recuperado excluye solo el capítulo anterior | Así no hace falta una cifra de cuántos capítulos literales entran: manda el presupuesto de la capa |
 | A-34 | P20 | El extractor cita hechos y promesas conocidos por alias cortos (H1, P1) que el código traduce a identificadores | Copiar UUID es frágil para un modelo; un alias que no existe se ignora |
@@ -2207,3 +2214,106 @@ primera novela del ensayo, y preguntó si detectan algo.
   capítulo suspende.
 - Tres llamadas al judge fuera de una generación, con un trazador local: no quedan en Langfuse
   ni en la base de la demo, y su coste no se midió.
+
+---
+
+## TO-059 — `max_intentos_capitulo` sube de 3 a 5 para compensar TO-057
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** · **Afecta a:** `config/thresholds.yaml` § orquestación, TO-014, `specs/spec1.md` RF-PROC-08, `docs/architecture.md` § TLA+
+
+### Problema
+
+Desde TO-057, cada vuelta en que el editor no arregla el capítulo gasta dos intentos: su
+corrección y la reescritura. Con `max_intentos_capitulo: 3`, un capítulo tiene la mitad de
+oportunidades que cuando se decidió TO-014.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Volver al recuento anterior | Tres vueltas con 3 | El editor vuelve a no contar, y el peor caso de TO-014 es falso |
+| B · Mantener 3 | Frena antes | Un capítulo que el editor no arregla se agota en dos vueltas |
+| **C · Subir a 5** | Con el recuento correcto, tres vueltas con redactor y editor, como antes | Peor caso de 6 generaciones por capítulo (60 por novela), frente a las 4 (40) de TO-014 |
+
+### Elección
+
+**C, decidida por el desarrollador**, con la marca `[provisional — calibrar tras la demo]`, y
+aplicada desde la regeneración del ensayo: la generación inicial en curso siguió con 3.
+
+### Consecuencias
+
+- TO-014 lleva una nota de revisión con el peor caso nuevo; RF-PROC-08 lo nombra, y la
+  invariante TLA+ prevista acota `intentos[c] <= MaxIntentos` con las dos acciones que gastan.
+- El tope por novela (15 USD, TO-049) y el de latencia siguen siendo los frenos globales.
+
+---
+
+## TO-060 — Los dos hooks del alcance, con su nombre en el código
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (renombrado sin cambio de comportamiento) ·
+**Afecta a:** `backend/app/process/hook_policy.py` (antes `hooks.py`),
+`backend/app/quality/service.py`, `docs/architecture.md` § Hooks y policy engine,
+`docs/verification.md` (O-36, O-43, O-45)
+
+### Problema
+
+El alcance pide «dos hooks: uno de validación del capítulo y otro de policy». El desarrollador
+leyó `process/hooks.py` —dos funciones, `schema_valido` y `palabras_prohibidas`— como esos dos
+hooks. No lo son:
+
+| Hook del alcance | Dónde está | Span | Qué corre |
+| --- | --- | --- | --- |
+| **De policy** | `process/hook_policy.py`; decide el policy engine | `hook_policy` | `schema_valido` y `palabras_prohibidas` |
+| **De validación del capítulo** | `quality.service.hook_capitulo` | `hook_capitulo` | `longitud`, `nombres_exactos`, `consistencia_factica`, `cumplimiento_brief`, `reglas_mundo`, `calidad_prosa`, `integridad_pov`, en paralelo, y solo si pasa el de policy |
+
+Los spans ya decían los dos nombres. Lo que confundía era el módulo, llamado en plural
+`hooks.py` aunque solo contiene uno, y la tabla de `architecture.md`, que atribuía el hook de
+policy a `policy/` (lo ejecuta `process/`, A-31). `verification.md` además situaba en el hook de
+capítulo tres filas que no corren ahí: O-36 y O-45 son criterios del judge (rol editor), y O-43
+(firma dramática) no está implementada.
+
+### Elección
+
+Renombrar el módulo a `hook_policy.py`, con docstrings que nombran cada hook del alcance y remiten
+al otro. Corregir la tabla de `architecture.md` —quién lo ejecuta, span y validadores de cada
+hook— y el punto de ejecución de O-36, O-43 y O-45. Sin cambio de comportamiento: la suite no
+cambia.
+
+---
+
+## TO-061 — Las instrucciones de privacidad de la organización interfieren con `proveedor: claude_code`
+
+**Fecha:** 2026-09-25 · **Estado:** documentada; **no se esquiva** (decisión del desarrollador) ·
+**Afecta a:** `config/models.yaml` § `proveedor`, `docs/red-team.md` RT-002, `specs/progreso.md` § Post-demo
+
+### Problema
+
+Con `proveedor: claude_code` (TO-040, I-04), cada rol es un subproceso del CLI de Claude Code con
+la sesión del desarrollador. Su organización tiene **instrucciones de administrador** que piden
+anonimizar datos personales (nombres, profesiones, salud) y bloquear credenciales. Esas
+instrucciones se aplican también al subproceso, sin que el repositorio las vea ni las controle.
+En el ensayo de la demo:
+
+- el redactor escribió `[NOMBRE_ANONIMIZADO]` en lugar del nombre de la destinataria en un
+  capítulo, aunque el brief es ficticio (TO-052);
+- el judge citó con `[PROFESION_OCULTA]` y `[SALUD_OCULTA]`, lo que desactivaba el cotejo de
+  `invencion_destinatario`.
+
+Es intermitente: nueve de diez capítulos nombran a la destinataria sin problema.
+
+### Por qué no se esquiva
+
+Es una **política del administrador de la organización**, y corresponde a él decidir su alcance.
+No se añade a ningún prompt una instrucción para evitar la anonimización, ni se manipula el
+entorno del subproceso para saltársela. Lo que sí hace el repositorio es **no publicar** el
+resultado: los validadores detectan el marcador (TO-056, TO-058) y el capítulo vuelve al editor o
+al redactor; si se repite hasta agotar los intentos, la generación se detiene y lo dice.
+
+### Salidas legítimas
+
+| Salida | Qué hace falta | Efecto |
+| --- | --- | --- |
+| **A · Ajuste del administrador** | Que el administrador de la organización excluya este uso (datos ficticios de un generador de novelas) de la política de anonimización, o la acote | `claude_code` sigue sin clave de API y deja de anonimizar |
+| **B · `proveedor: api`** | Una `ANTHROPIC_API_KEY` proporcionada por la organización o por el curso, en `.env` (nunca en el repo) | La API no lleva las instrucciones de la organización; además el recuento de tokens y el coste dejan de ser estimados (TO-040) |
+
+Las dos están en la lista post-demo: resolver el proveedor con el administrador.

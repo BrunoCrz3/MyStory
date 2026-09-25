@@ -97,7 +97,10 @@ async def en_paralelo(
 
 
 async def hook_capitulo(config: Config, entrada: EntradaHookCapitulo) -> list[ResultadoValidador]:
-    """Los siete validadores programáticos del hook de capítulo, en paralelo."""
+    """**Hook de validación del capítulo** del alcance, en el span `hook_capitulo`: los siete
+    validadores programáticos —`longitud`, `nombres_exactos`, `consistencia_factica`,
+    `cumplimiento_brief`, `reglas_mundo`, `calidad_prosa` e `integridad_pov`— en paralelo. Corre
+    después del hook de policy (`process/hook_policy.py`) y solo si este pasa."""
     e, texto = entrada, entrada.texto
     return await en_paralelo(
         [

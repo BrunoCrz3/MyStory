@@ -28,7 +28,7 @@ from app.guardrail import service as guardrail
 from app.intake.service import BriefNovela, leer_brief
 from app.novel import service as novel
 from app.policy.service import DecisionCapitulo, PolicyEngine, Veredicto
-from app.process import hooks
+from app.process import hook_policy
 from app.process.editor import corregir
 from app.process.judge import juzgar
 from app.process.schemas import BorradorCapitulo
@@ -263,10 +263,10 @@ async def ciclo_capitulo(
         """
         nonlocal reescrituras_por_guardrail
         with r.trazador.span("hook_policy"):
-            v_schema, borrador = hooks.schema_valido(salida, error)
+            v_schema, borrador = hook_policy.schema_valido(salida, error)
             resultados = [v_schema]
             if borrador is not None:
-                v_palabras, coincidencias = hooks.palabras_prohibidas(
+                v_palabras, coincidencias = hook_policy.palabras_prohibidas(
                     config, borrador, palabras_novela=datos.palabras, perfil=perfil
                 )
                 resultados.append(v_palabras)

@@ -210,7 +210,7 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Invariantes de la cronología y del harness | `formal/lean/`, `formal/tla/` ▸ previsto |
 | Qué se decidió construir, antes de escribir código | `docs/spec-inicial.md` ▸ previsto |
 | Un concepto del curso por fichero | `docs/explainers/` ▸ previsto |
-| Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md` ▸ previsto, `docs/browser-mcp.md` |
+| Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md`, `docs/browser-mcp.md` |
 | Specs y planes de implementación | `specs/` · lo archivado, en `docs/specs/_archivo/` |
 | Skills: las de runtime que cargan los roles y las de desarrollo | `docs/architecture.md` § Skills |
 | Contrato de la API | `http://localhost:8000/openapi.json` |

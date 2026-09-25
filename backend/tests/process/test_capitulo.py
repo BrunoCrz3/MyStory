@@ -7,14 +7,17 @@ from typing import Any
 
 import pytest
 
+from app.commons.config import cargar_config
 from app.process.capitulo import ciclo_capitulo
 from app.quality.validadores import basicos
+from tests.arquitectura.comprobadores import RAIZ_REPO
 from tests.conftest import Entorno
 from tests.dobles.guiones import corregido
 from tests.fixtures.borradores import borrador
 from tests.fixtures.planificada import novela_planificada
 
-LIMITE = 3
+# El límite sale de config: TO-059 lo subió de 3 a 5.
+LIMITE = cargar_config(RAIZ_REPO / "config").umbrales.orquestacion.max_intentos_capitulo
 
 
 def _estado(entorno: Entorno, novela: str, numero: int = 1) -> tuple[str, int]:

@@ -151,7 +151,8 @@ primeros bloques son lo que el alcance exige para aprobar; el resto, por orden.
 | 12 | **Exceso de filas `obligatorio` en `docs/verification.md`** | Hay más filas obligatorias de las que la demo puede cubrir; hay que revisar cuáles lo son de verdad | — |
 | 13 | **`disk I/O error` intermitente en `tests/e2e/test_f1.py`** al leer la base justo después de matar el proceso, en Windows | Visto una vez; pasa en las repeticiones (RI-027) | Decisión del desarrollador, 2026-09-25 |
 | 14 | **Unificar la dirección de todos los scores** (por ejemplo, 1 = cumple) para Langfuse y la tabla brief × validador: hoy `invencion_destinatario` y `temas_excluidos` son recuentos con 0 = bien | Cambiaría los scores de Langfuse a mitad de ensayo; la dirección está declarada en `docs/verification.md` | Decisión del desarrollador (TO-058) |
-| 15 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
+| 15 | **Resolver el proveedor del modelo con el administrador de la organización**: que excluya o acote la política de anonimización para este uso, o que la organización o el curso proporcionen una clave para `proveedor: api` | Con `claude_code`, las instrucciones de privacidad de la organización llegan a los subprocesos y anonimizan nombres ficticios (RT-002) | Decisión del desarrollador (TO-061) |
+| 16 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
 
 ## Decisiones
 
@@ -194,7 +195,7 @@ registrada.
 | A-28 | P18 | El conversor de salida estructurada quita longitudes, rangos y títulos y marca obligatoria toda propiedad; lo quitado se comprueba al validar con el mismo modelo Pydantic | La salida estructurada admite un subconjunto de JSON Schema; la validación posterior es schema_valido | TO-039 |
 | A-29 | P18 | La lectura de la story bible para un rol se envuelve en el span consultar_story_bible en vez de ofrecer la tool al modelo | El orquestador entrega el contexto ya ensamblado; el span deja la lectura en la traza | TO-039 |
 | A-30 | P18 | Aristas process → novel y process → intake añadidas al grafo de architecture.md | La prueba de importaciones las cazó; el orquestador crea capítulos y lee el brief, y no hay ciclo | TO-039 |
-| A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no | TO-039 |
+| A-31 | P19 | El hook de policy lo ejecuta process/ (process/hooks.py, hoy `process/hook_policy.py`, TO-060) y el de capítulo quality/; policy/ solo decide sobre sus veredictos | process/ es quien tiene arista a guardrail/; quality/ y policy/ no | TO-039 |
 | A-32 | P19 | El contador de intentos cuenta las reescrituras hechas: al agotar no se suma la que ya no se hace | Un capítulo agotado muestra las reescrituras gastadas, igual que el ejemplo Detenida del contrato | TO-039 |
 | A-33 | P19 | La capa Local lleva todos los capítulos anteriores por recencia y el ensamblador los resume o los quita al desbordar; Recuperado excluye solo el capítulo anterior | Así no hace falta una cifra de cuántos capítulos literales entran: manda el presupuesto de la capa | TO-039 |
 | A-34 | P20 | El extractor cita hechos y promesas conocidos por alias cortos (H1, P1) que el código traduce a identificadores | Copiar UUID es frágil para un modelo; un alias que no existe se ignora | TO-039 |
