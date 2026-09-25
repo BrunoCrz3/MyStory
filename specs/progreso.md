@@ -114,13 +114,42 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 
 ## Post-demo
 
-Lo que se decidió no hacer en la demo y **no se olvida**. No es trabajo de este plan.
+Lo que queda después de la demo, **priorizado** (decisión del desarrollador, 2026-09-25). Los tres
+primeros bloques son lo que el alcance exige para aprobar; el resto, por orden.
 
-| Qué | Por qué queda fuera | Decisión |
-| --- | --- | --- |
-| **Replanificación de capítulos pendientes** (invalidación de restricción de destino) | Sin RF en la spec 1; un defecto sistémico se trata como reescritura y queda registrado con su clasificación | D-14, aceptada por el desarrollador |
-| El resto de la lista post-demo de la spec | Entrevistador conversacional, TLA+, servidor MCP, agente de seguridad, gate de Lean, SSE, PO-11 y PO-12 | `specs/spec1.md` § 7 Post-demo |
-| **Validador programático «toda promesa pagada tiene su apertura en una fila vigente anterior al pago»** (O-41, el antiguo P-45) | Cierra el hueco de la regla 3 de TO-047: una promesa que el capítulo reescrito no reabre y paga uno no afectado sigue viva y pagada sin que la versión nueva la plantee. Hasta que exista es el punto ciego #16 de `docs/verification.md` | Decisión del desarrollador, 2026-09-25 (TO-047 § Decisiones posteriores) |
+### 1. Lo que el alcance exige para aprobar
+
+1. **Evaluaciones con resultados medibles.**
+   - Los cinco briefs de prueba B1–B5, incluidos el adversarial y el de incoherencia temporal,
+     corridos con el modelo real.
+   - La **tabla brief × validador**, con un score por celda.
+   - La **revisión humana comparada con el judge**, criterio a criterio.
+   - La **iteración de tuning documentada** con antes, después y la versión de prompt de cada
+     lado (E-11). RI-021 cambió `writer` y `extractor` sin esa tabla: es la primera candidata.
+2. **Lean.**
+   - RF-EXP-03: generar el fichero Lean desde la story bible de la versión.
+   - Activar `formal.gate_activo` (toolchain y timeout ya listos, I-03).
+   - Al menos **un caso real que solo detecte Lean**.
+3. **TLA+.**
+   - La especificación del harness en `formal/tla/harness.tla` y TLC con su `harness.cfg`.
+   - El test de correspondencia con la tabla de transiciones de `process/transiciones.py`.
+   - El mapeo en el README.
+
+### 2. Después
+
+| # | Qué | Por qué queda fuera | Decisión |
+| --- | --- | --- | --- |
+| 4 | **Entrevistador conversacional** | La entrevista de la demo es un formulario con validación del backend | `specs/spec1.md` § 7 |
+| 5 | **Replanificación de capítulos pendientes** (invalidación de restricción de destino) | Sin RF en la spec 1; un defecto sistémico se trata como reescritura y queda registrado con su clasificación | D-14, aceptada por el desarrollador |
+| 6 | **Validador «toda promesa pagada tiene su apertura en una fila vigente anterior al pago»** (O-41, el antiguo P-45) | Cierra el hueco de la regla 3 de TO-047. Hasta que exista es el punto ciego #16 de `docs/verification.md` | Decisión del desarrollador (TO-047 § Decisiones posteriores) |
+| 7 | **Casetes HTTP** (plan § 4.1, capa 2) | Solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen | — |
+| 8 | **`proveedor` en `GET /salud`** (contrato 1.3.0), para rotular tokens y coste como estimados solo con `claude_code` | La demo los rotula siempre como estimados | Decisión del desarrollador (TO-055) |
+| 9 | **Las 4 vulnerabilidades moderadas de `npm audit`** del frontend | Sin `npm audit fix --force`: rompería dependencias antes de la demo | Revisión de seguridad post-demo |
+| 10 | **Retención de trazas en Langfuse** | Política de cuánto se guardan las trazas de las novelas | — |
+| 11 | **Auditoría 002** | Sucesora de `docs/audits/001-coherencia-ontologia.md`, sobre el estado tras la demo | — |
+| 12 | **Exceso de filas `obligatorio` en `docs/verification.md`** | Hay más filas obligatorias de las que la demo puede cubrir; hay que revisar cuáles lo son de verdad | — |
+| 13 | **`disk I/O error` intermitente en `tests/e2e/test_f1.py`** al leer la base justo después de matar el proceso, en Windows | Visto una vez; pasa en las repeticiones (RI-027) | Decisión del desarrollador, 2026-09-25 |
+| 14 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
 
 ## Decisiones
 
