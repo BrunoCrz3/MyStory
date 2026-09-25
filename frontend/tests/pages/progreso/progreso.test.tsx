@@ -73,3 +73,14 @@ describe('progreso de una generación (CA-05)', () => {
     expect(await screen.findByRole('alert')).toBeInTheDocument()
   })
 })
+
+describe('consumo de la generación (TO-055)', () => {
+  it('rotula tokens y coste como estimados', async () => {
+    montar({ ...generacionEnCurso(), tokens_consumidos: 12345, coste_usd: 1.5 })
+
+    expect(await screen.findByText('Tokens (estimados)')).toBeInTheDocument()
+    expect(screen.getByText('Coste en USD (estimado)')).toBeInTheDocument()
+    expect(screen.getByText(/son estimaciones/i)).toBeInTheDocument()
+    expect(screen.queryByText('Tokens')).not.toBeInTheDocument()
+  })
+})

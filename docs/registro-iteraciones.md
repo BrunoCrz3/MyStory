@@ -1349,3 +1349,27 @@ A petición del desarrollador, para cubrir también `uvicorn --reload`. Siete pr
 fallan con `EnvNoCargado`, `STORYMAKER_SIN_ENV` la salta, y `--sin-env` del lanzador pone la
 variable. Comprobado a mano: sin `--env-file`, `python -m app` sale con código 3 y
 `uvicorn … --reload` muestra `EnvNoCargado` y `Application startup failed`.
+
+---
+
+## RI-028 — Tokens y coste rotulados como estimados en el progreso
+
+**Fecha:** 2026-09-25 · **Ficheros:** `frontend/src/pages/progreso/ui/ProgresoPage.tsx`,
+`frontend/src/pages/progreso/progreso.css`, `frontend/tests/pages/progreso/progreso.test.tsx`
+(TO-055)
+
+### Causa
+
+Ensayo de la demo con `proveedor: claude_code`: la pantalla de progreso presentaba una estimación
+y un coste nominal como si fueran exactos.
+
+### Qué cambió
+
+Prueba primero (en rojo): el progreso rotula «Tokens (estimados)» y «Coste en USD (estimado)» y
+explica por qué. Después, los rótulos y la nota. El PDF sigue con el Chromium de Playwright por
+decisión del desarrollador.
+
+### Efecto
+
+Frontend: 95 de 95 y `typecheck` en verde. `proveedor` en `/salud` (contrato 1.3.0) queda
+post-demo.

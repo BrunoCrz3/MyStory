@@ -100,3 +100,9 @@
     padding-top: 0;
   }
 }
+
+.pagina-progreso .nota-estimacion {
+  font-size: 0.9rem;
+  font-style: italic;
+  color: var(--color-tinta-suave);
+}

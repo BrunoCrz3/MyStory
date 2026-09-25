@@ -42,15 +42,26 @@ export function ProgresoPage() {
             {generacion.data.capitulos_a_regenerar && generacion.data.capitulos_a_regenerar.length > 0 && (
               <Dato nombre="Capítulos a regenerar">{generacion.data.capitulos_a_regenerar.join(', ')}</Dato>
             )}
+            {/* Rotulados siempre como estimados (TO-055): con `proveedor: claude_code` el
+                recuento es una estimación y el coste es nominal, y el contrato 1.2.0 no dice
+                qué proveedor atiende. */}
             {generacion.data.tokens_consumidos != null && (
-              <Dato nombre="Tokens">{generacion.data.tokens_consumidos}</Dato>
+              <Dato nombre="Tokens (estimados)">{generacion.data.tokens_consumidos}</Dato>
             )}
-            {generacion.data.coste_usd != null && <Dato nombre="Coste (USD)">{generacion.data.coste_usd}</Dato>}
+            {generacion.data.coste_usd != null && (
+              <Dato nombre="Coste en USD (estimado)">{generacion.data.coste_usd}</Dato>
+            )}
             {generacion.data.detenida_por && <Dato nombre="Detenida por">{generacion.data.detenida_por}</Dato>}
             {generacion.data.traza_langfuse_id && (
               <Dato nombre="Traza">{generacion.data.traza_langfuse_id}</Dato>
             )}
           </dl>
+          {(generacion.data.tokens_consumidos != null || generacion.data.coste_usd != null) && (
+            <p className="nota-estimacion">
+              Tokens y coste son estimaciones: según el proveedor del modelo, el recuento se
+              calcula antes de llamar y el coste es nominal.
+            </p>
+          )}
           {!generacion.data.es_terminal && generacion.data.intervalo_sondeo_segundos != null && (
             <p role="status">Se actualiza cada {generacion.data.intervalo_sondeo_segundos} s.</p>
           )}

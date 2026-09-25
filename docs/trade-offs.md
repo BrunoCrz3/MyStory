@@ -2049,3 +2049,30 @@ las pruebas de extremo a extremo; `python -m app --sin-env` la pone por el entor
 `--reload` la app corre en otro proceso. El error es `EnvNoCargado` y no `SystemExit`: uvicorn lo
 muestra y responde `Application startup failed`. Con `--reload`, el supervisor de uvicorn sigue
 vivo esperando cambios, pero el error queda a la vista.
+
+---
+
+## TO-055 — Consumo rotulado como estimado y PDF con el Chromium de Playwright
+
+**Fecha:** 2026-09-25 · **Estado:** **decisiones del desarrollador** · **Afecta a:** `frontend/src/pages/progreso/`, `backend/app/versioning/export.py` (sin cambios), `specs/progreso.md` § Post-demo
+
+### Problema
+
+1. Con `proveedor: claude_code` (TO-040), los tokens son una estimación previa y el coste es
+   nominal, pero la pantalla de progreso los mostraba como cifras exactas. El contrato 1.2.0 no
+   dice qué proveedor atiende, así que el frontend no puede rotularlos solo cuando toca.
+2. El export a PDF usa el Chromium de Playwright (A-123), que se instala aparte; el servidor MCP
+   usa Edge. Usar Edge en el export evitaría la instalación (TO-053).
+
+### Opciones y elección
+
+| Decisión | Opciones | Elección |
+| --- | --- | --- |
+| Rótulo del consumo | (a) `proveedor` en `GET /salud`, contrato 1.3.0, y rótulo según el proveedor; **(b) rotular siempre «estimados»**, sin tocar el contrato | **(b) para la demo.** (a) queda en la lista post-demo. Con `proveedor: api`, (b) exagera: los tokens son exactos, aunque el coste sigue saliendo de los precios de config |
+| Navegador del PDF | Edge (`channel="msedge"`); **Chromium de Playwright** | **Chromium de Playwright**: ya está instalado, y con Edge el PDF dependería de la versión que el sistema actualiza solo. `export.py` no cambia |
+
+### Consecuencias
+
+- La pantalla de progreso dice «Tokens (estimados)», «Coste en USD (estimado)» y una nota que lo
+  explica (prueba en `tests/pages/progreso/progreso.test.tsx`).
+- La instalación sigue necesitando `uv run playwright install chromium` (README).
