@@ -10,6 +10,9 @@ from app.commons.texto import contar_palabras, plano
 from app.quality.models import Defecto, ResultadoValidador
 
 _TOKEN = re.compile(r"[^\W\d_]+", re.UNICODE)
+# Un marcador de sustitución en mayúsculas entre corchetes (`[NOMBRE_ANONIMIZADO]`), que un
+# modelo escribe en lugar del nombre (TO-056). Unos corchetes con texto corriente no lo son.
+_MARCADOR = re.compile(r"\[[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ_]{2,}\]")
 
 
 def longitud(config: Config, texto: str) -> ResultadoValidador:
@@ -59,7 +62,8 @@ def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
     forma de nombre las palabras que el nombre declarado escribe con mayúscula: en «El perro
     de Ondina», «perro» no lo es. Punto ciego declarado (O-02): un diminutivo legítimo que el
     brief no declaró se marca como error, un nombre ausente no se detecta y un nombre escrito
-    en minúscula por error tampoco.
+    en minúscula por error tampoco. Un marcador en mayúsculas entre corchetes en lugar de un
+    nombre (`[NOMBRE_ANONIMIZADO]`) es un error (TO-056).
     """
     formas: dict[str, str] = {}
     for nombre in nombres:
@@ -86,6 +90,10 @@ def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
             ):
                 errores.append(f"«{palabra}» se parece a «{forma}» y no es ese nombre")
                 break
+    errores += [
+        f"«{m.group(0)}» es un marcador y no un nombre: escribe el nombre de la story bible"
+        for m in _MARCADOR.finditer(texto)
+    ]
     unicos = sorted(set(errores))
     detalle = (
         "; ".join(unicos) if unicos else "todos los nombres se escriben como en la story bible"

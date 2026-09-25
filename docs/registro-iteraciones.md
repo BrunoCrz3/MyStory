@@ -1373,3 +1373,35 @@ decisión del desarrollador.
 
 Frontend: 95 de 95 y `typecheck` en verde. `proveedor` en `/salud` (contrato 1.3.0) queda
 post-demo.
+
+---
+
+## RI-029 — Ensayo de la demo, primera generación: detenida en el gate
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/process/aceptar.py`,
+`backend/app/process/orquestador.py`, `backend/app/quality/validadores/basicos.py`,
+`backend/tests/process/test_cierre_ultimo_capitulo.py`,
+`backend/tests/quality/test_validadores_minimos.py`, `docs/verification.md`, `specs/spec1.md`
+(TO-056)
+
+### Causa
+
+La novela nueva del ensayo, con el brief de ejemplo y `proveedor: claude_code`: diez capítulos
+aceptados en 2.708 s (45 min), 866.571 tokens estimados y 5,96 USD nominales. Se detuvo con
+`error-interno` porque el gate rechazó la versión por `cierre_arco` (una promesa abierta en el
+capítulo 10). Al revisarla apareció un segundo defecto que nada cazó: el capítulo 10 dice
+`[NOMBRE_ANONIMIZADO]` en lugar del nombre de la destinataria.
+
+### Qué cambió
+
+- Tres pruebas primero (en rojo): el último capítulo que abre una promesa nueva vuelve al
+  redactor y la novela se publica; el que deja sin pagar una promesa abierta, también; y un
+  capítulo intermedio puede abrir promesas. Después, `pendientes_al_cerrar` y el bucle común
+  `_escribir_y_aceptar` (en verde).
+- Dos pruebas primero para `nombres_exactos` (un marcador falla; unos corchetes con texto
+  corriente, no). Después, el patrón del marcador (en verde).
+
+### Efecto
+
+Con dobles, la novela se publica tras devolver una vez el capítulo 10. Con el modelo real, la
+segunda generación del ensayo lo comprueba (§ Coste real de `specs/progreso.md`).

@@ -11,7 +11,8 @@ Un capítulo que se **reescribe** en una regeneración dirigida pasa además, an
 consolidar, la mitad programática de `cierre_arco` sobre lo que le toca: no puede abrir una
 promesa que ningún capítulo posterior vaya a pagar ni dejar sin pagar la que pagaba su versión
 anterior. Si la deja, la extracción se descarta sin rastro y el capítulo vuelve a su redactor
-como intento fallido (TO-047).
+como intento fallido (TO-047). Lo mismo el **último** capítulo de una generación inicial: después
+de él nadie paga nada, así que no puede dejar promesas pendientes al cierre (TO-056).
 """
 
 from __future__ import annotations
@@ -40,7 +41,8 @@ ESQUEMA_EXTRACCION = esquema_de_salida(Extraccion)
 
 
 class PromesasSinPago(Exception):
-    """Un capítulo reescrito dejaría promesas pendientes al cierre: vuelve a su redactor."""
+    """Un capítulo reescrito, o el último, dejaría promesas pendientes al cierre: vuelve a su
+    redactor."""
 
     def __init__(self, numero: int, defectos: list[str]) -> None:
         super().__init__(f"el capítulo {numero} deja promesas sin pagar: " + "; ".join(defectos))
@@ -108,6 +110,23 @@ class _Conocido:
             f"«{v.promesa.enunciado}»."
             for a, v in self.promesas.items()
             if v.conservar == "pagar" and v.promesa.promesa_id not in pagadas
+        ]
+        return defectos
+
+    def pendientes_al_cerrar(self, e: Extraccion) -> list[str]:
+        """Lo que el último capítulo de una generación inicial dejaría pendiente al cierre, como
+        defectos para su redactor: después de él no hay capítulo que pague nada (TO-056)."""
+        nuevas, _, pagadas = self.clasificar(e)
+        defectos = [
+            f"El último capítulo abre una promesa que ya nadie puede pagar: «{p.enunciado}». "
+            "El arco se cierra aquí: no abras promesas nuevas."
+            for p in nuevas
+        ]
+        defectos += [
+            f"El último capítulo deja sin pagar una promesa abierta ({a}): "
+            f"«{v.promesa.enunciado}». Págala antes del final."
+            for a, v in self.promesas.items()
+            if v.conservar is None and v.promesa.promesa_id not in pagadas
         ]
         return defectos
 
@@ -330,19 +349,17 @@ def _consolidar(
     return resultado
 
 
-def _cierre_del_reescrito(
-    r: Recursos, *, numero: int, extraccion: Extraccion, conocido: _Conocido
-) -> None:
-    """`cierre_arco` sobre un capítulo reescrito, antes de consolidarlo (TO-047). Deja su score
-    y, si falla, lanza `PromesasSinPago` sin haber escrito nada."""
-    defectos = conocido.sin_pago(extraccion)
+def _cierre(r: Recursos, *, numero: int, defectos: list[str], quien: str, bien: str) -> None:
+    """`cierre_arco` sobre un capítulo antes de consolidarlo: un capítulo reescrito (TO-047) o
+    el último de una generación inicial (TO-056). Deja su score y, si falla, lanza
+    `PromesasSinPago` sin haber escrito nada."""
     maximo = r.config.umbrales.continuidad.promesas_pendientes_al_cerrar
     pasa = len(defectos) <= maximo
-    detalle = "; ".join(defectos) if defectos else "conserva sus promesas"
+    detalle = "; ".join(defectos) if defectos else bien
     r.trazador.score(
         "cierre_arco",
         1.0 if pasa else 0.0,
-        comentario=f"capítulo {numero} reescrito: {detalle}"[:2000],
+        comentario=f"capítulo {numero}, {quien}: {detalle}"[:2000],
     )
     if not pasa:
         raise PromesasSinPago(numero, defectos)
@@ -375,7 +392,21 @@ async def aceptar(
         novel_id=novel_id,
     )
     if conocido.reescrito:
-        _cierre_del_reescrito(r, numero=numero, extraccion=extraccion, conocido=conocido)
+        _cierre(
+            r,
+            numero=numero,
+            defectos=conocido.sin_pago(extraccion),
+            quien="reescrito",
+            bien="conserva sus promesas",
+        )
+    elif numero == r.config.umbrales.obra.capitulos:
+        _cierre(
+            r,
+            numero=numero,
+            defectos=conocido.pendientes_al_cerrar(extraccion),
+            quien="último capítulo",
+            bien="no deja promesas pendientes",
+        )
     motor = PolicyEngine(r.config)
     with r.trazador.span("consolidar", metadata={"numero": numero, "version": version}):
         return await r.db.en_transaccion(

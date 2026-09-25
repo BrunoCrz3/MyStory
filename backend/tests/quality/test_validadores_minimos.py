@@ -117,3 +117,17 @@ def test_las_grafias_distintas_y_los_casi_nombres_siguen_fallando() -> None:
     ):
         r = nombres_exactos(texto, nombres)
         assert not r.pasa and culpable in r.detalle, texto
+
+
+def test_un_marcador_en_lugar_de_un_nombre_falla() -> None:
+    """Ensayo de la demo (TO-056): el redactor escribió `[NOMBRE_ANONIMIZADO]` donde iba la
+    destinataria. Un marcador entre corchetes no es un nombre de la story bible."""
+    texto = prosa(1100, extra="[NOMBRE_ANONIMIZADO] llevaba el timón. Su hermana, la escota.")
+    pasa, detalle = _resultado(texto, "nombres_exactos")
+    assert not pasa
+    assert "[NOMBRE_ANONIMIZADO]" in detalle
+
+
+def test_unos_corchetes_con_texto_normal_no_son_un_marcador() -> None:
+    texto = prosa(1100, extra="Leyó el cartel [cerrado por obras] y siguió andando.")
+    assert _resultado(texto, "nombres_exactos")[0]

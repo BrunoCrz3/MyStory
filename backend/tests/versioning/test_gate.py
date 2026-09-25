@@ -7,7 +7,10 @@ import json
 from functools import partial
 from typing import Any
 
+import pytest
+
 from app.commons.llm import Peticion
+from app.process.aceptar import _Conocido
 from tests.conftest import Instancia
 from tests.dobles.guiones import capitulo_aceptado_de, guion_completo
 from tests.fixtures.briefs import brief_ejemplo
@@ -28,7 +31,12 @@ def _lanzar(i: Instancia) -> tuple[str, dict[str, Any]]:
     return novela, esperar(i.cliente, novela, gid, lambda g: g["es_terminal"])
 
 
-def test_una_promesa_pendiente_al_cerrar_impide_publicar(instancia: Instancia) -> None:
+def test_una_promesa_pendiente_al_cerrar_impide_publicar(
+    instancia: Instancia, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """El gate es la última defensa: desde TO-056 el último capítulo se devuelve antes si deja
+    una promesa pendiente, así que aquí se simula un hueco en esa comprobación."""
+    monkeypatch.setattr(_Conocido, "pendientes_al_cerrar", lambda self, e: [])
     guion_completo(instancia.modelo)
     instancia.modelo.encolar("extractor", partial(_extraer, promesas=[PROMESA]))
     novela, g = _lanzar(instancia)

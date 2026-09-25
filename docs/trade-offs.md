@@ -2076,3 +2076,49 @@ vivo esperando cambios, pero el error queda a la vista.
 - La pantalla de progreso dice «Tokens (estimados)», «Coste en USD (estimado)» y una nota que lo
   explica (prueba en `tests/pages/progreso/progreso.test.tsx`).
 - La instalación sigue necesitando `uv run playwright install chromium` (README).
+
+---
+
+## TO-056 — Dos fallos bloqueantes del ensayo de la demo: promesas del último capítulo y marcadores en lugar de nombres
+
+**Fecha:** 2026-09-25 · **Estado:** arreglos de bug con prueba previa, dentro de la autorización
+del desarrollador para «arreglar los fallos bloqueantes con TDD si es lógica de dominio» ·
+**Afecta a:** `backend/app/process/aceptar.py`, `backend/app/process/orquestador.py`,
+`backend/app/quality/validadores/basicos.py`, `docs/verification.md` (O-02, O-34),
+`specs/spec1.md` § 8.1
+
+### Problema
+
+La primera novela del ensayo (brief de ejemplo, `proveedor: claude_code`) aceptó los diez
+capítulos en 45 minutos y se detuvo con `error-interno`, sin versión publicada:
+
+1. **El gate la rechazó por `cierre_arco`.** El capítulo 10 abrió una promesa nueva (un deseo
+   que la protagonista no cuenta) y se consolidó. Al llegar al gate ya no quedaba capítulo que la
+   pagara, y un gate en rojo detiene la generación (A-79, A-113). En una generación inicial,
+   nada revisaba las promesas antes del gate: TO-047 solo lo hacía con los capítulos reescritos.
+2. **El capítulo 10 no nombra a la destinataria**: en su lugar escribe nueve veces
+   `[NOMBRE_ANONIMIZADO]`, y ningún validador lo detectó. Los otros nueve capítulos la nombran.
+   Causa probable: con `proveedor: claude_code`, el redactor corre en el CLI de Claude Code con la
+   cuenta del desarrollador, y le llegan las instrucciones de privacidad de su organización, que
+   piden anonimizar nombres de personas. El brief es ficticio (TO-052), pero el modelo lo aplicó
+   en un capítulo.
+
+### Opciones y elección
+
+| Fallo | Opciones | Elección |
+| --- | --- | --- |
+| Promesa abierta en el último capítulo | A · Que el gate devuelva el capítulo (hoy la candidata es inmutable tras el gate, A-127); **B · pasar la mitad programática de `cierre_arco` sobre el último capítulo antes de consolidarlo**, como un reescrito; C · cambiar el prompt del redactor | **B**: reutiliza el mecanismo de TO-047 sin estado nuevo. Si el último capítulo abre una promesa o deja sin pagar una abierta, la extracción se descarta y vuelve a su redactor como intento fallido, con los defectos; agotado, se detiene. La generación inicial acepta por el mismo bucle que la regeneración (`_escribir_y_aceptar`). C sería una iteración de prompt sin eval (E-11) |
+| Marcador en lugar de nombre | A · En `calidad_prosa` (metatexto); **B · en `nombres_exactos`** | **B**: `calidad_prosa` no cierra el paso mientras `medicion.cerrar_el_paso` sea `false`, y un capítulo sin el nombre de la destinataria no se puede aceptar. Se detecta un marcador en mayúsculas entre corchetes (`[NOMBRE_ANONIMIZADO]`, `[EMPRESA_OCULTA]`); unos corchetes con texto corriente no cuentan |
+
+**No se toca** la causa del segundo fallo: las instrucciones de la organización se aplican al
+subproceso del CLI, y no corresponde a este repositorio esquivarlas. El validador solo impide
+publicar un capítulo con un marcador: el redactor recibe el defecto y reescribe, y si vuelve a
+pasar hasta agotar los intentos, la generación se detiene y lo dice (regla 14). Con `proveedor:
+api` no pasaría.
+
+### Consecuencias
+
+- La primera novela del ensayo no se recupera: su versión 1 quedó `rechazada` y no hay versión
+  publicada sobre la que pedir un cambio. El ensayo genera otra desde cero.
+- El último capítulo puede costar algún intento más; cuenta contra `max_intentos_capitulo` y
+  contra el tope por novela.

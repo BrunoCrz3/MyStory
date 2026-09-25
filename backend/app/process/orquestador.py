@@ -214,7 +214,7 @@ class Orquestador:
                     )
                 )
             await self._actualizar(t, capitulo_actual=numero)
-            await self._reescribir(t, numero=numero, aviso=aviso)
+            await self._escribir_y_aceptar(t, numero=numero, aviso=aviso)
             await self._guardar_consumo(t, consumo)
             self._comprobar_topes(t, consumo)
 
@@ -223,8 +223,11 @@ class Orquestador:
             await self._mover_novela(t, "CerrarRegeneracion")
         await self._cerrar(t)
 
-    async def _reescribir(self, t: dict[str, Any], *, numero: int, aviso: str | None) -> None:
-        """Escribe y acepta un capítulo afectado. Si la aceptación lo rechaza por promesas
+    async def _escribir_y_aceptar(
+        self, t: dict[str, Any], *, numero: int, aviso: str | None = None
+    ) -> None:
+        """Escribe y acepta un capítulo: uno afectado por una regeneración o cualquiera de una
+        generación inicial. Si la aceptación lo rechaza por promesas
         sin pagar, el intento cuenta como fallido y el redactor recibe los defectos."""
         novel_id, version = t["novel_id"], t["version_objetivo"]
         devuelto: list[str] = []
@@ -240,7 +243,7 @@ class Orquestador:
             if resultado.accion != "aceptar":
                 raise GeneracionDetenida(
                     resultado.detenida_por or "limite-de-intentos-agotado",
-                    f"el capítulo {numero} no convergió al reescribirlo ({resultado.accion})",
+                    f"el capítulo {numero} no convergió ({resultado.accion})",
                 )
             try:
                 await aceptar(
@@ -259,7 +262,7 @@ class Orquestador:
                 if decision.accion != "devolver":
                     raise GeneracionDetenida(
                         decision.detenida_por or "limite-de-intentos-agotado",
-                        f"el capítulo {numero} no convergió al reescribirlo: {e}",
+                        f"el capítulo {numero} no convergió: {e}",
                     ) from e
                 devuelto = e.defectos
 
@@ -341,22 +344,8 @@ class Orquestador:
             if cap is None or cap.estado == "Aceptado":
                 continue
             await self._actualizar(t, capitulo_actual=numero)
-            resultado = await ciclo_capitulo(
-                self.r, novel_id=novel_id, version=version, numero=numero
-            )
-            if resultado.accion != "aceptar":
-                raise GeneracionDetenida(
-                    resultado.detenida_por or "limite-de-intentos-agotado",
-                    f"el capítulo {numero} no convergió ({resultado.accion})",
-                )
-            await aceptar(
-                self.r,
-                novel_id=novel_id,
-                version=version,
-                numero=numero,
-                resultado=resultado,
-                generacion_id=t["id"],
-            )
+            # El último capítulo puede volver a su redactor por `cierre_arco` (TO-056).
+            await self._escribir_y_aceptar(t, numero=numero)
             await self._guardar_consumo(t, consumo)
             self._comprobar_topes(t, consumo)
 

@@ -82,7 +82,7 @@ def test_un_capitulo_defectuoso_vuelve_al_redactor_se_corrige_y_se_acepta(
     assert longitudes.count(0.0) == 2 and longitudes.count(1.0) == 10
     # Los seis criterios del judge, con su justificación, en cada borrador que llegó a juicio.
     # Diez capítulos, más el corto del 3 y su corrección; `consistencia_factica` la emite
-    # también el hook, y `cierre_arco`, también el gate.
+    # también el hook, y `cierre_arco`, también el último capítulo (TO-056) y el gate.
     for criterio in [
         "adecuacion_tono",
         "coherencia_personajes",
@@ -92,4 +92,4 @@ def test_un_capitulo_defectuoso_vuelve_al_redactor_se_corrige_y_se_acepta(
         del_judge = [s for s in scores if s.nombre == criterio]
         assert len(del_judge) == 12
         assert all(s.comentario and s.comentario.startswith("Justificación") for s in del_judge)
-    assert len([s for s in scores if s.nombre == "cierre_arco"]) == 12 + 1
+    assert len([s for s in scores if s.nombre == "cierre_arco"]) == 12 + 1 + 1
