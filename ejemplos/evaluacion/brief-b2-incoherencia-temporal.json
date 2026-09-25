@@ -1,0 +1,55 @@
+{
+  "comprador": {
+    "identificador": "comprador-eval-b2",
+    "relacion_con_destinatario": "amiga"
+  },
+  "destinatario": {
+    "nombre": "Maribel",
+    "edad": 36,
+    "rasgos": [
+      "risueña",
+      "no sabe estarse quieta"
+    ],
+    "recuerdos": [
+      "en el verano de 1986 conoció a Irene en la feria del puerto de Cádiz",
+      "la tarde en que las dos se perdieron por la Caleta"
+    ],
+    "fecha_nacimiento": "1990-03-15"
+  },
+  "ocasion": {
+    "tipo": "cumpleanos",
+    "fecha": "2026-10-10",
+    "tono_esperado": "celebratorio"
+  },
+  "genero": "comedia costumbrista",
+  "tono": "luminoso y con humor",
+  "dedicatoria": {
+    "texto": "Para Maribel, que convierte cualquier tarde en una feria.",
+    "firma": "Irene"
+  },
+  "elementos_personalizados": [
+    {
+      "enunciado": "Conoció a Irene en el verano de 1986, en la feria del puerto de Cádiz",
+      "obligatorio": true
+    },
+    {
+      "enunciado": "Colecciona postales antiguas",
+      "obligatorio": false
+    }
+  ],
+  "temas_excluidos": [
+    "divorcio"
+  ],
+  "palabras_prohibidas": [
+    "Remedios"
+  ],
+  "reglas_mundo": [
+    "La historia transcurre en Cádiz"
+  ],
+  "textos_libres": [
+    {
+      "contenido": "Desde aquella feria de 1986 no se han separado nunca.",
+      "procedencia": "nota de Irene"
+    }
+  ]
+}
