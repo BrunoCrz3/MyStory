@@ -69,7 +69,8 @@ async def test_capitulo_corto_vuelve_al_redactor_con_el_informe(entorno: Entorno
     entorno.modelo.encolar("editor", corregido(500))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
-    assert _estado(entorno, novela) == ("Validando", 1)
+    # La corrección del editor (1) y la reescritura (2) gastan del mismo contador (TO-057).
+    assert _estado(entorno, novela) == ("Validando", 2)
     ultima = [p for p in entorno.modelo.peticiones if p.rol == "redactor"][-1]
     segunda = ultima.mensajes[0].contenido
     assert "500 palabras" in segunda
@@ -120,7 +121,9 @@ async def test_agotar_los_intentos(entorno: Entorno) -> None:
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "agotar"
     assert r.detenida_por == "limite-de-intentos-agotado"
-    assert entorno.modelo.llamadas["redactor"] == LIMITE + 1
+    # Cada corrección del editor gasta un intento, como cada reescritura (TO-057): entre las
+    # dos suman el límite, más el primer borrador.
+    assert entorno.modelo.llamadas["redactor"] + entorno.modelo.llamadas["editor"] == LIMITE + 1
     assert _estado(entorno, novela) == ("Agotado", LIMITE)
 
 

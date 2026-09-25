@@ -106,3 +106,8 @@
   font-style: italic;
   color: var(--color-tinta-suave);
 }
+
+.pagina-progreso .aclaracion {
+  font-size: 0.85rem;
+  color: var(--color-tinta-suave);
+}

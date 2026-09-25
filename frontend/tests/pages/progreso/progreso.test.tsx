@@ -84,3 +84,14 @@ describe('consumo de la generación (TO-055)', () => {
     expect(screen.queryByText('Tokens')).not.toBeInTheDocument()
   })
 })
+
+describe('reintentos del capítulo en curso (TO-057)', () => {
+  it('dice que son reintentos y qué cuentan', async () => {
+    montar({ ...generacionEnCurso(), intentos_capitulo_actual: 2 })
+
+    expect(await screen.findByText('Reintentos del capítulo actual')).toBeInTheDocument()
+    expect(screen.getByText(/0 es el primer borrador/i)).toBeInTheDocument()
+    expect(screen.getByText(/correcciones del editor y reescrituras/i)).toBeInTheDocument()
+    expect(screen.queryByText('Intentos del capítulo actual')).not.toBeInTheDocument()
+  })
+})

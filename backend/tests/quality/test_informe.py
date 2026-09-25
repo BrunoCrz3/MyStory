@@ -55,8 +55,9 @@ async def test_cada_intento_deja_su_informe_con_defectos_y_scores(entorno: Entor
     assert r.accion == "aceptar"
 
     primero, segundo = _informes(entorno, novela, r.capitulo_id)
-    assert (primero.intento, primero.decision) == (0, "devolver")
-    assert (segundo.intento, segundo.decision) == (1, "aceptar")
+    # Cada informe es del borrador corregido: la corrección ya gastó su intento (TO-057).
+    assert (primero.intento, primero.decision) == (1, "devolver")
+    assert (segundo.intento, segundo.decision) == (2, "aceptar")
     assert "longitud" in [d.dimension for d in primero.defectos]
     longitud = next(d for d in primero.defectos if d.dimension == "longitud")
     assert "500 palabras" in longitud.descripcion
@@ -83,7 +84,9 @@ async def test_el_informe_del_ultimo_intento_de_un_capitulo_agotado_es_consultab
     assert r.accion == "agotar"
 
     informes = _informes(entorno, novela, r.capitulo_id)
-    assert [i.intento for i in informes] == list(range(limite + 1))
+    intentos = [i.intento for i in informes]
+    assert intentos == sorted(set(intentos)) and intentos[-1] == limite
+    assert len(informes) == entorno.modelo.llamadas["redactor"]
     ultimo = entorno.recursos.db.ejecutar_sync(
         lambda con: quality.ultimo_informe(con, novel_id=novela, capitulo_id=r.capitulo_id)
     )

@@ -102,6 +102,24 @@ async def mover(
     return capitulo.model_copy(update={"estado": destino, "intentos": intentos})
 
 
+async def _sumar_intento(
+    r: Recursos, *, novel_id: str, capitulo: novel.CapituloEnCurso
+) -> novel.CapituloEnCurso:
+    """Un intento más sin cambiar de estado: la corrección del editor ocurre dentro de
+    `Validando` y no es una transición, pero gasta del mismo contador (TO-057)."""
+    intentos = capitulo.intentos + 1
+    await r.db.ejecutar(
+        lambda con: novel.fijar_estado_capitulo(
+            con,
+            novel_id=novel_id,
+            capitulo_id=capitulo.capitulo_id,
+            estado=capitulo.estado,
+            intentos=intentos,
+        )
+    )
+    return capitulo.model_copy(update={"intentos": intentos})
+
+
 async def _leer(
     r: Recursos, *, novel_id: str, version: int, numero: int
 ) -> tuple[_Datos, novel.CapituloEnCurso]:
@@ -336,8 +354,15 @@ async def ciclo_capitulo(
             capitulo = await mover(r, novel_id=novel_id, capitulo=capitulo, accion="Validar")
 
             resultados, borrador = await validar(salida, error, cid, capitulo.intentos)
-            if borrador is not None and quality.defectos_que_cierran(resultados):
-                # El editor corrige lo que cierra el paso, y su versión vuelve a pasar todo.
+            if (
+                borrador is not None
+                and quality.defectos_que_cierran(resultados)
+                and capitulo.intentos < config.umbrales.orquestacion.max_intentos_capitulo
+            ):
+                # El editor corrige lo que cierra el paso, y su versión vuelve a pasar todo. La
+                # corrección gasta un intento del contador único del capítulo (TO-014, TO-057),
+                # así que solo se pide mientras quede presupuesto.
+                capitulo = await _sumar_intento(r, novel_id=novel_id, capitulo=capitulo)
                 correccion = await corregir(
                     r,
                     novel_id=novel_id,

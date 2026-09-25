@@ -1405,3 +1405,30 @@ capítulo 10). Al revisarla apareció un segundo defecto que nada cazó: el cap�
 
 Con dobles, la novela se publica tras devolver una vez el capítulo 10. Con el modelo real, la
 segunda generación del ensayo lo comprueba (§ Coste real de `specs/progreso.md`).
+
+---
+
+## RI-030 — Las correcciones del editor cuentan como intentos
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/process/capitulo.py`,
+`backend/tests/process/test_editor.py`, `backend/tests/process/test_capitulo.py`,
+`backend/tests/quality/test_informe.py`, `frontend/src/pages/progreso/`,
+`frontend/tests/pages/progreso/progreso.test.tsx`, `docs/architecture.md` (TO-057)
+
+### Causa
+
+Observación del desarrollador en el ensayo: el editor intervino en tres capítulos y la pantalla
+decía 0 intentos. El backend no sumaba la corrección.
+
+### Qué cambió
+
+- Pruebas primero (en rojo): la corrección cuenta; corrección y reescritura gastan el mismo
+  límite; la generación terminada expone 1 en `intentos_capitulo_actual` si el editor corrigió
+  el último capítulo. Cuatro pruebas que fijaban el recuento anterior se ajustaron al nuevo.
+- `_sumar_intento` antes de pedir la corrección, y solo si queda presupuesto.
+- Pantalla: «Reintentos del capítulo actual», con la aclaración (prueba primero).
+
+### Efecto
+
+Backend y frontend en verde. En la segunda generación del ensayo los capítulos corregidos
+tendrán `intentos > 0`.

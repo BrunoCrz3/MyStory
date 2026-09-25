@@ -7,10 +7,12 @@ import json
 
 import pytest
 
+from app.process import cola
 from app.process.capitulo import ciclo_capitulo
 from tests.conftest import Entorno
-from tests.dobles.guiones import corregido
+from tests.dobles.guiones import corregido, guion_completo, numero_de_la_tarea, redactar
 from tests.fixtures.borradores import borrador
+from tests.fixtures.briefs import brief_ejemplo
 from tests.fixtures.judge import salida_judge
 from tests.fixtures.planificada import novela_planificada
 
@@ -23,7 +25,8 @@ async def test_el_editor_corrige_un_defecto_que_cierra_el_paso(entorno: Entorno)
     entorno.modelo.encolar("redactor", borrador(500))
     entorno.modelo.encolar("editor", corregido())
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
-    assert r.accion == "aceptar" and r.intentos == 0
+    # La corrección del editor cuenta en el contador único del capítulo (TO-057).
+    assert r.accion == "aceptar" and r.intentos == 1
     assert entorno.modelo.llamadas["redactor"] == 1
     # El editor recibió el informe con el defecto de longitud.
     editor = next(p for p in entorno.modelo.peticiones if p.rol == "editor")
@@ -38,10 +41,12 @@ async def test_el_corregido_vuelve_a_pasar_todos_los_validadores(entorno: Entorn
     entorno.modelo.encolar("redactor", borrador(500), borrador())
     entorno.modelo.encolar("editor", corregido(extra=VETADA))
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
-    assert r.accion == "aceptar" and r.intentos == 1
+    # Corrección del editor (1) y reescritura (2): las dos gastan del mismo contador (TO-057).
+    assert r.accion == "aceptar" and r.intentos == 2
     assert [s.valor for s in entorno.trazas.scores_de("palabras_prohibidas")] == [1.0, 0.0, 1.0]
     coincidencias = entorno.consultar("SELECT palabra, intento FROM coincidencia")
-    assert [tuple(c) for c in coincidencias] == [("Anselmo", 0)]
+    # La palabra vetada la metió el editor, y su corrección es el intento 1.
+    assert [tuple(c) for c in coincidencias] == [("Anselmo", 1)]
 
 
 @pytest.mark.anyio
@@ -121,3 +126,38 @@ async def test_un_judge_que_suspende_con_la_medicion_cerrada_pasa_al_editor(
     assert entorno.modelo.llamadas["editor"] >= 1
     editor = next(p for p in entorno.modelo.peticiones if p.rol == "editor")
     assert "Justificación de tono" in editor.mensajes[0].contenido
+
+
+@pytest.mark.anyio
+async def test_las_correcciones_del_editor_agotan_el_mismo_limite_que_las_reescrituras(
+    entorno: Entorno,
+) -> None:
+    """TO-014 y TO-057: un solo contador. Con el editor sin arreglar nada, cada vuelta gasta
+    dos intentos —su corrección y la reescritura— y el capítulo se agota antes."""
+    novela = await novela_planificada(entorno)
+    limite = entorno.recursos.config.umbrales.orquestacion.max_intentos_capitulo
+    entorno.modelo.por_defecto["redactor"] = lambda _: borrador(500)
+    entorno.modelo.por_defecto["editor"] = lambda _: corregido(palabras=500)
+    r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
+    assert r.accion == "agotar" and r.intentos == limite
+    # El editor solo corrige mientras quede presupuesto: nunca pasa del límite.
+    assert entorno.modelo.llamadas["editor"] + entorno.modelo.llamadas["redactor"] - 1 == limite
+
+
+@pytest.mark.anyio
+async def test_la_generacion_expone_la_correccion_del_editor_como_intento(
+    entorno: Entorno,
+) -> None:
+    """`Generacion.intentos_capitulo_actual` lee el contador del capítulo en curso: si el editor
+    corrige el capítulo 10, la generación terminada dice 1 y no 0."""
+    guion_completo(entorno.modelo)
+    entorno.modelo.por_defecto["redactor"] = lambda p: (
+        borrador(500) if numero_de_la_tarea(p) == 10 else redactar(p)
+    )
+    novela = await entorno.crear_novela(brief_ejemplo())
+    g = await cola.lanzar_generacion(entorno.recursos, novela)
+    await entorno.orquestador().ejecutar(str(g.generacion_id))
+    [generacion] = await cola.listar_generaciones(entorno.recursos, novela)
+    assert generacion.estado == "Publicada", generacion
+    assert generacion.capitulo_actual == 10
+    assert generacion.intentos_capitulo_actual == 1

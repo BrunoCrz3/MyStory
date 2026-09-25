@@ -36,7 +36,13 @@ export function ProgresoPage() {
               <Dato nombre="Capítulo actual">{generacion.data.capitulo_actual}</Dato>
             )}
             {generacion.data.intentos_capitulo_actual != null && (
-              <Dato nombre="Intentos del capítulo actual">{generacion.data.intentos_capitulo_actual}</Dato>
+              <Dato nombre="Reintentos del capítulo actual">
+                {generacion.data.intentos_capitulo_actual}
+                <span className="aclaracion">
+                  {' '}
+                  (correcciones del editor y reescrituras; 0 es el primer borrador)
+                </span>
+              </Dato>
             )}
             {generacion.data.checkpoint != null && <Dato nombre="Checkpoint">{generacion.data.checkpoint}</Dato>}
             {generacion.data.capitulos_a_regenerar && generacion.data.capitulos_a_regenerar.length > 0 && (

@@ -2122,3 +2122,47 @@ api` no pasaría.
   publicada sobre la que pedir un cambio. El ensayo genera otra desde cero.
 - El último capítulo puede costar algún intento más; cuenta contra `max_intentos_capitulo` y
   contra el tope por novela.
+
+---
+
+## TO-057 — La corrección del editor gasta del contador único del capítulo
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** · **Afecta a:** `backend/app/process/capitulo.py`, `frontend/src/pages/progreso/`, `docs/architecture.md` § Agentes, TO-014
+
+### Problema
+
+En la primera novela del ensayo el editor intervino en los capítulos 3, 8 y 10 —es decir, por un
+fallo que cierra el paso—, pero la pantalla de progreso mostró siempre 0 intentos. Diagnóstico:
+
+- **El backend no la contaba.** Desde el P32 el editor corrige *dentro* del intento (redactor →
+  hooks → judge → editor → otra vez hooks y judge → decisión), y el contador del capítulo solo
+  sumaba cuando el policy engine devolvía el capítulo al redactor. Los diez capítulos tienen
+  `intentos = 0` en la base.
+- **La exposición y la pantalla estaban bien**: `Generacion.intentos_capitulo_actual` es el
+  contador del capítulo en curso, y la pantalla muestra ese campo. No hace falta tocar el contrato.
+
+Con eso, TO-014 no se cumplía del todo: su peor caso («4 generaciones por capítulo») no contaba
+las llamadas al editor, que cuestan como una del redactor.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Dejarlo, y cambiar solo el rótulo | Sin tocar el ciclo | La corrección no aparece en ningún contador y el peor caso de TO-014 es falso |
+| **B · La corrección gasta un intento del contador único**, y solo se pide si queda presupuesto | Un contador, como pide TO-014; se ve en `intentos_capitulo_actual` | El capítulo se agota antes: cada vuelta con editor y devolución gasta dos |
+| C · Un contador aparte para el editor | Se distingue en la pantalla | Contradice TO-014 y cambia el contrato |
+
+### Elección
+
+**B, decisión del desarrollador.** Antes de pedir la corrección, el ciclo suma un intento sin
+cambiar de estado (la corrección ocurre dentro de `Validando` y no es una transición) y solo la
+pide si `intentos < max_intentos_capitulo`. Los informes de crítica y las coincidencias del
+guardrail registran el intento de la corrección. La pantalla rotula «Reintentos del capítulo
+actual» y aclara que cuenta correcciones del editor y reescrituras, con 0 para el primer borrador.
+
+### Consecuencias
+
+- **Peor caso por capítulo**: `max_intentos_capitulo + 1` llamadas entre redactor y editor (antes,
+  hasta el doble). Con 3, un capítulo que el editor no arregla se agota tras dos vueltas.
+- Un capítulo aceptado con `intentos > 0` es un capítulo que necesitó corrección: el dato sirve
+  para la tabla brief × validador.

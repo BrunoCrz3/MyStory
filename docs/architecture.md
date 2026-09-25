@@ -247,7 +247,8 @@ el judge corre en un modelo menos capaz que el redactor, y lo único que mide es
 la comparación con el `Revisor humano`.
 
 **Política de reintentos, la misma para todos**: un solo contador acumulativo por capítulo
-(`orquestacion.max_intentos_capitulo`), con el guardrail como sublímite de coincidencias
+(`orquestacion.max_intentos_capitulo`) que gastan por igual la **corrección del editor** y la
+**reescritura del redactor** (TO-057), con el guardrail como sublímite de coincidencias
 consecutivas (`guardrail.max_reescrituras`). Los fallos de infraestructura tienen su propio
 contador (`orquestacion.max_intentos_trabajo`) y **no gastan** del primero: que el proveedor
 devuelva un 429 no es un defecto del capítulo. Las llamadas al modelo son asíncronas y con
