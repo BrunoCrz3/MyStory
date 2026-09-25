@@ -1137,3 +1137,46 @@ a la primera, el 9 volvió dos veces a su redactor y se aceptó al tercer intent
 no tiene promesas pendientes de los reescritos (1.821 s, 3,22 USD). No se publicó: el gate la
 rechazó por dos promesas que la versión 1 ya dejaba sin pagar, porque se publicó antes de que
 existiera `cierre_arco`, y por `render_visual` sin servidor MCP.
+
+---
+
+## RI-021 — Primera iteración de prompts: `writer` y `extractor` v1 → v2
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/prompts/writer.md`, `backend/app/prompts/extractor.md` (commit `bc05327`, TO-047)
+
+### Causa
+
+La regeneración real 2 del P44 se detuvo por `cierre_arco`: los capítulos reescritos abrían
+promesas nuevas que ningún capítulo no afectado paga, y el extractor volvía a registrar como
+nuevas las que el capítulo ya abría. Es el validador que motivó el cambio. Las cuatro reglas
+de TO-047 necesitaban que los dos roles supieran qué hacer con las promesas que conserva un
+capítulo reescrito.
+
+### Qué cambió
+
+| Prompt | Antes (versión 1 en Langfuse) | Después (versión 2, `latest`) | Cambio |
+| --- | --- | --- | --- |
+| `writer` | `git-3c9b9161efeca1efe5e5a4faaa3310f7` (blob `3c9b916…`, `aa66b5c`) | `git-d82910c64ffea17c1048b9eed288e326` (blob `d82910c…`, `bc05327`) | Una regla nueva: si el brief lista promesas que el capítulo conserva, reabre las `[abrir]`, paga las `[pagar]` y no abre ninguna nueva, porque los capítulos que no se reescriben no la pagarían |
+| `extractor` | `git-f43fd5cdc460db660d91ac666140f0f9` (blob `f43fd5c…`, `aa66b5c`) | `git-1a294ce49b0946387fd3b9b225637155` (blob `1a294ce…`, `bc05327`) | Las promesas vivas se citan por su identificador: en `promesas_pagadas` si el capítulo las paga, en `promesas_reabiertas` si vuelve a abrir una que ya abría su versión anterior, y nunca se repiten como nuevas |
+
+El cambio de prompt va con cambio de contexto y de schema en el mismo commit: la pieza de
+promesas que conserva el capítulo en la capa Estructural del redactor, la lista de promesas
+vivas con alias común del extractor y el campo `promesas_reabiertas`. Lo que se mueve no es
+atribuible al texto del prompt por separado.
+
+Publicados en Langfuse con `python -m app.prompts.sync` el 2026-09-25: solo esos dos; los demás
+ya tenían su hash. La etiqueta es el hash de git del fichero en `bc05327`, así que la versión
+queda vinculada al commit que la introdujo (A-71).
+
+### Efecto
+
+- **Con dobles**: las pruebas de `tests/process/test_regeneracion_promesas.py` y el e2e de F4.
+- **Con el modelo real**, una sola regeneración (RI-020): el capítulo 3 reabrió su promesa a la
+  primera, y el 9 volvió dos veces a su redactor por `cierre_arco` antes de conservar las suyas.
+  No es un antes y un después comparables: la regeneración del P44 cambió otro hecho, con cinco
+  capítulos afectados.
+- **Sin tabla brief × validador de los dos lados**: no se ha corrido el eval de los briefs B1 a
+  B5 con ninguna de las dos versiones. **Regresión no medida**: el cambio del redactor solo
+  aplica a capítulos reescritos, así que no debería mover una generación inicial, pero no está
+  comprobado. La regeneración real corrió con los ficheros v2 antes de publicarlos en Langfuse;
+  no era un eval, así que A-72 no la bloqueaba.

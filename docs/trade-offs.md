@@ -1737,3 +1737,52 @@ pagar. En la regeneración real 2 (P44), `cierre_arco` detuvo la versión 2 por 
 - **Una novela publicada antes de `cierre_arco` no se puede regenerar tal como está**: la del
   humo trae dos promesas sin pagar desde su versión 1 y el gate rechaza cualquier versión 2. La
   comprobación del capítulo reescrito no las cuenta porque no son suyas.
+
+### Decisiones posteriores
+
+El desarrollador aceptó el arreglo el 2026-09-25, **incluida la diferencia de A-127**: comprobar
+`cierre_arco` al aceptar cada capítulo reescrito, con el gate como última red. Y decidió:
+
+- **La novela del humo no se usa en la demo** y sus promesas sin pagar no se aceptan como
+  herencia: la demo usará una novela nueva generada desde cero con el código actual, en el paso
+  de integración.
+- **El hueco de la regla 3 queda post-demo**: un validador programático, «toda promesa pagada
+  tiene su apertura en una fila vigente anterior al pago» (O-41, el antiguo P-45). Hasta
+  entonces es el punto ciego #16 de `docs/verification.md`.
+
+---
+
+## TO-048 — El tope de coste acumulado de las ejecuciones reales sube de 40 a 100 USD
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** · **Afecta a:** `specs/plan1.md` § 1 (condición de parada 4) y riesgos, `specs/progreso.md` § Coste real
+
+### Problema
+
+La condición de parada 4 del plan detiene cualquier ejecución real si el coste acumulado más
+`coste.coste_maximo_novela` pasaría de 40 USD. Tras la regeneración real de TO-047 el acumulado
+es 30,31 USD: con el tope por novela de 8 USD cabía una sola ejecución más, y la demo necesita
+generar una novela nueva desde cero (TO-047 § Decisiones posteriores).
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Mantener 40 USD | Nada que cambiar | Una ejecución más como mucho; la novela de la demo podría no caber |
+| **B · Subir a 100 USD** | Caben la novela de la demo y sus reintentos | El contador deja de frenar pronto; el límite que de verdad importa pasa a ser otro |
+| C · Quitar el tope | Sin paradas por coste | Se pierde la parada preventiva, que sigue sirviendo si el proveedor vuelve a ser `api` |
+
+### Elección
+
+**B, decidida por el desarrollador.** Con `proveedor: claude_code` el coste que registra el
+sistema es **nominal**: no se factura, y el límite real es el de uso de su plan. El tope sigue
+siendo preventivo y se aplica igual —si `acumulado + coste.coste_maximo_novela > 100`, no se
+lanza—, y el tope por novela de `config/thresholds.yaml` no cambia.
+
+### Consecuencias
+
+- **El contador ya no mide dinero con este proveedor**: sirve de proxy del uso del plan. Si se
+  vuelve a `proveedor: api`, el coste pasa a ser facturado y el tope de 100 USD habría que
+  revisarlo antes de lanzar nada.
+- **El límite de uso del plan no lo ve el sistema**: una ejecución puede cortarse por él antes
+  de llegar a ningún tope propio, y eso se registra como fallo de infraestructura, no como
+  parada por coste.

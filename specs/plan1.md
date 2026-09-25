@@ -91,7 +91,7 @@ desarrollador; hace commit de ese fichero, y **se detiene sin tocar nada más**.
 | 1 | **La prueba de humo necesita la credencial del modelo y no está en el entorno** | `ANTHROPIC_API_KEY` vacía o ausente al llegar al P27. La suite normal **no** la necesita: sin ella, todo lo anterior al humo se hace igual |
 | 2 | **Una decisión contradice la spec o exige cambiar `specs/openapi.yaml`** | Un criterio de la spec no se puede cumplir sin tocar el contrato, o el test de conformidad solo pasaría editando el fichero. También: cualquier cosa que exija un nombre nuevo en la ontología, porque la spec § 1.3 lo declara error |
 | 3 | **La suite no se pone en verde tras 3 intentos en el mismo paso** | Contador de § 0.2 |
-| 4 | **El coste acumulado de llamadas reales supera 40 USD** (unidad y tope confirmados por el desarrollador) | Contador en progreso § Coste real. **Es preventivo**: antes de lanzar una ejecución real, si `acumulado + coste.coste_maximo_novela` pasaría de 40, no se lanza y se para. El tope por novela de `config/thresholds.yaml` garantiza que ninguna ejecución individual se lo salte |
+| 4 | **El coste acumulado de llamadas reales supera 100 USD** (unidad y tope confirmados por el desarrollador; subido de 40 a 100 el 2026-09-25, TO-048: con `proveedor: claude_code` el coste es nominal y el límite real es el de uso de su plan) | Contador en progreso § Coste real. **Es preventivo**: antes de lanzar una ejecución real, si `acumulado + coste.coste_maximo_novela` pasaría de 100, no se lanza y se para. El tope por novela de `config/thresholds.yaml` garantiza que ninguna ejecución individual se lo salte |
 
 **`specs/openapi.yaml` no se edita nunca durante este plan**, ni para corregir una errata:
 el frontend depende de él. Si una ruta no se puede expresar en FastAPI de forma que el
@@ -1145,7 +1145,7 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
 | La página `lectura` no cumple la spec § 4.4 al integrarla | El P46 fija la lista como dato comparado con la spec, y el P49 corre `render_visual` contra la página real antes de exportar |
 | El OpenAPI de FastAPI no alcanza alguna forma del contrato | `json_schema_extra`, `responses=` y `openapi_extra`; si ni así, condición 2 |
 | El normalizador de conformidad es demasiado generoso y no falla nunca | La meta-prueba de mutaciones del P01 |
-| El coste real se dispara en el humo | Tope por novela de configuración, parada preventiva a 40 y reutilización de la misma novela en F4 y F5 |
+| El coste real se dispara en el humo | Tope por novela de configuración, parada preventiva a 100 (40 hasta TO-048) y reutilización de la misma novela en F4 y F5 |
 | La página `lectura` no está cuando llega F5 | Página de prueba en `tests/` que cumple la spec § 4.4, y el PDF final como pendiente del P49, no como parada ni como descarte |
 | Los validadores programáticos de F2 dan falsos positivos en cadena | `medicion.cerrar_el_paso: false` para los semánticos; los programáticos se prueban con un capítulo limpio además del defectuoso |
 | `--reload` y el cerrojo de instancia chocan | El recargador tiene un solo proceso de app a la vez; la prueba de reanudación del P27 lo ejercita |

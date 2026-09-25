@@ -17,9 +17,10 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 
 ## Coste real
 
-Tope de parada: **40 USD** acumulados (plan § 1, condición 4; unidad y tope confirmados por
-el desarrollador el 2026-09-24). Antes de cada ejecución
-real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
+Tope de parada: **100 USD** acumulados (plan § 1, condición 4). Lo subió el desarrollador de
+40 a 100 el 2026-09-25 (TO-048): con `proveedor: claude_code` el coste es **nominal** —no se
+factura— y el límite real es el de uso de su plan. Antes de cada ejecución real: si
+`acumulado + coste.coste_maximo_novela > 100`, no se lanza.
 
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
 | --- | --- | --- | --- | --- |
@@ -95,7 +96,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 ## Pendiente
 
 - ~~Hueco conocido de F4, visto en real~~ **resuelto** tras el plan (TO-047, RI-020): el desarrollador aceptó la propuesta ampliada a cuatro reglas —destino del redactor, reapertura por alias, reconciliación y devolución al redactor por `cierre_arco`—. Probado con dobles y con una regeneración real sobre una copia de la novela del humo (hecho del velero de botella, capítulos 3 y 9; 1.821 s, 3,22 USD): el 3 pasó a la primera, `cierre_arco` devolvió el 9 dos veces y lo aceptó al tercer intento, y la versión 2 no tiene promesas pendientes de los capítulos reescritos. El gate la rechazó por las dos promesas que la versión 1 ya dejaba sin pagar —se publicó en el P27, antes de que existiera `cierre_arco`— y por `render_visual` sin servidor MCP; las dos causas son ajenas al arreglo y no se repitió (§ Coste real).
-- **La novela del humo no puede publicar una versión 2 tal como está**: su versión 1 deja dos promesas sin pagar (las abren los capítulos 2 y 10) porque se publicó antes de que existiera `cierre_arco`. Cualquier regeneración suya la rechaza el gate por eso. Para decidir: regenerar el humo desde cero, o aceptar esas dos promesas como herencia de la versión 1.
+- **La novela del humo no se usa en la demo** (decisión del desarrollador, 2026-09-25): su versión 1 deja dos promesas sin pagar —se publicó antes de que existiera `cierre_arco`— y no se aceptan como herencia. **La demo usará una novela nueva generada desde cero con el código actual, en el paso de integración.** Hasta entonces, `data/storymaker-demo.db` queda como base de pruebas reales, no como novela de demo.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **Frontend** (fuera de este plan): regenerar el cliente desde el contrato 1.2.0 (I-10). Servir un favicon quitaría el único ruido de consola que `render_visual` tiene que ignorar (A-124), aunque no es necesario.
 
@@ -117,6 +118,7 @@ Lo que se decidió no hacer en la demo y **no se olvida**. No es trabajo de este
 | --- | --- | --- |
 | **Replanificación de capítulos pendientes** (invalidación de restricción de destino) | Sin RF en la spec 1; un defecto sistémico se trata como reescritura y queda registrado con su clasificación | D-14, aceptada por el desarrollador |
 | El resto de la lista post-demo de la spec | Entrevistador conversacional, TLA+, servidor MCP, agente de seguridad, gate de Lean, SSE, PO-11 y PO-12 | `specs/spec1.md` § 7 Post-demo |
+| **Validador programático «toda promesa pagada tiene su apertura en una fila vigente anterior al pago»** (O-41, el antiguo P-45) | Cierra el hueco de la regla 3 de TO-047: una promesa que el capítulo reescrito no reabre y paga uno no afectado sigue viva y pagada sin que la versión nueva la plantee. Hasta que exista es el punto ciego #16 de `docs/verification.md` | Decisión del desarrollador, 2026-09-25 (TO-047 § Decisiones posteriores) |
 
 ## Decisiones
 
