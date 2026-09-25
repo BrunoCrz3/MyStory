@@ -235,6 +235,12 @@ datos salen del backend real.
 | `demo-peticion-cambio-impacto.png` | El panel de cambio con el análisis de impacto: capítulos 5 y 6 |
 | `demo-lectura-pdf-paridad.png` | La lectura tras «Descargar PDF»: enlace a la descarga y «Paridad con la lectura web: comprobada» |
 
-La regeneración del ensayo se detuvo antes de publicar la versión 2 (RI-033), así que no hay
-captura de la lectura con capítulos marcados sobre la novela real; la marca se inspeccionó con
-datos de prueba (`lectura-despues-movil-indice-modificados.png`).
+| `demo-lectura-v3-indice-modificado.png` | La versión 3 real: el índice con «Modificado en esta versión» solo en el capítulo 7 |
+
+La primera regeneración del ensayo se detuvo (RI-033) y su candidata, la 2, quedó rechazada
+(TO-062). La segunda publicó la **versión 3** sobre la 1. Con el browser MCP: `lista`, diez
+capítulos, la marca solo en el 7 —en el índice y en su cabecera—, consola sin errores y sin
+desbordes; el selector ofrece la 3 y la 1, y no la 2 rechazada; la 1 se abre entera, sin
+marcas y con el capítulo 7 original. El PDF de la 3, desde la lectura, con la paridad
+comprobada. **Detectado**: la opción del selector no dice el motivo del cambio, porque el
+backend no rellena `Version.motivo` (post-demo).

@@ -1548,3 +1548,35 @@ fijaban el comportamiento anterior se ajustaron a la decisión.
 
 Suite en verde: 492 pasadas. El punto 2 de la decisión (solicitud fallida visible en la
 lectura) queda post-demo porque exige cambiar el contrato.
+
+---
+
+## RI-035 — Ensayo de la demo completado: versión 3 sobre la 1
+
+**Fecha:** 2026-09-25 · **Ficheros:** `specs/progreso.md`, `docs/browser-mcp.md`, `README.md`,
+`data/storymaker-demo.db` (no versionada)
+
+### Causa
+
+Tras TO-062, completar el ensayo con la solicitud pendiente del capítulo 7 sobre *Soltar
+amarras*.
+
+### Qué pasó
+
+- **Estado corregido** de la novela con las funciones de TO-062, en una transacción y con copia
+  previa (`data/storymaker-demo-antes-to062.db`): los capítulos 5 y 6 de la versión 1 vuelven a
+  `Aceptado`, la 2 se escribe como candidata con su capítulo 5 reescrito y queda `rechazada`, su
+  canon se revierte (5 hechos abiertos, 3 hechos y 30 usos cerrados) y la novela vuelve a
+  `Publicada`. La generación fallida sigue `Detenida`.
+- **Regeneración del capítulo 7** («Tomás navegó de joven, pero hace años que no sube a un barco
+  y el mar le da respeto»): publicada como **versión 3** sobre la 1 en 250 s, 0,53 USD
+  nominales. El gate recalculó el hash de la 1 y cuadró.
+- **Lectura** con el browser MCP: el 7 marcado, la 1 entera y la 2 fuera del selector; PDF de la
+  3 con paridad en verde (44 páginas, sin marcadores de anonimización).
+
+### Efecto
+
+El flujo de la demo queda recorrido de punta a punta con el modelo real: entrevista →
+generación → progreso → lectura → petición de cambio → versión nueva con el capítulo marcado y
+la anterior conservada → PDF. Detectado: `Version.motivo` no se rellena (post-demo).
+Acumulado nominal: 46,47 USD de 100.

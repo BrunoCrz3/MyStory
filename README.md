@@ -68,6 +68,12 @@ Quién atiende las llamadas al modelo lo dice `proveedor` en `config/models.yaml
 
 Sin las variables de Langfuse genera igual y `GET /salud` dice `degradado`.
 
+**Scores en Langfuse: se comprueban en la interfaz.** Cada novela es una sesión (su `novel_id`)
+y cada generación, una traza, con el entorno de `STORYMAKER_ENV`. En esta organización la API
+pública de lectura de trazas y de scores devuelve **410** (v1 y v2); solo responde la de
+observaciones v2, que confirma sesión, entorno, spans por rol y el `hash_prompt` de cada
+generation. Los scores por validador los revisa el desarrollador en la interfaz de Langfuse.
+
 ## Arrancar la demo en Windows
 
 Tres terminales de Git Bash, desde la raíz del repositorio, en este orden.
