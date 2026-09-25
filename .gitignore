@@ -15,6 +15,7 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+.coverage
 .ruff_cache/
 .mypy_cache/
 *.egg-info/
@@ -35,3 +36,6 @@ formal/tla/states/
 *.log
 # Capturas y logs de trabajo del browser MCP; las de evidencia van en frontend/docs/
 .playwright-mcp/
+
+# Ajustes locales de Claude Code: permisos de esta máquina, no del proyecto
+.claude/settings.local.json
