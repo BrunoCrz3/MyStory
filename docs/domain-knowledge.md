@@ -150,7 +150,7 @@ flowchart TD
   E2 -.-> C3
 ```
 
-Un capítulo puede narrar varios eventos y un evento puede narrarse en varios capítulos o en ninguno. Esta relación N:M es lo que permite modelar analepsis y elipsis, y es además la razón de que la verificación de cronología lea de la fábula y no del orden de los capítulos: comprobar que el capítulo 3 va después del 2 no dice nada sobre cuándo ocurrieron los hechos que narran.
+Un capítulo puede narrar varios eventos y un evento puede narrarse en varios capítulos o en ninguno. Esta relación N:M es lo que permite modelar analepsis y elipsis, y es además la razón de que la verificación de cronología lea de la fábula y no del orden de los capítulos: comprobar que el capítulo 3 va después del 2 no dice nada sobre cuándo ocurrieron los hechos que narran. En el `Evento` las dos ordenaciones son dos atributos: `momento` para el discurso y `año`, opcional, para la fábula (TO-064).
 
 ## Modelo de canon
 
@@ -304,6 +304,7 @@ flowchart TD
   GT --> V14[lean_cronologia]
   GT --> V15[lean_ubicacion]
   GT --> V16[lean_edad]
+  GT --> V27[lean_nacimiento]
   GT --> V17[elementos_obligatorios]
   GT --> V18[cierre_arco]
   GT --> V19[render_visual]

@@ -2408,3 +2408,122 @@ frontend rechaza en `html`, `body`, `:root` y `#root` un `overflow` oculto o una
 - `render_visual` tiene ocho aserciones. Probadas con una página que bloquea el desplazamiento
   (falla) y contra la lectura real de las versiones 1 y 3 de *Soltar amarras* (pasa).
 - Sin cambios de estilo: la impresión y el PDF no cambian.
+
+---
+
+## TO-064 — El evento lleva año y edad declarada, y la cronología se separa del orden de narración
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (decisión del desarrollador, `specs/spec4-lean.md`
+§ 7 P1) · **Afecta a:** `docs/definitions.md`, `docs/domain-knowledge.md`, extractor,
+migración `0016`, `formal/lean/`, `docs/verification.md` (O-13, O-14, O-15 y una O nueva)
+
+### Problema
+
+`evento.momento` es capítulo × 100 + orden (A-35): un orden del **discurso**. Sin fecha de la
+fábula, `lean_edad` no tiene con qué comparar y `lean_cronologia` solo comprueba que `momento`
+crece, cosa que el código garantiza al asignarlo. Lean demostraría lo que ya se sabe.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| **A. `año` opcional en `Evento` y `edad` opcional por personaje presente** | Es lo que una novela suele decir («aquel verano de 1998», «con diez años»); cabe en `Nat` sin Mathlib | Menos preciso que una fecha: la edad admite un año de holgura |
+| B. Fecha ISO completa | Precisión de día | Una novela casi nunca da día y mes: el extractor los inventaría |
+| C. No tocar la ontología | Sin migración ni cambio de extractor | Dos de las tres invariantes quedan casi vacías |
+
+### Elección
+
+**A**, con cuatro condiciones del desarrollador:
+
+1. `año` y `edad` se extraen **solo si el texto los dice explícitamente**. Si faltan, el campo
+   queda vacío y Lean no comprueba nada sobre él: **nunca un valor supuesto**.
+2. **Dos ordenaciones separadas.** El `momento` (narración) sirve para la ubicación única en una
+   misma escena; el `año`, para la cronología de la historia. **Una analepsis no es una
+   incoherencia**, así que ninguna invariante compara un orden con el otro.
+3. **Invariante nueva**: ningún personaje participa en un evento de un año anterior a su
+   nacimiento, con la fecha de nacimiento del brief para el destinatario. Score
+   `lean_nacimiento`.
+4. La mitad «no aparece tras un evento excluyente» pasa de `lean_ubicacion` a `lean_cronologia`,
+   porque «después» es cronología de la historia, no de la narración.
+
+### Consecuencias
+
+- Cuatro invariantes Lean, no tres. Un evento sin año no participa en las tres de la historia, y
+  el informe cuenta cuántos quedaron sin comprobar.
+- Las novelas ya generadas no tienen `año` ni `edad` hasta que se vuelvan a extraer.
+
+---
+
+## TO-065 — Los eventos excluyentes se extraen, solo si el texto los declara
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (decisión del desarrollador, `specs/spec4-lean.md`
+§ 7 P2) · **Afecta a:** extractor, `evento_excluyente`, `docs/definitions.md`
+
+### Problema
+
+`evento_excluyente` existe desde la migración `0004` y nadie la escribe: 0 filas en la base de la
+demo. La invariante «no aparece tras una muerte o una partida» no tiene de dónde leer.
+
+### Opciones y elección
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| **A. El extractor emite muertes y partidas definitivas** | Mismo cambio de esquema de extracción que TO-064 | Un falso positivo del extractor haría fallar el gate |
+| B. Dejarla vacía y declararlo | Sin cambio | Media invariante del alcance sin ejecutar |
+
+**A**, y **solo cuando el texto indique explícitamente** una muerte o una partida definitiva: una
+ausencia larga o una despedida ambigua no cuentan. Es la misma regla que TO-064 aplica al año.
+
+---
+
+## TO-066 — El evento se versiona por vigencia, como el hecho
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (decisión del desarrollador) · **Afecta a:**
+migración `0016`, features `novel/` y `versioning/`, `docs/definitions.md`
+
+### Problema
+
+`evento` no lleva versión: una regeneración añade los eventos del capítulo nuevo sin cerrar los del
+sustituido. En la base de la demo la novela regenerada tiene momentos duplicados en el capítulo 5.
+Filtrar por `version_capitulo → evento_capitulo` los esquiva, pero deja la corrección en manos de
+que toda consulta se acuerde de filtrar.
+
+### Opciones y elección
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A. Filtrar en el generador | Sin migración | La cronología de una versión depende de un `JOIN` que se puede olvidar |
+| **B. `version_desde` y `version_hasta` en `evento`** (TO-028) | La versión es un dato de la fila; la versión anterior conserva su cronología | Migración con relleno de lo existente; la reversión de una candidata rechazada (TO-062) cubre también los eventos |
+
+**B.** La migración `0016` rellena la vigencia de los eventos existentes a partir de
+`version_capitulo`. Mismo patrón y misma trampa nombrada que TO-028: toda consulta de eventos
+lleva `novel_id` y `version`, sin valor por defecto.
+
+---
+
+## TO-067 — El caso que solo detecta Lean es el del brief de incoherencia temporal
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (decisión del desarrollador, `specs/spec4-lean.md`
+§ 7 P3) · **Afecta a:** `docs/red-team.md`, `docs/verification.md` (P-83)
+
+### Problema
+
+El alcance (§ 5c) pide al menos un caso real en que Lean detecte una incoherencia que los demás
+validadores no vieron. Las versiones publicadas no tienen años porque se extrajeron sin ellos.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A. Volver a extraer la versión 3 en una copia de la base | Sin coste de generación; no toca la story bible real | Puede no aparecer ninguna incoherencia |
+| B. El brief B2 de la evaluación (`verification.md` § Evaluación) | Es el caso que el plan de verificación ya prevé para P-83 | Cuesta una generación, y otro validador puede cazarlo antes |
+| C. Inyección a mano | Reproducible | No es un caso real |
+
+### Elección
+
+**A como prueba y B como caso que se presenta.** La versión 3 se vuelve a extraer en una
+**copia** de la base, sin tocar la story bible real (regla 2), para comprobar el generador con
+datos reales. **El caso real que se presenta es el del brief B2.** Las reglas de la entrevista
+solo cruzan edad y fecha de nacimiento, no los años de los recuerdos, así que B2 no se detiene
+antes de escribir. Si hace falta construir un caso a mano, se presenta **marcado como
+provocado**, nunca como real.

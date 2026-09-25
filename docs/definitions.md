@@ -36,7 +36,7 @@ La novela se planifica entera y se escribe capítulo a capítulo, sin humano en 
 
 **El capítulo es la unidad atómica** de generación, validación, checkpoint, regeneración y marca de cambio entre versiones. Todo lo demás se planifica hacia él o se deriva de él. No hay unidad por debajo: a la longitud de capítulo que declara `config/thresholds.yaml` no cabe una subdivisión a la que colgarle un estado, un presupuesto o un validador propios, y una clase sin operación no entra en el modelo.
 
-El grano temporal fino no lo da la estructura del discurso sino la fábula: es el `Evento` quien lleva momento, lugar y participantes, y es de él —no del capítulo— de donde sale el fichero que verifica la cronología.
+El grano temporal fino no lo da la estructura del discurso sino la fábula: es el `Evento` quien lleva momento, año, lugar y participantes, y es de él —no del capítulo— de donde sale el fichero que verifica la cronología.
 
 **Clases propias de este modo**
 
@@ -100,14 +100,18 @@ No hay nivel intermedio entre obra y capítulo. La función dramática que soste
 | Arco | Trayectoria de transformación | estado inicial, puntos de giro, estado final, capítulos que lo avanzan |
 | Hilo de trama | Cadena causal de eventos con tensión propia | tipo, pregunta dramática, estado |
 | Lugar | Espacio donde ocurre acción | nombre, geografía, atmósfera sensorial |
-| Evento | Suceso de la fábula, situado en el orden cronológico ficcional | qué ocurre, momento, personajes presentes, lugar, duración |
-| Evento excluyente | Evento tras el cual un personaje no puede volver a aparecer | evento, personajes excluidos, tipo (muerte, partida definitiva) |
+| Evento | Suceso de la fábula, situado en el orden cronológico ficcional | qué ocurre, momento (orden de narración), año (opcional), personajes presentes con su edad declarada (opcional), lugar, duración, vigencia (versión desde, versión hasta) |
+| Evento excluyente | Evento tras el cual un personaje no puede volver a aparecer | evento, personajes excluidos, tipo (muerte, partida definitiva); solo cuando el texto lo declara explícitamente |
 | Regla del mundo | Restricción que el texto no puede violar | enunciado, alcance, excepciones declaradas, origen |
 | Voz narrativa | Configuración del narrador | persona, tiempo verbal, distancia, focalización |
 
 `Personaje` y `Lugar` son las dos entidades que la novela publica como ficha consultable, y por eso son las dos que sobreviven con nombre propio: lo que no se muestra ni se valida no necesita clase.
 
-`Evento excluyente` es subtipo de `Evento` y existe por una razón concreta: es el que permite demostrar que ningún personaje aparece después de morir o de marcharse para siempre. Sin él, esa demostración no tiene de dónde leer.
+`Evento excluyente` es subtipo de `Evento` y existe por una razón concreta: es el que permite demostrar que ningún personaje aparece después de morir o de marcharse para siempre. Sin él, esa demostración no tiene de dónde leer. Solo existe cuando el texto dice explícitamente que hay una muerte o una partida definitiva: una ausencia larga o una despedida ambigua no lo son.
+
+**Dos ordenaciones en el `Evento`, cada una para lo suyo** (TO-064). El `momento` es el **orden de narración**: dónde cae el evento en el discurso, y sirve para decir que dos eventos son la misma escena. El `año` es la **cronología de la historia**: cuándo ocurre en el mundo ficcional. Una analepsis narra tarde un año temprano, y por eso **no es una incoherencia**: lo sería comparar un orden con el otro. El `año` y la `edad declarada` de un personaje presente solo se rellenan cuando el texto los dice explícitamente; si no, quedan vacíos y ninguna verificación los supone.
+
+**Vigencia del `Evento`** (TO-066). Como el `Hecho` (TO-028), un `Evento` lleva `versión desde` y `versión hasta`: la versión que lo narró por primera vez y la última en que sigue narrado. Una regeneración cierra los eventos del capítulo sustituido y abre los del nuevo; la versión anterior conserva su cronología entera.
 
 `Regla del mundo` ya no deriva de un punto de divergencia especulativa: su origen es el brief. «El destinatario es alérgico a los gatos» y «el abuelo nunca aparece» son reglas del mundo tanto como lo sería la física de una novela de género.
 
@@ -205,9 +209,10 @@ Los **tipos** son cuatro: `programático` (decide un proceso determinista), `sem
 | Temas excluidos | Los temas que el comprador vetó no aparecen, aunque ninguna palabra prohibida los nombre | semántico | rol editor |
 | Cumplimiento de reglas del mundo | Ninguna `Regla del mundo` salida del brief se viola | programático | hook de capítulo |
 | Legibilidad | El texto se lee a la altura de la edad del destinatario | programático | rol editor |
-| Consistencia temporal | Los eventos respetan el orden cronológico declarado | formal-Lean | gate de publicación |
-| Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un evento excluyente | formal-Lean | gate de publicación |
-| Coherencia de edad | La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | formal-Lean | gate de publicación |
+| Consistencia temporal | En la cronología de la historia (año), ningún personaje participa en un evento posterior a un evento excluyente suyo | formal-Lean | gate de publicación |
+| Consistencia espacial | Ningún personaje está en dos lugares en el mismo momento de la narración | formal-Lean | gate de publicación |
+| Coherencia de edad | La edad declarada de cada personaje en cada evento cuadra con el año del evento y su fecha de nacimiento | formal-Lean | gate de publicación |
+| Nacimiento previo | Ningún personaje participa en un evento de un año anterior a su nacimiento | formal-Lean | gate de publicación |
 | Cumplimiento de elementos obligatorios | Todo elemento obligatorio aparece en al menos un capítulo | programático | gate de publicación |
 | Cierre del arco | Ninguna promesa queda pendiente al terminar la novela | programático + semántico | gate de publicación |
 | Render visual | Índice, ficha de personajes y lugares y portada renderizan sin error | programático | gate de publicación |
@@ -222,7 +227,7 @@ Los **tipos** son cuatro: `programático` (decide un proceso determinista), `sem
 | Originalidad | El fallo característico de un modelo no es escribir mal sino escribir correcto y genérico. La parte con forma reconocible —ecos, muletillas, clichés— la absorbe `calidad_prosa`; lo que queda no tiene criterio de aprobado escrito, y sin criterio ningún validador puede suspender |
 | Satisfacción del comprador | Es la definición del criterio, no una consecuencia suya. Se estima por la revisión humana y no se automatiza |
 
-**Verificación formal de la historia.** Las tres dimensiones `formal-Lean` se demuestran sobre un fichero generado desde la story bible con los hechos temporales: eventos, momento, personajes presentes, lugar, fechas de nacimiento y eventos excluyentes. Si la demostración falla, la versión no se publica y el fallo vuelve al editor como feedback. Lo que Lean verifica es la **historia**; el comportamiento del harness se verifica aparte y vive en la capa 5.
+**Verificación formal de la historia.** Las cuatro dimensiones `formal-Lean` se demuestran sobre un fichero generado desde la story bible de una versión con los hechos temporales: eventos, momento, año, personajes presentes y su edad declarada, lugar, fechas de nacimiento y eventos excluyentes. La consistencia espacial se mide en el orden de narración; las otras tres, en la cronología de la historia. Un dato vacío no se comprueba: nunca se sustituye por uno supuesto. Si la demostración falla, la versión no se publica y el fallo vuelve al editor como feedback. Lo que Lean verifica es la **historia**; el comportamiento del harness se verifica aparte y vive en la capa 5.
 
 **Guardrail de palabras prohibidas**
 
@@ -394,7 +399,7 @@ Las relaciones son lo que convierte un glosario en una ontología: sin ellas no 
 | Elemento personalizado | aparece en | Capítulo | N:M |
 | Evento | se narra en | Capítulo | N:M |
 | Evento | ocurre en | Lugar | N:1 |
-| Evento | involucra a | Personaje | N:M |
+| Evento | involucra a | Personaje | N:M, con edad declarada opcional |
 | Evento excluyente | excluye a | Personaje | N:M |
 | Personaje | recorre | Arco | 1:1 |
 | Hecho | contradice | Hecho | N:M |

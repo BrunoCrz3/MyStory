@@ -1604,3 +1604,27 @@ rojo), después la aserción. Guarda estática en el frontend.
 
 Backend 494 pasadas; frontend 98 de 98, `typecheck` y `build` en verde; ninguna hoja de estilo
 cambió. `render_visual` pasa sobre la lectura real de las versiones 1 y 3.
+
+## RI-037 — La ontología del evento se prepara para Lean
+
+**Fecha:** 2026-09-25 · **Ficheros:** `docs/definitions.md`, `docs/domain-knowledge.md`,
+`docs/trade-offs.md`, `specs/spec4-lean.md` (TO-064 a TO-067)
+
+### Causa
+
+Al escribir la spec de RF-EXP-03 se comprobó la story bible de la demo: ningún evento tiene fecha
+de la fábula, nadie escribe `evento_excluyente` y `evento` no lleva versión. Con eso,
+`lean_edad` no tendría con qué comparar y `lean_cronologia` sería una tautología.
+
+### Qué cambió
+
+Respuestas del desarrollador a las tres preguntas de la spec. `Evento` gana `año` opcional,
+`edad declarada` opcional por personaje presente y vigencia por versión. Los dos opcionales y el
+`Evento excluyente` se extraen solo si el texto los dice explícitamente. Se separan el orden de
+narración (`momento`, para la ubicación) y la cronología de la historia (`año`). Hay una cuarta
+dimensión formal-Lean, «Nacimiento previo», y la exclusión pasa de la consistencia espacial a la
+temporal.
+
+### Efecto
+
+Solo documentación: la spec 4 queda lista para aprobar, y el código espera al plan.
