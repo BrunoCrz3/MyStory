@@ -222,6 +222,8 @@ retirar para el fallo.
 
 ## Para integrar en trade-offs y registro
 
+**Integrado** el 2026-09-25: TO-051 y RI-024; la inspección, en `docs/browser-mcp.md`.
+
 Decisiones de esta sesión, para pasar a `docs/trade-offs.md` y
 `docs/registro-iteraciones.md` al fusionar. Numeración pendiente.
 

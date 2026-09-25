@@ -1231,3 +1231,29 @@ pasó primero a exigir que el 404 del favicon cuente (en rojo) y luego se quitó
 Con el browser MCP sobre `npm run dev`, `/favicon.svg` da 200 y no hay petición a
 `/favicon.ico`. La aserción `consola` del gate no tiene ninguna excepción. La comprobación con la
 novela real va en el ensayo de la demo (RI de integración).
+
+---
+
+## RI-024 — Fusión del frontend: decisiones y evidencia del browser MCP
+
+**Fecha:** 2026-09-25 · **Ficheros:** `CLAUDE.md`, `docs/trade-offs.md` (TO-051),
+`docs/browser-mcp.md`
+
+### Causa
+
+El frontend (`specs/plan2-frontend.md`, F01–F16) se fusionó en `Contexto-semilla-v2` con sus
+decisiones pendientes de numerar y su inspección con el browser MCP en
+`specs/progreso-frontend.md`, fuera de la documentación que el alcance revisa.
+
+### Qué cambió
+
+- TO-051 recoge las decisiones del desarrollador (tres páginas, dependencias, `.mcp.json`,
+  `.playwright-mcp/`), las técnicas y FA-01…FA-06.
+- `CLAUDE.md`: tres páginas, dependencias del frontend, `.mcp.json` en el layout y sin la marca
+  «▸ previsto» en lo que ya existe. Sigue por debajo de 300 líneas.
+- `docs/browser-mcp.md` incorpora la inspección del frontend con sus capturas: qué se
+  inspeccionó, qué se detectó y qué cambió.
+
+### Efecto
+
+Solo documentación: la regla y la evidencia están donde las busca quien revisa el alcance.

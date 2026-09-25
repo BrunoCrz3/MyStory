@@ -93,7 +93,118 @@ Chromium de Playwright, no el navegador del servidor MCP (A-123)—: 49 páginas
 
 ## Inspección en desarrollo
 
-La inspección exploratoria —Claude Code contra el servidor MCP, mirando lo que ninguna
-aserción prevé— es del frontend, que guarda sus capturas en `frontend/docs/capturas-browser-mcp/`
-de la rama `frontend-demo`. El plan 1 del backend no la repitió: sus pruebas pintan la página de
-prueba de `tests/fixtures/lectura/`, y la integración de arriba, la página real.
+La inspección exploratoria —Claude Code contra un servidor Playwright MCP, mirando lo que
+ninguna aserción prevé— la hizo el frontend durante su plan (`specs/progreso-frontend.md`).
+El plan 1 del backend no la repitió: sus pruebas pintan la página de prueba de
+`tests/fixtures/lectura/`, y la integración de arriba pinta la página real.
+
+### Configuración
+
+Son **dos servidores distintos** con el mismo paquete:
+
+| Servidor | Quién lo usa | Cómo arranca |
+| --- | --- | --- |
+| Del agente de desarrollo | Claude Code, para inspeccionar | `.mcp.json`, por stdio: `cmd /c npx -y @playwright/mcp@0.0.82 --browser msedge`. Lo lanza Claude Code |
+| Del gate | El backend, para `render_visual` | El comando de [El servidor](#el-servidor), por HTTP en `localhost:8931`. Se arranca a mano |
+
+Claude Code lee los servidores de proyecto en **`.mcp.json`**, en la raíz, y no en
+`.claude/mcp.json`: lo dicen `claude mcp --help` (`list` y `get` hablan de «servidores de
+`.mcp.json`») y `claude mcp add -s project`, que escribió en ese fichero. `.mcp.json` es el
+«`.claude/mcp.json` o equivalente» del alcance (TO-051). Va con `cmd /c npx` porque en Windows
+`npx` no se lanza directamente.
+
+**Navegador: Edge.** Con la configuración por defecto, `browser_navigate` fallaba con «Chromium
+distribution 'chrome' is not found»: `@playwright/mcp` usa el canal `chrome` y la máquina no
+tiene Google Chrome, pero sí Microsoft Edge. Por decisión del desarrollador se añadió
+`--browser msedge`, que no descarga ningún navegador.
+
+### Método
+
+Sin backend, las respuestas de `/api` se interceptaron **solo en el navegador del MCP**
+(`page.route`), con datos de prueba, para ver los estados que pinta el contrato. Nada de eso
+entra en el código. Las capturas de trabajo quedan en `.playwright-mcp/`, sin versionar; las de
+evidencia, en `frontend/docs/capturas-browser-mcp/`. Todas muestran solo datos ficticios: el
+ejemplo de `openapi.yaml`, un «Destinatario de prueba» o textos marcados «Ejemplo de prueba».
+
+Dirección visual elegida por el desarrollador: **«encuadernación clásica»**. Tokens en
+`src/shared/ui/tema.css`. Lo decorativo va en `@media screen`, para que la impresión, y con ella
+el PDF, no cambie.
+
+### Entrevista (1280×900 y 390×844)
+
+- **Inspeccionado:** formulario vacío; «Validar» y la lista de novelas con el proxy caído
+  (`500`, `AvisoProblema`); validación con datos faltantes, contradicción, fragmento descartado
+  y hecho extraído; filas de elemento personalizado y de texto libre; foco con teclado; ancho
+  del documento en móvil.
+- **Detectado:**
+  - El enlace de la cabecera usaba el azul del navegador; `fieldset`, botones y controles eran
+    los del sistema, sin foco propio; todos los campos iban a una columna de 46rem en
+    escritorio; el dato faltante solo se distinguía por el color del texto.
+  - Durante el rediseño: el fondo de la `legend` dejaba una muesca clara sobre el filete (se
+    quitó), y el `input` con dato faltante no se teñía mientras el `select` sí, porque ganaba
+    el estilo global por orden de carga (se subió la especificidad).
+- **Cambiado:** cabecera en versalitas burdeos sobre doble filete dorado; cada grupo, una hoja
+  con filete superior, y en escritorio los campos cortos a dos columnas; dato faltante con barra
+  lateral y campo marcado; botones principales rellenos y secundarios con filete; en móvil,
+  acciones a todo el ancho y sin desbordamiento horizontal a 390 px. Contrastes medidos: texto
+  de 7,6:1 a 14,2:1, borde de control 3,7:1; el dorado (2,8:1) solo en filetes y adornos.
+
+| Antes | Después |
+| --- | --- |
+| ![Entrevista antes del rediseño, 1280×900](../frontend/docs/capturas-browser-mcp/entrevista-antes-escritorio.png) | ![Entrevista después, con validación, 1280×900](../frontend/docs/capturas-browser-mcp/entrevista-despues-escritorio-validacion.png) |
+
+![Entrevista después, en móvil, 390×844](../frontend/docs/capturas-browser-mcp/entrevista-despues-movil-validacion.png)
+
+### Progreso (1280×900 y 390×844)
+
+- **Inspeccionado:** con el proxy caído y con los ejemplos `enCurso` y `detenida` de
+  `obtenerGeneracion` (a `detenida` se le añadió `version_resultante` para ver el enlace).
+- **Detectado:** la página no tenía hoja propia y la `dl` salía con la sangría del navegador;
+  y una hoja con selectores `main > …` sueltos se aplicaba también a las otras páginas, porque
+  en la SPA el CSS sigue cargado al navegar.
+- **Cambiado:** `progreso.css` pinta los datos como un colofón; «Leer la versión N» es un botón
+  relleno; en móvil cada dato va bajo su nombre; cada `main` lleva una clase de página
+  (`pagina-progreso`, `pagina-entrevista`) que acota sus selectores, sin tocar ningún
+  `data-testid`.
+
+### Lectura (1280×900 y 390×844)
+
+- **Inspeccionado:** una versión 2 de prueba con diez capítulos, los 3 y 7 modificados, textos
+  largos y cortos, ficha, dos versiones y un hecho; el flujo de cambio completo hasta el
+  análisis de impacto; el PDF disponible con paridad; la lectura con el proxy caído
+  (`data-estado="error"`); la medida de línea (unos 72 caracteres); la emulación `print`.
+- **Detectado:**
+  - El patrón `**/api/**` de `page.route` atrapaba también los módulos de Vite
+    (`/src/shared/api/index.ts`) y la app no cargaba: hay que interceptar
+    `http://127.0.0.1:5173/api/**`.
+  - La capitular flotaba fuera de los capítulos de una línea (se contiene con
+    `display: flow-root`).
+  - En móvil, el `select` de versión desbordaba 52 px con un motivo largo, y el numeral
+    «VIII.» del índice se salía por la izquierda.
+  - La portada pinta la ocasión con el valor del enum (`cumpleanos`): es texto del contrato,
+    no de estilo, y no se tocó.
+- **Cambiado:** portada como cubierta con doble marco dorado y dedicatoria firmada en
+  versalitas; índice en romanos con separadores punteados; capítulos en medida de lectura
+  (38rem, interlineado 1,75) con capitular y fleurón entre capítulos; marca de cambios como
+  etiqueta de aviso; controles discretos y la petición de cambio como hoja que sube del pie.
+- **Impresión:** el bloque `@media print` y las reglas base siguen idénticos (comprobado contra
+  `HEAD`); con `print` emulado, texto a 16 px, sin capitular ni marco y con los trece controles
+  ocultos. Solo cambian la tinta y el papel base (`#1f1b16`/`#fbf8f3` → `#2b2118`/`#f8f3ea`).
+
+| Escritorio | Móvil |
+| --- | --- |
+| ![Lectura: barra de versión y PDF, y portada, 1280×900](../frontend/docs/capturas-browser-mcp/lectura-despues-escritorio-portada.png) | ![Lectura: índice con los capítulos 3 y 7 modificados, 390×844](../frontend/docs/capturas-browser-mcp/lectura-despues-movil-indice-modificados.png) |
+
+### Interceptaciones olvidadas
+
+Tras la inspección, el navegador del MCP seguía mostrando la novela de prueba sin backend, y
+parecía que la aplicación traía datos de ejemplo. No los trae: `src/` no importa nada de
+`tests/` (CA-14), y el bundle de `npm run build` no contiene el título ni el identificador de
+prueba. La causa eran las rutas de `page.route` que quedaron registradas en la pestaña; se
+quitaron con `page.unrouteAll()` y la lectura quedó en `data-estado="error"`. **Regla para la
+próxima inspección:** cerrar cada sesión con `page.unrouteAll()`, o cerrar la pestaña.
+
+![Tras page.unrouteAll(): la lectura sin backend en data-estado="error"](../frontend/docs/capturas-browser-mcp/interceptaciones-retiradas-lectura-sin-backend.png)
+
+**Huecos de evidencia:** no hay captura de la lectura antes del rediseño (se inspeccionó ya con
+la hoja nueva) ni del fallo de las interceptaciones (solo del estado corregido).

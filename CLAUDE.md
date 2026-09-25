@@ -30,8 +30,8 @@ automática de principio a fin: **no hay autor humano en el bucle**.
 
 **Dependencias que el alcance exige** y que la regla 6 bloquearía si no estuvieran aquí:
 SDK de **Langfuse**; **Lean 4** con `lake` para verificar la cronología; **TLA+ tools** con
-TLC para el harness; **Playwright** para el browser MCP y el PDF. Ninguna añade
-infraestructura de servidor. El PDF sale de Playwright y no de una librería de PDF: como la
+TLC para el harness; **Playwright** para el browser MCP y el PDF; en el frontend,
+`react-router-dom` y `openapi-fetch` (TO-051). Ninguna añade infraestructura de servidor. El PDF sale de Playwright y no de una librería de PDF: como la
 lectura es web, se exporta del render que los validadores acaban de comprobar, y otro motor
 sería validar uno y entregar otro (`trade-offs.md` TO-003). Excluido: Postgres, pgvector,
 Pinecone, Chroma, Django, Flask, Next.js, Vue, Redis, Celery y todo ORM que oculte el SQL.
@@ -75,7 +75,7 @@ dueña cada una: `docs/architecture.md` § Anatomía de una feature.
 
 ```
 CLAUDE.md               esta guía; AGENTS.md solo apunta aquí
-backend/app/            ▸ previsto · main.py monta los routers de cada feature
+backend/app/            main.py monta los routers de cada feature
   intake/               Capa 1A · encargo: comprador, destinatario, brief de novela
   novel/                Capa 1B · obra, capítulo, personaje, lugar, evento, arco
   canon/                Capa 2  · story bible: hechos, snapshots, promesas, retcon
@@ -88,21 +88,21 @@ backend/app/            ▸ previsto · main.py monta los routers de cada featur
   commons/              db, migraciones, modelo, tokens, errores, Langfuse
   mcp_server/           adaptador del servidor MCP · no es feature
   skills/ · prompts/    skills de runtime y un prompt por rol · no son features
-frontend/src/           ▸ previsto · FSD v2.1: app/, pages/, shared/
+frontend/src/           FSD v2.1: app/, pages/, shared/
 formal/lean/            ▸ previsto · cronología e invariantes de la historia
 formal/tla/             ▸ previsto · especificación del harness y el .cfg de TLC
 docs/                   contexto semilla y documentación de proceso (ver tabla abajo)
 specs/                  specN.md y planN.md de v1, ambos con frontmatter
 config/thresholds.yaml  fuente única de cifras y umbrales
 config/models.yaml      id y effort de modelo por rol
-data/storymaker.db      ▸ previsto · base de datos, no versionada
-ejemplos/               ▸ previsto · novela-ejemplo.pdf
+data/storymaker.db      base de datos, no versionada; empieza vacía
+ejemplos/               novela-ejemplo.pdf y brief-ejemplo.json
 presentacion/           ▸ previsto · vídeo de demo
-.env.example            ▸ previsto · plantilla de secretos, nunca los secretos
+.env.example            plantilla de secretos, nunca los secretos
 .claude/skills/         skills de desarrollo (ver docs/architecture.md § Skills)
 .claude/agents/         ▸ previsto · agente de seguridad
 .claude/commands/       ▸ previsto · comandos propios
-.claude/mcp.json        ▸ previsto · browser MCP para la validación visual
+.mcp.json               browser MCP del agente (Edge); no .claude/mcp.json (TO-051)
 skills-lock.json        origen y hash de las skills instaladas
 ```
 
@@ -116,7 +116,7 @@ escribir no es opcional.
 
 **Base de datos** — skill `sqlite-relacional`; `sqlite-vec` solo si algún día se reactiva
 el vector. Un solo fichero, SQL explícito, sin servidor y sin ORM. Migraciones numeradas en
-`backend/app/commons/db/migrations/` ▸ previsto, aplicadas en orden y **nunca editadas** una vez
+`backend/app/commons/db/migrations/`, aplicadas en orden y **nunca editadas** una vez
 commiteadas. `WAL` activado; escrituras a la story bible siempre en transacción. **Toda
 tabla de dominio lleva `novel_id`.** La recuperación filtra por las entidades del brief de
 capítulo antes de ordenar: nunca similitud sola.
@@ -131,13 +131,13 @@ de dominio a HTTP en un handler central.
 **Frontend** — skill `feature-sliced-design`. React con TypeScript estricto, sin `any`;
 estado de servidor con TanStack Query. FSD v2.1, empezando por `app/`, `pages/` y
 `shared/`, y **`widgets/` no se usa**. El cliente tipado vive en
-`frontend/src/shared/api/` ▸ previsto y se deriva del OpenAPI: los tipos no se escriben a mano dos
+`frontend/src/shared/api/` y se deriva del OpenAPI: los tipos no se escriben a mano dos
 veces. Sin lógica de dominio en el frontend: la story bible se decide en el backend.
 
-**Dos páginas.** `entrevista` recoge los datos del destinatario y señala faltantes y
-contradicciones. `lectura` es la novela: índice, ficha de personajes y lugares enlazada a
-sus capítulos, portada con dedicatoria, petición de cambio en página y marca de los
-capítulos modificados.
+**Tres páginas** (TO-051). `entrevista` recoge los datos del destinatario y señala faltantes
+y contradicciones. `progreso` sigue una generación y es el destino común de la entrevista y
+de la confirmación de un cambio. `lectura` es la novela: índice, ficha enlazada a sus
+capítulos, portada con dedicatoria, petición de cambio en página y marca de los modificados.
 
 ## Comandos
 
@@ -210,11 +210,11 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | Invariantes de la cronología y del harness | `formal/lean/`, `formal/tla/` ▸ previsto |
 | Qué se decidió construir, antes de escribir código | `docs/spec-inicial.md` ▸ previsto |
 | Un concepto del curso por fichero | `docs/explainers/` ▸ previsto |
-| Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md`, `docs/browser-mcp.md` ▸ previsto |
+| Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md` ▸ previsto, `docs/browser-mcp.md` |
 | Specs y planes de implementación | `specs/` · lo archivado, en `docs/specs/_archivo/` |
 | Skills: las de runtime que cargan los roles y las de desarrollo | `docs/architecture.md` § Skills |
 | Contrato de la API | `http://localhost:8000/openapi.json` |
-| Story bible viva (solo vía servicios de `canon/`) | `data/storymaker.db` ▸ previsto |
+| Story bible viva (solo vía servicios de `canon/`) | `data/storymaker.db` |
 
 ## Ciclo de cambio
 

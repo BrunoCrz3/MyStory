@@ -1856,3 +1856,59 @@ la prueba del parser exige que un 404 del favicon cuente como error.
 - **Una página de lectura sin favicon vuelve a suspender `consola`.** La página de prueba del
   backend ya declaraba `<link rel="icon" href="data:,">`.
 - La paridad y el PDF no cambian: el favicon no se imprime.
+
+---
+
+## TO-051 — Decisiones del frontend de la demo, integradas al fusionar
+
+**Fecha:** 2026-09-25 (tomadas el 2026-09-24 en `frontend-demo`) · **Estado:** las marcadas
+«desarrollador», decididas por él; las FA, **decididas por el agente — revisar** · **Afecta a:**
+`CLAUDE.md` § Requisitos técnicos, § Layout y § Persistencia, backend y frontend; `frontend/`;
+`.mcp.json`; `.gitignore`
+
+### Problema
+
+`specs/progreso-frontend.md` dejó sus decisiones en «Para integrar en trade-offs y registro»,
+sin numerar, porque la rama del frontend no tenía `docs/trade-offs.md` al día. Al fusionar hay
+que darles entrada, y aplicar a `CLAUDE.md` las que cambian una regla.
+
+### Decisiones del desarrollador
+
+| # | Decisión | Frente a | Motivo |
+| --- | --- | --- | --- |
+| G2 | **Tres páginas**: `entrevista`, `progreso` y `lectura` | Dos páginas, con el progreso dentro de la entrevista | `progreso` es el destino común de la entrevista y de la confirmación de un cambio. `CLAUDE.md` pasa a decir tres |
+| G3 | **Dependencias del frontend**: en ejecución `react-router-dom` y `openapi-fetch`, además de `react`, `react-dom` y `@tanstack/react-query`; en desarrollo `openapi-typescript`, `vitest`, `jsdom`, Testing Library (`react`, `user-event`, `jest-dom`) y `yaml`, además de `vite`, `@vitejs/plugin-react` y `typescript` | Un router o un cliente escritos a mano | Son las mínimas para cuatro rutas y un cliente derivado del OpenAPI. `CLAUDE.md` las nombra en «Dependencias que el alcance exige» |
+| G1 | **Validación del brief sin campos obligatorios**: el arreglo va al contrato (brief parcial para `validarBrief`, 1.1.0, TO-037) y el frontend conserva una red de seguridad: pinta `datos_faltantes` venga en la respuesta que venga, y el `detail` de un `422` que no los traiga | Relajar los tipos solo en el frontend | El contrato es la fuente; la red cubre un backend que responda distinto |
+| — | **Browser MCP del agente en `.mcp.json`**, en la raíz, con `@playwright/mcp@0.0.82` fijado y `--browser msedge` | `.claude/mcp.json`, que pedían el alcance y el layout | Claude Code solo lee los servidores de proyecto en `.mcp.json` (comprobado con `claude mcp --help`). Edge porque la máquina no tiene Chrome, frente a instalar Chrome o el Chromium de Playwright. Es una herramienta, no entra en `package.json`. El layout de `CLAUDE.md` pasa a decir `.mcp.json` |
+| — | **`.playwright-mcp/` en el `.gitignore` raíz** | Versionar las capturas de trabajo | Es material de trabajo del agente. La evidencia elegida se versiona en `frontend/docs/capturas-browser-mcp/`. Sirve igual para el backend |
+
+### Decisiones técnicas del frontend
+
+| Decisión | Frente a | Motivo |
+| --- | --- | --- |
+| Del brief parcial al completo **sin `as`**: un estrechamiento que solo comprueba los campos obligatorios, y solo tras un `valido: true` del backend | Un `as BriefNovela` | Es el puente de tipos entre las dos formas de TO-037, no una regla de dominio |
+| La propuesta de `data-testid` del frontend **se retira** en favor de `spec1.md` § 4.4 | Mantener dos nombres | Diferían los nombres, la forma (el número va en `data-capitulo`) y faltaba `data-estado` |
+| La impresión se prueba **sobre la hoja**, no sobre el render | Probarla en `jsdom` | `jsdom` no evalúa `@media print`; el render impreso real lo comprueba el backend con Playwright |
+| **Puerto fijo 5173** (`strictPort`) | Puerto libre | `STORYMAKER_LECTURA_URL` no cambia entre arranques |
+| Cliente con **`openapi-typescript` + `openapi-fetch`** | orval, `@hey-api/openapi-ts` | Solo tipos y un `fetch` fino, sin plantillas de código que revisar |
+| **Proxy de Vite `/api` → `127.0.0.1:8000`** | CORS en el backend | No toca el backend, que sigue escuchando solo en local |
+| Respuestas de prueba **sin MSW**: un `fetch` inyectado desde `tests/` con los ejemplos de `specs/openapi.yaml` | MSW | Una dependencia menos y los datos salen del contrato |
+| **El export no se sondea**: el lector vuelve a comprobar con un botón | Sondear | El contrato no da intervalo y no se escribe una cifra suelta |
+| La descarga se construye con la **ruta de `descargarExport`** | `url_descarga` | Es un `uri-reference` sin base definida |
+
+### Decisiones del agente — revisar
+
+| # | Paso | Decisión | Motivo |
+| --- | --- | --- | --- |
+| FA-01 | F01 | Se instalan también `@testing-library/dom` (par de Testing Library) y los tipos `@types/react`, `@types/react-dom` y `@types/node` | Son parte de las aprobadas y no añaden nada |
+| FA-02 | F02 | `gen:api` usa un script propio (`scripts/generar-api.mjs`) sobre la API de `openapi-typescript` | La prueba de CA-01 compara con la misma función que escribe el fichero |
+| FA-03 | F05 | Los constructores de ruta viven en `shared/config/rutas.ts`; un cuerpo de error que no es `problem+json` (un proxy caído) se pinta como `error-interno` con su status real | `AvisoProblema` de `shared/ui` enlaza al progreso sin importar de `app/`; no se inventa detalle |
+| FA-04 | F10 | La regla «exactamente uno de `hecho_id` o `fragmento`» la garantiza el tipo `OrigenCambio`, no el generado | El `oneOf` de `NuevaSolicitudCambio` se genera como `& (unknown \| unknown)`; el backend lo valida igual |
+| FA-05 | F13 | La prueba del contrato de lectura lee la tabla CL-03 de `spec1.md` en cada ejecución; los controles llevan `data-controles`, que la hoja de impresión oculta | Falla si la tabla cambia sin que la lectura la siga. `data-controles` no es un `data-testid` ni parte del contrato |
+| FA-06 | F14 | Tipos generados con `defaultNonNullable: false` | `openapi-typescript` 7 hace obligatorio todo campo con `default`, y en un cuerpo de petición eso contradice el contrato |
+
+### Consecuencias
+
+- `CLAUDE.md` dice tres páginas, nombra las dependencias del frontend y lleva `.mcp.json` en el
+  layout. De paso, las rutas del layout que ya existen dejan de estar marcadas «▸ previsto».
+- La inspección con el browser MCP del frontend pasa a `docs/browser-mcp.md`.
