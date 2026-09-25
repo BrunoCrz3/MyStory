@@ -2037,3 +2037,15 @@ extremo a extremo, que lanzan el backend con un entorno propio.
 - Un `.env` ilegible o un arranque sin `--env-file` ya no producen un backend que funciona a
   medias: el proceso sale con código 1.
 - `uvicorn app.main:app --reload`, el arranque de desarrollo, no lo comprueba; el README lo dice.
+
+### Revisión: la comprobación pasa al `lifespan` (2026-09-25, decisión del desarrollador)
+
+La opción B dejaba fuera `uvicorn app.main:app --reload`, el arranque de desarrollo del README.
+Se pasa a la opción D: `comprobar_env_del_repo()` en `app/commons/config/entorno.py`, lo primero
+del `lifespan` de `crear_app`. Cubre las dos formas de arrancar porque ambas cargan
+`app.main:app` (prueba sobre ese mismo objeto). El coste que tenía D se paga con una variable:
+`STORYMAKER_SIN_ENV`, que fija el `conftest` para toda prueba sin credenciales y el entorno de
+las pruebas de extremo a extremo; `python -m app --sin-env` la pone por el entorno, porque con
+`--reload` la app corre en otro proceso. El error es `EnvNoCargado` y no `SystemExit`: uvicorn lo
+muestra y responde `Application startup failed`. Con `--reload`, el supervisor de uvicorn sigue
+vivo esperando cambios, pero el error queda a la vista.

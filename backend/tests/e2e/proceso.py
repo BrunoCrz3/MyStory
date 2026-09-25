@@ -28,6 +28,8 @@ def entorno(db: Path, **extra: str) -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if not k.startswith(("ANTHROPIC_", "LANGFUSE_"))}
     env["STORYMAKER_DB_PATH"] = str(db)
     env["STORYMAKER_E2E_DB_PATH"] = str(db)
+    # La prueba construye su propio entorno: el `.env` de la raíz no llega (TO-054).
+    env["STORYMAKER_SIN_ENV"] = "1"
     env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONUTF8"] = "1"
     env["PYTHONIOENCODING"] = "utf-8"

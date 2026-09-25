@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from app.canon import router as canon
 from app.commons import salud
 from app.commons.config import Config, cargar_config
+from app.commons.config.entorno import comprobar_env_del_repo
 from app.commons.db import BaseDatos, ruta_db
 from app.commons.db.cerrojo import CerrojoInstancia
 from app.commons.db.migrar import aplicar_migraciones
@@ -67,6 +68,7 @@ def crear_app(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        comprobar_env_del_repo()
         cfg = config if config is not None else cargar_config()
         ruta = ruta_db()
         cerrojo = CerrojoInstancia(ruta)

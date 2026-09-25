@@ -1341,3 +1341,11 @@ todas las variables con valor cargan. Nota en el README sobre las rutas de Windo
 justo después de matar el proceso. Pasó en las tres repeticiones aisladas y en la suite siguiente
 (471 pasadas). Es intermitente y previo a este cambio (la prueba no pasa por el lanzador); queda
 anotado en la lista post-demo.
+
+### Revisión de RI-027: la comprobación, en el `lifespan`
+
+A petición del desarrollador, para cubrir también `uvicorn --reload`. Siete pruebas escritas antes
+(en rojo por importación): las tres del parser, el arranque de `crear_app` y el de `app.main:app`
+fallan con `EnvNoCargado`, `STORYMAKER_SIN_ENV` la salta, y `--sin-env` del lanzador pone la
+variable. Comprobado a mano: sin `--env-file`, `python -m app` sale con código 3 y
+`uvicorn … --reload` muestra `EnvNoCargado` y `Application startup failed`.

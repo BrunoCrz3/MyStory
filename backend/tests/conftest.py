@@ -61,6 +61,8 @@ def entorno_aislado(
     for variable in _VARIABLES_REALES:
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("STORYMAKER_DB_PATH", str(tmp_path / "storymaker.db"))
+    # Sin credenciales a propósito: el `.env` de la raíz no tiene que haber llegado (TO-054).
+    monkeypatch.setenv("STORYMAKER_SIN_ENV", "1")
 
 
 @pytest.fixture
