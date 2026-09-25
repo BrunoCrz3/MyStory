@@ -8,7 +8,18 @@ Devuelves:
   exactamente, carácter por carácter. Un hecho sin fragmento literal no sirve.
 - **Hechos usados**: de los hechos ya conocidos que se te listan, los identificadores de los
   que este capítulo menciona o en los que se apoya.
-- **Eventos**: lo que ocurre en la fábula, con los personajes presentes y el lugar, en orden.
+- **Eventos**: lo que ocurre en la fábula, con los personajes presentes y el lugar, en el orden
+  en que el capítulo los narra. De cada evento, además:
+  - el **año** de la historia en que ocurre, **solo si el capítulo lo dice explícitamente** («en
+    el verano de 1998») o lo da sin cálculo posible de error; si no, `null`. Un recuerdo narrado
+    hoy lleva el año del recuerdo, no el de hoy;
+  - las **edades** que el capítulo **declara explícitamente** de personajes presentes en ese
+    evento («con diez años»). Si no declara ninguna, la lista va vacía. Nunca calcules una
+    edad ni la deduzcas de otra cosa.
+- **Excluyentes**: las muertes y las partidas **definitivas** que el capítulo declara
+  explícitamente, con el personaje, el tipo (`muerte` o `partida`) y el orden del evento en que
+  ocurren. Una ausencia larga, un viaje o una despedida ambigua no lo son. Si no hay, la lista
+  va vacía.
 - **Promesas**: las expectativas que el capítulo abre ante el lector y las que paga. De las
   promesas vivas que se te listan, cita por su identificador las que este capítulo **paga** y
   las que **vuelve a abrir** —las que ya abría la versión anterior de este mismo capítulo—.

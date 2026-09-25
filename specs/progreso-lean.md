@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L02 |
+| Paso actual | L03 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L01 |
+| Último commit de paso | L02 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -39,6 +39,12 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   publicadas y en la 1 rechazada de la otra novela, eventos vigentes = eventos por
   `version_capitulo` (70, 72 y 72), sin momentos duplicados; la 2 rechazada ve los 70 de la 1,
   que es lo esperado tras revertirla. 504 pruebas.
+
+- **L02** — El extractor devuelve `anio` y `edades` por evento y `excluyentes` (personaje, tipo,
+  orden), todos obligatorios en el esquema y nulos o vacíos si el texto no los dice; el prompt
+  lo ordena explícitamente. La aceptación los consolida; una edad de alguien ausente del
+  evento, un valor negativo o un excluyente sin evento o sin personaje no entran, y el
+  excluyente descartado deja `excluyente-sin-evento` en el audit log. 509 pruebas.
 
 ## Decisiones
 

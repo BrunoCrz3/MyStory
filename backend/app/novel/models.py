@@ -72,6 +72,19 @@ class EventoNarrado(BaseModel):
     momento: int
     lugar: str | None
     personajes: list[str]
+    anio: int | None = None
+    edades: dict[str, int] = {}
+
+
+class ExcluyenteNarrado(BaseModel):
+    """Un `Evento excluyente` que el capítulo declara: el evento del capítulo en `momento`
+    excluye a `personaje` (TO-065)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    personaje: str
+    tipo: Literal["muerte", "partida"]
+    momento: int
 
 
 class PresenciaEnEvento(BaseModel):

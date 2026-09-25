@@ -332,10 +332,33 @@ def _consolidar(
                 momento=momento_base + e.orden,
                 lugar=e.lugar,
                 personajes=e.personajes,
+                anio=e.anio,
+                edades={d.personaje: d.edad for d in e.edades},
             )
             for e in extraccion.eventos
         ],
     )
+    descartados = novel.registrar_excluyentes(
+        con,
+        novel_id=novel_id,
+        version=version,
+        capitulo_id=capitulo.capitulo_id,
+        excluyentes=[
+            novel.ExcluyenteNarrado(
+                personaje=x.personaje, tipo=x.tipo, momento=momento_base + x.orden
+            )
+            for x in extraccion.excluyentes
+        ],
+    )
+    for x in descartados:
+        motor.registrar_excluyente_descartado(
+            con,
+            novel_id=novel_id,
+            capitulo_id=capitulo.capitulo_id,
+            personaje=x.personaje,
+            tipo=x.tipo,
+            momento=x.momento,
+        )
     novel.registrar_elementos_en_capitulo(
         con,
         novel_id=novel_id,

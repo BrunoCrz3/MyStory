@@ -270,12 +270,14 @@ def insertar_evento(
     momento: int,
     lugar: str | None,
     personajes: list[str],
+    anio: int | None,
+    edades: dict[str, int],
 ) -> None:
     evento_id = str(uuid.uuid4())
     con.execute(
-        "INSERT INTO evento (id, novel_id, descripcion, momento, version_desde, lugar_id)"
-        " VALUES (?, ?, ?, ?, ?, (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?))",
-        (evento_id, novel_id, descripcion, momento, version, novel_id, lugar),
+        "INSERT INTO evento (id, novel_id, descripcion, momento, anio, version_desde, lugar_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, (SELECT id FROM lugar WHERE novel_id = ? AND nombre = ?))",
+        (evento_id, novel_id, descripcion, momento, anio, version, novel_id, lugar),
     )
     con.execute(
         "INSERT INTO evento_capitulo (novel_id, evento_id, capitulo_id) VALUES (?, ?, ?)",
@@ -283,10 +285,40 @@ def insertar_evento(
     )
     for nombre in personajes:
         con.execute(
-            "INSERT OR IGNORE INTO evento_personaje (novel_id, evento_id, personaje_id)"
-            " SELECT ?, ?, id FROM personaje WHERE novel_id = ? AND nombre = ?",
-            (novel_id, evento_id, novel_id, nombre),
+            "INSERT OR IGNORE INTO evento_personaje (novel_id, evento_id, personaje_id, edad)"
+            " SELECT ?, ?, id, ? FROM personaje WHERE novel_id = ? AND nombre = ?",
+            (novel_id, evento_id, edades.get(nombre), novel_id, nombre),
         )
+
+
+def insertar_excluyente(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    capitulo_id: str,
+    version: int,
+    personaje: str,
+    tipo: str,
+    momento: int,
+) -> bool:
+    """Liga el excluyente al evento vigente del capítulo en ese `momento`, si el personaje
+    existe. Devuelve si se ligó: sin evento o sin personaje no se inventa nada."""
+    cursor = con.execute(
+        "INSERT OR IGNORE INTO evento_excluyente (novel_id, evento_id, personaje_id, tipo)"
+        " SELECT :novel_id, e.id, p.id, :tipo FROM evento e"
+        " JOIN evento_capitulo ec ON ec.evento_id = e.id AND ec.capitulo_id = :capitulo_id"
+        " JOIN personaje p ON p.novel_id = e.novel_id AND p.nombre = :personaje"
+        f" WHERE e.novel_id = :novel_id AND e.momento = :momento AND {_vigente('e')}",
+        {
+            "novel_id": novel_id,
+            "capitulo_id": capitulo_id,
+            "personaje": personaje,
+            "tipo": tipo,
+            "momento": momento,
+            "version": version,
+        },
+    )
+    return cursor.rowcount > 0
 
 
 def _vigente(alias: str) -> str:

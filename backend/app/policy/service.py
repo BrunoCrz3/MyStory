@@ -276,6 +276,28 @@ class PolicyEngine:
             resultado="detener",
         )
 
+    def registrar_excluyente_descartado(
+        self,
+        con: sqlite3.Connection,
+        *,
+        novel_id: str,
+        capitulo_id: str,
+        personaje: str,
+        tipo: str,
+        momento: int,
+    ) -> None:
+        """Un excluyente del extractor sin evento o sin personaje que lo sostenga no se
+        consolida (TO-065, regla 4): queda aquí para saber que el extractor lo propuso."""
+        self._registrar(
+            con,
+            novel_id=novel_id,
+            sujeto="capitulo",
+            sujeto_id=capitulo_id,
+            regla="excluyente-sin-evento",
+            entrada={"personaje": personaje, "tipo": tipo, "momento": momento},
+            resultado="descartar",
+        )
+
 
 def decisiones(con: sqlite3.Connection, *, novel_id: str) -> list[DecisionRegistrada]:
     """El audit log de una novela, en orden (pregunta 31)."""

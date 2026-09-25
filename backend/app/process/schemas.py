@@ -89,11 +89,30 @@ class HechoExtraido(_Salida):
     fragmento_soporte: str
 
 
+class EdadDeclarada(_Salida):
+    personaje: str
+    edad: int
+
+
 class EventoExtraido(_Salida):
+    """`anio` es el año de la historia en que ocurre, y `edades`, las que el texto declara de
+    los presentes: los dos solo si el capítulo los dice explícitamente (TO-064)."""
+
     descripcion: str
     orden: int
     lugar: str | None
     personajes: list[str]
+    anio: int | None
+    edades: list[EdadDeclarada]
+
+
+class ExcluyenteExtraido(_Salida):
+    """Una muerte o una partida definitiva que el texto declara explícitamente (TO-065), en el
+    evento de este capítulo con ese `orden`."""
+
+    personaje: str
+    tipo: Literal["muerte", "partida"]
+    orden: int
 
 
 class PromesaExtraida(_Salida):
@@ -115,6 +134,7 @@ class Extraccion(_Salida):
     hechos_nuevos: list[HechoExtraido]
     hechos_usados: list[str]
     eventos: list[EventoExtraido]
+    excluyentes: list[ExcluyenteExtraido]
     promesas_abiertas: list[PromesaExtraida]
     promesas_pagadas: list[str]
     promesas_reabiertas: list[str]

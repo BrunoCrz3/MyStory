@@ -23,6 +23,7 @@ from app.novel.models import (
     EstadoNovela,
     EventoNarrado,
     EventoVigente,
+    ExcluyenteNarrado,
     HiloTrama,
     Lugar,
     Personaje,
@@ -39,6 +40,7 @@ __all__ = [
     "EstadoNovela",
     "EventoNarrado",
     "EventoVigente",
+    "ExcluyenteNarrado",
     "HiloTrama",
     "Lugar",
     "Personaje",
@@ -61,6 +63,7 @@ __all__ = [
     "personajes",
     "registrar_elementos_en_capitulo",
     "registrar_eventos",
+    "registrar_excluyentes",
     "registrar_reparto",
     "reglas_del_mundo",
     "retirar_eventos",
@@ -346,8 +349,9 @@ def registrar_eventos(
     eventos: list[EventoNarrado],
 ) -> None:
     """Eventos de la fábula que narra el capítulo, vigentes desde `version` (TO-066), con sus
-    personajes y su lugar. Un nombre que no está en la story bible se ignora: el extractor no
-    crea entidades."""
+    personajes, su lugar, su año y las edades declaradas (TO-064). Un nombre que no está en la
+    story bible se ignora: el extractor no crea entidades. Una edad de alguien que no está en
+    el evento, o un año o una edad negativos, tampoco entran: nulo es «el texto no lo dice»."""
     for e in eventos:
         repository.insertar_evento(
             con,
@@ -358,7 +362,35 @@ def registrar_eventos(
             momento=e.momento,
             lugar=e.lugar,
             personajes=e.personajes,
+            anio=e.anio if e.anio is not None and e.anio >= 0 else None,
+            edades={n: v for n, v in e.edades.items() if n in e.personajes and v >= 0},
         )
+
+
+def registrar_excluyentes(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    version: int,
+    capitulo_id: str,
+    excluyentes: list[ExcluyenteNarrado],
+) -> list[ExcluyenteNarrado]:
+    """Los `Evento excluyente` que el capítulo declara, ligados a sus eventos (TO-065).
+    Devuelve los que no casan con un evento del capítulo o con un personaje de la story
+    bible: no se consolidan, porque inventarles un evento sería inventar un hecho."""
+    return [
+        x
+        for x in excluyentes
+        if not repository.insertar_excluyente(
+            con,
+            novel_id=novel_id,
+            capitulo_id=capitulo_id,
+            version=version,
+            personaje=x.personaje,
+            tipo=x.tipo,
+            momento=x.momento,
+        )
+    ]
 
 
 def eventos_de_version(
