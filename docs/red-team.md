@@ -12,6 +12,7 @@ red-team log, `E-19`).
 | RT-002 | Ensayo de la demo, 2026-09-25, `proveedor: claude_code` | **Interferencia de las instrucciones de privacidad de la organización** en el subproceso del CLI: el redactor escribió `[NOMBRE_ANONIMIZADO]` nueve veces en lugar del nombre de la destinataria en el capítulo 10, y el judge citó fragmentos con `[PROFESION_OCULTA]` y `[SALUD_OCULTA]` | **Ninguno, al principio**: el capítulo se aceptó. Ahora: `nombres_exactos` (hook de capítulo, cierra el paso siempre) rechaza el marcador en el texto; `invencion_destinatario` coteja la cita del judge tratando el marcador como el trozo que sustituye | TO-056, TO-058, TO-061 |
 | RT-003 | L09 del plan 4, 2026-09-25: la versión 3 publicada de la novela de la demo, re-extraída con el extractor nuevo **en una copia** de la base | Buscar una incoherencia temporal real en una novela ya publicada | **Nadie, y Lean tampoco**: el texto no declara ningún año, edad ni muerte o partida explícitos, así que tres de las cuatro invariantes quedan sin comprobar en los 48 eventos; la ubicación se demuestra (6 sin lugar). No es un caso que solo detecte Lean: es la razón de que el caso real salga de B2 | TO-067 |
 | RT-004 | L10 del plan 4, 2026-09-25: el brief B2 de la evaluación (`ejemplos/evaluacion/brief-b2-incoherencia-temporal.json`), generado de principio a fin con el modelo real y el gate activo | La destinataria, nacida en 1990, conoce a su amiga en la feria de **1986**: una incoherencia temporal que el propio brief declara y que la entrevista no cruza | **Solo Lean**: `lean_nacimiento` avisa desde el capítulo 3 y rechaza la versión en el gate; ningún validador de capítulo lo señaló en ningún intento, y el judge llegó a citar «la referencia al verano de 1986» como hecho respetado. **Caso real**, no provocado (P-83) | TO-067 |
+| RT-005 | Demo, 2026-09-25: regeneración dirigida de la novela de la demo (capítulos 1–6 y 8), capítulo 6 | **Discrepancia entre un validador semántico y uno programático**: en cada intento el judge da 0,93–1,00 a `cierre_arco` y el capítulo pasa el hook, y justo después el `cierre_arco` programático lo devuelve con 0,0 porque el registro de promesas sigue viendo una pendiente. El texto la paga según el judge; el extractor no registra el pago | **El programático, por exceso**: bloquea un capítulo que el judge da por bueno, cinco veces, hasta agotarlo; la regeneración se detiene y la novela sigue en su versión publicada. Ningún validador compara las dos lecturas | Post-demo 17 y 23 (`specs/progreso.md`) |
 
 ## RT-002 — Anonimización impuesta por la organización
 
@@ -115,3 +116,45 @@ texto la escribió el modelo y la extrajo el extractor.
 **Qué no demuestra.** Con qué frecuencia ocurre sin un brief que la busque, y lo que pasa cuando
 el texto no fecha el recuerdo: en el capítulo 2 la alusión a 1986 no generó evento y Lean no la
 vio (RT-003 lo muestra a escala de novela).
+
+## RT-005 — El judge da la promesa por pagada y el registro no
+
+**Qué pasó.** En la regeneración dirigida de la demo (generación `11061cc7`, capítulos 1–6 y 8
+a reescribir), el capítulo 6 repitió el mismo patrón en cada intento del audit log:
+
+| Intento | Veredicto del hook de capítulo | `cierre_arco` del judge | `cierre_arco` programático | Decisión |
+| --- | --- | --- | --- | --- |
+| 0 | `todos-los-validadores-que-cierran-pasan` | 0,95 (no cierra el paso) | 0,0 (cierra el paso) | devolver |
+| 1 | ídem | 0,93 | 0,0 | devolver |
+| 3 | ídem | 0,93 | 0,0 | devolver |
+| 4 | ídem | 0,97 | 0,0 | devolver |
+| 5 | ídem | 1,00 | 0,0 | `limite-de-intentos-agotado` |
+
+El capítulo quedó `Agotado`, la generación `Detenida` con ocho capítulos aceptados, y la novela
+sigue en su versión publicada (TO-062). El audit log no tiene fila del intento 2.
+
+**Por qué discrepan.** Son dos validadores distintos con el mismo nombre. El del judge lee el
+texto y juzga si el arco se cierra. El programático (`process/aceptar.py`, A-127/A-128 de
+TO-047) no lee el texto: cuenta las promesas que el capítulo reescrito tenía que pagar y que el
+**extractor** no registró como pagadas. Según el judge el texto paga la promesa; el extractor no
+lo anota, y la cuenta programática manda porque es la única que cierra el paso. Es el riesgo que
+TO-047 ya declaraba («la comprobación cuenta lo que el extractor registra») y que el ensayo vio
+por primera vez (RI-033).
+
+**Quién lo detectó.** El programático, **por exceso**: un falso negativo repetido que gasta los
+cinco intentos (redactor, judge, editor y extractor cada vez) y detiene la regeneración. Ningún
+validador compara la lectura del judge con la del extractor, así que la contradicción solo se ve
+leyendo el audit log a mano, y el nombre compartido la esconde: dos filas `cierre_arco` seguidas,
+0,97 y 0,0, parecen el mismo validador cambiando de opinión.
+
+**Qué se hará** (post-demo, sin cambio de código ahora; `specs/progreso.md` § Post-demo):
+
+- **17**: decirle al extractor qué promesas debe cerrar el capítulo y pedirle que confirme si el
+  texto las resuelve, sin quitarle la posibilidad de decir que no.
+- **23**: dar nombre propio a cada validador duplicado (`cierre_arco` programático, por ejemplo
+  `promesas_pagadas`; revisar `consistencia_factica` y `schema_valido`, que salen dos veces en
+  cada veredicto del hook).
+
+**Qué no demuestra.** Cuál de las dos lecturas acierta: nadie ha leído el capítulo para decidir si
+la promesa está pagada, y el judge también puede equivocarse (RT-004 lo vio dar por respetado un
+año imposible).
