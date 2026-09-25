@@ -2374,3 +2374,37 @@ fijado por la rechazada— y habría tocado todas las consultas por vigencia.
   ajustadas a la decisión.
 - Una candidata rechazada pierde su vista del canon (queda la de su base): se conservan sus
   filas, sus vínculos, su hash, el audit log y el registro del retcon.
+
+---
+
+## TO-063 — El gate comprueba que la lectura se puede desplazar hasta el final
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (petición del desarrollador) · **Afecta a:**
+`backend/app/versioning/render_visual.py`, `frontend/tests/desplazamiento.test.ts`,
+`docs/browser-mcp.md`
+
+### Problema
+
+El desarrollador no podía desplazarse hasta el final de la página. Revisadas las tres pantallas
+en escritorio y en móvil con poca altura, con rueda y teclado, **la aplicación se desplaza
+bien**: ningún estilo lo bloquea. Lo más probable es la ventana del browser MCP del agente con
+un viewport fijado por `browser_resize` más alto que la ventana. Aun así, nada impedía que un
+cambio de estilo futuro lo rompiera sin que ninguna prueba lo notara.
+
+### Opciones y elección
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Solo documentarlo | Sin código | Una regresión real pasaría el gate |
+| **B · Una aserción `desplazamiento` en `render_visual`** y una guarda estática en el frontend | La aserción mide el render real que se publica; la guarda falla antes, en `npm run test` | Una llamada de desplazamiento dentro del `browser_evaluate` que ya existía |
+
+**B.** La aserción lleva la página al final, mira que el último elemento de la lectura quede
+dentro de la ventana y que ningún antepasado con `overflow: hidden` o `clip` tenga más contenido
+del que muestra, y devuelve la página a su posición. Un fallo es `maquetacion`. La guarda del
+frontend rechaza en `html`, `body`, `:root` y `#root` un `overflow` oculto o una altura `100vh`.
+
+### Consecuencias
+
+- `render_visual` tiene ocho aserciones. Probadas con una página que bloquea el desplazamiento
+  (falla) y contra la lectura real de las versiones 1 y 3 de *Soltar amarras* (pasa).
+- Sin cambios de estilo: la impresión y el PDF no cambian.

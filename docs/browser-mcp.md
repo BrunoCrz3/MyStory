@@ -41,6 +41,7 @@ consola y cierra la pestaña. La lista es el dato `ASERCIONES` de
 | `portada` | `browser_evaluate` | La portada muestra el título y la dedicatoria |
 | `consola` | `browser_console_messages` (`level: error`) | Sin errores de consola, incluidas las excepciones no capturadas |
 | `desbordes` | `browser_evaluate` | Ninguna caja del contrato ni el documento son más anchos que su contenedor |
+| `desplazamiento` | `browser_evaluate` | Desplazando la página hasta el final se ve el último elemento de la lectura, y ningún antepasado con `overflow` oculto lo recorta (TO-063) |
 
 **Enrutado del fallo** (A-80, O-10). Cada hallazgo se clasifica consultando antes la story
 bible de la versión: si el dato **no está** —un capítulo sin título, una portada sin
@@ -244,3 +245,23 @@ desbordes; el selector ofrece la 3 y la 1, y no la 2 rechazada; la 1 se abre ent
 marcas y con el capítulo 7 original. El PDF de la 3, desde la lectura, con la paridad
 comprobada. **Detectado**: la opción del selector no dice el motivo del cambio, porque el
 backend no rellena `Version.motivo` (post-demo).
+
+## Desplazamiento vertical (2026-09-25)
+
+**Informado:** «la página no permite desplazarse hasta abajo; no puedo ver la lista de novelas
+de la entrevista».
+
+- **Inspeccionado** con el browser MCP las tres pantallas, a 1280×500 y 390×500, con la rueda
+  del ratón (`page.mouse.wheel`) y con la tecla Fin, no con `scrollTo`: en las seis
+  combinaciones se llega al final y el último elemento queda visible —la lista de novelas en la
+  entrevista, «Leer la versión 3» en el progreso, el último capítulo en la lectura—.
+- **Detectado:** ningún estilo de `src/` bloquea el desplazamiento: no hay alturas de pantalla
+  ni `overflow` oculto en `html`, `body`, `:root` ni `#root`; el único `overflow-y: auto` es el
+  del panel de cambio, acotado a `70vh`. La causa más probable es el propio navegador del
+  browser MCP del agente: es una ventana visible (`.mcp.json` no pasa `--headless`) y
+  `browser_resize` fija el viewport emulado; si la ventana del sistema es más baja que ese
+  viewport, lo que sobra queda cortado y no se puede desplazar, porque para la página el
+  viewport sigue siendo el emulado.
+- **Cambiado:** sin cambios de estilo —la hoja de impresión y el PDF no cambian—. Se añaden dos
+  comprobaciones: la aserción `desplazamiento` de `render_visual` en el gate, y la guarda
+  estática `frontend/tests/desplazamiento.test.ts` sobre las hojas de `src/`.

@@ -114,6 +114,11 @@ ASERCIONES: tuple[Asercion, ...] = (
         tools=("browser_evaluate",),
         que="Ninguna caja del contrato ni el documento son más anchos que su contenedor",
     ),
+    Asercion(
+        nombre="desplazamiento",
+        tools=("browser_evaluate",),
+        que="Desplazando la página se llega al final de la lectura: nada lo recorta (TO-063)",
+    ),
 )
 _TOOLS = {a.nombre: "+".join(a.tools) for a in ASERCIONES}
 
@@ -186,6 +191,8 @@ class Dom(BaseModel):
     ficha: list[_EntradaFicha] = []
     portada: _PortadaDom = _PortadaDom()
     desbordes: list[str] = []
+    # Si el último elemento de la lectura se alcanza desplazando la página (TO-063).
+    desplazamiento: bool = True
 
 
 def cardinalidades(e: LecturaEsperada) -> dict[str, int]:
@@ -306,6 +313,12 @@ def evaluar(e: LecturaEsperada, dom: Dom, errores_consola: list[str]) -> list[Ha
     if dom.desbordes:
         detalle = f"desbordan: {', '.join(dom.desbordes)}"
         hallazgos.append(Hallazgo(asercion="desbordes", clase="maquetacion", detalle=detalle))
+    if not dom.desplazamiento:
+        detalle = (
+            "el final de la lectura no se alcanza desplazando la página: una altura fija con"
+            " overflow oculto lo recorta"
+        )
+        hallazgos.append(Hallazgo(asercion="desplazamiento", clase="maquetacion", detalle=detalle))
     return hallazgos
 
 
@@ -366,11 +379,28 @@ _EXTRAER_JS = """() => {
   }
   const doc = document.documentElement;
   if (doc.scrollWidth > doc.clientWidth + 1) desbordes.push('documento');
+  // TO-063: al final de la página tiene que verse el último elemento de la lectura, y ningún
+  // antepasado con overflow oculto puede tener más contenido del que muestra.
+  const recorta = (el) => {
+    for (let a = el.parentElement; a; a = a.parentElement) {
+      const o = getComputedStyle(a).overflowY;
+      if ((o === 'hidden' || o === 'clip') && a.scrollHeight > a.clientHeight + 1) return true;
+    }
+    return false;
+  };
+  const visibles = raiz ? q('*', raiz).filter((el) => el.getClientRects().length) : [];
+  const ultimo = visibles.length ? visibles[visibles.length - 1] : raiz;
+  const pagina = document.scrollingElement || doc;
+  const antes = pagina.scrollTop;
+  pagina.scrollTop = pagina.scrollHeight;
+  const desplazamiento = !ultimo
+    || (ultimo.getBoundingClientRect().bottom <= innerHeight + 1 && !recorta(ultimo));
+  pagina.scrollTop = antes;
   return {
     estado: raiz ? raiz.dataset.estado || null : null,
     raiz: raiz ? { novel_id: raiz.dataset.novelId || null,
                    version: raiz.dataset.version || null } : null,
-    cuentas, fuera, desbordes,
+    cuentas, fuera, desbordes, desplazamiento,
     indice: q(S['indice-entrada']).map((el) => ({
       capitulo: el.dataset.capitulo || null, ...enlace(el), modificado: marca(el) })),
     capitulos: q(S['capitulo']).map((el) => ({

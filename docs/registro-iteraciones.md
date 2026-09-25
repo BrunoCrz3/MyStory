@@ -1580,3 +1580,27 @@ El flujo de la demo queda recorrido de punta a punta con el modelo real: entrevi
 generación → progreso → lectura → petición de cambio → versión nueva con el capítulo marcado y
 la anterior conservada → PDF. Detectado: `Version.motivo` no se rellena (post-demo).
 Acumulado nominal: 46,47 USD de 100.
+
+---
+
+## RI-036 — Desplazamiento vertical: comprobado y vigilado
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/versioning/render_visual.py`,
+`backend/tests/versioning/test_render_visual.py`, `frontend/tests/desplazamiento.test.ts`,
+`docs/browser-mcp.md` (TO-063)
+
+### Causa
+
+El desarrollador informó de que la página no se desplazaba hasta el final.
+
+### Qué cambió
+
+Revisión con el browser MCP: la aplicación se desplaza bien en las tres pantallas (escritorio y
+móvil, 500 px de alto, rueda y tecla Fin); ningún estilo lo bloquea. Pruebas primero para la
+aserción nueva `desplazamiento` (una unitaria y una con navegador sobre una página bloqueada, en
+rojo), después la aserción. Guarda estática en el frontend.
+
+### Efecto
+
+Backend 494 pasadas; frontend 98 de 98, `typecheck` y `build` en verde; ninguna hoja de estilo
+cambió. `render_visual` pasa sobre la lectura real de las versiones 1 y 3.

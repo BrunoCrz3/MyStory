@@ -94,7 +94,16 @@ def _hallazgos(dom: dict[str, Any], consola: list[str] | None = None) -> list[st
 
 def test_cada_asercion_declara_la_tool_que_le_da_la_evidencia() -> None:
     nombres = {a.nombre for a in ASERCIONES}
-    assert nombres == {"estado", "selectores", "indice", "ficha", "portada", "consola", "desbordes"}
+    assert nombres == {
+        "estado",
+        "selectores",
+        "indice",
+        "ficha",
+        "portada",
+        "consola",
+        "desbordes",
+        "desplazamiento",
+    }
     tools = {"browser_navigate", "browser_evaluate", "browser_console_messages"}
     assert all(a.tools and set(a.tools) <= tools for a in ASERCIONES)
 
@@ -184,6 +193,14 @@ def test_errores_de_consola_y_desbordes_fallan() -> None:
     hallazgos = _hallazgos(dom, ["[ERROR] TypeError: x is undefined"])
     assert any(h.startswith("consola:maquetacion:") and "TypeError" in h for h in hallazgos)
     assert any(h.startswith("desbordes:maquetacion:") and "capitulo-texto" in h for h in hallazgos)
+
+
+def test_una_pagina_que_no_se_desplaza_hasta_el_final_falla() -> None:
+    """TO-063: el final de la lectura tiene que alcanzarse desplazando la página."""
+    dom = _dom(_esperado()) | {"desplazamiento": False}
+    hallazgos = _hallazgos(dom, [])
+    assert any(h.startswith("desplazamiento:maquetacion:") for h in hallazgos)
+    assert not any(h.startswith("desplazamiento") for h in _hallazgos(_dom(_esperado()), []))
 
 
 # --- Con el servidor Playwright MCP real ------------------------------------------------
@@ -345,3 +362,20 @@ def test_los_errores_de_consola_se_leen_tras_la_cabecera() -> None:
     ]
     sin_errores = salto.join(["### Result", "Total messages: 3 (Errors: 0, Warnings: 3)"])
     assert _errores_consola(sin_errores) == []
+
+
+@mcp
+@pytest.mark.anyio
+async def test_una_pagina_con_el_desplazamiento_bloqueado_falla(
+    instancia: Instancia, paginas: Paginas
+) -> None:
+    """TO-063: una altura de pantalla con `overflow: hidden` deja el final fuera de alcance."""
+    novela = publicada_con_uso(instancia)
+    bloqueo = (
+        "<style>html, body { height: 100%; overflow: hidden; }"
+        " main { padding-bottom: 4000px; }</style></head>"
+    )
+    html = pagina(datos_de_version(instancia.cliente, novela, 1)).replace("</head>", bloqueo, 1)
+    paginas.servir(novela, 1, html)
+    v = await _render(instancia, paginas)(novel_id=novela, version=1)
+    assert not v.pasa and "desplazamiento" in v.detalle
