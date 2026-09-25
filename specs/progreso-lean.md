@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L03 |
+| Paso actual | L04 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L02 |
+| Último commit de paso | L03 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -46,11 +46,20 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   evento, un valor negativo o un excluyente sin evento o sin personaje no entran, y el
   excluyente descartado deja `excluyente-sin-evento` en el audit log. 509 pruebas.
 
+- **L03** — Proyecto Lake en `formal/lean/` (Lean 4.34.1, sin `require`): `Cronologia/Basico.lean`
+  con los tipos y los cuatro predicados `Bool` (L-D05, L-D07) y `Cronologia/Ejemplo.lean` en
+  verde (analepsis, evento sin año, edad antes del cumpleaños, exclusión del mismo año). Cuatro
+  variantes con una violación fallan cada una solo en la línea de su teorema. `lake` se busca
+  con `app/versioning/lean/toolchain.py` (L-D10), que ya lo encuentra en `~/.elan/bin` sin
+  tocar el PATH. README: Lean es obligatorio donde corra la suite. Build del proyecto en frío,
+  3,6 s.
+
 ## Decisiones
 
 | ID | Paso | Decisión | Porqué | Rastro |
 | --- | --- | --- | --- | --- |
 | A-01 | L01 | `version_desde` se añade con `ADD COLUMN` nula y dos triggers impiden insertar o dejar un evento sin ella | Reconstruir `evento` exige `DROP TABLE` con tres tablas que la referencian y las claves foráneas activas dentro de la transacción de la migración | TO-068 |
+| A-03 | L03 | Los hechos se escriben con constructores explícitos (`Evento.mk id momento anio lugar presentes`), no con `{ campo := … }` | La instancia de estructura partida en varias líneas no parseó en 4.34.1; los constructores caben en una línea por evento y el generador no depende del sangrado | — |
 | A-02 | L01 | En el relleno, lo escrito por una **regeneración** rechazada queda con intervalo vacío; una **primera** versión rechazada en el gate conserva sus eventos | Es lo que hizo TO-062 con los hechos: solo `rechazar_regeneracion` revierte; la primera versión rechazada no se revierte | TO-068 |
 
 ## Parada

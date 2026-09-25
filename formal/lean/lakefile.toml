@@ -1,0 +1,10 @@
+# Cronología de una novela (spec 4, TO-064). Sin `require`: ni Mathlib ni Batteries (A-91),
+# para que el build tarde segundos y el chequeo incremental salga a cuenta (TO-016).
+name = "cronologia"
+defaultTargets = ["Cronologia"]
+
+[[lean_lib]]
+name = "Cronologia"
+# `Cronologia.Hechos` solo existe en la copia temporal de cada ejecución: lo escribe el
+# generador de `backend/app/versioning/lean/` y nunca se versiona.
+globs = ["Cronologia", "Cronologia.+"]

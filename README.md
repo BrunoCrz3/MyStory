@@ -12,9 +12,17 @@ si se publica.
 
 ## Requisitos
 
-Python 3.12, [`uv`](https://docs.astral.sh/uv/), `git`, Node 20+ y Microsoft Edge. En Windows,
-todos los comandos de este README son de **Git Bash**. Con `proveedor: claude_code` (el valor
-actual), el CLI de Claude Code instalado y con la sesión iniciada.
+Python 3.12, [`uv`](https://docs.astral.sh/uv/), `git`, Node 20+, Microsoft Edge y **Lean 4 con
+`lake`** (la versión de `formal/lean/lean-toolchain`, instalada con
+[`elan`](https://github.com/leanprover/elan)). En Windows, todos los comandos de este README son
+de **Git Bash**. Con `proveedor: claude_code` (el valor actual), el CLI de Claude Code instalado
+y con la sesión iniciada.
+
+> **Lean es obligatorio en todo entorno donde corra la suite**, no solo en producción: las
+> pruebas de `tests/formal/` y las del gate ejecutan `lake build` de verdad y **fallan** —no se
+> saltan— si no encuentran `lake`. Se busca en el `PATH` y después en `~/.elan/bin` (en Windows,
+> `%USERPROFILE%\.elan\bin`). Si el shell no lo ve, añádelo: `export PATH="$HOME/.elan/bin:$PATH"`
+> en Git Bash.
 
 **Qué navegador usa cada pieza:**
 
