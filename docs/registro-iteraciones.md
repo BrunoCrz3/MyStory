@@ -1698,3 +1698,26 @@ copia y con una novela real del brief B2.
   validador semántico ve.
 - La suite pasa de 504 a 538 pruebas y de 6 a unos 13 minutos (el gate lanza `lake build` en
   cada publicación y el incremental en las pruebas por HTTP).
+
+## RI-041 — Evaluación preliminar y caso de Lean para la presentación
+
+**Fecha:** 2026-09-25 · **Ficheros:** `docs/evaluacion-preliminar.md`, `docs/caso-lean.md`,
+`docs/verification.md`
+
+### Causa
+
+La presentación necesita una tabla de evals y un caso de Lean, y no había tiempo de lanzar los
+briefs B1–B5 que faltan.
+
+### Qué cambió
+
+Merge de `lean-v1` en `Contexto-semilla-v2` (avance rápido, sin conflictos; las dos suites en
+verde antes y después). Dos documentos a partir de las ejecuciones reales que ya existían,
+leyendo las bases en solo lectura, sin llamar al modelo ni a la API de scores de Langfuse (410):
+la tabla completa y la compacta de las quince ejecuciones, y el caso de B2 con el fichero Lean y
+la salida de `lake build` reproducidos en local.
+
+### Efecto
+
+B2 queda cubierto y B1 en parte; B3, B4 y B5 siguen sin ejecutar. Las filas no son comparables
+entre sí en sentido estricto (brief repetido, commits distintos): el documento lo dice.

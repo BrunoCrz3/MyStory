@@ -667,6 +667,11 @@ un plan que las omite finge una cobertura que no tiene.
 Qué se medirá y con qué. **Esta sección no contiene resultados**: las tablas se rellenan
 con ejecuciones reales, y una celda sin ejecución detrás se deja vacía, no se estima.
 
+> **Resultados preliminares, fuera de esta sección**: `docs/evaluacion-preliminar.md` recoge las
+> quince ejecuciones reales que ya existían (humos, adversarial, las dos novelas de la demo, sus
+> regeneraciones y B2) con su tabla por validador, y cubre B2 entero y B1 en parte. El caso que
+> solo detecta Lean (P-83) está contado para la presentación en `docs/caso-lean.md`.
+
 ### Los cinco briefs de prueba
 
 Dos los fija el alcance §5; los otros tres cubren los modos de fallo más probables del
