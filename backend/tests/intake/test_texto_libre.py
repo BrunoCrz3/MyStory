@@ -16,7 +16,7 @@ from tests.fixtures.briefs import INYECCION, brief_adversarial
 from tests.fixtures.esquemas import esquema_valido
 from tests.fixtures.inyecciones import CORPUS_INYECCION
 
-LIMPIO = "Marta aprendió a navegar con su abuela en Cádiz."
+LIMPIO = "Ondina aprendió a navegar con su abuela en Cádiz."
 
 
 def test_una_instruccion_se_marca_y_se_retira_del_texto() -> None:
@@ -57,8 +57,8 @@ def test_validar_devuelve_el_fragmento_y_los_hechos_sin_mandar_la_instruccion(
         "entrevistador",
         {
             "hechos": [
-                {"enunciado": "Marta aprendió a navegar con su abuela", "fragmento": LIMPIO},
-                {"enunciado": "Marta escribe novelas de terror", "fragmento": "novela de terror"},
+                {"enunciado": "Ondina aprendió a navegar con su abuela", "fragmento": LIMPIO},
+                {"enunciado": "Ondina escribe novelas de terror", "fragmento": "novela de terror"},
             ]
         },
     )
@@ -68,7 +68,7 @@ def test_validar_devuelve_el_fragmento_y_los_hechos_sin_mandar_la_instruccion(
     assert [f["fragmento"] for f in resultado["fragmentos_sospechosos"]] == [INYECCION]
     # Solo se propone lo que el texto limpio sostiene literalmente, y como texto libre.
     assert resultado["hechos_extraidos"] == [
-        {"enunciado": "Marta aprendió a navegar con su abuela", "origen": "texto-libre"}
+        {"enunciado": "Ondina aprendió a navegar con su abuela", "origen": "texto-libre"}
     ]
 
     [peticion] = [p for p in instancia.modelo.peticiones if p.rol == "entrevistador"]

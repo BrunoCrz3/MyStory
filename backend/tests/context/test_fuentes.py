@@ -47,12 +47,12 @@ def _aceptado(con: sqlite3.Connection, novel_id: str, numero: int, texto: str) -
 
 def test_recuperado_filtra_por_entidades_antes_de_ordenar(con: sqlite3.Connection) -> None:
     _aceptado(con, "n1", 1, "El Alondra crujía en el puerto.\n\nUna gaviota graznó sobre el mar.")
-    _aceptado(con, "n1", 2, "Marta revisó las velas del Alondra.\n\nEl faro seguía apagado.")
+    _aceptado(con, "n1", 2, "Ondina revisó las velas del Alondra.\n\nEl faro seguía apagado.")
     piezas = recuperar_fragmentos(
         con,
         novel_id="n1",
         version=1,
-        entidades=["Alondra", "Marta"],
+        entidades=["Alondra", "Ondina"],
         antes_de=3,
         excluir=set(),
         maximo=CONFIG.umbrales.recuperacion.max_fragmentos,
@@ -60,7 +60,7 @@ def test_recuperado_filtra_por_entidades_antes_de_ordenar(con: sqlite3.Connectio
     textos = [p.texto for p in piezas]
     # El párrafo de la gaviota se parece en tono, pero no nombra ninguna entidad del brief.
     assert all("gaviota" not in t and "faro" not in t for t in textos)
-    assert textos[0] == "Marta revisó las velas del Alondra."  # dos entidades, va primero
+    assert textos[0] == "Ondina revisó las velas del Alondra."  # dos entidades, va primero
     assert "El Alondra crujía en el puerto." in textos
 
 

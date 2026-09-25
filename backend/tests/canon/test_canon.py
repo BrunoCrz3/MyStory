@@ -22,7 +22,7 @@ from app.commons.db.migrar import aplicar_migraciones
 from app.novel.service import crear_capitulo
 
 TEXTO = (
-    "Marta soltó amarras al amanecer. El barco se llamaba Alondra y crujía como una casa vieja. "
+    "Ondina soltó amarras al amanecer. El barco se llamaba Alondra y crujía como una casa vieja. "
     "En el puerto, su perro ladró hasta perderla de vista."
 )
 
@@ -55,14 +55,14 @@ def _entrada(capitulo_id: str, numero: int, **extra: object) -> Consolidacion:
                 fragmento_soporte="El barco se llamaba Alondra",
             ),
             HechoNuevo(
-                enunciado="Marta tiene un perro",
+                enunciado="Ondina tiene un perro",
                 tipo="relacion",
                 fragmento_soporte="su perro ladró",
             ),
         ],
         "promesas_abiertas": [PromesaNueva(enunciado="¿Volverá a puerto?", tipo="pregunta")],
-        "personajes_presentes": ["Marta"],
-        "ubicaciones": {"Marta": "el puerto"},
+        "personajes_presentes": ["Ondina"],
+        "ubicaciones": {"Ondina": "el puerto"},
         "momento": numero * 10,
     }
     base.update(extra)
@@ -86,20 +86,20 @@ def test_consolidar_escribe_hechos_usos_promesas_y_snapshot(con: sqlite3.Connect
         )
     assert len(resultado.adoptados) == 2
     vigentes = hechos_vigentes(con, novel_id="n1", version=1)
-    assert {h.enunciado for h in vigentes} == {"El barco se llama Alondra", "Marta tiene un perro"}
+    assert {h.enunciado for h in vigentes} == {"El barco se llama Alondra", "Ondina tiene un perro"}
     assert all(h.capitulos_usan == [1] and h.capitulo_establece == 1 for h in vigentes)
     snap = snapshot_de(con, novel_id="n1", version=1, capitulo_id=c1)
     assert snap is not None
     assert "El barco se llama Alondra" in snap.hechos
     assert snap.promesas_pendientes == ["¿Volverá a puerto?"]
-    assert snap.personajes_presentes == ["Marta"]
+    assert snap.personajes_presentes == ["Ondina"]
 
 
 def test_si_algo_falla_a_medias_no_queda_nada(con: sqlite3.Connection) -> None:
     c1 = _capitulo(con, 1)
 
     def falla_en_el_segundo(h: object) -> bool:
-        if getattr(h, "enunciado", "") == "Marta tiene un perro":
+        if getattr(h, "enunciado", "") == "Ondina tiene un perro":
             raise RuntimeError("se cae a mitad de consolidar")
         return True
 
@@ -163,7 +163,7 @@ def test_un_hecho_descartado_no_es_vigente_en_ninguna_version(con: sqlite3.Conne
             version=1,
             texto=TEXTO,
             entrada=_entrada(c1, 1),
-            decidir=lambda h: getattr(h, "enunciado", "") != "Marta tiene un perro",
+            decidir=lambda h: getattr(h, "enunciado", "") != "Ondina tiene un perro",
         )
     assert [h.enunciado for h in hechos_vigentes(con, novel_id="n1", version=1)] == [
         "El barco se llama Alondra"
@@ -219,10 +219,10 @@ def test_vigencia_no_estatus_un_hecho_retconeado_sigue_en_su_version(
             "UPDATE hecho SET version_hasta = 3, estado = 'retconeado' WHERE id = ?",
             (perro.hecho_id,),
         )
-    assert "Marta tiene un perro" in {
+    assert "Ondina tiene un perro" in {
         h.enunciado for h in hechos_vigentes(con, novel_id="n1", version=1)
     }
-    assert "Marta tiene un perro" not in {
+    assert "Ondina tiene un perro" not in {
         h.enunciado for h in hechos_vigentes(con, novel_id="n1", version=3)
     }
 

@@ -1181,11 +1181,11 @@ components:
           identificador: comprador-0042
           relacion_con_destinatario: hermana
         destinatario:
-          nombre: Marta
+          nombre: Ondina
           edad: 34
           rasgos: [tozuda, le encanta el mar]
           recuerdos: [el verano en que aprendió a navegar]
-          fecha_nacimiento: '1992-04-18'
+          fecha_nacimiento: '1992-01-01'
         ocasion:
           tipo: cumpleanos
           fecha: '2026-10-02'
@@ -1193,7 +1193,7 @@ components:
         genero: aventura costumbrista
         tono: cálido y con humor
         dedicatoria:
-          texto: Para Marta, que siempre vuelve al mar.
+          texto: Para Ondina, que siempre vuelve al mar.
           firma: Tu hermana
         elementos_personalizados:
           - enunciado: Aprendió a navegar en un barco llamado Alondra
@@ -1201,7 +1201,7 @@ components:
           - enunciado: Tiene un perro
             obligatorio: false
         temas_excluidos: [enfermedad]
-        palabras_prohibidas: [Luis]
+        palabras_prohibidas: [Anselmo]
         reglas_mundo: [El abuelo nunca aparece]
         textos_libres:
           - contenido: Aquel verano se empeñó en soltar amarras sin ayuda de nadie.

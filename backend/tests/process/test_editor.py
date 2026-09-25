@@ -14,7 +14,7 @@ from tests.fixtures.borradores import borrador
 from tests.fixtures.judge import salida_judge
 from tests.fixtures.planificada import novela_planificada
 
-VETADA = "Luis la esperaba en el puerto aquella tarde de viento."
+VETADA = "Anselmo la esperaba en el puerto aquella tarde de viento."
 
 
 @pytest.mark.anyio
@@ -41,7 +41,7 @@ async def test_el_corregido_vuelve_a_pasar_todos_los_validadores(entorno: Entorn
     assert r.accion == "aceptar" and r.intentos == 1
     assert [s.valor for s in entorno.trazas.scores_de("palabras_prohibidas")] == [1.0, 0.0, 1.0]
     coincidencias = entorno.consultar("SELECT palabra, intento FROM coincidencia")
-    assert [tuple(c) for c in coincidencias] == [("Luis", 0)]
+    assert [tuple(c) for c in coincidencias] == [("Anselmo", 0)]
 
 
 @pytest.mark.anyio

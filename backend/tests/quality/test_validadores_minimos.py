@@ -17,7 +17,7 @@ CAP = CONFIG.umbrales.capitulo
 
 def _entrada(texto: str) -> EntradaHookCapitulo:
     return EntradaHookCapitulo(
-        titulo="Título", texto=texto, nombres=["Marta", "Tomás", "el Alondra", "Cádiz"]
+        titulo="Título", texto=texto, nombres=["Ondina", "Tomás", "el Alondra", "Cádiz"]
     )
 
 
@@ -48,10 +48,10 @@ def test_nombre_bien_escrito_pasa() -> None:
 
 
 def test_nombre_del_destinatario_mal_escrito_falla() -> None:
-    texto = prosa(1100, extra="Aquella tarde, su hermana llamó a Martha desde el muelle.")
+    texto = prosa(1100, extra="Aquella tarde, su hermana llamó a Ondinna desde el muelle.")
     pasa, detalle = _resultado(texto, "nombres_exactos")
     assert not pasa
-    assert "Martha" in detalle and "Marta" in detalle
+    assert "Ondinna" in detalle and "Ondina" in detalle
 
 
 def test_mismo_nombre_con_otro_acento_falla() -> None:
@@ -90,11 +90,11 @@ def test_cada_validador_dice_si_cierra_el_paso() -> None:
 
 
 def test_una_palabra_comun_dentro_de_un_nombre_compuesto_no_es_un_nombre_mal_escrito() -> None:
-    # Humo real del P27: con «El perro de Marta», «La bocana» y «Varadero de Remedios» en la
+    # Humo real del P27: con «El perro de Ondina», «La bocana» y «Varadero de Remedios» en la
     # obra, cada «perro», «bocana» o «varadero» de la prosa suspendía el capítulo.
-    nombres = ["Marta", "El perro de Marta", "La bocana", "Bar El Ancla", "Varadero de Remedios"]
+    nombres = ["Ondina", "El perro de Ondina", "La bocana", "Bar El Ancla", "Varadero de Remedios"]
     texto = (
-        "Marta subió al varadero con el perro. Desde la bocana se veía el ancla oxidada "
+        "Ondina subió al varadero con el perro. Desde la bocana se veía el ancla oxidada "
         "del bar, y el varadero olía a brea."
     )
     r = nombres_exactos(texto, nombres)
@@ -105,12 +105,12 @@ def test_un_nombre_que_tambien_es_palabra_comun_puede_ir_en_minuscula() -> None:
     # Humo real del P27: el perro se llamaba «Boya», y cada «boya» del mar suspendía el
     # capítulo. Poner en minúscula un nombre propio no es un error que el modelo cometa;
     # lo que comete es otra grafía o un casi-nombre, y eso se sigue cazando.
-    r = nombres_exactos("Boya ladró. Marta miró la boya roja que cabeceaba.", ["Marta", "Boya"])
+    r = nombres_exactos("Boya ladró. Ondina miró la boya roja que cabeceaba.", ["Ondina", "Boya"])
     assert r.pasa, r.detalle
 
 
 def test_las_grafias_distintas_y_los_casi_nombres_siguen_fallando() -> None:
-    nombres = ["Marta", "Tomás", "Varadero de Remedios"]
+    nombres = ["Ondina", "Tomás", "Varadero de Remedios"]
     for texto, culpable in (
         ("Aquella tarde Tomas volvió al puerto.", "Tomas"),
         ("Aquella tarde fue al Baradero de Remedios con prisa.", "Baradero"),

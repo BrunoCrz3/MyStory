@@ -21,13 +21,13 @@ from tests.arquitectura.comprobadores import RAIZ_REPO
 from tests.fixtures.borradores import prosa
 
 CONFIG = cargar_config(RAIZ_REPO / "config")
-NOMBRES = ["Marta", "Tomás", "el puerto", "el faro"]
-HECHOS = ["Marta tiene 34 años y vive lejos del mar.", "Tomás arregla barcas en el puerto."]
+NOMBRES = ["Ondina", "Tomás", "el puerto", "el faro"]
+HECHOS = ["Ondina tiene 34 años y vive lejos del mar.", "Tomás arregla barcas en el puerto."]
 REGLAS = ["El abuelo nunca aparece", "Nada de violencia"]
-ALCANCE = [{"tipo": "personaje", "nombre": "Marta"}, {"tipo": "lugar", "nombre": "el puerto"}]
+ALCANCE = [{"tipo": "personaje", "nombre": "Ondina"}, {"tipo": "lugar", "nombre": "el puerto"}]
 LIMPIO = prosa(
     1200,
-    extra="Marta, que tiene treinta y cuatro años, bajó al puerto a buscar a Tomás. "
+    extra="Ondina, que tiene treinta y cuatro años, bajó al puerto a buscar a Tomás. "
     "Cuando tenía doce años había aprendido allí a navegar.",
 )
 
@@ -53,7 +53,7 @@ def test_un_capitulo_limpio_pasa_los_tres() -> None:
 
 
 def test_una_edad_que_contradice_un_hecho_adoptado_es_un_defecto() -> None:
-    texto = prosa(1200, extra="Marta, que tiene cuarenta años, bajó al puerto.")
+    texto = prosa(1200, extra="Ondina, que tiene cuarenta años, bajó al puerto.")
     r = consistencia_factica(CONFIG, texto, hechos=HECHOS, nombres=NOMBRES)
     assert not r.pasa and r.valor == 0.0
     [defecto] = r.defectos
@@ -63,19 +63,19 @@ def test_una_edad_que_contradice_un_hecho_adoptado_es_un_defecto() -> None:
 
 
 def test_la_edad_en_pasado_no_contradice_la_del_presente() -> None:
-    texto = prosa(1200, extra="Cuando Marta tenía doce años, cumplía los veranos en el faro.")
+    texto = prosa(1200, extra="Cuando Ondina tenía doce años, cumplía los veranos en el faro.")
     assert consistencia_factica(CONFIG, texto, hechos=HECHOS, nombres=NOMBRES).pasa
 
 
 def test_el_umbral_y_el_cierre_salen_de_config() -> None:
-    texto = prosa(1200, extra="Marta, que tiene cuarenta años, bajó al puerto.")
+    texto = prosa(1200, extra="Ondina, que tiene cuarenta años, bajó al puerto.")
     r = consistencia_factica(CONFIG, texto, hechos=HECHOS, nombres=NOMBRES)
     # Con score: cierra el paso solo fuera de la fase de medición (A-03).
     assert r.cierra_el_paso is CONFIG.umbrales.medicion.cerrar_el_paso
 
 
 def test_una_regla_del_mundo_violada_es_un_defecto_que_cierra_el_paso() -> None:
-    texto = prosa(1200, extra="El abuelo de Marta la esperaba en el muelle.")
+    texto = prosa(1200, extra="El abuelo de Ondina la esperaba en el muelle.")
     r = reglas_mundo(texto, reglas=REGLAS)
     assert not r.pasa and r.cierra_el_paso
     [defecto] = r.defectos
@@ -94,7 +94,7 @@ def test_las_formas_de_la_regla_de_exclusion(regla: str) -> None:
 
 def test_una_restriccion_de_destino_incumplida_es_un_defecto() -> None:
     alcance = [*ALCANCE, {"tipo": "lugar", "nombre": "el faro"}]
-    texto = prosa(1200, extra="Marta bajó al puerto a buscar a Tomás.")
+    texto = prosa(1200, extra="Ondina bajó al puerto a buscar a Tomás.")
     r = cumplimiento_brief(CONFIG, texto, alcance=alcance, previstas=[])
     assert not r.pasa
     assert r.valor == pytest.approx(2 / 3)

@@ -42,7 +42,7 @@ def _web() -> LecturaWeb:
             CapituloWeb(numero=1, titulo="Uno", palabras_texto=100, palabras_seccion=101),
             CapituloWeb(numero=2, titulo="Dos", palabras_texto=200, palabras_seccion=202),
         ],
-        dedicatoria="Para Marta, que siempre vuelve al puerto.",
+        dedicatoria="Para Ondina, que siempre vuelve al puerto.",
         indice=["Uno", "Dos modificado"],
     )
 
@@ -50,7 +50,7 @@ def _web() -> LecturaWeb:
 def _pdf(**cambios: Any) -> PdfLeido:
     base: dict[str, Any] = {
         "paginas": [
-            "El verano del Alondra\nPara Marta, que siempre\nvuelve al puerto.\n"
+            "El verano del Alondra\nPara Ondina, que siempre\nvuelve al puerto.\n"
             "1. Uno\n2. Dos\nmodificado",
             "Uno\n" + " ".join(["palabra"] * 100),
             "Dos\nmodificado\n" + " ".join(["palabra"] * 150),
@@ -86,7 +86,7 @@ def test_falta_la_dedicatoria_o_el_indice() -> None:
         _pdf(paginas=["El verano del Alondra\n1. Uno\n2. Dos\nmodificado", *paginas[1:]])
     )
     assert "índice" in _detalle(
-        _pdf(paginas=["El verano\nPara Marta, que siempre vuelve al puerto.", *paginas[1:]])
+        _pdf(paginas=["El verano\nPara Ondina, que siempre vuelve al puerto.", *paginas[1:]])
     )
 
 

@@ -61,7 +61,7 @@ async def test_aceptar_consolida_texto_canon_resumen_y_elementos(entorno: Entorn
         entorno.consultar("SELECT texto FROM resumen_capitulo WHERE capitulo_id = ?", cid)[0][
             "texto"
         ]
-        == "Marta mira el mar y decide volver."
+        == "Ondina mira el mar y decide volver."
     )
     assert len(entorno.consultar("SELECT 1 FROM snapshot WHERE capitulo_id = ?", cid)) == 1
     assert len(entorno.consultar("SELECT 1 FROM elemento_capitulo WHERE capitulo_id = ?", cid)) == 1

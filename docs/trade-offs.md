@@ -1912,3 +1912,49 @@ que darles entrada, y aplicar a `CLAUDE.md` las que cambian una regla.
 - `CLAUDE.md` dice tres páginas, nombra las dependencias del frontend y lleva `.mcp.json` en el
   layout. De paso, las rutas del layout que ya existen dejan de estar marcadas «▸ previsto».
 - La inspección con el browser MCP del frontend pasa a `docs/browser-mcp.md`.
+
+---
+
+## TO-052 — Ejemplos del contrato con datos claramente ficticios
+
+**Fecha:** 2026-09-25 · **Estado:** **cambio de ejemplos del contrato aprobado por el desarrollador** · **Afecta a:** `specs/openapi.yaml` (solo el `example` de `BriefNovela`), `ejemplos/brief-ejemplo.json`, `frontend/src/shared/api/schema.d.ts` (regenerado), `backend/tests/`
+
+### Problema
+
+El ejemplo de `BriefNovela` —del que salen `ejemplos/brief-ejemplo.json`, los fixtures del
+backend, las respuestas de prueba del frontend y la novela del humo— describía a una
+destinataria con nombre corriente, **fecha de nacimiento exacta**, relación de hermana y un
+recuerdo concreto, y vetaba un nombre de pila («Luis»). Junto, puede ser el retrato de una
+persona real, y el ejemplo acaba en el PDF de ejemplo y en las trazas.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Dejarlo | Nada que tocar | No se puede afirmar que sea ficticio |
+| **B · Sustituir nombre, fecha y nombre vetado por valores inventados** | El ejemplo deja de apuntar a nadie; la historia (el mar, el Alondra, el perro) sigue sirviendo a la demo | Hay que cambiar las pruebas que nombran a la destinataria |
+| C · Anonimizar con marcadores («[NOMBRE]») | Evidente | La novela de la demo saldría con marcadores en vez de un nombre |
+
+### Elección
+
+**B.** Solo valores de ejemplo: ni schemas, ni rutas, ni `operationId`, así que el contrato sigue
+en la 1.2.0.
+
+| Campo | Antes | Después |
+| --- | --- | --- |
+| `destinatario.nombre` y la dedicatoria | «Marta» | «Ondina» (nombre literario, la ondina del agua) |
+| `destinatario.fecha_nacimiento` | una fecha de abril | `1992-01-01`, coherente con `edad: 34` y la ocasión |
+| `palabras_prohibidas` | «Luis» | «Anselmo» |
+
+El resto ya era genérico o inventado: `comprador-0042`, «Tu hermana», el barco Alondra, el perro,
+«El abuelo nunca aparece». Los otros nombres de las pruebas (Tomás, Luna, Remedios, Nala) son
+personajes o mascotas sin datos que los identifiquen. Las pruebas de `nombres_exactos` usan
+«Ondinna» como casi-nombre, igual que antes usaban una variante de una letra. Las pruebas
+genéricas del guardrail («Luis»/«Luisa», falso positivo por subcadena) no dependen del brief y
+no cambian.
+
+### Consecuencias
+
+- `ejemplos/novela-ejemplo.pdf` se regenera con la novela nueva de la demo, que usa este brief.
+- Las entradas antiguas de `docs/` y las trazas ya enviadas a Langfuse conservan el nombre
+  anterior: son registro histórico, no ejemplos.

@@ -83,7 +83,7 @@ async def test_elemento_obligatorio_fuera_del_plan_falla(entorno: Entorno) -> No
 async def test_destinatario_mal_escrito_falla(entorno: Entorno) -> None:
     novela = await entorno.crear_novela(brief_ejemplo())
     malo = esquema_valido(brief_ejemplo())
-    malo["personajes"][0]["nombre"] = "Martha"
+    malo["personajes"][0]["nombre"] = "Ondinna"
     entorno.modelo.encolar("planificador", malo, esquema_valido(brief_ejemplo()))
     await planificar(entorno.recursos, novel_id=novela, version=1)
     assert entorno.modelo.llamadas["planificador"] == 2

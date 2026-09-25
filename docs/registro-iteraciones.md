@@ -1257,3 +1257,29 @@ decisiones pendientes de numerar y su inspección con el browser MCP en
 ### Efecto
 
 Solo documentación: la regla y la evidencia están donde las busca quien revisa el alcance.
+
+---
+
+## RI-025 — Ejemplos del contrato con datos claramente ficticios
+
+**Fecha:** 2026-09-25 · **Ficheros:** `specs/openapi.yaml`, `ejemplos/brief-ejemplo.json`,
+`frontend/src/shared/api/schema.d.ts`, `backend/tests/`, docstring de
+`backend/app/quality/validadores/basicos.py` (TO-052)
+
+### Causa
+
+Revisión de datos personales en los ejemplos antes de la demo: el brief de ejemplo podía ser el
+retrato de una persona real (nombre, fecha de nacimiento exacta, relación y recuerdo), y vetaba
+un nombre de pila.
+
+### Qué cambió
+
+Nombre y dedicatoria («Ondina»), fecha de nacimiento (`1992-01-01`) y palabra prohibida
+(«Anselmo») en el `example` de `BriefNovela` y en `brief-ejemplo.json`; `npm run gen:api`; las
+pruebas del backend que nombran a la destinataria o la palabra vetada, con la posición de la
+coincidencia ajustada a la longitud nueva.
+
+### Efecto
+
+Backend: 463 pasadas, 6 omitidas. Frontend: 94 de 94, `typecheck` en verde. El contrato sigue en
+la 1.2.0.

@@ -30,18 +30,18 @@ def test_ficha_y_portada_por_http(
     r = instancia.cliente.get(f"/novelas/{novela}/versiones/1/ficha")
     validar_contra_contrato(r, "obtenerFicha")
     ficha = r.json()
-    marta = next(p for p in ficha["personajes"] if p["nombre"] == "Marta")
+    marta = next(p for p in ficha["personajes"] if p["nombre"] == "Ondina")
     assert marta["capitulos"] == list(range(1, 11)) and marta["descripcion"]
     puerto = next(lugar for lugar in ficha["lugares"] if lugar["nombre"] == "el puerto")
     assert puerto["capitulos"] and all(1 <= n <= 10 for n in puerto["capitulos"])
-    assert {p["nombre"] for p in ficha["personajes"]} >= {"Marta", "Tomás"}
+    assert {p["nombre"] for p in ficha["personajes"]} >= {"Ondina", "Tomás"}
 
     r = instancia.cliente.get(f"/novelas/{novela}/versiones/1/portada")
     validar_contra_contrato(r, "obtenerPortada")
     portada = r.json()
     assert portada["dedicatoria"] == brief_ejemplo()["dedicatoria"]
     assert portada["titulo"] == "El verano del Alondra"
-    assert portada["destinatario"] == "Marta" and portada["ocasion"] == "cumpleaños"
+    assert portada["destinatario"] == "Ondina" and portada["ocasion"] == "cumpleaños"
 
     for sufijo in ("ficha", "portada"):
         r = instancia.cliente.get(f"/novelas/{novela}/versiones/9/{sufijo}")
@@ -52,8 +52,8 @@ def test_ficha_y_portada_por_http(
 
 def _extractor_con_tomas(p: Peticion) -> dict[str, Any]:
     salida = extraccion(capitulo_aceptado_de(p))
-    salida["eventos"][0]["personajes"] = ["Marta", "Tomás"]
-    salida["personajes_presentes"] = ["Marta", "Tomás"]
+    salida["eventos"][0]["personajes"] = ["Ondina", "Tomás"]
+    salida["personajes_presentes"] = ["Ondina", "Tomás"]
     return salida
 
 

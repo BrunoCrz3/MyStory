@@ -34,9 +34,9 @@ from tests.versioning.test_confirmar import _solicitud
 NUEVO = "El perro se llama Nala"
 A = "¿Volverá el Alondra a navegar?"
 B = "¿Quién dejó la carta en el muelle?"
-C = "¿Encontrará Marta el faro apagado?"
+C = "¿Encontrará Ondina el faro apagado?"
 INTRUSA = "¿Qué esconde Nala bajo la barca?"
-CORREGIDO = "Marta volvió a preguntarse por la carta y por el Alondra."
+CORREGIDO = "Ondina volvió a preguntarse por la carta y por el Alondra."
 DEVUELTO = "El borrador anterior no pasó la validación"
 
 

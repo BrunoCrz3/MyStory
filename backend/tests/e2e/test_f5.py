@@ -74,7 +74,7 @@ def test_de_la_generacion_al_pdf_con_render_visual_real(tmp_path: Path, paginas:
         assert c.get(f"/novelas/{novela}").json()["version_vigente"] == 1
 
         ficha = c.get(f"/novelas/{novela}/versiones/1/ficha").json()
-        assert any(p["nombre"] == "Marta" and p["capitulos"] for p in ficha["personajes"])
+        assert any(p["nombre"] == "Ondina" and p["capitulos"] for p in ficha["personajes"])
         portada = c.get(f"/novelas/{novela}/versiones/1/portada").json()
         assert portada["dedicatoria"] == brief_ejemplo()["dedicatoria"]
 

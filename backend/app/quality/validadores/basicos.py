@@ -50,14 +50,14 @@ def nombres_exactos(texto: str, nombres: list[str]) -> ResultadoValidador:
     """Los nombres de la story bible se escriben exactamente igual.
 
     Caza dos formas de error: la misma palabra con otra grafía (`Tomas` por `Tomás`) y una
-    palabra capitalizada a una letra de distancia de un nombre (`Martha` por `Marta`) que no
+    palabra capitalizada a una letra de distancia de un nombre (`Ondinna` por `Ondina`) que no
     está al principio de frase, donde una palabra común también va en mayúscula.
 
     Una diferencia **solo de mayúsculas** no es error: los nombres de una novela son a menudo
     palabras comunes —el perro «Boya» y la boya del puerto, el «Varadero de Remedios» y el
     varadero—, y un modelo no escribe un nombre propio en minúscula. Por lo mismo, solo son
     forma de nombre las palabras que el nombre declarado escribe con mayúscula: en «El perro
-    de Marta», «perro» no lo es. Punto ciego declarado (O-02): un diminutivo legítimo que el
+    de Ondina», «perro» no lo es. Punto ciego declarado (O-02): un diminutivo legítimo que el
     brief no declaró se marca como error, un nombre ausente no se detecta y un nombre escrito
     en minúscula por error tampoco.
     """

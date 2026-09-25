@@ -19,7 +19,7 @@ CONFIG = cargar_config(RAIZ_REPO / "config")
 
 # Prosa variada y sin tics: frases de longitudes distintas, sin muletillas ni clichés.
 _FRASES_LIMPIAS = [
-    "Marta bajó al puerto antes de que abrieran las lonjas.",
+    "Ondina bajó al puerto antes de que abrieran las lonjas.",
     "Olía a gasóleo y a sal.",
     "Tomás ya estaba allí, sentado sobre un cabo enrollado, con las manos manchadas de brea y "
     "la gorra echada hacia atrás como cuando eran críos y esperaban a los barcos del alba.",
@@ -121,7 +121,7 @@ def test_un_cambio_de_persona_narrativa_suspende_integridad_pov() -> None:
     texto = limpio(40) + " " + primera * 10
     r = integridad_pov(
         CONFIG, texto, persona="tercera", tiempo_verbal="pasado", focalizacion="interna",
-        pov="Marta", personajes=["Marta", "Tomás"],
+        pov="Ondina", personajes=["Ondina", "Tomás"],
     )  # fmt: skip
     comprobar(r)
     assert not r.pasa and r.valor < CONFIG.umbrales.calidad.integridad_pov  # type: ignore[operator]
@@ -133,18 +133,18 @@ def test_el_dialogo_puede_cambiar_de_persona_y_la_narracion_limpia_pasa() -> Non
     texto = limpio(60) + dialogo + limpio(20)
     r = integridad_pov(
         CONFIG, texto, persona="tercera", tiempo_verbal="pasado", focalizacion="interna",
-        pov="Marta", personajes=["Marta", "Tomás"],
+        pov="Ondina", personajes=["Ondina", "Tomás"],
     )  # fmt: skip
     assert r.pasa and r.valor == 1.0, r.detalle
 
 
 def test_tiempo_presente_declarado_y_narracion_en_pasado() -> None:
     texto = (
-        "Marta baja al puerto. Tomás la espera. " * 20 + "Marta llegó tarde y miró el mar. " * 20
+        "Ondina baja al puerto. Tomás la espera. " * 20 + "Ondina llegó tarde y miró el mar. " * 20
     )
     r = integridad_pov(
         CONFIG, texto, persona="tercera", tiempo_verbal="presente", focalizacion="interna",
-        pov="Marta", personajes=["Marta", "Tomás"],
+        pov="Ondina", personajes=["Ondina", "Tomás"],
     )  # fmt: skip
     assert not r.pasa and any("pasado" in d.descripcion for d in r.defectos)
 
@@ -153,7 +153,7 @@ def test_acceso_mental_de_quien_no_es_el_pov() -> None:
     texto = limpio(30) + " Tomás pensó que ella nunca volvería. " * 8
     r = integridad_pov(
         CONFIG, texto, persona="tercera", tiempo_verbal="pasado", focalizacion="interna",
-        pov="Marta", personajes=["Marta", "Tomás"],
+        pov="Ondina", personajes=["Ondina", "Tomás"],
     )  # fmt: skip
     assert any("Tomás" in d.descripcion and "focalización" in d.descripcion for d in r.defectos)
 
@@ -180,7 +180,7 @@ async def test_los_validadores_del_hook_corren_a_la_vez() -> None:
 
 @pytest.mark.anyio
 async def test_el_hook_ejecuta_siete_validadores_en_orden() -> None:
-    entrada = quality.EntradaHookCapitulo(titulo="t", texto=limpio(), nombres=["Marta"])
+    entrada = quality.EntradaHookCapitulo(titulo="t", texto=limpio(), nombres=["Ondina"])
     resultados = await quality.hook_capitulo(CONFIG, entrada)
     assert [r.nombre for r in resultados] == [
         "longitud", "nombres_exactos", "consistencia_factica", "cumplimiento_brief",

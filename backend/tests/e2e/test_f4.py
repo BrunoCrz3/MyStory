@@ -92,7 +92,7 @@ def test_un_cambio_de_hecho_produce_la_version_2_sin_tocar_el_resto(
 
 PROMESA = "¿Volverá el Alondra a navegar?"
 INTRUSA = "¿Qué esconde Nala bajo la barca?"
-RETOMA = "Marta volvió a preguntarse si el Alondra navegaría."
+RETOMA = "Ondina volvió a preguntarse si el Alondra navegaría."
 DEVUELTO = "El borrador anterior no pasó la validación"
 
 

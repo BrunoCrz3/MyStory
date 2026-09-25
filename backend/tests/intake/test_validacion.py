@@ -143,7 +143,7 @@ def test_edad_de_nino_con_genero_adulto_y_fecha_que_no_cuadra(
     cliente: TestClient, validar_contra_contrato: ValidarContrato
 ) -> None:
     brief = brief_ejemplo(genero="terror gore")
-    brief["destinatario"].update(edad=9, fecha_nacimiento="1992-04-18")
+    brief["destinatario"].update(edad=9, fecha_nacimiento="1992-01-01")
     tipos = {
         c["tipo"] for c in _validar(cliente, brief, validar_contra_contrato)["contradicciones"]
     }

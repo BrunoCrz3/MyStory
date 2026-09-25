@@ -45,9 +45,9 @@ def _esperado() -> LecturaEsperada:
         novel_id="n",
         version=2,
         titulo="El verano del Alondra",
-        dedicatoria="Para Marta, que siempre vuelve al puerto.",
+        dedicatoria="Para Ondina, que siempre vuelve al puerto.",
         capitulos=[(1, "Uno", False), (2, "Dos", True), (3, "Tres", False)],
-        personajes=[("Marta", [1, 2, 3]), ("Tomás", [2])],
+        personajes=[("Ondina", [1, 2, 3]), ("Tomás", [2])],
         lugares=[("el puerto", [1, 3])],
     )
 

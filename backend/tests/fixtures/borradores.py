@@ -10,7 +10,7 @@ _FRASES = [
 ]
 
 
-def prosa(palabras: int, *, nombre: str = "Marta", extra: str = "") -> str:
+def prosa(palabras: int, *, nombre: str = "Ondina", extra: str = "") -> str:
     """Un texto de exactamente `palabras` palabras, en párrafos, que nombra a `nombre`.
 
     `extra` va al principio, dentro del recuento.

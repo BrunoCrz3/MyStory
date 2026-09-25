@@ -22,11 +22,11 @@ from tests.fixtures.judge import salida_judge
 from tests.fixtures.planificada import novela_planificada
 
 CONFIG = cargar_config(RAIZ_REPO / "config")
-INVENTADA = "Marta trabaja de cirujana en el hospital del puerto desde hace diez años."
+INVENTADA = "Ondina trabaja de cirujana en el hospital del puerto desde hace diez años."
 HOSPITAL = "Pasó aquel invierno ingresada, entre sueros y visitas cortas."
 TEXTO = prosa(1200, extra=f"{INVENTADA} {HOSPITAL} Aprendió a navegar en un barco llamado Alondra.")
 CONTEXTO = ContextoJudge(
-    destinatario="Marta",
+    destinatario="Ondina",
     soporte=[
         "tozuda",
         "le encanta el mar",
@@ -56,12 +56,12 @@ def test_un_hecho_personal_ausente_del_brief_cuenta_uno_y_se_cita() -> None:
     salida = _salida(
         [
             {
-                "afirmacion": "Marta es cirujana en un hospital",
+                "afirmacion": "Ondina es cirujana en un hospital",
                 "fragmento": INVENTADA,
                 "apoyo": "ninguno",
             },
             {
-                "afirmacion": "Marta aprendió a navegar en el Alondra",
+                "afirmacion": "Ondina aprendió a navegar en el Alondra",
                 "fragmento": "Aprendió a navegar en un barco llamado Alondra.",
                 "apoyo": "brief",
             },
@@ -81,8 +81,8 @@ def test_una_cita_que_no_esta_en_el_capitulo_no_cuenta() -> None:
     salida = _salida(
         [
             {
-                "afirmacion": "Marta es piloto",
-                "fragmento": "Marta pilotaba aviones",
+                "afirmacion": "Ondina es piloto",
+                "fragmento": "Ondina pilotaba aviones",
                 "apoyo": "ninguno",
             }
         ],
@@ -134,7 +134,7 @@ async def test_el_ciclo_emite_los_dos_scores_con_el_brief_como_soporte(entorno: 
     entorno.modelo.encolar(
         "judge",
         _salida(
-            [{"afirmacion": "Marta es cirujana", "fragmento": INVENTADA, "apoyo": "ninguno"}],
+            [{"afirmacion": "Ondina es cirujana", "fragmento": INVENTADA, "apoyo": "ninguno"}],
             [{"tema": "enfermedad", "aparece": True, "fragmento": HOSPITAL}],
         ),
     )
@@ -154,7 +154,7 @@ async def test_lo_que_dice_el_brief_no_es_invencion_aunque_no_sea_rasgo_ni_recue
     # Humo adversarial real del P38: la edad, la ocasión y quién regala vienen del brief, y
     # contarlas como invención suspendía el capítulo en todos los intentos.
     novela = await novela_planificada(entorno)
-    edad = "Marta cumple treinta y cuatro años este otoño."
+    edad = "Ondina cumple treinta y cuatro años este otoño."
     hermana = "Su hermana le había escrito para el cumpleaños."
     texto = prosa(1200, extra=f"{edad} {hermana}")
     entorno.modelo.encolar(
@@ -162,12 +162,12 @@ async def test_lo_que_dice_el_brief_no_es_invencion_aunque_no_sea_rasgo_ni_recue
         _salida(
             [
                 {
-                    "afirmacion": "Marta cumple treinta y cuatro años",
+                    "afirmacion": "Ondina cumple treinta y cuatro años",
                     "fragmento": edad,
                     "apoyo": "ninguno",
                 },
                 {
-                    "afirmacion": "Marta tiene una hermana que le escribe",
+                    "afirmacion": "Ondina tiene una hermana que le escribe",
                     "fragmento": hermana,
                     "apoyo": "ninguno",
                 },

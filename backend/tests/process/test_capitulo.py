@@ -78,7 +78,7 @@ async def test_capitulo_corto_vuelve_al_redactor_con_el_informe(entorno: Entorno
 @pytest.mark.anyio
 async def test_nombre_mal_escrito_vuelve_al_redactor(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
-    malo = borrador(extra="Aquella tarde su hermana llamó a Martha desde el muelle.")
+    malo = borrador(extra="Aquella tarde su hermana llamó a Ondinna desde el muelle.")
     entorno.modelo.encolar("redactor", malo)
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "aceptar"
@@ -89,13 +89,13 @@ async def test_nombre_mal_escrito_vuelve_al_redactor(entorno: Entorno) -> None:
 @pytest.mark.anyio
 async def test_palabra_vetada_se_registra_y_el_hook_de_capitulo_no_corre(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
-    malo = borrador(extra="Luis la esperaba en el puerto aquella tarde de viento.")
+    malo = borrador(extra="Anselmo la esperaba en el puerto aquella tarde de viento.")
     entorno.modelo.encolar("redactor", malo, borrador())
     await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert [s.valor for s in entorno.trazas.scores_de("palabras_prohibidas")] == [0.0, 1.0]
     assert len(entorno.trazas.scores_de("longitud")) == 1  # solo en el intento limpio
     coincidencia = entorno.consultar("SELECT palabra, nivel, intento FROM coincidencia")
-    assert [tuple(c) for c in coincidencia] == [("Luis", "novela", 0)]
+    assert [tuple(c) for c in coincidencia] == [("Anselmo", "novela", 0)]
     reglas = [f["regla"] for f in entorno.consultar("SELECT regla FROM audit_log ORDER BY rowid")]
     assert "palabra-prohibida" in reglas
 
@@ -103,7 +103,7 @@ async def test_palabra_vetada_se_registra_y_el_hook_de_capitulo_no_corre(entorno
 @pytest.mark.anyio
 async def test_dos_pasadas_con_palabra_vetada_detienen_sin_tercer_intento(entorno: Entorno) -> None:
     novela = await novela_planificada(entorno)
-    malo = borrador(extra="Luis la esperaba en el puerto aquella tarde de viento.")
+    malo = borrador(extra="Anselmo la esperaba en el puerto aquella tarde de viento.")
     entorno.modelo.encolar("redactor", malo, malo, borrador())
     r = await ciclo_capitulo(entorno.recursos, novel_id=novela, version=1, numero=1)
     assert r.accion == "detener"
@@ -144,7 +144,7 @@ async def test_el_contexto_del_redactor_lleva_su_brief_de_capitulo(entorno: Ento
     estructural = usuario.split('<capa nombre="estructural">', 1)[1].split("</capa>", 1)[0]
     assert "está más cerca del mar" in estructural
     anticontexto = usuario.split('<capa nombre="anticontexto">', 1)[1].split("</capa>", 1)[0]
-    assert "Luis" in anticontexto
+    assert "Anselmo" in anticontexto
     assert peticion.esquema_salida is not None
     consumo = entorno.consultar(
         "SELECT tokens_entrada, coste_usd FROM capitulo WHERE novel_id = ? AND numero = 1", novela

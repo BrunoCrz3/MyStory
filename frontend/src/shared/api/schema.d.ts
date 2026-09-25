@@ -710,7 +710,7 @@ export interface components {
          *         "relacion_con_destinatario": "hermana"
          *       },
          *       "destinatario": {
-         *         "nombre": "Marta",
+         *         "nombre": "Ondina",
          *         "edad": 34,
          *         "rasgos": [
          *           "tozuda",
@@ -719,7 +719,7 @@ export interface components {
          *         "recuerdos": [
          *           "el verano en que aprendió a navegar"
          *         ],
-         *         "fecha_nacimiento": "1992-04-18"
+         *         "fecha_nacimiento": "1992-01-01"
          *       },
          *       "ocasion": {
          *         "tipo": "cumpleanos",
@@ -729,7 +729,7 @@ export interface components {
          *       "genero": "aventura costumbrista",
          *       "tono": "cálido y con humor",
          *       "dedicatoria": {
-         *         "texto": "Para Marta, que siempre vuelve al mar.",
+         *         "texto": "Para Ondina, que siempre vuelve al mar.",
          *         "firma": "Tu hermana"
          *       },
          *       "elementos_personalizados": [
@@ -746,7 +746,7 @@ export interface components {
          *         "enfermedad"
          *       ],
          *       "palabras_prohibidas": [
-         *         "Luis"
+         *         "Anselmo"
          *       ],
          *       "reglas_mundo": [
          *         "El abuelo nunca aparece"

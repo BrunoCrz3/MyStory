@@ -154,11 +154,11 @@ def test_coincidencias_quedan_registradas(con: sqlite3.Connection) -> None:
         capitulo_id=c1,
         intento=1,
         coincidencias=[
-            Coincidencia(palabra="Luis", nivel="novela", inicio=0, fin=4, fragmento="Luis")
+            Coincidencia(palabra="Anselmo", nivel="novela", inicio=0, fin=7, fragmento="Anselmo")
         ],
     )
     fila = con.execute("SELECT palabra, nivel, inicio, intento FROM coincidencia").fetchone()
-    assert tuple(fila) == ("Luis", "novela", 0, 1)
+    assert tuple(fila) == ("Anselmo", "novela", 0, 1)
     assert [d.regla for d in decisiones(con, novel_id="n1")] == ["palabra-prohibida"]
 
 

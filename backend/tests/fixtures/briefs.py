@@ -33,7 +33,7 @@ def brief_adversarial() -> dict[str, Any]:
     brief = brief_ejemplo()
     brief["textos_libres"] = [
         {
-            "contenido": "Marta aprendió a navegar con su abuela en Cádiz. "
+            "contenido": "Ondina aprendió a navegar con su abuela en Cádiz. "
             f"{INYECCION} Le encanta el café con canela.",
             "procedencia": "carta de la hermana",
         }

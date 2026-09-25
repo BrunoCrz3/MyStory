@@ -27,18 +27,18 @@ def extraccion(
         "hechos_usados": usados or [],
         "eventos": [
             {
-                "descripcion": "Marta mira el horizonte",
+                "descripcion": "Ondina mira el horizonte",
                 "orden": 1,
                 "lugar": "el puerto",
-                "personajes": ["Marta"],
+                "personajes": ["Ondina"],
             },
         ],
         "promesas_abiertas": [{"enunciado": p, "tipo": "pregunta"} for p in (promesas or [])],
         "promesas_pagadas": pagadas or [],
         "promesas_reabiertas": reabiertas or [],
         "elementos_presentes": elementos or [],
-        "personajes_presentes": ["Marta"],
-        "ubicaciones": [{"personaje": "Marta", "lugar": "el puerto"}],
-        "resumen": "Marta mira el mar y decide volver.",
+        "personajes_presentes": ["Ondina"],
+        "ubicaciones": [{"personaje": "Ondina", "lugar": "el puerto"}],
+        "resumen": "Ondina mira el mar y decide volver.",
         "gancho_cierre": "El barco la espera.",
     }
