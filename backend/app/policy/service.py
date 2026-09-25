@@ -276,6 +276,32 @@ class PolicyEngine:
             resultado="detener",
         )
 
+    def registrar_aviso_lean(
+        self,
+        con: sqlite3.Connection,
+        *,
+        novel_id: str,
+        capitulo_id: str,
+        numero: int,
+        veredictos: Sequence[tuple[str, bool, str]],
+    ) -> None:
+        """El chequeo incremental de Lean (TO-016, P-81): `aviso` si algo falla, nunca un
+        bloqueo; `demostrado` si las cuatro pasan sobre la cronología hasta `numero`."""
+        self._registrar(
+            con,
+            novel_id=novel_id,
+            sujeto="capitulo",
+            sujeto_id=capitulo_id,
+            regla="lean-incremental",
+            entrada={
+                "capitulo": numero,
+                "veredictos": [
+                    {"nombre": n, "pasa": p, "detalle": d[:1000]} for n, p, d in veredictos
+                ],
+            },
+            resultado="demostrado" if all(p for _, p, _ in veredictos) else "aviso",
+        )
+
     def registrar_excluyente_descartado(
         self,
         con: sqlite3.Connection,

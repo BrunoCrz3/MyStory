@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L07 |
+| Paso actual | L08 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L06 |
+| Último commit de paso | L07 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -78,6 +78,13 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   con capítulo y personaje en el audit log; limpia publicada; gate apagado sin Lean;
   regeneración en rojo con la 1 intacta. 533 pruebas.
 
+- **L07** — Chequeo incremental tras cada capítulo aceptado (`Orquestador._lean_incremental`,
+  fuera de la transacción de aceptación): cuatro scores con `{"etapa": "incremental",
+  "capitulo": n}` y `lean-incremental` en el audit log (`demostrado` o `aviso`); nunca cambia un
+  estado ni lanza. El arranque rechaza `lean_incremental` sin timeout. Un intento en rojo: una
+  prueba de promesas contaba las decisiones del capítulo en el audit log y ahora hay una más
+  (se filtra `lean-incremental`), y la suite pasó de 6 a 20 min (A-06). 538 pruebas, 12 min.
+
 ## Decisiones
 
 | ID | Paso | Decisión | Porqué | Rastro |
@@ -90,6 +97,7 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
 
 | ID | Paso | Decisión | Porqué | Rastro |
 | --- | --- | --- | --- | --- |
+| A-06 | L07 | `crear_entorno` (pruebas de servicio) apaga `lean_incremental`; `instancia` (pruebas por HTTP) usa la configuración real | Con el incremental en cada capítulo de cada prueba la suite pasaba de 6 a 20 min; el incremental tiene pruebas propias que lo encienden, y las de HTTP lo siguen ejerciendo con la configuración real | — |
 | A-05 | L06 | Un solo método `Publicador.lean(db, novel_id, version, hasta_numero=None)` para gate e incremental, en vez de `lean` y `lean_incremental` | Es la misma ejecución sobre un prefijo; la etapa la pone el orquestador en el span y en los scores | — |
 | A-04 | L05 | La prueba de RNF-09 admite un segundo proceso: `asyncio.create_subprocess_exec` en `versioning/lean/ejecutar.py` | Argumentos fijos (`lake build Cronologia.Hechos`) sobre un fichero sin texto libre; la salida del modelo sigue sin poder llegar a un proceso | TO-069 |
 

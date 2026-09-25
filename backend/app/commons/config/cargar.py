@@ -83,6 +83,8 @@ def _comprobar(config: Config) -> list[str]:
 
     if u.formal.gate_activo and u.formal.lean_timeout_segundos is None:
         problemas.append("formal.lean_timeout_segundos es null con formal.gate_activo en true")
+    if u.formal.lean_incremental and u.formal.lean_timeout_segundos is None:
+        problemas.append("formal.lean_timeout_segundos es null con formal.lean_incremental en true")
 
     precios = u.coste.precio_usd_por_millon
     for rol in ROLES:

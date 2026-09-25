@@ -256,6 +256,7 @@ class Orquestador:
                     resultado=resultado,
                     generacion_id=t["id"],
                 )
+                await self._lean_incremental(novel_id, version, numero, resultado.capitulo_id)
                 return
             except PromesasSinPago as e:
                 decision = await self.r.db.en_transaccion(
@@ -449,6 +450,26 @@ class Orquestador:
         for v in resultado.veredictos:
             self.r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000], metadata=marca)
         return resultado.veredictos
+
+    async def _lean_incremental(
+        self, novel_id: str, version: int, numero: int, capitulo_id: str
+    ) -> None:
+        """Aviso temprano tras aceptar un capítulo (TO-016, P-81): la cronología hasta él.
+        No bloquea ni cambia estado; queda en los scores y en el audit log. Corre fuera de la
+        transacción de la aceptación, que ya se cerró."""
+        if not self.r.config.umbrales.formal.lean_incremental:
+            return
+        veredictos = await self._lean(novel_id, version, etapa="incremental", hasta_numero=numero)
+        motor = PolicyEngine(self.r.config)
+        await self.r.db.en_transaccion(
+            partial(
+                motor.registrar_aviso_lean,
+                novel_id=novel_id,
+                capitulo_id=capitulo_id,
+                numero=numero,
+                veredictos=[(v.nombre, v.pasa, v.detalle) for v in veredictos],
+            )
+        )
 
     async def _detener(
         self, t: dict[str, Any], motivo: str, detalle: str, *, devolver_al_editor: bool = False

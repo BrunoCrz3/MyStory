@@ -110,6 +110,16 @@ def test_gate_lean_sin_timeout_falla(config_con: Callable[[Mutador], Path]) -> N
         cargar_config(config_con(mutar))
 
 
+def test_lean_incremental_sin_timeout_falla(config_con: Callable[[Mutador], Path]) -> None:
+    def mutar(u: dict[str, Any], m: dict[str, Any]) -> None:
+        u["formal"]["gate_activo"] = False
+        u["formal"]["lean_incremental"] = True
+        u["formal"]["lean_timeout_segundos"] = None
+
+    with pytest.raises(ConfigInvalida, match=r"formal\.lean_incremental"):
+        cargar_config(config_con(mutar))
+
+
 def test_judge_igual_al_redactor_falla(config_con: Callable[[Mutador], Path]) -> None:
     def mutar(u: dict[str, Any], m: dict[str, Any]) -> None:
         m["roles"]["judge"]["id"] = m["roles"]["redactor"]["id"]

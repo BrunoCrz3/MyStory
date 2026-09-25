@@ -15,7 +15,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from hypothesis import settings
 
-from app.commons.config import cargar_config
+from app.commons.config import Config, cargar_config
 from app.commons.db import BaseDatos
 from app.commons.db.migrar import aplicar_migraciones
 from app.commons.llm.llamar import LlamadorModelo
@@ -145,14 +145,26 @@ class Entorno:
         return self.recursos.db.ejecutar_sync(lambda con: con.execute(sql, parametros).fetchall())
 
 
+def _sin_lean_incremental(config: Config) -> Config:
+    formal = config.umbrales.formal.model_copy(update={"lean_incremental": False})
+    return config.model_copy(
+        update={"umbrales": config.umbrales.model_copy(update={"formal": formal})}
+    )
+
+
 @pytest.fixture
 def entorno(tmp_path: Path) -> Entorno:
     return crear_entorno(tmp_path / "entorno.db")
 
 
 def crear_entorno(ruta: Path) -> Entorno:
-    """Recursos con los dos dobles sobre la base de `ruta`, migrada."""
-    config = cargar_config()
+    """Recursos con los dos dobles sobre la base de `ruta`, migrada.
+
+    El chequeo incremental de Lean se apaga aquí (A-06 del plan 4): lanzaría `lake build` en
+    cada capítulo aceptado de cada prueba de servicio y triplica la suite. Lo prueban
+    `tests/process/test_lean_incremental.py`, que lo enciende, y las pruebas por HTTP de
+    `instancia`, que usan la configuración real sin tocar."""
+    config = _sin_lean_incremental(cargar_config())
     db = BaseDatos(ruta)
     db.ejecutar_sync(aplicar_migraciones)
     modelo = ModeloGuionizado(config)

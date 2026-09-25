@@ -239,7 +239,7 @@ async def test_una_promesa_nueva_sin_pago_vuelve_al_redactor_como_intento_fallid
     assert cap["intentos"] == 1
     decisiones = entorno.consultar(
         "SELECT regla, resultado, entrada FROM audit_log WHERE sujeto = 'capitulo'"
-        " AND sujeto_id = ? ORDER BY rowid",
+        " AND sujeto_id = ? AND regla <> 'lean-incremental' ORDER BY rowid",
         cap["id"],
     )
     assert [d["resultado"] for d in decisiones] == ["aceptar", "devolver", "aceptar"]
