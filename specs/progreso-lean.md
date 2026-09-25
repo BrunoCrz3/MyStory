@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L08 |
+| Paso actual | L09 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L07 |
+| Último commit de paso | L08 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -84,6 +84,14 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   estado ni lanza. El arranque rechaza `lean_incremental` sin timeout. Un intento en rojo: una
   prueba de promesas contaba las decisiones del capítulo en el audit log y ahora hay una más
   (se filtra `lean-incremental`), y la suite pasó de 6 a 20 min (A-06). 538 pruebas, 12 min.
+
+- **L08** — Medida con el fichero real más grande (versión 3 de la novela de la demo en una copia
+  migrada: 72 eventos, 288 teoremas, 33.219 bytes): `lake build` en frío 1,97 / 2,02 / 2,03 s
+  (mediana 2,02) y en caliente, con el `.lake` copiado como hace el ejecutor, 1,47 / 1,45 /
+  1,47 s. `formal.lean_timeout_segundos` = **20** (10 × 2,02, criterio de I-03) y
+  `formal.gate_activo: true`. Prompt del extractor publicado en Langfuse
+  (`git-9383032a9b54e9df8ab6e6f54f657983`). 538 pruebas con el gate activo, 12 min 45 s (dos
+  avisos de pytest que ya salían en el L07; sin revisar, no fallan nada).
 
 ## Decisiones
 
