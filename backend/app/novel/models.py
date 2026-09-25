@@ -107,6 +107,7 @@ class EventoVigente(BaseModel):
     capitulo_id: str
     numero: int
     momento: int
+    descripcion: str = ""
     anio: int | None
     lugar_id: str | None
     presentes: list[PresenciaEnEvento]

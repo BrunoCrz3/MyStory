@@ -2561,3 +2561,24 @@ Y dos más, del L01:
 - Toda consulta de eventos lleva `novel_id` y `version`, como las de hechos (TO-028).
 - La comprobación sobre una copia de la base de la demo cuadra en todas las versiones
   publicadas (`specs/progreso-lean.md`, L01).
+
+---
+
+## TO-069 — `lake build` es el segundo proceso que el backend puede lanzar
+
+**Fecha:** 2026-09-25 · **Estado:** decidida (**decidido por el agente — revisar**, A-04 del
+plan 4) · **Afecta a:** `backend/tests/arquitectura/comprobadores.py`, RNF-09
+
+### Problema
+
+RNF-09 se comprueba con una prueba de arquitectura que solo deja lanzar un proceso: el CLI del
+proveedor `claude_code`. El gate de Lean necesita lanzar `lake build`.
+
+### Opciones y elección
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A. Ejecutar Lean fuera del backend (un servicio aparte) | La regla no cambia | Infraestructura nueva: el stack está cerrado |
+| **B. Admitir `asyncio.create_subprocess_exec` solo en `versioning/lean/ejecutar.py`** | Lo que RNF-09 protege sigue protegido: los argumentos son fijos y el fichero no lleva texto de la novela (regla 11), así que la salida del modelo no llega a ningún proceso | La lista de excepciones crece en uno |
+
+**B**, con la excepción ligada a un fichero y a una llamada concretos, como la de TO-040.

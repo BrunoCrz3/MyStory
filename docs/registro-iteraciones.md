@@ -1650,3 +1650,23 @@ revierte, en la misma transacción que el canon.
 
 504 pruebas en verde. Sobre una copia de la base real, cada versión publicada tiene exactamente
 los eventos de sus capítulos y ningún momento duplicado.
+
+## RI-039 — Lean corre de verdad desde el backend (L03 a L05 del plan 4)
+
+**Fecha:** 2026-09-25 · **Ficheros:** `formal/lean/`, `backend/app/versioning/lean/`,
+`backend/tests/formal/`, `backend/tests/arquitectura/comprobadores.py` (TO-068, TO-069)
+
+### Causa
+
+RF-EXP-03: sin generador ni ejecutor no había nada que demostrar.
+
+### Qué cambió
+
+Proyecto Lake sin dependencias; generador determinista con un teorema por evento e
+invariante; ejecutor con timeout y copia temporal; informe que traduce cada error a su evento.
+La prueba de RNF-09 admite `lake build` como segundo proceso.
+
+### Efecto
+
+Cada invariante caza su violación sintética y solo esa; una analepsis compila en verde. El build
+de un fichero pequeño tarda unos 1,5 s con el `.lake` copiado. 529 pruebas.

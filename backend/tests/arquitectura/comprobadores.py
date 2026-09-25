@@ -260,8 +260,13 @@ def violaciones_camino_al_modelo(raiz: Path = RAIZ_APP) -> list[str]:
 
 
 # Lo único que lanza un proceso: el CLI del proveedor `claude_code`, con argumentos propios y
-# la petición por la entrada estándar (TO-040). Nunca con la salida del modelo.
-_EJECUCION_PERMITIDA = {("commons/llm/claude_code.py", "anyio.run_process")}
+# la petición por la entrada estándar (TO-040), y `lake build` con argumentos fijos sobre un
+# fichero sin texto libre de la novela (spec 4, regla 11, A-04 del plan 4). Nunca con la salida
+# del modelo.
+_EJECUCION_PERMITIDA = {
+    ("commons/llm/claude_code.py", "anyio.run_process"),
+    ("versioning/lean/ejecutar.py", "asyncio.create_subprocess_exec"),
+}
 _NOMBRES_PROHIBIDOS = frozenset({"eval", "exec"})
 _MODULOS_PROCESO = ("subprocess.", "os.system", "os.popen", "os.exec", "os.spawn")
 _LLAMADAS_PROCESO = frozenset(

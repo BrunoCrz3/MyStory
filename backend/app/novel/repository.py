@@ -334,7 +334,7 @@ def leer_eventos_de_version(
 ) -> list[dict[str, Any]]:
     """Eventos vigentes en `version`, con su capítulo, en orden de narración."""
     filas = con.execute(
-        "SELECT e.id, e.momento, e.anio, e.lugar_id, ec.capitulo_id, c.numero"
+        "SELECT e.id, e.momento, e.descripcion, e.anio, e.lugar_id, ec.capitulo_id, c.numero"
         " FROM evento e JOIN evento_capitulo ec ON ec.evento_id = e.id"
         " JOIN capitulo c ON c.id = ec.capitulo_id"
         f" WHERE e.novel_id = :novel_id AND {_vigente('e')}"

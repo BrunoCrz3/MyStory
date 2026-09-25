@@ -434,6 +434,7 @@ def eventos_de_version(
             capitulo_id=f["capitulo_id"],
             numero=f["numero"],
             momento=f["momento"],
+            descripcion=f["descripcion"],
             anio=f["anio"],
             lugar_id=f["lugar_id"],
             presentes=presentes.get(f["id"], []),

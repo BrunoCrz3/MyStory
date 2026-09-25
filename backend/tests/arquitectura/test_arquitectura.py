@@ -112,9 +112,10 @@ def test_meta_llamada_directa_al_cliente(tmp_path: Path) -> None:
 
 
 def test_ningun_camino_ejecuta_la_salida_del_modelo() -> None:
-    """RNF-09: nada en `app/` llama a `eval`, `exec` ni `os.system`, y el único proceso que
-    se lanza es el CLI del proveedor `claude_code`, con argumentos propios y la petición por
-    la entrada estándar (TO-040). La salida del modelo es prosa que se guarda."""
+    """RNF-09: nada en `app/` llama a `eval`, `exec` ni `os.system`, y los únicos procesos que
+    se lanzan son el CLI del proveedor `claude_code`, con argumentos propios y la petición por
+    la entrada estándar (TO-040), y `lake build` con argumentos fijos sobre un fichero de
+    identificadores sintéticos (spec 4). La salida del modelo es prosa que se guarda."""
     assert c.violaciones_ejecucion() == []
 
 

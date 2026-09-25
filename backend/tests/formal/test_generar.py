@@ -41,6 +41,7 @@ def cronologias(draw: st.DrawFn) -> Cronologia:
                 capitulo_id=f"c{i // 3 + 1}",
                 numero=i // 3 + 1,
                 momento=(i // 3 + 1) * 100 + i % 3 + 1,
+                descripcion=f"{MARCA} evento {i}",
                 anio=draw(st.none() | st.integers(1900, 2030)),
                 lugar_id=draw(st.none() | st.sampled_from(lugares)) if lugares else None,
                 presentes=[

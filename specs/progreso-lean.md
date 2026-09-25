@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L05 |
+| Paso actual | L06 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L04 |
+| Último commit de paso | L05 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -61,6 +61,14 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   Mathlib ni texto libre, índice completo. `novel` gana `personajes_por_id` y
   `excluyentes_de_version`.
 
+- **L05** — `versioning/lean/ejecutar.py` (`verificar`: copia el proyecto con su `.lake`, escribe
+  `Hechos.lean`, `lake build Cronologia.Hechos` con timeout, borra la copia) e `informe.py`
+  (errores por línea → cuatro veredictos con evento, capítulo, momento, año y presentes; recuento
+  de «sin comprobar»; un error fuera de los teoremas, un timeout o sin `lake` → las cuatro en
+  rojo). Diez pruebas con `lake` real: una violación por invariante falla solo esa; analepsis,
+  datos vacíos y mismo año en verde. `EventoVigente` gana `descripcion` para el informe (nunca
+  entra en el fichero: la propiedad de A-91 la siembra). 529 pruebas.
+
 ## Decisiones
 
 | ID | Paso | Decisión | Porqué | Rastro |
@@ -68,6 +76,12 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
 | A-01 | L01 | `version_desde` se añade con `ADD COLUMN` nula y dos triggers impiden insertar o dejar un evento sin ella | Reconstruir `evento` exige `DROP TABLE` con tres tablas que la referencian y las claves foráneas activas dentro de la transacción de la migración | TO-068 |
 | A-03 | L03 | Los hechos se escriben con constructores explícitos (`Evento.mk id momento anio lugar presentes`), no con `{ campo := … }` | La instancia de estructura partida en varias líneas no parseó en 4.34.1; los constructores caben en una línea por evento y el generador no depende del sangrado | — |
 | A-02 | L01 | En el relleno, lo escrito por una **regeneración** rechazada queda con intervalo vacío; una **primera** versión rechazada en el gate conserva sus eventos | Es lo que hizo TO-062 con los hechos: solo `rechazar_regeneracion` revierte; la primera versión rechazada no se revierte | TO-068 |
+
+## Decisiones de L05
+
+| ID | Paso | Decisión | Porqué | Rastro |
+| --- | --- | --- | --- | --- |
+| A-04 | L05 | La prueba de RNF-09 admite un segundo proceso: `asyncio.create_subprocess_exec` en `versioning/lean/ejecutar.py` | Argumentos fijos (`lake build Cronologia.Hechos`) sobre un fichero sin texto libre; la salida del modelo sigue sin poder llegar a un proceso | TO-069 |
 
 ## Parada
 
