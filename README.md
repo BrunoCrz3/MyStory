@@ -135,6 +135,24 @@ omiten si el servidor Playwright MCP no está en marcha.
 La prueba de humo con el modelo real está excluida por defecto y gasta cuota del modelo:
 `uv run --env-file ../.env pytest -m real tests/humo -v`.
 
+## Qué queda fuera de la demo
+
+La demo recorre el flujo entero con el modelo real: entrevista → generación → progreso →
+lectura → petición de cambio → versión nueva con los capítulos marcados y la anterior
+conservada → PDF. Lo que falta, priorizado, está en `specs/progreso.md` § Post-demo; lo
+principal:
+
+- **Evaluaciones medibles** (briefs B1–B5, tabla brief × validador, revisión humana frente al
+  judge, iteración de tuning documentada), **Lean** (el gate existe pero está apagado:
+  `formal.gate_activo: false`, falta generar el fichero desde la story bible) y **TLA+** (la
+  especificación y sus invariantes están descritas en `docs/architecture.md`, sin `formal/`).
+- Con `proveedor: claude_code`, las instrucciones de privacidad de la organización llegan a los
+  subprocesos del modelo y a veces anonimizan nombres ficticios; los validadores lo detectan y
+  el capítulo vuelve al redactor (TO-061, `docs/red-team.md` RT-002). Se resuelve con el
+  administrador o con `proveedor: api`.
+- Una regeneración fallida deja la novela publicada y su candidata rechazada (TO-062), pero la
+  lectura todavía no muestra el motivo del fallo de la solicitud (necesita el contrato 1.3.0).
+
 ## Novela de ejemplo
 
 `ejemplos/novela-ejemplo.pdf` es la versión 1 de la novela generada en el ensayo de la demo

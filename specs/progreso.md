@@ -103,7 +103,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 ## Pendiente
 
 - ~~Hueco conocido de F4, visto en real~~ **resuelto** tras el plan (TO-047, RI-020): el desarrollador aceptó la propuesta ampliada a cuatro reglas —destino del redactor, reapertura por alias, reconciliación y devolución al redactor por `cierre_arco`—. Probado con dobles y con una regeneración real sobre una copia de la novela del humo (hecho del velero de botella, capítulos 3 y 9; 1.821 s, 3,22 USD): el 3 pasó a la primera, `cierre_arco` devolvió el 9 dos veces y lo aceptó al tercer intento, y la versión 2 no tiene promesas pendientes de los capítulos reescritos. El gate la rechazó por las dos promesas que la versión 1 ya dejaba sin pagar —se publicó en el P27, antes de que existiera `cierre_arco`— y por `render_visual` sin servidor MCP; las dos causas son ajenas al arreglo y no se repitió (§ Coste real).
-- **La novela del humo no se usa en la demo** (decisión del desarrollador, 2026-09-25): su versión 1 deja dos promesas sin pagar —se publicó antes de que existiera `cierre_arco`— y no se aceptan como herencia. **La demo usará una novela nueva generada desde cero con el código actual, en el paso de integración.** Hasta entonces, `data/storymaker-demo.db` queda como base de pruebas reales, no como novela de demo.
+- **La novela del humo no se usa en la demo** (decisión del desarrollador, 2026-09-25). **Hecho**: la novela de la demo es *Soltar amarras* (`data/storymaker-demo.db`, `novel_id` `9a9970e0-b5c9-415f-8eec-c952cccd6335`), generada desde cero en el ensayo con el código actual: versión 1 publicada, la 2 rechazada (regeneración fallida, TO-062) y la 3 publicada sobre la 1 (RI-033 a RI-035). La del humo no migró a la máquina Windows.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - ~~**Frontend**: regenerar el cliente desde el contrato 1.2.0 (I-10) y servir un favicon (A-124)~~ **hecho** en la integración de la demo (TO-050).
 
@@ -159,8 +159,9 @@ primeros bloques son lo que el alcance exige para aprobar; el resto, por orden.
 | 16 | ~~Una regeneración detenida deja la novela `Detenida`~~ **resuelto** (TO-062): la candidata queda `rechazada`, la novela sigue publicada y la solicitud siguiente parte de la vigente. **Queda el punto 2 de la decisión**: marcar la solicitud como fallida con su motivo visible en la lectura, que exige el contrato 1.3.0 (`fallida` en `SolicitudCambio.estado`, un campo de motivo y listar las solicitudes de una novela) | Cambio de contrato | Decisión del desarrollador (TO-062): post-demo |
 | 17 | **El extractor puede no reconocer como pagada una promesa que el capítulo reescrito tiene que pagar** (la cita como reabierta), y el capítulo se agota aunque el texto la resuelva | TO-047 regla 1 descansa en dos lecturas del extractor que pueden discrepar; darle las marcas `[pagar]` lo sesgaría. Visto en el ensayo (RI-033) | Pendiente de decisión del desarrollador |
 | 18 | **Comprobar los scores por validador en la interfaz de Langfuse**: la API de scores devuelve 410 en esta organización (v1 y v2) | Las observaciones v2 sí confirman sesión, entorno, spans por rol y `hash_prompt`. Lo comprueba el desarrollador en la interfaz (anotado en el README) | Decisión del desarrollador, 2026-09-25 |
-| 19 | **`Version.motivo` va siempre vacío**: el backend no copia el enunciado de la solicitud a la versión que la aplica, así que el selector de la lectura no dice por qué cambió una versión | El contrato lo define («en una regeneración, el enunciado de la solicitud»); una versión publicada es inmutable, así que solo se arreglaría para las siguientes | Visto en el ensayo (RI-035) |
-| 20 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
+| 19 | **Rellenar `Version.motivo` en las versiones nuevas** con el enunciado de la solicitud que las aplica: hoy va siempre vacío y el selector de la lectura no dice por qué cambió una versión | El contrato lo define («en una regeneración, el enunciado de la solicitud»); una versión publicada es inmutable, así que solo aplica a las siguientes | Decisión del desarrollador, 2026-09-25 (RI-035) |
+| 20 | **Que un retcon solo cierre el hecho antiguo al publicarse su versión**, con la vigencia por versión de TO-028, para **eliminar la excepción de `Retconeado`** (hoy vuelve a `Adoptado` si se rechaza la candidata que lo retconeó) | TO-062 revierte el canon de una candidata rechazada y necesita esa excepción; si el cierre solo ocurre al publicar, no hay nada que revertir y `Retconeado` vuelve a ser terminal sin excepciones | Decisión del desarrollador, 2026-09-25 (TO-062) |
+| 21 | El resto de la lista post-demo de la spec: servidor MCP propio, agente de seguridad, SSE, PO-11 y PO-12 | — | `specs/spec1.md` § 7 |
 
 ## Decisiones
 
@@ -371,9 +372,9 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **plan 1 cerrado** (P49) y fusionado con el frontend en `Contexto-semilla-v2`, subida a
+Estado al escribir esto: **plan 1 cerrado** (P49), fusionado con el frontend e **integración y ensayo de la demo terminados** (RI-023 a RI-035) en `Contexto-semilla-v2`, subida a
 `origin/Contexto-semilla-v2`. No queda paso del plan: lo siguiente
-es decidir lo que queda de § Pendiente con el desarrollador; el hueco de promesas ya se resolvió (TO-047). Para `render_visual` real, arrancar el
+es la lista priorizada de § Post-demo; el hueco de promesas ya se resolvió (TO-047). Para `render_visual` real, arrancar el
 servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica (A-114).
 
 ```bash
