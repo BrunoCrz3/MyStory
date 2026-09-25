@@ -1,6 +1,6 @@
 ---
-estado: en-revision
-aprobada-por:
+estado: aprobada
+aprobada-por: el desarrollador, en la conversación del 2026-09-25 («aprobada»)
 fecha: 2026-09-25
 ---
 
@@ -11,9 +11,8 @@ Mini-spec de RF-EXP-03 (`specs/spec1.md` § 3.10), el único requisito de Lean q
 arquitectura, la de `docs/architecture.md` § Verificación formal; las aserciones, las de
 `docs/verification.md` (A-90, A-91, O-13, O-14, O-15, P-81, P-82, P-83).
 
-> **Estado: en revisión.** Las tres preguntas de § 7 están respondidas por el desarrollador
-> (2026-09-25) e incorporadas. Las decisiones están en TO-064 a TO-067 y en RI-037, y la
-> ontología ya está actualizada en `docs/definitions.md`. No hay plan hasta que la apruebe.
+> **Estado: aprobada** por el desarrollador el 2026-09-25, con las respuestas de § 7
+> (TO-064 a TO-067, RI-037). No hay código hasta que `specs/plan4-lean.md` esté aprobado.
 
 ---
 
