@@ -223,3 +223,20 @@ a mano se marca como provocado. → TO-067.
 depender de que el generador filtre. → TO-066. Se aceptan los identificadores sintéticos,
 un teorema por evento, `GateEnRojo` con timeout o error de toolchain como fallo, y el chequeo
 por capítulo solo como aviso.
+
+## 8. Cierre — 2026-09-25
+
+Plan 4 ejecutado entero (`specs/progreso-lean.md`). Los ocho requisitos RF-LEAN y los doce
+criterios de § 5 se cumplen; lo que resultó distinto de lo escrito aquí:
+
+- **Un solo punto de entrada** para gate e incremental, `Publicador.lean(…, hasta_numero)`: la
+  etapa la pone el orquestador en el span y en los scores (A-05).
+- **El motivo de detención** de un gate en rojo por Lean es `error-interno`, el que ya usa todo
+  `GateEnRojo` (A-47 del plan 1); el detalle nombra invariante, capítulo, evento y personajes.
+- **`lake build` es un segundo proceso permitido** en la prueba de RNF-09 (TO-069).
+- **Las pruebas de servicio apagan el incremental** (A-06): las de HTTP lo ejercen con la
+  configuración real y tiene pruebas propias.
+- **Datos reales** (§ 3.10): la versión 3 re-extraída no fecha nada; tres de las cuatro
+  invariantes quedan sin nada que comprobar (RT-003).
+- **El caso B2** (§ 3.11) salió **real**: `lean_nacimiento` rechaza la versión y es el único
+  veredicto fallido (RT-004, `ejemplos/evaluacion/resultado-b2.json`).

@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L11 |
-| Estado del paso | pendiente |
+| Paso actual | — (plan cerrado: L11 fue el último) |
+| Estado del paso | **plan 4 cerrado** |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L10 |
+| Último commit de paso | L11 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -109,6 +109,13 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   veredicto fallido**. Ningún validador de capítulo señaló la fecha en ningún intento; el judge
   la dio por respetada en el capítulo 5. **Caso real** (P-83), en `docs/red-team.md` RT-004;
   resultado reutilizable en `ejemplos/evaluacion/resultado-b2.json`.
+
+- **L11** — Cierre: `verification.md` (Lean activo, O-13/O-14/O-15 con su enunciado nuevo, O-66,
+  P-83 demostrado, cuatro scores con la etapa, recuento de filas obligatorias), `architecture.md`
+  § Lean (qué se demuestra, timeout medido, diagramas), `spec1.md` (RF-EXP-03 implementado),
+  `spec4-lean.md` § 8, `CLAUDE.md` (layout: `formal/lean/` ya existe), README y
+  `specs/progreso.md` § Post-demo (Lean hecho), RI-040. Coste del plan: ≈8,73 USD nominales;
+  acumulado ≈55,20 de 100.
 
 ## Decisiones
 

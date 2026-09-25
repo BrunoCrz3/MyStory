@@ -578,6 +578,7 @@ flowchart TD
   GT[Gate de publicación] --> V14[lean_cronologia]
   GT --> V15[lean_ubicacion]
   GT --> V16[lean_edad]
+  GT --> V27[lean_nacimiento]
   GT --> V17[elementos_obligatorios]
   GT --> V18[cierre_arco]
   GT --> V19[render_visual]
@@ -836,8 +837,8 @@ es correcta sin acotar a una—, y ninguna lleva `user_id` ni `tenant_id`.
 | Lugar | `lugar` | entra en Lean |
 | Arco | `arco` | |
 | Hilo de trama | `hilo_trama` | |
-| Evento | `evento` | `momento`, `lugar_id`; es la tabla de cronología |
-| Evento ↔ Personaje | `evento_personaje` | personajes presentes; entra en Lean |
+| Evento | `evento` | `momento` (narración), `anio` (historia), `lugar_id`, `version_desde`/`version_hasta` (TO-066); es la tabla de cronología |
+| Evento ↔ Personaje | `evento_personaje` | personajes presentes y `edad` declarada; entra en Lean |
 | Evento ↔ Capítulo | `evento_capitulo` | fábula ↔ discurso, N:M |
 | Evento excluyente | `evento_excluyente` | referencia a `evento`; entra en Lean |
 | Regla del mundo | `regla_mundo` | |
@@ -922,10 +923,10 @@ harness que publica capítulos sin validar.
 
 ```mermaid
 flowchart LR
-  SQL[SELECT sobre evento, evento_personaje,<br/>evento_excluyente y personaje] --> GEN[Generador de Lean]
-  GEN --> FIC[Fichero .lean sin Mathlib]
-  FIC --> LAKE[lake build]
-  LAKE -->|éxito| SC[Score lean_cronologia<br/>lean_ubicacion · lean_edad]
+  SQL[Eventos vigentes en la versión,<br/>presencias, excluyentes y nacimientos] --> GEN[versioning/lean/generar.py]
+  GEN --> FIC[Cronologia/Hechos.lean<br/>sin Mathlib ni texto libre]
+  FIC --> LAKE[lake build en una copia<br/>de formal/lean/]
+  LAKE -->|éxito| SC[Scores lean_cronologia · lean_ubicacion<br/>lean_edad · lean_nacimiento]
   LAKE -->|fallo| INF[Informe al editor]
   SC --> GATE{¿Gate?}
   GATE -->|sí, bloquea| PUB[Publicar o no]
@@ -942,10 +943,20 @@ novela entera—, así que detectarla en el capítulo 3 ahorra siete capítulos 
 una preferencia: es lo que mantiene el build en segundos en vez de minutos, y sin ella el
 chequeo incremental no sale a cuenta.
 
-**El timeout está sin fijar y es deliberado.** No hay toolchain Lean en la máquina de
-desarrollo, así que el coste está **estimado y no medido**. `formal.lean_timeout_segundos`
-se queda en `null` hasta medirlo. Lean es dependencia de **toolchain**, no de Python: se
-declara en el README y en CI, no en `pyproject.toml`.
+**Qué se demuestra** (spec 4, TO-064). Cuatro invariantes, cada una con **un teorema por
+evento** cerrado con `by decide`, para que el teorema que falla nombre al evento culpable. La
+ubicación se mide en el orden de narración (`momento`); la cronología, la edad y el nacimiento,
+en el año de la historia, así que una analepsis no es una incoherencia. Un dato vacío hace la
+comprobación vacuamente cierta y el informe cuenta cuántos eventos quedaron sin comprobar. Los
+identificadores del fichero son sintéticos: ningún texto de la novela llega al compilador
+(regla 11), y por eso `lake build` es el único proceso, además del CLI del proveedor, que el
+backend puede lanzar (TO-069).
+
+**El timeout está medido** (L08 del plan 4): con el fichero real más grande —72 eventos, 288
+teoremas—, `lake build` tarda 2,02 s en frío y 1,47 s en caliente; `formal.lean_timeout_segundos`
+es 20. Un timeout o una toolchain ausente son rojo en el gate y aviso en el incremental, nunca
+excepción. Lean es dependencia de **toolchain**, no de Python: está en `formal/lean/lean-toolchain`
+y en el README —**obligatorio también para la suite**—, no en `pyproject.toml`.
 
 ### TLA+ — el harness
 

@@ -134,7 +134,7 @@ ninguna tabla lleva `user_id` ni `tenant_id`.
 | --- | --- | --- |
 | **API de Anthropic** | Los seis roles, con el identificador y el effort de `config/models.yaml` | El sistema no genera. Es la única dependencia dura |
 | **Langfuse** | Trazas, spans, scores y versiones de prompt | La generación **sigue**, y lo registra como degradado en `GET /salud`. Perder observabilidad no debe costar una novela |
-| **Lean 4 con `lake`** | Las tres demostraciones de cronología en el gate | Ya está previsto: `formal.gate_activo` está en `false` y el gate no corre. Se enciende al instalar la toolchain |
+| **Lean 4 con `lake`** | Las cuatro demostraciones de cronología en el gate y el aviso por capítulo (spec 4) | **Ninguna versión se publica**: sin `lake`, los cuatro veredictos de Lean son rojo en el gate y la candidata queda `rechazada`; el aviso por capítulo lo registra sin detener nada |
 | **Playwright** | `render_visual` en el gate y el export a PDF | Sin él no hay export ni validación visual, y **ninguna versión se publica**: la generación termina con la versión `rechazada` (RNF-19, TO-045) |
 
 **Supuestos declarados.** Una sola instancia del backend escribe sobre
@@ -511,13 +511,13 @@ sola vez por versión (TO-003, TO-025).
 dedicatoria e índice, y recuento de palabras dentro de
 `export.tolerancia_recuento_palabras`.
 
-**RF-EXP-03 [post-demo]** · Cuando `formal.gate_activo` sea `true`, el sistema deberá
-generar el fichero Lean desde la story bible, ejecutar `lake build` en el gate y **no
-publicar** si falla, devolviendo el fallo al editor como feedback.
+**RF-EXP-03 [post-demo · implementado en el plan 4]** · Cuando `formal.gate_activo` sea `true`,
+el sistema deberá generar el fichero Lean desde la story bible, ejecutar `lake build` en el gate
+y **no publicar** si falla, devolviendo el fallo al editor como feedback.
 
-> Está **fuera de la demo** porque no hay toolchain Lean instalada. Mientras tanto,
-> `GET /salud` lo dice, para que la lectura no dé por demostrada una cronología que nadie
-> ha demostrado.
+> Quedó fuera de la demo y se implementó después, con su propia spec (`specs/spec4-lean.md`) y
+> su plan (`specs/plan4-lean.md`): cuatro invariantes, gate activo y aviso por capítulo.
+> `GET /salud` sigue diciendo si el gate está activo.
 
 ### 3.11 `commons/` — observabilidad y meta
 
@@ -922,9 +922,9 @@ ella salió `ejemplos/novela-ejemplo.pdf` con `paridad_pdf_web` en verde.
   fallido, igual que un capítulo reescrito (TO-056). **`nombres_exactos`** rechaza un marcador
   en mayúsculas entre corchetes escrito en lugar de un nombre (TO-056).
 
-**Sin implementar, por ser `[post-demo]`**: RF-INTAKE-06, RF-CANON-05, RF-QUA-08 y RF-EXP-03.
-Sin este último no hay fichero Lean que demostrar, así que el gate de Lean sigue apagado
-aunque la toolchain ya está instalada (`config/thresholds.yaml` § `formal`).
+**Sin implementar, por ser `[post-demo]`**: RF-INTAKE-06, RF-CANON-05 y RF-QUA-08. RF-EXP-03 se
+implementó después del cierre, con la spec 4: el gate de Lean está activo
+(`config/thresholds.yaml` § `formal`).
 
 ---
 

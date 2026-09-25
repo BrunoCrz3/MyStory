@@ -89,7 +89,7 @@ backend/app/            main.py monta los routers de cada feature
   mcp_server/           adaptador del servidor MCP · no es feature
   skills/ · prompts/    skills de runtime y un prompt por rol · no son features
 frontend/src/           FSD v2.1: app/, pages/, shared/
-formal/lean/            ▸ previsto · cronología e invariantes de la historia
+formal/lean/            cronología: proyecto Lake sin dependencias y sus cuatro invariantes
 formal/tla/             ▸ previsto · especificación del harness y el .cfg de TLC
 docs/                   contexto semilla y documentación de proceso (ver tabla abajo)
 specs/                  specN.md y planN.md de v1, ambos con frontmatter
@@ -208,7 +208,7 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
 | **Todos los números**: presupuesto por capa y umbrales | `config/thresholds.yaml` |
 | Por qué se eligió una opción frente a otras | `docs/trade-offs.md` |
 | Qué cambió, qué lo provocó y qué efecto tuvo | `docs/registro-iteraciones.md` |
-| Invariantes de la cronología y del harness | `formal/lean/`, `formal/tla/` ▸ previsto |
+| Invariantes de la cronología y del harness | `formal/lean/`; `formal/tla/` ▸ previsto |
 | Qué se decidió construir, antes de escribir código | `docs/spec-inicial.md` ▸ previsto |
 | Un concepto del curso por fichero | `docs/explainers/` ▸ previsto |
 | Casos adversariales, y qué inspeccionó el browser MCP | `docs/red-team.md`, `docs/browser-mcp.md` |

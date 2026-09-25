@@ -110,7 +110,7 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 ### Resumen al cerrar el plan (I-08)
 
 - **Funciona**, con la suite en verde (462 pruebas, e2e por fase): entrevista y brief con datos faltantes, contradicciones y texto libre saneado; planificación, escritura, hooks, judge y editor, aceptación por el policy engine con audit log; story bible por versión con vigencia y retcon; regeneración dirigida que solo reescribe lo afectado; versión candidata con el gate completo, `render_visual` real incluido; lectura por versión con ficha y portada; export a PDF con paridad; observabilidad con spans y scores; proveedor `claude_code` sin clave de API.
-- **No funciona o no está**: el gate de Lean (falta RF-EXP-03, post-demo; toolchain y timeout listos); los casetes HTTP. El hueco de promesas en la regeneración dirigida se arregló después del cierre (TO-047); una regeneración real lo confirma, aunque no publica porque la versión 1 del humo trae dos promesas sin pagar.
+- **No funciona o no está**: los casetes HTTP. (El gate de Lean se activó después, con el plan 4.) El hueco de promesas en la regeneración dirigida se arregló después del cierre (TO-047); una regeneración real lo confirma, aunque no publica porque la versión 1 del humo trae dos promesas sin pagar.
 - **Post-demo**: la tabla de abajo y los cuatro RF `[post-demo]` de la spec (RF-INTAKE-06, RF-CANON-05, RF-QUA-08, RF-EXP-03).
 
 ### Después del plan
@@ -131,10 +131,10 @@ primeros bloques son lo que el alcance exige para aprobar; el resto, por orden.
    - La **revisión humana comparada con el judge**, criterio a criterio.
    - La **iteración de tuning documentada** con antes, después y la versión de prompt de cada
      lado (E-11). RI-021 cambió `writer` y `extractor` sin esa tabla: es la primera candidata.
-2. **Lean.**
-   - RF-EXP-03: generar el fichero Lean desde la story bible de la versión.
-   - Activar `formal.gate_activo` (toolchain y timeout ya listos, I-03).
-   - Al menos **un caso real que solo detecte Lean**.
+2. ~~**Lean.**~~ **Hecho** con la spec 4 y el plan 4 (`specs/progreso-lean.md`):
+   - RF-EXP-03: el fichero Lean se genera desde la story bible de cada versión.
+   - `formal.gate_activo: true`, con el timeout medido (20 s, L08).
+   - El caso real que solo detecta Lean: el brief B2 (`docs/red-team.md` RT-004).
 3. **TLA+.**
    - La especificación del harness en `formal/tla/harness.tla` y TLC con su `harness.cfg`.
    - El test de correspondencia con la tabla de transiciones de `process/transiciones.py`.

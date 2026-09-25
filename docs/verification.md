@@ -121,8 +121,11 @@ brief × validador:
 | `legibilidad` | Índice INFLESZ (0–100), cuanto más alto más legible | Por encima del umbral de `config/thresholds.yaml` § calidad. **Todavía no se emite**: está en el registro, sin implementación |
 | Todos los demás: `schema_valido`, `palabras_prohibidas`, `nombres_exactos`, `longitud`, `consistencia_factica`, `calidad_prosa`, `integridad_pov`, `cumplimiento_brief`, `reglas_mundo`, los seis criterios del judge (`consistencia_factica`, `adecuacion_tono`, `cierre_arco`, `coherencia_personajes`, `ritmo`, `personalizacion_natural`), `elementos_obligatorios`, `estructura_edicion`, `regeneracion_fiel`, `render_visual`, `paridad_pdf_web` | Escala 0–1: 1 si pasa (o la proporción de comprobaciones en regla, o la puntuación del judge) | **1** |
 
-Los de Lean (`lean_cronologia`, `lean_ubicacion`, `lean_edad`) serán 0–1 con 1 = demostrado, y no
-se emiten mientras `formal.gate_activo` sea `false`. **Unificar la dirección** —por ejemplo,
+Los de Lean (`lean_cronologia`, `lean_ubicacion`, `lean_edad`, `lean_nacimiento`) son 0–1 con
+1 = demostrado, y se emiten dos veces con el mismo nombre: en el gate, con `metadata.etapa =
+gate`, y tras cada capítulo aceptado, con `etapa = incremental` y el número del capítulo (plan 4,
+L-D11). Su comentario dice cuántos eventos quedaron **sin comprobar** por falta de datos: un 1
+sobre 48 eventos sin año no es una demostración de cronología. **Unificar la dirección** —por ejemplo,
 1 = cumple también en los dos recuentos— queda post-demo (`specs/progreso.md` § Post-demo).
 
 **Validadores que no emiten score**, porque no corren en una generación. `CLAUDE.md`
@@ -192,8 +195,8 @@ necesita juicio.
 resuelve es inspección, es barata y es justo lo que nadie hace a mano dos veces. Trece de
 sus veinte filas son un `grep` en CI.
 
-**Diecinueve filas obligatorias cuestan alto**, y catorce de ellas están en Obra. Son las
-tres demostraciones de Lean, las seis de la rúbrica del judge, la revisión humana y la
+**Veinte filas obligatorias cuestan alto**, y quince de ellas están en Obra. Son las
+cuatro demostraciones de Lean, las seis de la rúbrica del judge, la revisión humana y la
 reproducción de la novela de ejemplo. No hay forma de abaratarlas sin dejar de comprobar lo
 que el encargo evalúa.
 
@@ -388,7 +391,7 @@ siguiente.
 | **P-80** · Ninguna versión se publica con un capítulo que no pasó todos sus validadores | `CLAUDE.md` regla 16; `alcance` §5d | Model checking + pruebas basadas en propiedades | A, T | sí | gate de publicación | — | obligatorio | medio | El invariante es sobre el estado del capítulo, no sobre la calidad del validador: un validador roto que aprueba siempre no lo viola | P-50, A-99 | `formal/tla/`, `versioning/` |
 | **P-81** · El Lean incremental por capítulo avisa y no bloquea; el del gate bloquea | `architecture.md` § Lean; TO-016; `config/thresholds.yaml` § formal | Pruebas unitarias / de integración | T | sí | hook de capítulo · gate de publicación | `lean_cronologia` | recomendado | medio | El incremental corre sobre la cronología hasta `t`: un evento futuro que contradiga uno pasado no existe todavía y no se detecta hasta el gate | O-13 | `versioning/`, `formal/lean/` |
 | **P-82** · Un fallo de Lean vuelve al editor como feedback, no como excepción | `alcance` §5c; `CLAUDE.md` regla 16 | Pruebas unitarias / de integración | T | sí | gate de publicación | `lean_cronologia` | obligatorio | medio | El mensaje de Lean es una prueba fallida, no una instrucción de reescritura: traducirlo a feedback accionable no está garantizado | O-13, P-29 | `versioning/`, `quality/` |
-| **P-83** · Existe al menos un caso real en que Lean detectó una incoherencia que ningún otro validador detectó, o la justificación de por qué no apareció | `alcance` §5c | Demostración + inspección | D, I | no | CI/desarrollo | — | obligatorio | medio | Un caso demuestra que puede ocurrir, no cuántos se escapan; y el brief con incoherencia temporal del corpus lo provoca a propósito, que es más débil que encontrarlo en el uso normal | § Evaluación del sistema | `docs/red-team.md` ▸ previsto, `formal/lean/` |
+| **P-83** · Existe al menos un caso real en que Lean detectó una incoherencia que ningún otro validador detectó, o la justificación de por qué no apareció. **Demostrado** con el brief B2 (RT-004): `lean_nacimiento` rechaza la versión y ningún otro validador vio la fecha | `alcance` §5c | Demostración + inspección | D, I | no | CI/desarrollo | — | obligatorio | medio | Un caso demuestra que puede ocurrir, no cuántos se escapan; y el brief con incoherencia temporal del corpus lo provoca a propósito, que es más débil que encontrarlo en el uso normal. Una novela que no fecha nada no da a Lean qué comprobar (RT-003) | § Evaluación del sistema | `docs/red-team.md` RT-003, RT-004; `ejemplos/evaluacion/resultado-b2.json` |
 | **P-84** · La fase de medición se registra junto a cada puntuación, con el número de capítulos aceptados desde que se declaró | `config/thresholds.yaml` § Fase de medición | Observabilidad | T | sí | CI/desarrollo | — | recomendado | bajo | Hace visible que la fase sigue abierta; no la cierra nadie, y un corpus que ya da para calibrar con la fase abierta es una señal que alguien tiene que leer | § Puntos ciegos #6 | `commons/langfuse/`, `quality/` |
 | **P-85** · El acuerdo entre el `judge` y el `Revisor humano` se mide criterio a criterio de la misma rúbrica, sobre las diez parejas de puntuaciones por criterio que da una novela | `alcance` §5b; `definitions.md` Capa 4 § Rúbrica; pregunta 27 | Evals | T | parcial | CI/desarrollo | — | obligatorio | alto | Diez capítulos de **una** novela son diez parejas correlacionadas entre sí: miden acuerdo en esta novela, no en el sistema | § Puntos ciegos #2 | `tests/evals/`, `quality/` |
 | **P-86** · El `judge` puntúa la misma entrada dentro de una tolerancia declarada | `definitions.md` Capa 4 § Rúbrica; cierra el punto ciego de P-85 | Evals | T | sí | CI/desarrollo | — | recomendado | medio | Mide la estabilidad, no la validez: un juez establemente equivocado sale perfecto | P-85 | `tests/evals/` |
@@ -418,9 +421,9 @@ filas de personalización y las de calidad narrativa están en la misma tabla.
 | **O-10** · Un fallo de render se registra y vuelve al rol dueño del dato, o detiene con informe si el dato está y no se pinta | `alcance` §5a; TO-026 | Pruebas unitarias / de integración | T | sí | gate de publicación | `render_visual` | obligatorio | bajo | El enrutado consulta la story bible primero; un dato presente pero mal formado admite las dos lecturas | A-80 | `versioning/` |
 | **O-11** · El `judge` puntúa los seis criterios de la rúbrica por separado, cada uno con su justificación | `alcance` §5b; `definitions.md` Capa 4 § Rúbrica | Verificación multiagente + evals | D | no | rol editor | según criterio | obligatorio | alto | El judge corre en un modelo menos capaz que el redactor, y lo único que mide esa brecha es la comparación con el revisor humano | P-85, O-12 | `quality/` |
 | **O-12** · Un `Revisor humano` evalúa al menos una novela completa con la misma rúbrica, capítulo a capítulo | `alcance` §5b; `definitions.md` Capa 5; pregunta 27 | Revisión humana en el bucle | D | no | rol editor · revisión | `reconocibilidad` | obligatorio | alto | Una novela da diez parejas por criterio y una sola muestra de novela: mide acuerdo en este texto, no en el sistema | P-85, § Puntos ciegos #2 | `quality/`, `docs/` |
-| **O-13** · Los eventos respetan el orden cronológico declarado | `alcance` §5c; `definitions.md` Capa 4 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_cronologia` | obligatorio | alto | Demuestra sobre lo que la story bible contiene: un evento que el extractor no registró no participa en la demostración | A-90, § Puntos ciegos #1 | `formal/lean/`, `versioning/` |
-| **O-14** · Ningún personaje está en dos lugares en el mismo momento, ni aparece tras un `Evento excluyente` | `alcance` §5c; `definitions.md` Capa 4 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_ubicacion` | obligatorio | alto | Sin relación `Lugar`↔`Lugar` no hay coste de desplazamiento: dos lugares distintos en momentos consecutivos e imposibles son válidos | § Propuestas de cambio PO-11 | `formal/lean/` |
-| **O-15** · La edad de cada personaje en cada evento cuadra con su fecha de nacimiento | `alcance` §5c; `definitions.md` Capa 4; pregunta 14 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_edad` | obligatorio | alto | Demuestra la aritmética; una edad que el texto nombra y la story bible no registra no entra en el fichero | A-90 | `formal/lean/` |
+| **O-13** · En la cronología de la historia (año), ningún personaje participa en un evento posterior a un `Evento excluyente` suyo; una analepsis no es una incoherencia (TO-064) | `alcance` §5c; `definitions.md` Capa 4 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_cronologia` | obligatorio | alto | Demuestra sobre lo que la story bible contiene: un evento que el extractor no registró no participa en la demostración | A-90, § Puntos ciegos #1 | `formal/lean/`, `versioning/` |
+| **O-14** · Ningún personaje está en dos lugares en el mismo momento de la narración (la exclusión pasó a O-13, TO-064) | `alcance` §5c; `definitions.md` Capa 4 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_ubicacion` | obligatorio | alto | Sin relación `Lugar`↔`Lugar` no hay coste de desplazamiento: dos lugares distintos en momentos consecutivos e imposibles son válidos | § Propuestas de cambio PO-11 | `formal/lean/` |
+| **O-15** · La edad declarada de cada personaje en cada evento cuadra con el año del evento y su fecha de nacimiento (ese año o uno menos) | `alcance` §5c; `definitions.md` Capa 4; pregunta 14 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_edad` | obligatorio | alto | Demuestra la aritmética; una edad que el texto nombra y la story bible no registra no entra en el fichero | A-90 | `formal/lean/` |
 | **O-66** · Ningún personaje participa en un evento de un año anterior a su nacimiento; para el destinatario, la fecha de nacimiento del brief | `alcance` §5c; `definitions.md` Capa 4; TO-064 | Verificación formal / demostración de teoremas | A | sí | gate de publicación | `lean_nacimiento` | obligatorio | alto | Solo compara años: un evento sin año o un personaje sin fecha de nacimiento no participa, y mismo año no es violación | A-90, O-15 | `formal/lean/` |
 | **O-16** · El PDF exportado contiene lo mismo que la lectura web: capítulos, títulos, índice y dedicatoria | `definitions.md` Capa 4; TO-025 | Pruebas unitarias / de integración | T | sí | export | `paridad_pdf_web` | obligatorio | medio | Compara recuentos, títulos y presencia, con tolerancia de palabras por el paginado; una diferencia de maquetación que no cambia el texto no se ve, y a veces importa | A-103 | `versioning/`, `tests/versioning/` |
 | **O-17** · Los elementos personalizados se reparten a lo largo de la novela, no se concentran en un capítulo | `definitions.md` Capa 1A; `alcance` §5b, «integrada de forma natural» | Pruebas basadas en propiedades | T | sí | gate de publicación | `personalizacion_natural` | obligatorio | bajo | Mide dispersión sobre `elemento_capitulo`: un reparto uniforme de menciones forzadas sale perfecto | O-22 | `quality/`, `canon/` |
@@ -705,6 +708,7 @@ traza de Langfuse que la sostiene.
 | `lean_cronologia` | | | | | |
 | `lean_ubicacion` | | | | | |
 | `lean_edad` | | | | | |
+| `lean_nacimiento` | | | | | |
 | `elementos_obligatorios` | | | | | |
 | `cierre_arco` | | | | | |
 | `render_visual` | | | | | |
@@ -886,7 +890,7 @@ produce afirmaciones verificables, y se dice por qué.
 | 5a · Validación visual con browser MCP | O-09, O-10, A-102, E-07 |
 | 5b · LLM-as-judge con rúbrica y justificación | O-11, P-71 |
 | 5b · Revisión humana con la misma rúbrica | O-12, P-85 |
-| 5c · Lean generado desde la story bible, ≥2 invariantes, gate, feedback, caso real | A-90, A-91, O-13, O-14, O-15, P-81, P-82, P-83 |
+| 5c · Lean generado desde la story bible, ≥2 invariantes, gate, feedback, caso real | A-90, A-91, O-13, O-14, O-15, O-66, P-81, P-82, P-83 |
 | 5d · Spec TLA+, 3 invariantes, liveness, TLC, correspondencia, contraejemplos | P-74, P-75, P-76, P-77, A-92, A-93, A-94 |
 | 5 · Cinco briefs, tabla brief × validador, iteración de tuning | § Evaluación del sistema, E-10, E-11 |
 | 6 · Observabilidad completa | P-68, P-69, P-70, P-71, P-72, P-73, A-45 |
@@ -939,7 +943,7 @@ produce afirmaciones verificables, y se dice por qué.
 | Tools · `consultar_story_bible`, `extraer_hechos_texto_libre`, `detectar_contradiccion` | schema estricto | schema inválido, fuga entre novelas | A-68, A-83, A-96 |
 | Hook de policy | schema y palabras prohibidas | devolución al writer, parada | O-01, O-05, A-79, P-56 |
 | Hook de capítulo | programáticos en paralelo | reescritura | A-76, O-26 a O-56 |
-| Gate de publicación | Lean, obligatorios, arco, render | no se publica | O-04, O-09, O-13 a O-15, O-34, P-80 |
+| Gate de publicación | Lean, obligatorios, arco, render | no se publica | O-04, O-09, O-13 a O-15, O-66, O-34, P-80 |
 | `export` | versión publicada → PDF | paridad rota | O-16, A-103, A-105 |
 | Skill `personalizacion-natural` | capa Invariante de tres roles | personalización forzada | O-22, A-77 |
 | Skills de `.claude/skills/` | documentación de desarrollo | — | E-06 |
@@ -1034,11 +1038,15 @@ veintiocho que estaban en `null` llevan valor desde RI-008, todas marcadas
 provisional no es un umbral calibrado: hasta que haya corpus, lo que dicen es con qué error
 se prefiere fallar, no dónde está la frontera real.
 
-**El gate de Lean está apagado** (`formal.gate_activo: false`). La toolchain ya está instalada
-y `formal.lean_timeout_segundos` tiene valor provisional (I-03 del plan 1), pero falta el
-generador del fichero Lean desde la story bible, que es RF-EXP-03 `[post-demo]`. Con el gate
-apagado, `O-13`, `O-14` y `O-15` no se ejecutan y la demo publica versiones sin demostración de
-cronología. Volver a encenderlo es la primera tarea después de implementar RF-EXP-03.
+**El gate de Lean está activo** (plan 4, `formal.gate_activo: true`). El generador escribe desde
+la story bible de cada versión un módulo sin Mathlib ni texto libre (`A-90`, `A-91`), `lake build`
+demuestra cuatro invariantes con un teorema por evento (`O-13`, `O-14`, `O-15`, `O-66`) y un
+fallo, un timeout o una toolchain ausente rechazan la candidata por `GateEnRojo` con el evento
+culpable nombrado (`P-64`, `P-82`). El chequeo incremental avisa tras cada capítulo sin bloquear
+(`P-81`). `formal.lean_timeout_segundos` está **medido**: 20 s, diez veces los 2,02 s en frío del
+fichero real más grande (L08). Lo que Lean no ve está dicho en el comentario de cada score: los
+eventos sin año, sin lugar o sin edad declarada no participan, y en una novela que no fecha nada
+tres de las cuatro invariantes no tienen qué comprobar (`docs/red-team.md` RT-003).
 
 **`render_visual` y `paridad_pdf_web` ya se ejecutan** (plan 1, P47b y P48). `render_visual`
 corre en el gate sobre la versión candidata con el servidor Playwright MCP (`O-09`, `O-10`,

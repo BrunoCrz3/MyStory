@@ -151,9 +151,11 @@ conservada → PDF. Lo que falta, priorizado, está en `specs/progreso.md` § Po
 principal:
 
 - **Evaluaciones medibles** (briefs B1–B5, tabla brief × validador, revisión humana frente al
-  judge, iteración de tuning documentada), **Lean** (el gate existe pero está apagado:
-  `formal.gate_activo: false`, falta generar el fichero desde la story bible) y **TLA+** (la
-  especificación y sus invariantes están descritas en `docs/architecture.md`, sin `formal/`).
+  judge, iteración de tuning documentada) y **TLA+** (la especificación y sus invariantes están
+  descritas en `docs/architecture.md`, sin `formal/tla/`). El brief B2 ya se corrió y su resultado
+  está en `ejemplos/evaluacion/`, reutilizable mientras el código no cambie.
+- **Lean ya no queda fuera**: el gate está activo con cuatro invariantes (plan 4, `formal/lean/`),
+  y el caso que solo detecta Lean es el de B2 (`docs/red-team.md` RT-004).
 - Con `proveedor: claude_code`, las instrucciones de privacidad de la organización llegan a los
   subprocesos del modelo y a veces anonimizan nombres ficticios; los validadores lo detectan y
   el capítulo vuelve al redactor (TO-061, `docs/red-team.md` RT-002). Se resuelve con el

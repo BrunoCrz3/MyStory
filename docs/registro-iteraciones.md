@@ -1670,3 +1670,31 @@ La prueba de RNF-09 admite `lake build` como segundo proceso.
 
 Cada invariante caza su violación sintética y solo esa; una analepsis compila en verde. El build
 de un fichero pequeño tarda unos 1,5 s con el `.lake` copiado. 529 pruebas.
+
+## RI-040 — El gate de Lean se activa y encuentra su caso real (L06 a L11 del plan 4)
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/process/orquestador.py`,
+`backend/app/versioning/`, `config/thresholds.yaml`, `docs/red-team.md` (RT-003, RT-004),
+`ejemplos/evaluacion/` (TO-064 a TO-069)
+
+### Causa
+
+RF-EXP-03 estaba `[post-demo]`: la demo publicaba versiones sin demostración de cronología, y el
+alcance pedía un caso real que solo detectara Lean.
+
+### Qué cambió
+
+Lean en el gate (bloquea) y tras cada capítulo (avisa), con span y scores marcados por etapa;
+`lean_nacimiento` como cuarta invariante; `formal.gate_activo: true` con el timeout medido
+(2,02 s en frío con 72 eventos, 20 s de tope). Se probó sobre la versión 3 re-extraída en una
+copia y con una novela real del brief B2.
+
+### Efecto
+
+- La versión 3 de la demo no fecha nada: Lean solo puede demostrar la ubicación (RT-003).
+- **B2**: la versión se rechaza solo por `lean_nacimiento` —la destinataria, nacida en 1990,
+  aparece en tres eventos de 1986— mientras todos los demás validadores pasan, y el judge llega
+  a dar la fecha por respetada (RT-004). Es el primer defecto que el sistema caza y que ningún
+  validador semántico ve.
+- La suite pasa de 504 a 538 pruebas y de 6 a unos 13 minutos (el gate lanza `lake build` en
+  cada publicación y el incremental en las pruebas por HTTP).
