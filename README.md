@@ -128,3 +128,18 @@ omiten si el servidor Playwright MCP no está en marcha.
 
 La prueba de humo con el modelo real está excluida por defecto y gasta cuota del modelo:
 `uv run --env-file ../.env pytest -m real tests/humo -v`.
+
+## Novela de ejemplo
+
+`ejemplos/novela-ejemplo.pdf` es la versión 1 de la novela generada en el ensayo de la demo
+(2026-09-25) con `ejemplos/brief-ejemplo.json`, el mismo `example` de `BriefNovela` que trae el
+contrato. Todos los datos son ficticios (TO-052):
+
+- **Destinataria**: Ondina, 34 años, tozuda y enamorada del mar, que aprendió a navegar un verano.
+- **Encargo**: su hermana, por su cumpleaños; aventura costumbrista en tono cálido y con humor.
+- **Elementos**: el barco Alondra (obligatorio) y un perro; excluye el tema «enfermedad» y la
+  palabra «Anselmo»; el abuelo nunca aparece.
+- **Dedicatoria**: «Para Ondina, que siempre vuelve al mar.» — Tu hermana.
+
+El resultado, *Soltar amarras*: diez capítulos, 44 páginas, paridad con la lectura web
+comprobada.

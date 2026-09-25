@@ -208,3 +208,33 @@ próxima inspección:** cerrar cada sesión con `page.unrouteAll()`, o cerrar la
 
 **Huecos de evidencia:** no hay captura de la lectura antes del rediseño (se inspeccionó ya con
 la hoja nueva) ni del fallo de las interceptaciones (solo del estado corregido).
+
+## Ensayo de la demo con la novela real (2026-09-25)
+
+Máquina Windows, frontend en `http://localhost:5173` (`npm run dev`), backend con
+`STORYMAKER_ENV=demo` y el servidor Playwright MCP del gate en marcha. La inspección la hizo
+Claude Code con el browser MCP del agente (`.mcp.json`, Edge), sobre la novela nueva del ensayo
+—brief de ejemplo, diez capítulos publicados como versión 1— y sin interceptar nada: todos los
+datos salen del backend real.
+
+| Pantalla | Viewport | Inspeccionado | Detectado | Cambiado |
+| --- | --- | --- | --- | --- |
+| Entrevista | 1280×900 | «Validar» con el formulario vacío (siete datos faltantes, cada uno con su pregunta) y con el brief completo (un hecho extraído del texto libre, «El brief está completo»); «Crear y generar» se habilita solo entonces | Nada que corregir | — |
+| Progreso | 1280×900 | Generación en curso sondeando cada 3 s | Tokens y coste parecían exactos con `proveedor: claude_code`; los intentos del capítulo decían siempre 0 aunque el editor corrigiera | Rótulos «estimados» con una nota (TO-055) y «Reintentos del capítulo actual» con lo que cuentan (TO-057) |
+| Lectura | 1280×900 y 390×844 | `data-estado = lista`, diez capítulos, índice, ficha (cuatro personajes y cuatro lugares), portada con dedicatoria; ancho del documento; consola; un capítulo entero en móvil (17 px, capitular) | **Consola sin errores**: sin el 404 del favicon (TO-050). Sin desbordes a 390 px (documento de 375 px). La ocasión ya sale como «cumpleaños», con tilde, y no como el valor del enum que vio la inspección con datos de prueba | Nada: el diseño aguanta los textos reales —títulos largos en el índice, párrafos de diálogo, ficha con descripciones largas— sin ajustes |
+| Petición de cambio | 1280×900 | «Hechos de este capítulo» en el capítulo 5 → «Cambiar» el hecho de la pintura del casco → «Ver qué capítulos cambian» | El análisis de impacto nombra solo los capítulos 5 y 6, con enlace a cada uno | — |
+
+**Capturas**, en `frontend/docs/capturas-browser-mcp/`:
+
+| Captura | Qué muestra |
+| --- | --- |
+| `demo-entrevista-brief-completo.png` | La entrevista tras validar el brief de ejemplo: hecho extraído del texto libre y «Crear y generar» habilitado |
+| `demo-progreso-en-curso.png` | El progreso de la generación real, con tokens y coste rotulados como estimados |
+| `demo-lectura-escritorio-portada.png` | La portada de la versión 1 real, con título, destinataria, ocasión y dedicatoria firmada |
+| `demo-lectura-movil-indice.png` | El índice y el principio de la ficha a 390×844 |
+| `demo-peticion-cambio-impacto.png` | El panel de cambio con el análisis de impacto: capítulos 5 y 6 |
+| `demo-lectura-pdf-paridad.png` | La lectura tras «Descargar PDF»: enlace a la descarga y «Paridad con la lectura web: comprobada» |
+
+La regeneración del ensayo se detuvo antes de publicar la versión 2 (RI-033), así que no hay
+captura de la lectura con capítulos marcados sobre la novela real; la marca se inspeccionó con
+datos de prueba (`lectura-despues-movil-indice-modificados.png`).

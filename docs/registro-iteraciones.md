@@ -1486,3 +1486,38 @@ reconocían en el código; y la anonimización de la organización tenía que qu
 ### Efecto
 
 Suite en verde sin cambios de pruebas por el renombrado. El límite nuevo se ve en la regeneración.
+
+---
+
+## RI-033 — Ensayo de la demo: generación publicada, regeneración detenida
+
+**Fecha:** 2026-09-25 · **Ficheros:** `ejemplos/novela-ejemplo.pdf`, `README.md`,
+`docs/browser-mcp.md`, `specs/progreso.md`
+
+### Causa
+
+El ensayo de la demo con el brief de ejemplo y `proveedor: claude_code`, tras los arreglos de
+TO-056 a TO-059.
+
+### Qué pasó
+
+- **Generación inicial publicada**: *Soltar amarras*, diez capítulos en 46 min, 6,04 USD
+  nominales. Ningún marcador de anonimización; tres capítulos con una corrección del editor, ya
+  contada (TO-057); `render_visual` real en verde; consola sin errores. Langfuse (observaciones
+  v2): una sesión, la de la novela, entorno `demo`, generations de los cinco roles con
+  `hash_prompt`. La API de scores devuelve 410 y no se pudo leer.
+- **Lectura** revisada con el browser MCP en escritorio y en móvil sin ajustes de diseño
+  (`docs/browser-mcp.md`); **PDF** de la versión 1 desde la lectura: 44 páginas, diez capítulos,
+  paridad en verde, sin datos personales. Sustituye a `ejemplos/novela-ejemplo.pdf`.
+- **Regeneración detenida**. Cambio del color del casco (capítulos 5 y 6): el 5 se aceptó; el 6
+  agotó los cinco intentos porque en cada uno el extractor citó la promesa de las velas —que el 6
+  pagaba en la versión 1— como reabierta y no como pagada, y `cierre_arco` del reescrito lo
+  devolvió (TO-047). 28 min, 3,63 USD nominales. La novela queda `Detenida`, que la ontología
+  declara terminal; la versión 1 sigue publicada y se lee entera.
+
+### Efecto
+
+No hay versión 2: el paso «versión nueva con los capítulos marcados» del ensayo queda sin
+demostrar con el modelo real. Dos hallazgos para el desarrollador en la lista post-demo: qué
+hace una regeneración fallida con la novela (y que la API acepte una solicitud sobre una novela
+`Detenida`), y la discrepancia del extractor al pagar promesas en un capítulo reescrito.
