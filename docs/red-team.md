@@ -11,6 +11,7 @@ red-team log, `E-19`).
 | RT-001 | Humo adversarial del P38 (cuatro ejecuciones reales) | Texto libre del comprador con una instrucción inyectada para el modelo | La instrucción **no llegó** a ninguna petición al modelo: el texto libre entra saneado y marcado como datos (`CLAUDE.md` regla 11). Las tres primeras ejecuciones se detuvieron por otros motivos (A-92, A-98, A-108); la cuarta publicó en verde | A-92, A-98, A-108 (`specs/progreso.md` § Coste real) |
 | RT-002 | Ensayo de la demo, 2026-09-25, `proveedor: claude_code` | **Interferencia de las instrucciones de privacidad de la organización** en el subproceso del CLI: el redactor escribió `[NOMBRE_ANONIMIZADO]` nueve veces en lugar del nombre de la destinataria en el capítulo 10, y el judge citó fragmentos con `[PROFESION_OCULTA]` y `[SALUD_OCULTA]` | **Ninguno, al principio**: el capítulo se aceptó. Ahora: `nombres_exactos` (hook de capítulo, cierra el paso siempre) rechaza el marcador en el texto; `invencion_destinatario` coteja la cita del judge tratando el marcador como el trozo que sustituye | TO-056, TO-058, TO-061 |
 | RT-003 | L09 del plan 4, 2026-09-25: la versión 3 publicada de la novela de la demo, re-extraída con el extractor nuevo **en una copia** de la base | Buscar una incoherencia temporal real en una novela ya publicada | **Nadie, y Lean tampoco**: el texto no declara ningún año, edad ni muerte o partida explícitos, así que tres de las cuatro invariantes quedan sin comprobar en los 48 eventos; la ubicación se demuestra (6 sin lugar). No es un caso que solo detecte Lean: es la razón de que el caso real salga de B2 | TO-067 |
+| RT-004 | L10 del plan 4, 2026-09-25: el brief B2 de la evaluación (`ejemplos/evaluacion/brief-b2-incoherencia-temporal.json`), generado de principio a fin con el modelo real y el gate activo | La destinataria, nacida en 1990, conoce a su amiga en la feria de **1986**: una incoherencia temporal que el propio brief declara y que la entrevista no cruza | **Solo Lean**: `lean_nacimiento` avisa desde el capítulo 3 y rechaza la versión en el gate; ningún validador de capítulo lo señaló en ningún intento, y el judge llegó a citar «la referencia al verano de 1986» como hecho respetado. **Caso real**, no provocado (P-83) | TO-067 |
 
 ## RT-002 — Anonimización impuesta por la organización
 
@@ -67,3 +68,50 @@ valor—, y el recuento de «sin comprobar» impide presentarlo como una demostr
 **Qué enseña.** Lean solo caza lo que el texto fecha. En una novela que no fecha nada, tres de
 las cuatro invariantes no tienen nada que comprobar, y eso no se arregla con Lean: se arregla
 con un brief cuyos recuerdos lleven año. Por eso el caso que se presenta es B2 (RT-004).
+
+## RT-004 — El caso que solo detecta Lean: B2, incoherencia temporal
+
+**Qué se hizo** (L10 del plan 4, TO-067). Se generó una novela completa con **exactamente** el
+brief B2 que usará la evaluación, `ejemplos/evaluacion/brief-b2-incoherencia-temporal.json`
+(ficticio): la destinataria nace el 15 de marzo de 1990 y el mismo brief dice que conoció a su
+amiga «en el verano de 1986, en la feria del puerto de Cádiz», como recuerdo y como elemento
+obligatorio. Backend real sobre una base propia, con el gate de Lean activo, el servidor
+Playwright MCP y la página `lectura`; `proveedor: claude_code`. Commit del código `9f87263`,
+traza `ce9ddeffad797dbade91bdc4e802bf0f`, 57 min, 1.110.227 tokens, **7,98 USD** nominales. El
+resultado completo —scores de capítulo, veredictos del gate, auditoría, coste— está en
+`ejemplos/evaluacion/resultado-b2.json` para que la evaluación lo reutilice sin regenerar
+mientras el código no cambie.
+
+**Por qué no se detuvo antes.** Las reglas de la entrevista solo cruzan la edad declarada con la
+fecha de nacimiento (`intake/reglas.py`), y las dos cuadran: 36 años el 10 de octubre de 2026. Los
+años de los recuerdos no los cruza nadie.
+
+**Qué pasó, capítulo a capítulo.**
+
+| Capítulo | Qué entra en la story bible | Lean incremental |
+| --- | --- | --- |
+| 1–2 | El capítulo 2 **alude** al verano de 1986, pero no lo narra: ningún evento con año | demostrado (sin nada temporal que comprobar) |
+| 3 | «Maribel recuerda el verano de 1986…»: evento con año 1986, Maribel presente | **aviso**: `lean_nacimiento` falla en ese evento |
+| 4, 10 | Dos eventos más de 1986 con Maribel presente | aviso, con los tres eventos |
+
+**Quién lo vio.**
+
+| Validador | Resultado |
+| --- | --- |
+| `consistencia_factica` programática y del judge | Pasa en el capítulo 3 (1,0 y 0,9). En el intento 1 del capítulo 5 el judge escribió que el capítulo **respeta** «la referencia al verano de 1986» |
+| Los seis criterios del judge, `invencion_destinatario`, `nombres_exactos`, `reglas_mundo` | Pasan en todos los capítulos aceptados |
+| Gate: `estructura_edicion`, `elementos_obligatorios`, `cierre_arco`, `render_visual` | Pasan |
+| `lean_ubicacion`, `lean_cronologia`, `lean_edad` | Demostrados (la edad, vacuamente: el texto no declara la de Maribel en esos eventos) |
+| **`lean_nacimiento`** | **Falla**: capítulos 3 (momento 304), 4 (404) y 10 (1007), año 1986, con Maribel presente |
+
+**Desenlace.** La versión 1 queda `rechazada` por `GateEnRojo` —el único veredicto fallido es
+`lean_nacimiento`, con los tres eventos nombrados en el audit log— y la generación se detiene
+(`detenida_por: error-interno`, el motivo que ya usa el gate, A-47). Es el **caso real** que pide
+el alcance § 5c y que P-83 pedía: una incoherencia que el texto contiene, que ningún otro
+validador detectó, y que Lean detectó sin que nadie la inyectara a mano. El brief la provoca a
+propósito (`verification.md` P-83 lo dice: es más débil que encontrarla en el uso normal); el
+texto la escribió el modelo y la extrajo el extractor.
+
+**Qué no demuestra.** Con qué frecuencia ocurre sin un brief que la busque, y lo que pasa cuando
+el texto no fecha el recuerdo: en el capítulo 2 la alusión a 1986 no generó evento y Lean no la
+vio (RT-003 lo muestra a escala de novela).

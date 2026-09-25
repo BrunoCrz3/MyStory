@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L10 |
+| Paso actual | L11 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L09 |
+| Último commit de paso | L10 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -30,6 +30,7 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
 | --- | --- | --- | --- | --- |
 | 2026-09-25 | L09 | Re-extracción de los 10 capítulos de la versión 3 de la novela de la demo en una copia (`claude_code`, extractor Sonnet 5, effort low). La copia se borra al terminar y con ella el consumo por capítulo, así que el coste es **estimado**: unos 150.000 tokens de entrada y 20.000 de salida. Traza `41ca142437dcc661822be843c6f849cf` | ≈0,75 | ≈47,22 |
+| 2026-09-25 | L10 | Novela B2 completa (brief de la evaluación), backend real sobre `data/storymaker-b2.db`, gate activo: 57 min, 1.110.227 tokens; versión 1 `rechazada` por `lean_nacimiento`. Traza `ce9ddeffad797dbade91bdc4e802bf0f` | 7,98 | ≈55,20 |
 
 ## Pasos cerrados
 
@@ -100,21 +101,25 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   (48 de 48 sin comprobar). La novela no fecha nada: no hay caso real que encontrar en ella.
   `docs/red-team.md` RT-003.
 
+- **L10** — Brief B2 de la evaluación en `ejemplos/evaluacion/brief-b2-incoherencia-temporal.json`
+  (ficticio: nace en 1990, conoce a su amiga en la feria de 1986) generado de principio a fin con
+  el modelo real (commit `9f87263`). La entrevista no lo para (solo cruza edad y nacimiento).
+  El extractor registra tres eventos de 1986 con la destinataria (capítulos 3, 4 y 10);
+  `lean_nacimiento` avisa desde el capítulo 3 y rechaza la versión en el gate, **único
+  veredicto fallido**. Ningún validador de capítulo señaló la fecha en ningún intento; el judge
+  la dio por respetada en el capítulo 5. **Caso real** (P-83), en `docs/red-team.md` RT-004;
+  resultado reutilizable en `ejemplos/evaluacion/resultado-b2.json`.
+
 ## Decisiones
 
 | ID | Paso | Decisión | Porqué | Rastro |
 | --- | --- | --- | --- | --- |
 | A-01 | L01 | `version_desde` se añade con `ADD COLUMN` nula y dos triggers impiden insertar o dejar un evento sin ella | Reconstruir `evento` exige `DROP TABLE` con tres tablas que la referencian y las claves foráneas activas dentro de la transacción de la migración | TO-068 |
-| A-03 | L03 | Los hechos se escriben con constructores explícitos (`Evento.mk id momento anio lugar presentes`), no con `{ campo := … }` | La instancia de estructura partida en varias líneas no parseó en 4.34.1; los constructores caben en una línea por evento y el generador no depende del sangrado | — |
 | A-02 | L01 | En el relleno, lo escrito por una **regeneración** rechazada queda con intervalo vacío; una **primera** versión rechazada en el gate conserva sus eventos | Es lo que hizo TO-062 con los hechos: solo `rechazar_regeneracion` revierte; la primera versión rechazada no se revierte | TO-068 |
-
-## Decisiones de L05
-
-| ID | Paso | Decisión | Porqué | Rastro |
-| --- | --- | --- | --- | --- |
-| A-06 | L07 | `crear_entorno` (pruebas de servicio) apaga `lean_incremental`; `instancia` (pruebas por HTTP) usa la configuración real | Con el incremental en cada capítulo de cada prueba la suite pasaba de 6 a 20 min; el incremental tiene pruebas propias que lo encienden, y las de HTTP lo siguen ejerciendo con la configuración real | — |
-| A-05 | L06 | Un solo método `Publicador.lean(db, novel_id, version, hasta_numero=None)` para gate e incremental, en vez de `lean` y `lean_incremental` | Es la misma ejecución sobre un prefijo; la etapa la pone el orquestador en el span y en los scores | — |
+| A-03 | L03 | Los hechos se escriben con constructores explícitos (`Evento.mk id momento anio lugar presentes`), no con `{ campo := … }` | La instancia de estructura partida en varias líneas no parseó en 4.34.1; los constructores caben en una línea por evento y el generador no depende del sangrado | — |
 | A-04 | L05 | La prueba de RNF-09 admite un segundo proceso: `asyncio.create_subprocess_exec` en `versioning/lean/ejecutar.py` | Argumentos fijos (`lake build Cronologia.Hechos`) sobre un fichero sin texto libre; la salida del modelo sigue sin poder llegar a un proceso | TO-069 |
+| A-05 | L06 | Un solo método `Publicador.lean(db, novel_id, version, hasta_numero=None)` para gate e incremental, en vez de `lean` y `lean_incremental` | Es la misma ejecución sobre un prefijo; la etapa la pone el orquestador en el span y en los scores | — |
+| A-06 | L07 | `crear_entorno` (pruebas de servicio) apaga `lean_incremental`; `instancia` (pruebas por HTTP) usa la configuración real | Con el incremental en cada capítulo de cada prueba la suite pasaba de 6 a 20 min; el incremental tiene pruebas propias que lo encienden, y las de HTTP lo siguen ejerciendo con la configuración real | — |
 
 ## Parada
 

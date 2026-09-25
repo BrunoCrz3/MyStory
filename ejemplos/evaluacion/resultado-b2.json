@@ -1,0 +1,1863 @@
+{
+  "brief": "ejemplos/evaluacion/brief-b2-incoherencia-temporal.json",
+  "commit": "9f872637cab7774babf8a493a72060fbc61d045c",
+  "fecha": "2026-09-25T11:03:57+00:00",
+  "novel_id": "7514a880-8d14-43a2-9929-793058dc9a5f",
+  "generacion_id": "0033c5be-deaa-438e-9a1e-0cf8ed4d2df3",
+  "traza_langfuse": "ce9ddeffad797dbade91bdc4e802bf0f",
+  "estado": "Detenida",
+  "detenida_por": "error-interno",
+  "version": 1,
+  "versiones": [
+    {
+      "version": 1,
+      "estado": "rechazada",
+      "hash": "86752e9205da3104acd2dd40e8e1a22014fbee23f26c62c566ba2b71f9d26bf5"
+    }
+  ],
+  "coste_usd": 7.984417,
+  "tokens": 1110227,
+  "duracion_s": 3403,
+  "gate_recalculado": [
+    {
+      "nombre": "estructura_edicion",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "estructura correcta"
+    },
+    {
+      "nombre": "elementos_obligatorios",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "todos presentes"
+    },
+    {
+      "nombre": "cierre_arco",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "ninguna promesa pendiente al cerrar"
+    },
+    {
+      "nombre": "lean_ubicacion",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "demostrado sobre 58 eventos (sin comprobar: 10 de 58)"
+    },
+    {
+      "nombre": "lean_cronologia",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "demostrado sobre 58 eventos (sin comprobar: 58 de 58)"
+    },
+    {
+      "nombre": "lean_edad",
+      "pasa": true,
+      "valor": 1.0,
+      "detalle": "demostrado sobre 58 eventos (sin comprobar: 58 de 58)"
+    },
+    {
+      "nombre": "lean_nacimiento",
+      "pasa": false,
+      "valor": 0.0,
+      "detalle": "lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo; evento «Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.» (b92525f8-41ea-43d5-bed1-a4b5d32a795f) del capítulo 10, momento 1007, año 1986, con Maribel, Irene, Don Paco (sin comprobar: 55 de 58)"
+    }
+  ],
+  "auditoria": [
+    {
+      "momento": "2026-09-25T10:16:22.960154Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "demostrado",
+      "entrada": "{\"capitulo\": 1, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 4 eventos (sin comprobar: 0 de 4)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 4 eventos (sin comprobar: 4 de 4)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 4 eventos (sin comprobar: 4 de 4)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": true, \"detalle\": \"demostrado sobre 4 eventos (sin comprobar: 4 de 4)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:20:56.054290Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "demostrado",
+      "entrada": "{\"capitulo\": 2, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 8 eventos (sin comprobar: 0 de 8)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 8 eventos (sin comprobar: 8 de 8)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 8 eventos (sin comprobar: 8 de 8)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": true, \"detalle\": \"demostrado sobre 8 eventos (sin comprobar: 8 de 8)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:24:45.286152Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 3, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 14 eventos (sin comprobar: 2 de 14)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 14 eventos (sin comprobar: 14 de 14)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 14 eventos (sin comprobar: 14 de 14)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene (sin comprobar: 13 de 14)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:31:01.362013Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 4, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 20 eventos (sin comprobar: 2 de 20)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 20 eventos (sin comprobar: 20 de 20)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 20 eventos (sin comprobar: 20 de 20)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 18 de 20)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:36:43.372145Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 5, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 23 eventos (sin comprobar: 2 de 23)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 23 eventos (sin comprobar: 23 de 23)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 23 eventos (sin comprobar: 23 de 23)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 21 de 23)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:45:27.445619Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 6, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 27 eventos (sin comprobar: 2 de 27)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 27 eventos (sin comprobar: 27 de 27)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 27 eventos (sin comprobar: 27 de 27)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 25 de 27)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:48:51.346079Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 7, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 33 eventos (sin comprobar: 2 de 33)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 33 eventos (sin comprobar: 33 de 33)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 33 eventos (sin comprobar: 33 de 33)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 31 de 33)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:55:16.492438Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 8, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 41 eventos (sin comprobar: 3 de 41)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 41 eventos (sin comprobar: 41 de 41)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 41 eventos (sin comprobar: 41 de 41)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 39 de 41)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T10:59:47.632266Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 9, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 51 eventos (sin comprobar: 3 de 51)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 51 eventos (sin comprobar: 51 de 51)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 51 eventos (sin comprobar: 51 de 51)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo (sin comprobar: 49 de 51)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T11:03:44.386768Z",
+      "sujeto": "capitulo",
+      "regla": "lean-incremental",
+      "resultado": "aviso",
+      "entrada": "{\"capitulo\": 10, \"veredictos\": [{\"nombre\": \"lean_ubicacion\", \"pasa\": true, \"detalle\": \"demostrado sobre 58 eventos (sin comprobar: 10 de 58)\"}, {\"nombre\": \"lean_cronologia\", \"pasa\": true, \"detalle\": \"demostrado sobre 58 eventos (sin comprobar: 58 de 58)\"}, {\"nombre\": \"lean_edad\", \"pasa\": true, \"detalle\": \"demostrado sobre 58 eventos (sin comprobar: 58 de 58)\"}, {\"nombre\": \"lean_nacimiento\", \"pasa\": false, \"detalle\": \"lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo; evento «Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.» (b92525f8-41ea-43d5-bed1-a4b5d32a795f) del capítulo 10, momento 1007, año 1986, con Maribel, Irene, Don Paco (sin comprobar: 55 de 58)\"}]}"
+    },
+    {
+      "momento": "2026-09-25T11:03:51.047767Z",
+      "sujeto": "generacion",
+      "regla": "error-interno",
+      "resultado": "detener",
+      "entrada": "{\"detalle\": \"el gate de publicación falló: lean_nacimiento: lean_nacimiento falla en evento «Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.» (aa957220-0b57-4e73-b2bf-e8c789548a7f) del capítulo 3, momento 304, año 1986, con Maribel, Irene; evento «Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.» (c6009db7-066b-4d1b-bf98-c6dac6f36509) del capítulo 4, momento 404, año 1986, con Maribel, Chari, Manolo; evento «Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.» (b92525f8-41ea-43d5-bed1-a4b5d32a795f) del capítulo 10, momento 1007, año 1986, con Maribel, Irene, Don Paco (sin comprobar: 55 de 58)\", \"transiciones\": [\"DevolverAlEditor\", \"Detener\"]}"
+    }
+  ],
+  "eventos_con_anio": [
+    {
+      "momento": 304,
+      "anio": 1986,
+      "descripcion": "Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.",
+      "nombre": "Maribel",
+      "edad": null
+    },
+    {
+      "momento": 304,
+      "anio": 1986,
+      "descripcion": "Maribel recuerda el verano de 1986: el choque con Irene entre cucuruchos de buñuelos en la feria del puerto, la risa compartida y el regalo del farolillo.",
+      "nombre": "Irene",
+      "edad": null
+    },
+    {
+      "momento": 404,
+      "anio": 1986,
+      "descripcion": "Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.",
+      "nombre": "Maribel",
+      "edad": null
+    },
+    {
+      "momento": 404,
+      "anio": 1986,
+      "descripcion": "Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.",
+      "nombre": "Chari",
+      "edad": null
+    },
+    {
+      "momento": 404,
+      "anio": 1986,
+      "descripcion": "Chari avisa por mensaje a Irene de que Maribel está en el mercado preguntando a Manolo por el buñolero de la feria del 86, y que Manolo ha mentido diciendo que era su primo.",
+      "nombre": "Manolo",
+      "edad": null
+    },
+    {
+      "momento": 406,
+      "anio": 1986,
+      "descripcion": "Don Paco envuelve las postales con cuidado y se las entrega a Irene, que sale contenta y decidida a correr como lleva haciendo desde la feria de 1986.",
+      "nombre": "Irene",
+      "edad": null
+    },
+    {
+      "momento": 406,
+      "anio": 1986,
+      "descripcion": "Don Paco envuelve las postales con cuidado y se las entrega a Irene, que sale contenta y decidida a correr como lleva haciendo desde la feria de 1986.",
+      "nombre": "Don Paco",
+      "edad": null
+    },
+    {
+      "momento": 1007,
+      "anio": 1986,
+      "descripcion": "Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.",
+      "nombre": "Maribel",
+      "edad": null
+    },
+    {
+      "momento": 1007,
+      "anio": 1986,
+      "descripcion": "Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.",
+      "nombre": "Irene",
+      "edad": null
+    },
+    {
+      "momento": 1007,
+      "anio": 1986,
+      "descripcion": "Don Paco pregunta desde cuándo están juntas; Irene responde que desde la feria de 1986 no se han separado nunca; Maribel se levanta y baila con Irene entre las sillas.",
+      "nombre": "Don Paco",
+      "edad": null
+    }
+  ],
+  "scores_capitulo": [
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1475 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 0.9090909090909091,
+      "pasa": 1,
+      "detalle": "«Puerto de Cádiz» aparece antes de tiempo: el plan lo presenta en el capítulo 3"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "las 7 comprobaciones de prosa en regla"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "67 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.98,
+      "pasa": 1,
+      "detalle": "El capítulo respeta el estado de entrada (\"Faltan pocos días para el cumpleaños\", recados encadenados: \"a las doce y media llevaba siete empezados y ninguno terminado\") y cumple la restricción de destino del brief: termina con Maribel en posesión de la postal y decidida a investigar (\"escribió un séptimo punto: Averiguar quién. Lo subrayó dos veces\"). El punto de vista (Maribel), el lugar (Plaza de las Flores) y la función dramática (detonar el misterio de la postal) coinciden exactamente con el brief. No hay ninguna contradicción detectable con las reglas del mundo (Cádiz) ni con los rasgos dados."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y cómico de principio a fin, coherente con la comedia costumbrista y la ocasión celebratoria: el gag del pescadero (\"Tú ríete —le había dicho—, que el mar no regala nada\"), la escena del pulpo en una mudanza, o la risa que espanta a las palomas (\"Maribel se echó a reír tan fuerte que las palomas más cercanas levantaron el vuelo, ofendidas\"). No hay pasajes que desentonen; incluso el giro de misterio se presenta con ligereza (\"Esto es un crimen —dijo Maribel, fascinada\") sin ensombrecer el tono general."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "Como capítulo 1 de 10, su función es detonar el misterio, y lo hace con claridad: la trama pasa de \"recados dispersos\" a un objetivo concreto y nuevo (\"Averiguar quién\"). Es un arranque de arco sólido, no un cierre (lo cual es correcto en un capítulo 1), y deja una pregunta motora bien plantada. Se resta un poco porque el misterio se resuelve de forma algo rápida en su presentación (aparece, se examina, se decide investigar, todo en una escena continua) sin apenas resistencia o duda por parte de Maribel, lo que limita el avance emocional más allá del giro de trama."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "Los rasgos dados (risueña, no sabe estarse quieta) se manifiestan de forma constante y con distintos matices: se ríe sola en la calle, se ríe del estornudo, se ríe al ver la postal; y su inquietud física se muestra en acciones concretas y no forzadas (\"Enderezó un cubo de margaritas que estaba perfectamente derecho... Sacó la lista del bolso para tachar algo, aunque no hubiera nada que tachar\"). El propio entorno confirma el rasgo desde fuera (\"Estás recolocándome los claveles por colores\", \"no hay otra Maribel que no se esté quieta. Que eso lo sabe todo Cádiz\"), lo que refuerza la coherencia sin depender solo de la voz narrativa."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.88,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien un tramo ágil y fragmentado (la lista de recados, los diálogos breves con el pescadero y con Paqui) con un tramo de mayor densidad y pausa en el examen de la postal (\"Maribel le dio la vuelta con la yema de los dedos, como se toca algo que puede romperse\"), que funciona como respiro contemplativo antes del giro final. El arranque acumula quizá demasiados recados en poco espacio (pilas, vestido, velas, gambas, sellos) antes de llegar a la plaza, lo que ralentiza ligeramente la entrada en la escena central, aunque sirve para caracterizar a Maribel."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (la feria del puerto de Cádiz de 1986) se introduce como imagen visual en la propia postal (\"estaba la feria del puerto de Cádiz... la curva de una noria contra un cielo pintado de un azul que no existía\") sin que ningún personaje lo explique en diálogo, dejando que el lector con contexto lo reconozca sin necesidad de un guiño explicativo. El elemento opcional (coleccionar postales) se teje como motivo narrativo que justifica por qué a ella precisamente le importa ese objeto (\"supo antes de pensarlo que aquella era de las buenas\"), en vez de mencionarse como dato suelto. No hay inventario de datos personales ni diálogos que expliquen lo que los personajes ya saben entre sí."
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 1,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1426 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 3 entidades de su restricción de destino"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "las 7 comprobaciones de prosa en regla"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "57 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "El capítulo respeta el estado de entrada al pie de la letra: arranca con Maribel buscando a Irene para enseñarle la postal, tal como marcaba 'Maribel busca a Irene para enseñarle la postal y pedirle ayuda'. Retoma sin contradicción los hechos fijados: la postal llegó sin remite ni firma al puesto de Paqui ('me la ha mandado al puesto de Paqui, sin firmar, sin remite'), Irene niega haberla enviado (deja viva la promesa abierta '¿quién ha enviado la postal?'), y se reafirma el recuerdo obligatorio de 1986 en la feria del puerto. No hay ninguna reescritura de reglas del mundo (sigue en Cádiz, con lugares reales del Mercado Central) ni ningún dato que choque con el capítulo 1."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y de comedia costumbrista de principio a fin, coherente con una ocasión de cumpleaños celebratoria: la entrada de Maribel 'con los lirios en alto, como quien lleva la antorcha olímpica', las excusas atropelladas de Chari, la metáfora de Manolo sobre los buñuelos y el cierre con Maribel riendo calle abajo mantienen el humor cálido sin ninguna caída al drama o a un registro serio que desentone."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "Cumple con precisión la función dramática encomendada: muestra a Irene esquivando preguntas ('Bonita', 'Yo no mando postales... Mando mensajes') y deja ver la conspiración al lector sin que Maribel la perciba, mediante la lista caída del bolsillo de Chari ('QUE NO SE ENTERE', subrayado tres veces) y las cabezas juntas de Irene, Chari y Manolo al cierre. Al ser el capítulo 2 de 10 no debe cerrar nada, y efectivamente avanza la intriga central (la promesa abierta de quién envía la postal se entrelaza ahora con la conspiración) sin resolverla prematuramente."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Maribel actúa en plena consonancia con sus rasgos de brief: risueña ('Maribel soltó una carcajada'; se ríe con el frutero, se quema con los buñuelos y se ríe) y incapaz de estarse quieta (persigue a Irene por todo el mercado, esquiva tomates, rodea sandías). Irene se comporta como cómplice protectora coherente con la amistad de toda la vida ya establecida, sin salirse de su papel para mentir de forma creíble ('las orejas coloradas' como tic reconocido por Maribel). Chari y Manolo, aunque nuevos, sostienen la comedia sin contradecir nada dado."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.85,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien diálogo denso (el interrogatorio a Irene) con pasajes físicos de respiro cómico (la persecución entre puestos, el frutero, los buñuelos quemando los dedos), lo que evita que la escena se sienta como un solo bloque de exposición. Para un capítulo 2 de 10 centrado en sembrar intriga, el ritmo ligero y episódico funciona; solo pierde un poco de tensión al repetir tres veces la misma estructura (pregunta-esquiva) con Irene, Chari y Manolo, lo que alarga algo el tramo central."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.85,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (feria del puerto, verano de 1986) se integra en el diálogo y en la memoria compartida sin listar datos ni explicarlos como si el lector no los conociera; la postal funciona como objeto narrativo, no como guiño etiquetado. La conspiración (farolillos, buñuelos, sillas) se revela mediante un papel caído, no mediante un personaje que la enuncia para el lector. El elemento opcional de las postales coleccionadas no se teje explícitamente en este capítulo (se centra en una sola postal), lo cual es aceptable al ser opcional, pero deja esa personalización sin aprovechar aquí."
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 2,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1426 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "la restricción de destino toca «Puerto de Cádiz» y el borrador no lo nombra"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "las 7 comprobaciones de prosa en regla"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "79 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El capítulo respeta el estado de entrada (la segunda postal muestra el puerto con luces de feria) y cumple la restricción de destino: el lector conoce cómo se conocieron Maribel e Irene en 1986 en la feria del puerto. No contradice ningún hecho fijado (colección de postales, poco tiempo para el cumpleaños, lugar Cádiz). El único matiz es que la primera postal se estableció como enviada al puesto de Paqui en la Plaza de las Flores, mientras que esta segunda llega por correo a la tintorería; no es una contradicción real (son envíos distintos y el misterio se presenta como progresivo), pero introduce una variación de mecanismo que no se explica y podría leerse como una pequeña grieta de continuidad."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y de comedia costumbrista en todo el capítulo, coherente con una celebración de cumpleaños: el choque con la farola y la disculpa absurda, las gaviotas 'como si les debieran dinero', los buñuelos que 'parecían planetas', el pescador que asiente 'como se les da la razón a los turistas'. El único pasaje más íntimo (el recuerdo del encuentro) mantiene la ternura sin caer en dramatismo ni desentonar con el resto."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "Al ser el capítulo 3 de 10, no debe cerrar sino avanzar, y lo hace con claridad: cumple la función dramática asignada (el lugar le devuelve el recuerdo de la feria), resuelve ante el lector el origen de la pareja y añade una nueva pregunta abierta (quién conoce la historia del choque, y la promesa explícita de seguir el rastro de postales), dejando enganche para el capítulo 4 sin cerrar el misterio principal."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Maribel actúa en todo momento según sus rasgos: risueña (se ríe sola, se ríe del percance con la farola, recuerda la risa compartida) y 'no sabe estarse quieta' (se sienta y se levanta sin poder parar, 'no había ido andando a ninguna parte en toda su vida', echa a andar casi corriendo al final). Irene, en el recuerdo, se muestra reservada y con una risa 'para dentro', coherente con su reacción presente de negar con las orejas coloradas que ella contara la historia; no hay ninguna acción que contradiga lo que son sin motivo."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.88,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien tramos de acción cotidiana con humor rápido (tintorería, choque con la farola) y un tramo de mayor densidad emocional (el recuerdo de 1986), que funciona como respiro reflexivo antes de retomar el impulso final hacia la siguiente postal. Para el lugar que ocupa en la obra (revelación central del origen de la pareja) el ritmo, algo más pausado en el tramo del recuerdo, está justificado y no se atasca ni se precipita."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (feria del puerto de Cádiz, verano de 1986) se despliega como escena vivida y no como dato insertado, surgido orgánicamente del propio lugar y de la postal. El elemento opcional (colecciona postales antiguas) se teje mediante el detalle del 'cajón en la cabeza para las postales rayadas' y el cuidado de guardarlas 'cada una en una página para que no se rocen', sin explicaciones didácticas ni diálogos que expongan lo que los personajes ya saben."
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 3,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1387 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 3 entidades de su restricción de destino"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "eco de n-gramas repetidos más de 2 veces: «de los coches de choque» y 0 más"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "52 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "El capítulo respeta el estado de entrada (Maribel ya fue al puerto antes de lo previsto) y encaja con los hechos ya fijados: el orden de pistas coincide con el establecido (plaza-lunes, tintorería-martes con el vestido, puerto-viernes), la segunda postal dirigida 'A MARIBEL, LA QUE NO SE ESTÁ QUIETA' se retoma coherentemente como ya entregada en la tintorería, y el rasgo de Irene sonrojándose al negar el chisme del choque se mantiene. No detecto contradicciones con el mundo narrativo ni con los personajes secundarios (Chari, Manolo, Paqui) mencionados de forma consistente."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.92,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y con humor costumbrista en todo el capítulo: el rastro de Don Paco, la bicicleta sin ruedas 'como un murciélago', los mensajes de Chari ('MANOLO NO TIENE PRIMOS', 'Se ha comido seis') y la relación pícara entre Irene y Don Paco mantienen la comedia sin perder calidez. No hay pasajes que desentonen; incluso el momento de inseguridad de Irene se resuelve con ternura y humor, coherente con la ocasión celebratoria."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El capítulo cumple con precisión la función dramática y la restricción de destino asignadas: cambia el foco a Irene, muestra desde dentro la dificultad de coordinar el plan con una Maribel imprevisible, y cierra con Irene aceptando explícitamente que debe adelantar las pistas ('Las dos mañana', 'Mañana adelantamos'). El avance es claro y motivado por la acción previa (Maribel yendo antes de tiempo al puerto), y deja bien plantado el terreno para los capítulos siguientes sin resolver prematuramente el misterio del remitente ni el plan del sábado."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.92,
+      "pasa": 1,
+      "detalle": "Irene actúa según su deseo (que todo salga perfecto para Maribel) y su herida (miedo a no estar a la altura de la Maribel real, inseguridad sobre si sus gestos serán suficientes), coherente con lo establecido. El detalle de ponerse colorada de las orejas al hablar del choque de los buñuelos encaja con el rasgo ya fijado en el estado ('se puso colorada de las orejas al negarlo'). Maribel, vista siempre de lejos, se comporta como 'la que no se está quieta': llega antes de tiempo, indaga, se come seis buñuelos por curiosidad. Don Paco, personaje nuevo, funciona como arquetipo consistente (sabio pausado) sin fricciones internas."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.88,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien la densidad emocional (la libreta, el monólogo de inseguridad de Irene, la reflexión final) con respiros cómicos (los mensajes de Chari, las ocurrencias de Don Paco sobre las postales). Como cuarto capítulo de diez, funciona como una pausa reflexiva antes de la aceleración hacia el sábado, sin atascarse: el diálogo fluye, la libreta aporta información visual sin frenar la acción, y el cierre relanza la trama con decisión."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (la feria de 1986) se teje en la reflexión emocional de Irene ('Aquella noche de 1986 ya iba corriendo...') sin sonar a guiño explicado. El elemento opcional (las postales) no se menciona como dato suelto sino que es el motor mismo de la trama del capítulo, con función dramática propia (representan el recuerdo, la incertidumbre de Irene y el discurso de Don Paco sobre 'quién se acordó'). No hay inventario ni diálogo explicativo artificial; todo surge de la acción y el objeto en juego."
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 4,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1460 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 0.5,
+      "pasa": 0,
+      "detalle": "la restricción de destino toca «Barrio de la Viña» y el borrador no lo nombra; «La Caleta» aparece antes de tiempo: el plan lo presenta en el capítulo 6"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "eco de n-gramas repetidos más de 2 veces: «con la decada escrita por» y 2 más"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "58 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.85,
+      "pasa": 0,
+      "detalle": "El capítulo respeta los hechos establecidos: la referencia al verano de 1986, la segunda postal 'del vestido de la tintorería', el rastro de Don Paco sin rótulo ni horario con cajas de postales por décadas, y las sillas que Paqui presta (coherente con el plan secreto del sábado). El giro final —la letra 'años' y la cifra borrada en el reverso, que coincide con 'la década escrita por fuera' de las cajas de Don Paco— es una deducción nueva pero no contradice nada dado. El único punto flojo es de continuidad espacial: al cierre del capítulo 4 Maribel, Manolo y Chari estaban en el Mercado Central, y este capítulo arranca con Maribel ya en la Viña y luego con Chari apareciendo también en la Viña, sin ninguna transición temporal o narrativa que sitúe el salto (no se indica si es el mismo día u otro), lo que deja una pequeña ambigüedad de continuidad, aunque no llega a ser una contradicción que dañe la trama."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y humorístico de principio a fin, con comedia costumbrista bien anclada en el barrio gaditano (los balcones que cuentan todo, el tabernero de los calambrazos, los jugadores de dominó, el pánico teatral de Chari). Encaja con la ocasión celebratoria del cumpleaños sin caer en ningún pasaje serio o discordante; incluso el momento de mayor tensión (Chari a punto de desvelar el secreto) se resuelve con humor y no con dramatismo."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.92,
+      "pasa": 1,
+      "detalle": "El capítulo cumple con precisión la función dramática encargada: Maribel interroga a medio barrio, Chari está a punto de desvelar la fiesta ('Los... ¡Don Paco!') y se salva por los pelos con una excusa improvisada (la comunión/el mueble), y el capítulo cierra exactamente en el estado final pedido: el secreto de la fiesta sigue a salvo pero Maribel ha atado el hilo de Don Paco a las postales ('Don Paco. El del rastro. Cajas con la década escrita por fuera'). Al ser el capítulo 5 de 10, no necesita cerrar la historia, y efectivamente no lo hace: deja una pista nueva abierta (Don Paco) sin resolver el misterio completo, lo que es el avance correcto para este punto de la obra. No hay final abrupto ni estancamiento."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "Maribel actúa en plena coherencia con sus rasgos 'risueña' y 'no sabe estarse quieta': persigue al cartero corriendo, salta, interroga a un gato y a un turista, no se rinde ante callejones sin salida y convierte el hallazgo en fiesta ('de pronto aquello le parecía una fiesta'). Chari se comporta de forma consistente con su papel de cómplice nerviosa del secreto: se traba, inventa excusas poco creíbles sobre una comunión, y su pánico crece de forma gradual y verosímil hasta la fuga casi cómica. Ningún personaje actúa contra lo que se sabe de él; Don Paco e Irene no aparecen en escena, así que no hay riesgo de contradicción sobre ellos."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El capítulo alterna viñetas breves y ágiles (la señora de los geranios, el tabernero, el cartero, los jugadores de dominó) que funcionan como respiro cómico episódico, con una escena más sostenida y tensa (el encuentro con Chari, que escala hasta el casi-desliz del secreto), y cierra con una pausa reflexiva y de descubrimiento (el examen del reverso de las postales). Ese vaivén entre gags cortos y el momento de mayor densidad dramática encaja bien con su función de 'episodio cómico' de mitad de libro, sin atascarse ni precipitar el desenlace del misterio mayor."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (el recuerdo de 1986 en la feria del puerto) aparece de forma orgánica, como un misterio que la propia Maribel se pregunta ('qué pintaba un hombre de un rastro sin horario en su verano de 1986'), sin que nadie se lo explique a nadie ni se convierta en un guiño expositivo. El elemento opcional (colecciona postales antiguas) no se anuncia como dato biográfico: es el motor mismo de la trama del capítulo, mostrado en acción (las lleva en la agenda, las examina a contraluz, las guarda) en vez de enunciado como inventario. No hay diálogos que expliquen a los personajes lo que ya saben entre ellos; incluso el 'casi lo cuenta' de Chari funciona narrativamente y no como recurso de exposición forzada."
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 5,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 6,
+      "intento": 0,
+      "decision": "devolver",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 6,
+      "intento": 0,
+      "decision": "devolver",
+      "validador": "palabras_prohibidas",
+      "valor": 0.0,
+      "pasa": 0,
+      "detalle": "«remedio» (nivel novela)"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1416 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 3 entidades de su restricción de destino"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "las 7 comprobaciones de prosa en regla"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "55 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El capítulo respeta con precisión los hechos ya establecidos: el rastro de Don Paco es 'un bajo estrecho sin rótulo ni horario' con las postales 'guardadas en cajas de cartón por décadas en una estantería de pino' (texto: 'las mismas... en aquella caja de la tercera balda' y 'estantería de pino' implícita en el mobiliario descrito), Maribel colecciona postales en 'tres cajas de zapatos y un álbum' (coincide literalmente con el estado), y el capítulo cumple el estado_final exigido por el brief: sale con la postal de la Caleta y la certeza de que allí la espera la siguiente pista ('allí había algo para ella'). El único punto que un lector muy atento al estado podría cuestionar es que la postal entregada por Don Paco (la Caleta, con el mensaje 'PARA LA QUE NO SE HA PERDIDO NUNCA') no coincide con las dos postales que el estado dice que Irene 'apartó... para enviárselas a Maribel' (la de los coches de choque y la del paseo con casetas cerradas al amanecer). El texto lo resuelve como una tercera postal de contingencia dejada por si Maribel llegaba antes de tiempo, lo cual es plausible y no contradice explícitamente lo ya sabido, pero tampoco lo reconcilia del todo, así que no llega a la puntuación máxima."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y con humor costumbrista de principio a fin, coherente con la ocasión celebratoria: la entrada teatral de Maribel ('¡Vengo a por la verdad!'), la flema de Don Paco, la anécdota de Encarna y el ascensor de Santander, y el cierre juguetón sobre correr y andar. No hay ningún pasaje que desentone ni se vuelva sombrío o fuera de registro; incluso el momento de mayor carga emotiva (el recuerdo de perderse en la Caleta) se resuelve con ternura y sin dramatismo excesivo, manteniendo el tono general de comedia amable."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El capítulo cumple exactamente su función dramática: Don Paco entrega la postal de la Caleta con una pista sin sentido aparente (un mapa con 'ENTRADA' por el mar y 'SALIDA' por la ciudad), que empuja a Maribel hacia el segundo gran recuerdo (el día en que se perdió con Irene en la Caleta). El avance es claro y progresivo, no abrupto, y termina en el umbral del siguiente paso ('Echó a correr... hacia la Caleta'), como corresponde a un capítulo intermedio (6 de 10) que no necesita cerrar el arco general, solo impulsarlo."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Maribel entra decidida a 'sacarle la verdad' a Don Paco (coherente con el estado de entrada), pero su curiosidad natural y su lado risueño la desarman en el camino ('las preguntas se le habían ido de los dedos'), lo cual encaja con los rasgos dados (risueña) sin traicionar su determinación: sigue anotando pistas y termina corriendo hacia la Caleta, fiel a 'no sabe estarse quieta'. Don Paco se construye como un personaje enigmático y sabio a través de sus propias reglas ('en este negocio eso no se pregunta'), coherente con lo poco que se sabía de él (dueño del rastro, guardián de las cajas) sin contradecir nada previo."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien la densidad: arranca con energía cómica (la entrada teatral, el maniquí, las cuatro preguntas contadas con los dedos), se remansa en el diálogo reflexivo sobre las postales y Encarna (respiro), se tensa de nuevo con la revelación de la postal de la Caleta y el recuerdo emergente (momento de mayor densidad emocional), y cierra con una aceleración física (el correr-andar-correr) que funciona como bisagra hacia el siguiente capítulo. El ritmo sirve bien a su posición intermedia en la novela, sin atascarse en la escena de diálogo ni precipitar la revelación del recuerdo."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Los elementos personalizados están tejidos en la trama sin sonar a inventario: la afición a coleccionar postales surge de forma natural en el diálogo sobre las postales rayadas y sirve para caracterizar a Maribel y a Don Paco a la vez (no es un dato suelto, tiene función dramática al justificar por qué a Maribel le importan tanto los mensajes escritos detrás). El recuerdo de perderse en la Caleta con Irene emerge orgánicamente de la contemplación de la postal, sin que nadie lo explique en voz alta ni haya un diálogo expositivo que recuerde a los personajes algo que ya saben; se deja en el terreno de la sensación física de Maribel ('lo tenía ahí, justo detrás de los ojos'), lo que evita el efecto de guiño opaco o lista de datos."
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 6,
+      "intento": 2,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1446 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 3 entidades de su restricción de destino"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "las 7 comprobaciones de prosa en regla"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "74 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "El capítulo respeta con precisión el estado de entrada (Maribel llega al atardecer siguiendo la postal; Irene está allí colocando la siguiente pista) y todos los hechos previos: el mapa al revés con entrada por el agua y salida por el paseo, la inscripción 'PARA LA QUE NO SE HA PERDIDO NUNCA', el hábito de Irene de marcar mayúsculas tiesas apretando el lápiz, la mancha de grafito en los dedos, el alfiler en la solapa (coherente con que usa alfileres para fijar postales, como en el estado), y la postal que aparece en la barca coincide exactamente con una de las dos que Irene había apartado en el rastro de Don Paco ('el paseo con las casetas cerradas al amanecer'). La reacción de orejas coloradas de Irene al mentir es consistente con episodios anteriores. No se detecta ninguna contradicción con el mundo o los hechos dados."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro luminoso y de comedia costumbrista se mantiene de principio a fin: la escena del agua fría, la búsqueda errática de la salida, las excusas atropelladas de Irene sobre 'los turistas y los alfileres', y el ataque de risa compartido encajan con el género de comedia y con una ocasión celebratoria de cumpleaños. Hay un breve momento de mayor calado emocional (el descubrimiento de que es Irene), pero está resuelto con ternura y humor contenido, sin desentonar del conjunto."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "El capítulo cumple exactamente la función dramática encomendada: Maribel e Irene coinciden en la Caleta, se pierden juntas repitiendo en clave cómica el recuerdo de 1986, y Maribel descubre que Irene está detrás de las postales. La restricción de posición de personaje se respeta con literalidad ('Hacerse la tonta. Hasta el sábado'), dejando abierta la promesa del sábado y avanzando con claridad hacia el desenlace sin cerrar prematuramente, adecuado para un capítulo 7 de 10."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Maribel actúa según su naturaleza inquieta y risueña (se mete en el agua sin pensarlo, se ríe primero) y, fiel a su cariño por Irene, decide ocultar su descubrimiento para no arruinar la sorpresa, en línea con la restricción del capítulo. Irene se muestra nerviosa y evasiva de forma consistente con episodios previos (orejas coloradas, excusas inventadas), y su cuidado meticuloso con el plan ('cara de alguien que ha preparado algo con regla') encaja con el personaje organizador ya establecido."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien la comedia física y dialogada (el vaivén de direcciones erróneas, las excusas de Irene) con un respiro más pausado y emotivo cuando Maribel ata cabos sentada en el murete, y cierra con un golpe cómico rápido (la segunda postal en la barca). Este vaivén sirve bien a su posición en la obra, como preparación tensa pero ligera antes del clímax del sábado, aunque el tramo de idas y venidas por el paseo se alarga un poco antes de llegar a la revelación."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "Los elementos personalizados —el encuentro de 1986 en la feria, el coleccionismo de postales, el recuerdo de perderse en la Caleta— están integrados en la trama del misterio de las postales y no se enuncian como inventario ni se explican en diálogos artificiales; se revelan mediante pistas físicas (grafito, alfiler, letra apretada) y memoria emocional de Maribel. No hay guiños opacos: cada dato tiene función en el avance de la trama del capítulo."
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 7,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1493 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 2 entidades de su restricción de destino"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "eco de n-gramas repetidos más de 2 veces: «la señora de los geranios» y 2 más"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "81 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "El capítulo respeta con precisión el estado de entrada: Maribel ya sabe que Irene envía las postales y ha decidido 'hacerse la tonta' (visto en su lista 'Tirar de ningún hilo' y en que no vuelve a investigar); Irene la hace vigilar por Chari, coherente con el plan secreto del sábado; Chari lleva el delantal de las aceitunas (su puesto en el mercado) y está a punto de soltar el secreto mencionando 'las guirnaldas del muelle', igual que en el cierre del capítulo 7 estuvo a punto de revelarlo con el muelle, sillas y farolillos. La cita final, 'Mañana a las nueve. Como siempre', encaja exactamente con que Irene tiene previsto llegar el sábado a las nueve. No se detecta ninguna contradicción con los hechos establecidos."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y de comedia costumbrista de principio a fin, coherente con una destinataria adulta (36) en su cumpleaños: la lista imposible, el disfraz de Chari con la hoja de ofertas, el 'la, la, la' con los dedos en las orejas y la vigilancia mutua mantienen el humor sin caer en infantilismo ni en golpes fuera de tono. El único matiz es que el cierre se vuelve más contemplativo ('se quedó mirándolo un buen rato... Ni un pie moviéndose'), un cambio de registro leve pero justificado por el propio arco del capítulo, no una desafinación."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Cumple con exactitud la función dramática encargada: 'esperar sin moverse y sin investigar más' se traduce en la lista de prohibiciones, el episodio del banco del dominó, la tentación de los buñuelos resistida, y el cierre en el que Maribel logra, por fin, estarse quieta. La restricción de destino ('Maribel consigue pasar la víspera sin descubrir la fiesta, aunque a su manera') se resuelve de forma orgánica: no descubre nada nuevo salvo un dato que descarta ella misma ('eso lo había dicho Chari... tampoco contaba'), y el capítulo termina con la promesa cumplida ('Mañana a las nueve. Como siempre'), preparando el cierre final sin resolver la sorpresa antes de tiempo."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "El rasgo central de Maribel ('no sabe estarse quieta') vertebra todo el capítulo de forma coherente con su deseo (dejarse sorprender) y su reto (contenerse): se mueve muchísimo mientras cree que no está haciendo nada, y solo al final consigue la quietud real, en un giro que respeta su arco sin traicionarlo. Irene actúa según lo ya establecido (organiza en secreto, protege la sorpresa poniendo vigilancia). Chari repite su rasgo de nerviosismo ya visto en el capítulo anterior, a punto de desvelar el secreto y rectificando a tiempo, sin actuar contra lo que es."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.88,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien la inquietud física acelerada (la persecución de Chari, el conteo hasta cuarenta, el 'la, la, la') con momentos de respiro (la tarde juntas, el sueño de Chari, el cierre contemplativo), y ese descenso de intensidad tiene sentido como penúltimo capítulo antes del desenlace. El tramo de 'la tarde la pasaron juntas' es algo más laxo y repite el patrón de resistencia ya mostrado por la mañana sin aportar mucho nuevo, lo que resta algo de tensión antes del giro final."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "Los elementos personalizados están integrados en la acción y no como inventario: el rasgo 'no sabe estarse quieta' es el motor mismo de la comedia, y la relación con las postales aparece de forma indirecta y funcional (la pregunta del señor del dominó '¿Hoy no trae postales?') en vez de explicarse. No hay diálogos que resuman lo que los personajes ya saben del secreto; al contrario, la comedia surge precisamente de que casi lo dicen y se cortan. El escenario gaditano (la Viña, geranios, mercado, buñuelos) funciona como ambientación orgánica, no como guiño turístico."
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 8,
+      "intento": 1,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1455 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "el borrador nombra las 4 entidades de su restricción de destino"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "eco de n-gramas repetidos más de 2 veces: «la caseta de los buñuelos» y 0 más"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "75 frases de narración en tercera persona y pasado"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "El capítulo respeta con precisión el estado de entrada: preparativos con retraso, Irene/Manolo/Chari/Don Paco montando la feria sorpresa (toldo, farolillos, sillas de Paqui, cuarenta buñuelos de Manolo, postales de Don Paco). Retoma correctamente el farolillo abollado que Maribel regaló a Irene tras el choque de 1986, la cita fija de Irene en casa de Maribel a las nueve, el vigilar a Chari por la Viña (coherente con 'Chari está en Barrio de la Viña' del cierre del cap. 8) y el motivo de la cruz en la tercera caseta/postales de Don Paco. La restricción de destino se cumple literalmente: la solución ('bajarlo todo', dejar que el viento se lleve lo alto) surge de que Irene entiende que Maribel 'no arreglaba los contratiempos, los invitaba a la fiesta', y así la feria queda montada a tiempo. No se detecta ninguna contradicción con los hechos fijados ni con las promesas abiertas; más bien las hace avanzar sin resolverlas del todo (deja el reencuentro para el cap. 10)."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y cómico de principio a fin, propio de comedia costumbrista para un cumpleaños celebratorio de una adulta: los diálogos de Manolo sobre los buñuelos ('la masa nota cuándo la quieren'), las ocurrencias de Chari, la ceremonia de Don Paco con las postales y el desastre del viento están tratados con humor amable, nunca cruel ni sombrío. El cierre, con Irene riéndose y corriendo 'como Maribel', mantiene ese tono festivo sin caer en cursilería excesiva. No hay pasajes que desentonen."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 0.93,
+      "pasa": 1,
+      "detalle": "Siendo el capítulo 9 de 10, no le corresponde cerrar el arco, pero lo hace avanzar con claridad: cumple la función dramática exacta del brief (todo se tuerce por el viento y hace falta una solución que 'solo se le ocurriría a Maribel'), y Irene, al reflexionar sobre cómo Maribel convierte el desastre en fiesta, aplica esa lógica para salvar la feria a tiempo. El capítulo deja a Irene corriendo hacia la cita de las nueve, tendiendo el puente perfecto hacia el desenlace del cap. 10, sin resolver aún el reencuentro ni las postales, lo que mantiene la tensión de las promesas abiertas."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.94,
+      "pasa": 1,
+      "detalle": "Irene se comporta como la planificadora ansiosa y ordenada que ya conocíamos (columnas, listas, plan de las tres esquinas), y su giro no es arbitrario: nace de recordar explícitamente el choque de 1986 y La Caleta, es decir, de la herida/deseo de la propia Irene (aprender de la ligereza de Maribel) construida en capítulos previos. Chari mantiene su tono nervioso-cómico y su tendencia a hablar de más, coherente con haber estado a punto de desvelar el secreto antes; Manolo conserva su obsesión artesanal por los buñuelos (los cuarenta exactos, tirar lo caído) ya establecida; Don Paco actúa como el anticuario meticuloso y afectuoso con las postales que ya se había perfilado. Ningún personaje actúa contra lo que es."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.89,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien tramos de detalle minucioso (las columnas de la libreta, el recuento de sillas) con golpes de humor rápido en diálogo, y luego escala en tensión con el desastre del viento, para bajar el ritmo en el momento de introspección de Irene (el recuerdo de 1986 y La Caleta) y volver a acelerar en el tramo final de reconstrucción y en la carrera hacia la casa de Maribel. Este vaivén tiene sentido como penúltimo capítulo: construye tensión de cara al desenlace sin resolverlo. El tramo intermedio de preparativos es algo extenso antes de la crisis, pero no llega a atascar la lectura."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.9,
+      "pasa": 1,
+      "detalle": "El elemento obligatorio (feria de 1986) no se declara como dato suelto sino que emerge de un objeto concreto en escena, el farolillo abollado, y de una asociación emocional de Irene, integrada en la acción. El rasgo de Maribel ('convierte cualquier tarde en una feria', de la dedicatoria) se dramatiza mediante el mecanismo de la trama (el viento, la reconstrucción) en vez de explicarse en diálogo. El elemento opcional de las postales se apoya en el hilo ya tejido en capítulos anteriores (Don Paco, las postales dirigidas a Maribel) y aquí cumple función decorativa y simbólica ('se les nota que han viajado'), sin sonar a inventario ni a guiño que alguien tenga que explicar. No hay diálogos que expliquen a los personajes lo que ya saben entre sí."
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 9,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida cumple su schema"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "palabras_prohibidas",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna palabra prohibida"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "longitud",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "1457 palabras; el rango es 1000–1500"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "nombres_exactos",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "todos los nombres se escriben como en la story bible"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "sin contradicciones con 1 edades del canon"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cumplimiento_brief",
+      "valor": 0.6666666666666667,
+      "pasa": 0,
+      "detalle": "la restricción de destino toca «Puerto de Cádiz» y el borrador no lo nombra"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "reglas_mundo",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "ninguna regla del mundo violada; no comprobables por nombre: La historia transcurre en Cádiz"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "calidad_prosa",
+      "valor": 0.8571428571428572,
+      "pasa": 1,
+      "detalle": "eco de n-gramas repetidos más de 2 veces: «a las nueve como siempre» y 3 más"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "integridad_pov",
+      "valor": 0.9848484848484849,
+      "pasa": 1,
+      "detalle": "narración en primera persona en 1 frases"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "schema_valido",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "la salida del judge cumple su schema"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "consistencia_factica",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "El capítulo respeta con precisión el estado de entrada y los hechos acumulados: Maribel lleva las cuatro postales ya recibidas ('cuatro postales en fila'), Irene entrega la quinta y última, la de los coches de choque, firmada por primera vez ('PARA LA QUE CHOCÓ CONMIGO. FELICIDADES. IRENE'), que coincide exactamente con la postal que el estado decía que Irene había apartado del rastro de Don Paco sin haberla enviado aún. El farolillo abollado aparece colgado en el centro de la guirnalda tal como se estableció. Las catorce sillas distintas de Paqui, los cuarenta buñuelos ('los segundos cuarenta', aludiendo al primer lote arruinado por el levante) y el toldo 'remendado' encajan con los daños del levante narrados antes. La deducción de Maribel sobre el alfiler, el grafito y las mayúsculas retoma con exactitud las pistas sembradas capítulo a capítulo. No se detecta ninguna contradicción factual relevante; el único punto discutible —que Chari adelante la recogida antes de la hora pactada de Irene— se resuelve dentro de la propia escena como parte del enredo cómico, sin romper la lógica interna."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "adecuacion_tono",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "El registro es luminoso y celebratorio de principio a fin, coherente con una comedia costumbrista de cumpleaños: la mentira disparatada del barco griego con loro trilingüe, la broma de 'gaviotas delante' sobre los buñuelos quemados, la silla de peluquero con palanca, las orejas coloradas de Irene. No hay ningún pasaje que decaiga hacia la gravedad o desentone con la ocasión; incluso el momento de revelación emocional se mantiene ligero y cálido, cerrando en baile y risas."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "cierre_arco",
+      "valor": 1.0,
+      "pasa": 1,
+      "detalle": "Cumple con exactitud el estado final exigido: Maribel celebra su cumpleaños en la feria del puerto junto a Irene, se revela la última postal (firmada), queda explícito que Maribel ya había descubierto el secreto ('Desde las mayúsculas... Nadie aprieta el lápiz como tú') y se pronuncia literalmente que desde la feria de 1986 no se han separado nunca. El capítulo no corta en seco: tras el reconocimiento mutuo hay una escena de cierre emocional (los buñuelos compartidos, el farolillo) y una imagen final de baile que redondea el tono festivo sin dejar cabos sueltos ni finales abruptos."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "coherencia_personajes",
+      "valor": 0.97,
+      "pasa": 1,
+      "detalle": "Cada personaje actúa según lo establecido: Maribel es incapaz de quedarse quieta y toca, cuenta y baila; Irene mantiene su precisión (el lápiz apretado, la regla, la vergüenza en las orejas ya anticipada en capítulos previos) y su costumbre de llegar puntual a las nueve, lo que motiva el gag final. Chari repite su patrón de nerviosismo y casi-delación ya visto antes, ahora convertido en una mentira desbordada pero coherente con su torpeza encantadora. Manolo bromea sobre sus propios buñuelos fallidos, en línea con su personaje cercano y jocoso. Don Paco mantiene su parquedad y su costumbre de hablarles a las postales. No hay ninguna acción que contradiga deseo, herida o arco de ningún personaje."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "ritmo",
+      "valor": 0.92,
+      "pasa": 1,
+      "detalle": "El capítulo alterna bien la densidad descriptiva de la llegada al muelle (una acumulación sensorial de bombillas, sillas, postales, gente) con respiros dialogados más pausados en la escena del alfiler y los buñuelos compartidos. Como clímax final, el ritmo acelera hacia la sorpresa y luego se remansa en la conversación íntima antes de cerrar con el baile, una estructura adecuada para un último capítulo. El único punto discutible es que el inventario de objetos del muelle (sillas, toldo, farolillos, postales) es denso y podría percibirse como acumulativo, aunque se justifica narrativamente porque replica el gesto de Maribel de 'tocarlo todo' para comprobar que la sorpresa es real."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "personalizacion_natural",
+      "valor": 0.95,
+      "pasa": 1,
+      "detalle": "Los elementos personalizados —la feria de 1986, el choque de los buñuelos, el farolillo abollado, la colección de postales, La Caleta— no se enumeran como inventario sino que cumplen función dramática: cada postal ya tenía una historia previa y aquí se cierra con la firma; el farolillo culmina su recorrido físico colgado en el centro de la guirnalda; el rasgo de 'no sabe estarse quieta' se dramatiza en acción, no se declara. La escena de deducción del alfiler funciona como revelación genuina entre personajes, no como diálogo que explica al lector lo que ya sabe, porque es Irene quien descubre que ha sido descubierta, aportando información nueva a la trama. Solo el guiño explícito 'Tú siempre llegas antes' / postal 'PARA LA QUE SIEMPRE LLEGA ANTES' roza la evidencia de guiño, aunque se resuelve con ligereza y humor, sin subrayado excesivo."
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "invencion_destinatario",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ninguna afirmación sobre el destinatario sin apoyo en el brief"
+    },
+    {
+      "numero": 10,
+      "intento": 0,
+      "decision": "aceptar",
+      "validador": "temas_excluidos",
+      "valor": 0.0,
+      "pasa": 1,
+      "detalle": "ningún tema excluido aparece"
+    }
+  ],
+  "desenlace": {
+    "etiqueta": "real",
+    "resumen": "Lean rechaza la versión 1 por lean_nacimiento: la destinataria, nacida en 1990, aparece en tres eventos de 1986 (capítulos 3, 4 y 10). El resto del gate (estructura_edicion, elementos_obligatorios, cierre_arco, render_visual) pasó, y ningún validador de capítulo señaló la fecha en ningún intento; en el intento 1 del capítulo 5 el judge citó 'la referencia al verano de 1986' como hecho respetado.",
+    "aviso_incremental_desde_capitulo": 3,
+    "red_team": "docs/red-team.md RT-004",
+    "reutilizable_mientras": "el código no cambie respecto de 'commit'; comparar con git diff <commit> -- backend formal config antes de reutilizar"
+  }
+}
