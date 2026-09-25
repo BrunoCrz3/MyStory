@@ -304,6 +304,31 @@
     border-radius: 1rem;
   }
 
+  /* Aviso de versión nueva en camino: visible, pero con el tono de la marca de modificado. */
+  .aviso-regeneracion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--espacio-2) var(--espacio-4);
+    max-width: var(--ancho-lectura);
+    margin: 0 auto var(--espacio-5);
+    padding: var(--espacio-3) var(--espacio-4);
+    font-size: var(--texto-pequeno);
+    background: var(--color-aviso-velo);
+    color: var(--color-aviso);
+    border: 1px solid var(--color-aviso);
+    border-radius: 0.5rem;
+  }
+
+  .aviso-regeneracion p {
+    margin: 0;
+  }
+
+  .aviso-regeneracion a {
+    color: inherit;
+    font-weight: 600;
+  }
+
   /* Controles del capítulo: discretos, que no compitan con el texto. */
   .capitulo-controles {
     padding-top: var(--espacio-3);

@@ -20,3 +20,11 @@ export const generacionEnCurso = () =>
 
 export const generacionDetenida = () =>
   ejemploDeRespuesta<Esquemas['Generacion']>('/novelas/{novel_id}/generaciones/{generacion_id}', 'get', '200', 'detenida')
+
+/** La generación inicial ya terminada: la que dejó publicada la versión vigente. */
+export const generacionPublicada = (): Esquemas['Generacion'] => ({
+  ...generacionEnCurso(),
+  estado: 'Publicada',
+  es_terminal: true,
+  intervalo_sondeo_segundos: null,
+})

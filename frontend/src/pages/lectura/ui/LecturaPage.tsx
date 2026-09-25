@@ -4,6 +4,7 @@ import { problemaDe } from '@/shared/api'
 import { AvisoProblema } from '@/shared/ui'
 import { useCapitulos, useFicha, usePortada, useVersion } from '../api/lectura'
 import type { OrigenCambio } from '../model/peticion-cambio'
+import { AvisoRegeneracion } from './AvisoRegeneracion'
 import { CapituloLeido } from './CapituloLeido'
 import { DescargaPdf } from './DescargaPdf'
 import { Ficha } from './Ficha'
@@ -35,6 +36,8 @@ export function LecturaPage() {
     <article data-testid="lectura" data-estado={estado} data-novel-id={novelId} data-version={versionTexto}>
       <SelectorVersion novelId={novelId} version={version} />
       <DescargaPdf key={version} novelId={novelId} version={version} />
+      {/* Solo sobre una publicada: la candidata que pinta el gate es la regeneración misma. */}
+      {datosVersion.data?.estado === 'publicada' && <AvisoRegeneracion novelId={novelId} />}
       {fallida && <AvisoProblema problema={problemaDe(fallida.error)} novelId={novelId} />}
       {portada.isSuccess && <Portada portada={portada.data} />}
       {datosVersion.isSuccess && <Indice capitulos={datosVersion.data.capitulos} />}

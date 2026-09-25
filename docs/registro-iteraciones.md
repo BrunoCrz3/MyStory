@@ -1744,3 +1744,35 @@ propio y visible, no `error-interno`.
 
 Las cuatro novelas completas medidas (2.708 a 3.933 s) caben bajo el tope. La novela detenida
 sigue sin versión publicada.
+
+## RI-043 — `/novelas/:id` lleva al progreso de una regeneración en curso
+
+**Fecha:** 2026-09-25 · **Ficheros:** `frontend/src/pages/lectura/ui/RedireccionNovela.tsx`,
+`frontend/src/pages/lectura/ui/AvisoRegeneracion.tsx`,
+`frontend/src/pages/lectura/model/generacion-en-curso.ts`, `frontend/src/pages/lectura/api/novela.ts`,
+`specs/spec2-frontend.md` § 4, `specs/plan2-frontend.md`
+
+### Causa
+
+Fallo visto en la demo: con una regeneración dirigida en curso, la lista de novelas la mostraba
+como `Regenerando`, pero al entrar en ella la redirección iba a la lectura de la versión vigente.
+La regla de la spec 2 solo consultaba las generaciones cuando no había versión vigente, así que
+una regeneración sobre una novela ya publicada no tenía camino hasta su progreso.
+
+### Qué cambió
+
+La redirección consulta siempre las generaciones y va al progreso de la que tenga
+`es_terminal: false`, inicial o dirigida; si no hay ninguna, a la versión vigente, y sin ella a
+la última generación. Si la lista de generaciones falla y hay versión vigente, va a la lectura
+en vez de mostrar el error. En la lectura de una versión `publicada`, un aviso con
+`role="status"` enlaza al progreso de la regeneración en curso y se actualiza al ritmo que pide
+la generación. Va marcado con `data-controles`: no se imprime ni entra en el PDF, no cuenta para
+`data-estado`, y en una candidata (la que pinta el gate) ni se muestra ni se pregunta por él.
+El contrato no cambia: todo sale de `listarGeneraciones` y `es_terminal`.
+
+### Efecto
+
+Arreglo de un fallo con prueba previa: la prueba de rutas lo reproducía antes del cambio, y
+cuatro pruebas nuevas cubren el aviso. Revisado con el browser MCP contra la regeneración real
+en curso: la lista lleva al progreso, el aviso se ve en pantalla y desaparece con medios `print`,
+y su enlace abre el progreso.

@@ -77,7 +77,7 @@ de «novedades» del PDF, que maqueta el backend; y cualquier estilo más allá 
 | --- | --- | --- |
 | `/` | `entrevista` | Formulario, y debajo las novelas existentes (`listarNovelas`) con enlace a su lectura o a su generación |
 | `/novelas/:novel_id/generaciones/:generacion_id` | `progreso` | Sondea `obtenerGeneracion` |
-| `/novelas/:novel_id` | `lectura` | Redirige a la versión vigente; sin versión vigente, a la última generación |
+| `/novelas/:novel_id` | `lectura` | Redirige al progreso de la generación no terminal (`es_terminal: false`), inicial o dirigida, aunque haya versión vigente; si no la hay, a la versión vigente; sin versión vigente, a la última generación (RI-043) |
 | `/novelas/:novel_id/versiones/:version` | `lectura` | La novela en esa versión; cada capítulo en el ancla `#capitulo-N` |
 
 El backend llega por un **proxy de Vite** en `/api` → `http://127.0.0.1:8000`, así que el

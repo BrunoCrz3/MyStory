@@ -27,6 +27,8 @@ export function responderVersiones(prueba: FetchDePrueba, mapa: MapaDeVersiones,
   prueba.responder('get', `${BASE}/portada`, conVersion(() => PORTADA))
   prueba.responder('get', `${BASE}/ficha`, conVersion(() => FICHA))
   prueba.responder('get', '/novelas/{novel_id}/versiones', { status: 200, cuerpo: VERSIONES })
+  // Sin generación en curso por defecto; la prueba que la quiera registra la suya después.
+  prueba.responder('get', '/novelas/{novel_id}/generaciones', { status: 200, cuerpo: [] })
 }
 
 export function responderLectura(prueba: FetchDePrueba, version = 2, modificados: readonly number[] = []) {

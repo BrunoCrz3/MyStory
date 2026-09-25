@@ -3,8 +3,9 @@ import { Rutas } from '@/app'
 import { renderizar } from '../apoyo/render'
 import { RutaActual } from '../apoyo/ruta-actual'
 import { crearFetchDePrueba } from '../apoyo/fetch-de-prueba'
-import { crearNovela, generacionEnCurso } from '../datos/novela'
-import { GENERACION_ID, NOVEL_ID } from '../datos/identificadores'
+import { crearNovela, generacionEnCurso, generacionPublicada } from '../datos/novela'
+import { generacionDirigida } from '../datos/cambio'
+import { GENERACION_DIRIGIDA_ID, GENERACION_ID, NOVEL_ID } from '../datos/identificadores'
 
 const conRuta = (
   <>
@@ -29,9 +30,10 @@ describe('rutas de la spec § 4', () => {
     expect(await screen.findByTestId('lectura')).toBeInTheDocument()
   })
 
-  it('/novelas/:id redirige a la versión vigente', async () => {
+  it('/novelas/:id sin generación en curso redirige a la versión vigente', async () => {
     const prueba = crearFetchDePrueba()
     prueba.responder('get', '/novelas/{novel_id}', { status: 200, cuerpo: crearNovela(2) })
+    prueba.responder('get', '/novelas/{novel_id}/generaciones', { status: 200, cuerpo: [generacionPublicada()] })
     renderizar(conRuta, { ruta: `/novelas/${NOVEL_ID}`, prueba })
     expect(await screen.findByText(`/novelas/${NOVEL_ID}/versiones/2`)).toBeInTheDocument()
   })
@@ -42,5 +44,16 @@ describe('rutas de la spec § 4', () => {
     prueba.responder('get', '/novelas/{novel_id}/generaciones', { status: 200, cuerpo: [generacionEnCurso()] })
     renderizar(conRuta, { ruta: `/novelas/${NOVEL_ID}`, prueba })
     expect(await screen.findByText(`/novelas/${NOVEL_ID}/generaciones/${GENERACION_ID}`)).toBeInTheDocument()
+  })
+
+  it('/novelas/:id con versión vigente y una regeneración en curso redirige a su progreso', async () => {
+    const prueba = crearFetchDePrueba()
+    prueba.responder('get', '/novelas/{novel_id}', { status: 200, cuerpo: { ...crearNovela(2), estado: 'Regenerando' } })
+    prueba.responder('get', '/novelas/{novel_id}/generaciones', {
+      status: 200,
+      cuerpo: [generacionDirigida(), generacionPublicada()],
+    })
+    renderizar(conRuta, { ruta: `/novelas/${NOVEL_ID}`, prueba })
+    expect(await screen.findByText(`/novelas/${NOVEL_ID}/generaciones/${GENERACION_DIRIGIDA_ID}`)).toBeInTheDocument()
   })
 })

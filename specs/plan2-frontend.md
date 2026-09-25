@@ -177,8 +177,8 @@ de los ejemplos.
 
 `app/router` con las cuatro rutas de la spec § 4. `shared/api/problema.ts` convierte una
 respuesta de error en un `Problema` tipado, y `shared/ui` lo pinta con `title`, `detail`,
-el enlace a `generacion_id` y la `traza_langfuse_id`. `/novelas/:id` redirige a la versión
-vigente o, si no hay, a la última generación.
+el enlace a `generacion_id` y la `traza_langfuse_id`. `/novelas/:id` redirige al progreso de la generación
+en curso, si la hay; si no, a la versión vigente o, sin ella, a la última generación (RI-043).
 
 - **Prueba primero**: cada ruta pinta su página; la redirección con y sin
   `version_vigente`; un `409` del ejemplo `Conflicto` se lee con su `generacion_id`.
