@@ -311,8 +311,9 @@ def test_produccion_elige_el_render_segun_el_entorno(monkeypatch: pytest.MonkeyP
 
 
 def test_los_errores_de_consola_se_leen_tras_la_cabecera() -> None:
-    """A-118, A-124: la cabecera puede tener una o dos líneas; una excepción no capturada sale
-    sin prefijo; el 404 del favicon no es un error de la lectura."""
+    """A-118: la cabecera puede tener una o dos líneas; una excepción no capturada sale
+    sin prefijo. Todo error cuenta, también un 404 del favicon: A-124 se retiró al servir el
+    frontend su favicon."""
     salto = chr(10)
     solo_errores = salto.join(
         [
@@ -337,6 +338,10 @@ def test_los_errores_de_consola_se_leen_tras_la_cabecera() -> None:
             "[ERROR] Uncaught ReferenceError: x is not defined",
         ]
     )
-    assert _errores_consola(con_avisos) == ["[ERROR] Uncaught ReferenceError: x is not defined"]
+    assert _errores_consola(con_avisos) == [
+        "[ERROR] Failed to load resource: the server responded with a status of 404 (Not Found)"
+        " @ http://127.0.0.1:5173/favicon.ico:0",
+        "[ERROR] Uncaught ReferenceError: x is not defined",
+    ]
     sin_errores = salto.join(["### Result", "Total messages: 3 (Errors: 0, Warnings: 3)"])
     assert _errores_consola(sin_errores) == []

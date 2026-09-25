@@ -414,10 +414,6 @@ def _resultado_json(texto: str) -> object:
     return json.loads(cuerpo)
 
 
-# El navegador pide el favicon por su cuenta; su 404 no es un error de la lectura (A-124).
-_RUIDO_CONSOLA = re.compile(r"status of 404 .*/favicon\.ico")
-
-
 def _errores_consola(texto: str) -> list[str]:
     """Los errores de `browser_console_messages` con `level = error`. La cabecera —una o dos
     líneas— dice cuántos hay y termina en una línea en blanco; cada entrada empieza en una
@@ -435,7 +431,7 @@ def _errores_consola(texto: str) -> list[str]:
     ]
     if not entradas:
         return [f"{cuantos.group(1)} errores de consola"]
-    return [e for e in entradas if not _RUIDO_CONSOLA.search(e)]
+    return entradas
 
 
 class RenderVisualMCP:

@@ -60,8 +60,9 @@ detalle del score y en el audit log.
   avisos, «Returning N messages…») y acaba en una línea en blanco: las entradas son lo que va
   detrás.
 - El navegador pide `/favicon.ico` por su cuenta, y si no existe el 404 sale como error de
-  consola. No es un error de la lectura ni está en el contrato, así que no cuenta (A-124); la
-  página de prueba declara `<link rel="icon" href="data:,">` igualmente.
+  consola. El P49 lo excluyó (A-124). Desde que el frontend sirve `favicon.svg`, la excepción
+  está retirada y todo error cuenta (TO-050). La página de prueba declara
+  `<link rel="icon" href="data:,">`.
 
 ## Residuo declarado
 

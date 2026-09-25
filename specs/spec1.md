@@ -899,8 +899,8 @@ ella salió `ejemplos/novela-ejemplo.pdf` con `paridad_pdf_web` en verde.
 - **RF-QUA-03**: el gate corre sobre una versión `candidata` (TO-045), ya reescrito arriba.
 - **RF-EXP-02**: un PDF sin paridad no se sirve —queda `fallido` y se guarda para el
   diagnóstico (A-121)—, y un export `fallido` se relanza con el siguiente `POST` (A-119).
-- **`render_visual`** no cuenta como error de consola el 404 del favicon, que el navegador pide
-  por su cuenta y el contrato de lectura no incluye (A-124).
+- **`render_visual`** cuenta todo error de consola. El P49 excluía el 404 del favicon (A-124);
+  se retiró cuando el frontend pasó a servir el suyo (TO-050).
 
 **Sin implementar, por ser `[post-demo]`**: RF-INTAKE-06, RF-CANON-05, RF-QUA-08 y RF-EXP-03.
 Sin este último no hay fichero Lean que demostrar, así que el gate de Lean sigue apagado

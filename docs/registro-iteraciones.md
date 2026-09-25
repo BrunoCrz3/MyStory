@@ -1206,3 +1206,28 @@ con TO-049.
 
 La novela del paso de integración cabe con margen: 30,31 + 15 = 45,31 ≤ 100. Ningún tope es
 todavía una medida: los dos siguen siendo frenos de seguridad.
+
+---
+
+## RI-023 — Favicon en el frontend y A-124 retirada
+
+**Fecha:** 2026-09-25 · **Ficheros:** `frontend/index.html`, `frontend/public/favicon.svg`,
+`backend/app/versioning/render_visual.py`, `backend/tests/versioning/test_render_visual.py`
+(TO-050)
+
+### Causa
+
+El P49 declaró A-124 porque el frontend no servía favicon y su 404 salía como error de consola.
+La integración de la demo pidió servirlo y revisar si la excepción seguía siendo necesaria.
+
+### Qué cambió
+
+El frontend sirve `favicon.svg` y lo declara en `index.html`. La prueba del parser de consola
+pasó primero a exigir que el 404 del favicon cuente (en rojo) y luego se quitó el filtro
+`_RUIDO_CONSOLA` (en verde).
+
+### Efecto
+
+Con el browser MCP sobre `npm run dev`, `/favicon.svg` da 200 y no hay petición a
+`/favicon.ico`. La aserción `consola` del gate no tiene ninguna excepción. La comprobación con la
+novela real va en el ensayo de la demo (RI de integración).

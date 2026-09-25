@@ -1665,7 +1665,7 @@ la fase.
 | A-121 | P48 | Un PDF sin paridad queda `fallido` y no se sirve; se guarda para el diagnóstico | Servirlo sería validar uno y entregar otro (TO-003) |
 | A-122 | P48 | El export corre como tarea de fondo de la petición, fuera de la cola de trabajos | No llama al modelo ni consume presupuesto en vuelo; la cola es de generaciones |
 | A-123 | P48 | El PDF sale del Chromium de Playwright y `render_visual` usa el navegador del servidor MCP: misma página y mismo motor, dos procesos | `paridad_pdf_web` compara el PDF con el DOM del render del que sale |
-| A-124 | P49 | El 404 de `/favicon.ico` no cuenta como error de consola en `render_visual` | El navegador lo pide por su cuenta y el contrato de lectura no lo incluye; la página real del frontend no sirve favicon |
+| A-124 | P49 | El 404 de `/favicon.ico` no cuenta como error de consola en `render_visual` | El navegador lo pide por su cuenta y el contrato de lectura no lo incluye; la página real del frontend no sirve favicon. **Retirada** en la integración de la demo: el frontend sirve su favicon (TO-050) |
 
 ### Consecuencias
 
@@ -1823,3 +1823,36 @@ demo]` no cambia.
 - **Un bucle caro gasta hasta 15 USD nominales antes de detenerse**: con `claude_code` eso es
   uso del plan, no dinero. Si se vuelve a `proveedor: api`, este tope y el de TO-048 se revisan
   antes de lanzar nada.
+
+---
+
+## TO-050 — El frontend sirve su favicon y `render_visual` deja de ignorar su 404 (A-124 retirada)
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** (integración de la demo) · **Afecta a:** `frontend/index.html`, `frontend/public/favicon.svg`, `backend/app/versioning/render_visual.py`, `docs/browser-mcp.md`, `specs/spec1.md` § 8.1
+
+### Problema
+
+A-124 (P49) excluía de la aserción `consola` de `render_visual` el 404 de `/favicon.ico`: el
+navegador lo pide por su cuenta y el frontend no servía ninguno. Era la única excepción del
+filtro de consola, y una excepción por patrón puede esconder un error real con la misma forma.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Mantener A-124 | Nada que tocar | Una excepción permanente en un validador del gate, por un fichero que falta |
+| **B · Servir un favicon y retirar A-124** | El filtro de consola vuelve a contar todo error; la página no deja ruido | Un fichero más en el frontend |
+| C · Servir el favicon y conservar A-124 por si acaso | Tolerante con otras páginas | Mantiene la excepción sin causa |
+
+### Elección
+
+**B.** `frontend/index.html` declara `<link rel="icon" href="/favicon.svg">` y `public/favicon.svg`
+lo sirve. Comprobado con el browser MCP (Edge) sobre `npm run dev`: `/favicon.svg` responde 200
+y el navegador ya no pide `/favicon.ico`. Con eso, `_RUIDO_CONSOLA` sale de `render_visual.py` y
+la prueba del parser exige que un 404 del favicon cuente como error.
+
+### Consecuencias
+
+- **Una página de lectura sin favicon vuelve a suspender `consola`.** La página de prueba del
+  backend ya declaraba `<link rel="icon" href="data:,">`.
+- La paridad y el PDF no cambian: el favicon no se imprime.
