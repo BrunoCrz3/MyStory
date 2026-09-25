@@ -13,6 +13,7 @@ def extraccion(
     elementos: list[str] | None = None,
     promesas: list[str] | None = None,
     pagadas: list[str] | None = None,
+    reabiertas: list[str] | None = None,
 ) -> dict[str, Any]:
     """Una extracción cuyos hechos citan fragmentos literales de `texto`."""
     if fragmentos is None:
@@ -34,6 +35,7 @@ def extraccion(
         ],
         "promesas_abiertas": [{"enunciado": p, "tipo": "pregunta"} for p in (promesas or [])],
         "promesas_pagadas": pagadas or [],
+        "promesas_reabiertas": reabiertas or [],
         "elementos_presentes": elementos or [],
         "personajes_presentes": ["Marta"],
         "ubicaciones": [{"personaje": "Marta", "lugar": "el puerto"}],

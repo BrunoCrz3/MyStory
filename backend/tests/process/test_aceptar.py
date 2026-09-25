@@ -124,8 +124,13 @@ async def test_el_capitulo_siguiente_usa_los_hechos_por_su_alias(entorno: Entorn
     assert [u["numero"] for u in usos] == [1, 2]
     extractor = [p for p in entorno.modelo.peticiones if p.rol == "extractor"][-1]
     assert "H1" in extractor.mensajes[0].contenido
-    (promesa,) = entorno.consultar("SELECT estado FROM promesa WHERE novel_id = ?", novela)
-    assert promesa["estado"] == "pagada"
+    # El estado se deriva de las filas (TO-047): el 2 queda vinculado como pago.
+    vinculos = entorno.consultar(
+        "SELECT c.numero, v.papel FROM promesa_capitulo v JOIN capitulo c ON c.id = v.capitulo_id"
+        " WHERE v.novel_id = ? ORDER BY c.numero",
+        novela,
+    )
+    assert [(v["numero"], v["papel"]) for v in vinculos] == [(1, "apertura"), (2, "pago")]
 
 
 @pytest.mark.anyio

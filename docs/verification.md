@@ -96,7 +96,7 @@ Los **tipos** son los cuatro de la ontología: `programático`, `semántico`, `f
 | Consistencia espacial | formal-Lean | gate de publicación | `lean_ubicacion` | O-14 |
 | Coherencia de edad | formal-Lean | gate de publicación | `lean_edad` | O-15 |
 | Cumplimiento de elementos obligatorios | programático | gate de publicación | `elementos_obligatorios` | O-04, O-18 |
-| Cierre del arco | programático + semántico | gate de publicación | `cierre_arco` | O-34, O-35, O-36, O-40, O-41, O-43 |
+| Cierre del arco | programático + semántico | gate de publicación | `cierre_arco` | O-34, O-35, O-36, O-40, O-41, O-43, O-65 |
 | Render visual | programático | gate de publicación | `render_visual` | O-09, O-10, O-59, O-60, A-106 |
 | Paridad PDF ↔ web | programático | export | `paridad_pdf_web` | O-16 |
 | **Invención sobre el destinatario** | programático + semántico | rol editor | `invencion_destinatario` | O-20 |
@@ -455,6 +455,7 @@ filas de personalización y las de calidad narrativa están en la misma tabla.
 | **O-62** · Los capítulos vecinos a uno regenerado siguen siendo continuos con él | `alcance` §2, «sin romper la continuidad» | Pruebas basadas en propiedades + verificación multiagente | T, D | parcial | gate de publicación | `consistencia_factica` | obligatorio | alto | La continuidad de hechos se comprueba contra el canon; la de prosa —un eco, una transición que ya no encaja— es juicio | O-26, P-85 | `quality/`, `versioning/` |
 | **O-63** · La marca de capítulos modificados respecto a la versión anterior es exacta | `alcance` §2; pregunta 20 | Pruebas basadas en propiedades | T | sí | gate de publicación | `regeneracion_fiel` | obligatorio | bajo | Contrasta `version_capitulo.modificado` con el hash del texto: dos fuentes independientes que tienen que coincidir, y si difieren no dice cuál miente | O-61, A-88 | `versioning/`, `frontend/` |
 | **O-64** · La versión anterior sigue siendo consultable entera: texto, capítulos y hechos vigentes en ella | `CLAUDE.md` regla 15; TO-028; pregunta 22 | Pruebas basadas en propiedades | T | sí | gate de publicación | `regeneracion_fiel` | obligatorio | medio | Depende de que toda consulta pase la versión y resuelva por vigencia: una que olvide el puente devuelve el texto viejo con los hechos nuevos | A-84, A-85 | `versioning/`, `canon/` |
+| **O-65** · Una regeneración dirigida no deja promesas pendientes por los capítulos que reescribe: cada uno conserva las que abría y pagaba su versión anterior y no abre otras que nadie vaya a pagar | `alcance` §2, «sin romper la continuidad»; TO-047 | Pruebas unitarias / de integración | T | sí | aceptación de un capítulo reescrito, antes de consolidar | `cierre_arco` | obligatorio | medio | Cuenta lo que el extractor registra. Una promesa que el reescrito no reabre y paga un capítulo no afectado sigue viva y pagada (regla 3 de TO-047) aunque el texto nuevo ya no la plantee: eso es continuidad de prosa, O-62 | O-34, O-62 | `process/aceptar.py`, `canon/`, `tests/process/test_regeneracion_promesas.py` |
 
 ---
 

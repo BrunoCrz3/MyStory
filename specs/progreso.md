@@ -33,6 +33,7 @@ real: si `acumulado + coste.coste_maximo_novela > 40`, no se lanza.
 | 2026-09-24 | P44 | Regeneración real «el perro se llama Nala» sobre la novela del humo: reescribió y aceptó los capítulos 1 a 4 y se detuvo en el 6 por `ContextoNoCabe` del extractor (A-110); la base de demo se restaura desde `data/storymaker-demo-antes-f4.db` | 3,01 | 17,16 |
 | 2026-09-24 | P38 | Humo adversarial 4 (con A-108): **verde**, novela real publicada y ninguna de sus 40 peticiones con la instrucción inyectada | 7,03 | 24,19 |
 | 2026-09-24 | P44 | Regeneración real 2 sobre la novela del humo (con A-110): reescribió y aceptó los capítulos 1, 2, 3, 4 y 6, y el gate la detuvo por `cierre_arco` —promesas abiertas por los capítulos reescritos que los no afectados nunca pagan—; base restaurada a la versión 1 | 2,90 | 27,09 |
+| 2026-09-25 | TO-047 | Regeneración real única sobre una **copia** de la novela del humo (`data/storymaker-demo-promesas-to047.db`), cambiando el hecho del velero de botella (capítulos 3 y 9): **1.821 s** (30 min). El 3 pasó a la primera; `cierre_arco` devolvió el 9 dos veces y lo aceptó al tercer intento; ninguna promesa pendiente de los reescritos. El gate la rechazó por dos promesas que la versión 1 ya dejaba sin pagar (se publicó en el P27, antes de `cierre_arco`) y por `render_visual` sin servidor MCP: ajeno al arreglo, no se repite. Informe `data/humo-regeneracion-promesas-20260925T000733.json`; la base de demo no se tocó | 3,22 | 30,31 |
 
 **Novela de humo** (se reutiliza en F4 y F5): base `data/storymaker-demo.db` (ruta absoluta al ejecutar desde `backend/`), `novel_id` `4e884416-fa5d-4f7a-b013-94554af5a29e`, versión 1 publicada. Traza: `https://us.cloud.langfuse.com/project/cmu5p7ovq02acad0d3x5caggq/traces/e296b4f51ef4012cc416f6b14fbd3a16`. Informe por llamada: `data/humo-20260924T163649.json`. Los intentos fallidos están en `data/storymaker-demo-intentos-p27.db`.
 
@@ -93,15 +94,20 @@ Un renglón por paso cerrado: paso, qué quedó y hash del commit.
 - **P49** — `tests/e2e/test_f5.py`: backend como proceso con dobles y `render_visual` real (servidor MCP y una página de lectura que lee la API al pedirla, como el frontend): el gate pinta la candidata y la publica; ficha y portada por HTTP; export con paridad; `test_conformidad_completa` (`PENDIENTES` vacía). Integración con la página `lectura` real del frontend (rama `frontend-demo`, `npm run dev`): `render_visual` en verde tras corregir el parser de consola y declarar A-124; `ejemplos/novela-ejemplo.pdf` con la CLI sobre la novela del humo (49 páginas, 124 enlaces, paridad en verde). I-03: `lean_timeout_segundos` = 26. Documentos de cierre: spec § 8.1, `verification.md`, `architecture.md`, `browser-mcp.md`, TO-046, RI-019; 462 pruebas
 ## Pendiente
 
-- **Hueco conocido de F4, visto en real**: una regeneración dirigida reescribe capítulos que abren promesas nuevas; los capítulos no afectados pagaban las promesas de las filas viejas, así que al cerrar quedan pendientes y `cierre_arco` detiene la versión nueva. A-102 retira hechos y usos de la fila vieja pero no reconcilia promesas. Propuesta para decidir: al reescribir, cerrar las promesas abiertas por la fila vieja solo si ninguna fila no afectada las paga, y ofrecer al extractor del capítulo reescrito las promesas vivas por su alias para que las reabra en vez de duplicarlas.
+- ~~Hueco conocido de F4, visto en real~~ **resuelto** tras el plan (TO-047, RI-020): el desarrollador aceptó la propuesta ampliada a cuatro reglas —destino del redactor, reapertura por alias, reconciliación y devolución al redactor por `cierre_arco`—. Probado con dobles y con una regeneración real sobre una copia de la novela del humo (hecho del velero de botella, capítulos 3 y 9; 1.821 s, 3,22 USD): el 3 pasó a la primera, `cierre_arco` devolvió el 9 dos veces y lo aceptó al tercer intento, y la versión 2 no tiene promesas pendientes de los capítulos reescritos. El gate la rechazó por las dos promesas que la versión 1 ya dejaba sin pagar —se publicó en el P27, antes de que existiera `cierre_arco`— y por `render_visual` sin servidor MCP; las dos causas son ajenas al arreglo y no se repitió (§ Coste real).
+- **La novela del humo no puede publicar una versión 2 tal como está**: su versión 1 deja dos promesas sin pagar (las abren los capítulos 2 y 10) porque se publicó antes de que existiera `cierre_arco`. Cualquier regeneración suya la rechaza el gate por eso. Para decidir: regenerar el humo desde cero, o aceptar esas dos promesas como herencia de la versión 1.
 - Casetes HTTP (plan § 4.1, capa 2): **pendientes**; solo se graban con `proveedor: api` y no hay clave. El grabador y el reproductor existen (`tests/herramientas/casetes.py`).
 - **Frontend** (fuera de este plan): regenerar el cliente desde el contrato 1.2.0 (I-10). Servir un favicon quitaría el único ruido de consola que `render_visual` tiene que ignorar (A-124), aunque no es necesario.
 
 ### Resumen al cerrar el plan (I-08)
 
 - **Funciona**, con la suite en verde (462 pruebas, e2e por fase): entrevista y brief con datos faltantes, contradicciones y texto libre saneado; planificación, escritura, hooks, judge y editor, aceptación por el policy engine con audit log; story bible por versión con vigencia y retcon; regeneración dirigida que solo reescribe lo afectado; versión candidata con el gate completo, `render_visual` real incluido; lectura por versión con ficha y portada; export a PDF con paridad; observabilidad con spans y scores; proveedor `claude_code` sin clave de API.
-- **No funciona o no está**: el gate de Lean (falta RF-EXP-03, post-demo; toolchain y timeout listos); los casetes HTTP; el hueco de promesas en la regeneración dirigida, que puede detener una versión 2 real por `cierre_arco`.
+- **No funciona o no está**: el gate de Lean (falta RF-EXP-03, post-demo; toolchain y timeout listos); los casetes HTTP. El hueco de promesas en la regeneración dirigida se arregló después del cierre (TO-047); una regeneración real lo confirma, aunque no publica porque la versión 1 del humo trae dos promesas sin pagar.
 - **Post-demo**: la tabla de abajo y los cuatro RF `[post-demo]` de la spec (RF-INTAKE-06, RF-CANON-05, RF-QUA-08, RF-EXP-03).
+
+### Después del plan
+
+- **TO-047** — Promesas en la regeneración dirigida (decisión del desarrollador; arreglo de RF-VER-08 con TDD): migración `0015_promesa_por_version.sql` (apertura y pago como vínculos `promesa_capitulo`, estado derivado por las filas de la versión); `canon.promesas_vivas` con el alias común a redactor y extractor; el brief del capítulo reescrito lleva las promesas que conserva como restricción de destino; `Extraccion.promesas_reabiertas`; `cierre_arco` sobre el capítulo reescrito antes de consolidar, que lo devuelve a su redactor como intento fallido (A-125…A-132); `tests/process/test_regeneracion_promesas.py` y el e2e de F4 con el caso real
 
 ## Post-demo
 
@@ -246,6 +252,14 @@ registrada.
 | A-123 | P48 | El PDF sale del Chromium de Playwright y `render_visual` usa el navegador del servidor MCP (Edge en esta máquina): misma página, misma URL y mismo motor Chromium, pero dos procesos | «El mismo render» se sostiene por la página y el motor; `paridad_pdf_web` compara el PDF con el DOM del render del que sale | TO-046 (F5) |
 | A-124 | P49 | El 404 de `/favicon.ico` no cuenta como error de consola en `render_visual` | El navegador lo pide por su cuenta y el contrato de lectura no lo incluye; la página real del frontend no sirve favicon | TO-046 (F5) |
 | A-43 | P23 | La latencia de una novela se mide desde trabajo.iniciada_en en reloj de pared | Sobrevive a un reinicio; cuenta también el tiempo caído, que es el lado conservador | TO-039 |
+| A-125 | TO-047 | Apertura y pago de una promesa son vínculos con filas de capítulo (`promesa_capitulo`); el estado se deriva de las filas de la versión | La fila nueva reabre o paga sin tocar lo que lee la anterior (regla 15) | TO-047 |
+| A-126 | TO-047 | La reconciliación no escribe nada: una promesa está en una versión si una fila de la versión la abre o la paga | Es la regla 3 del desarrollador escrita como consulta | TO-047 |
+| A-127 | TO-047 | `cierre_arco` corre sobre el capítulo reescrito al aceptarlo, antes de consolidar; el gate lo sigue pasando sobre la versión entera | Tras el gate la candidata es inmutable y una rechazada detiene (A-113); antes de consolidar, la extracción se descarta sin rastro | TO-047 |
+| A-128 | TO-047 | Cuenta como pendiente del reescrito toda promesa nueva y toda que pagaba su fila anterior y él no paga | Los no afectados no cambian y los reescritos posteriores solo pagan lo que conservan | TO-047 |
+| A-129 | TO-047 | El intento fallido lo decide el policy engine con un veredicto `cierre_arco` que cierra el paso, con el contador del capítulo | Mismas transiciones y mismo límite que un validador del hook de capítulo | TO-047 |
+| A-130 | TO-047 | Una promesa «nueva» igual a una que el capítulo puede reabrir se reabre | Es la duplicación que la regla 2 evita | TO-047 |
+| A-131 | TO-047 | El snapshot deriva las promesas abiertas para la versión que se lee | Como los hechos (A-104): el de un no afectado decía las promesas de la versión anterior | TO-047 |
+| A-132 | TO-047 | Las promesas que conserva el reescrito van en la capa Estructural | Son destino, que no se degrada, y están acotadas por un capítulo | TO-047 |
 
 ## Instrucciones pendientes
 
@@ -315,7 +329,7 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 Estado al escribir esto: **plan 1 cerrado** (P49). Rama `backend-v1`, subida a
 `origin/backend-v1`, con la suite en verde (462 pruebas). No queda paso del plan: lo siguiente
-es decidir lo de § Pendiente con el desarrollador. Para `render_visual` real, arrancar el
+es decidir lo que queda de § Pendiente con el desarrollador; el hueco de promesas ya se resolvió (TO-047). Para `render_visual` real, arrancar el
 servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica (A-114).
 
 ```bash

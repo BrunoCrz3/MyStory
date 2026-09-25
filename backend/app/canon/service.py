@@ -14,6 +14,7 @@ from uuid import UUID
 
 from app.canon import repository
 from app.canon.models import (
+    Conservar,
     Consolidacion,
     EstadoHecho,
     Hecho,
@@ -21,6 +22,7 @@ from app.canon.models import (
     HechoPropuesto,
     Promesa,
     PromesaNueva,
+    PromesaViva,
     ResultadoConsolidacion,
     Snapshot,
 )
@@ -39,6 +41,7 @@ __all__ = [
     "HechoVigente",
     "Promesa",
     "PromesaNueva",
+    "PromesaViva",
     "ResultadoConsolidacion",
     "Snapshot",
     "aplicar_retcon",
@@ -49,6 +52,7 @@ __all__ = [
     "listar_hechos",
     "promesas_de",
     "promesas_pendientes_al_cierre",
+    "promesas_vivas",
     "retcon_de",
     "retirar_capitulo",
     "snapshot_de",
@@ -130,10 +134,16 @@ def consolidar(
         repository.insertar_promesa(
             con, novel_id=novel_id, capitulo_id=entrada.capitulo_id, promesa=promesa
         )
-    for promesa_id in entrada.promesas_pagadas:
-        repository.pagar_promesa(
-            con, novel_id=novel_id, capitulo_id=entrada.capitulo_id, promesa_id=promesa_id
-        )
+    vinculos = (("apertura", entrada.promesas_reabiertas), ("pago", entrada.promesas_pagadas))
+    for papel, ids in vinculos:
+        for promesa_id in ids:
+            repository.vincular_promesa(
+                con,
+                novel_id=novel_id,
+                promesa_id=promesa_id,
+                capitulo_id=entrada.capitulo_id,
+                papel=papel,
+            )
 
     snapshot = Snapshot(
         numero=entrada.numero,
@@ -146,8 +156,11 @@ def consolidar(
                 con, novel_id=novel_id, version=version, hasta_numero=entrada.numero
             )
         ],
-        promesas_pendientes=repository.promesas_pendientes_hasta(
-            con, novel_id=novel_id, version=version, numero=entrada.numero
+        promesas_pendientes=_pendientes_tras(
+            con,
+            novel_id=novel_id,
+            filas=[*entrada.filas_version, entrada.capitulo_id],
+            numero=entrada.numero,
         ),
     )
     repository.insertar_snapshot(
@@ -174,15 +187,32 @@ def capitulos_que_usan(
     )
 
 
+def _pendientes_tras(
+    con: sqlite3.Connection, *, novel_id: str, filas: list[str], numero: int
+) -> list[str]:
+    return [
+        p.enunciado
+        for p in repository.leer_promesas(con, novel_id=novel_id, capitulo_ids=filas)
+        if p.pendiente_tras(numero)
+    ]
+
+
 def snapshot_de(
-    con: sqlite3.Connection, *, novel_id: str, version: int, capitulo_id: str
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    version: int,
+    capitulo_id: str,
+    filas: list[str] | None = None,
 ) -> Snapshot | None:
     """El snapshot al cierre de un capítulo **visto desde `version`** (D-12).
 
     Presentes y ubicaciones son los que se guardaron al aceptar el capítulo; los hechos se
     derivan de nuevo por vigencia en la versión pedida. Un capítulo no afectado por una
     regeneración conserva su fila, pero en la versión nueva su snapshot ya no dice el hecho
-    retconeado sino el que lo sustituye (P43).
+    retconeado sino el que lo sustituye (P43). Con `filas` —las que lee la versión—, las
+    promesas abiertas también se derivan de nuevo: la reescritura de un capítulo anterior
+    puede haber cerrado o reabierto alguna (TO-047).
     """
     guardado = repository.leer_snapshot(
         con, novel_id=novel_id, version=version, capitulo_id=capitulo_id
@@ -196,7 +226,12 @@ def snapshot_de(
         )
         if h.estado != "propuesto"
     ]
-    return guardado.model_copy(update={"hechos": hechos})
+    cambios: dict[str, list[str]] = {"hechos": hechos}
+    if filas is not None:
+        cambios["promesas_pendientes"] = _pendientes_tras(
+            con, novel_id=novel_id, filas=filas, numero=guardado.numero
+        )
+    return guardado.model_copy(update=cambios)
 
 
 def retirar_capitulo(
@@ -218,9 +253,43 @@ def retcon_de(
 def promesas_de(
     con: sqlite3.Connection, *, novel_id: str, version: int, capitulo_ids: list[str]
 ) -> list[Promesa]:
-    return repository.leer_promesas(
-        con, novel_id=novel_id, version=version, capitulo_ids=capitulo_ids
-    )
+    """Las promesas de una versión, vistas desde sus filas de capítulo (TO-047)."""
+    return repository.leer_promesas(con, novel_id=novel_id, capitulo_ids=capitulo_ids)
+
+
+def promesas_vivas(
+    con: sqlite3.Connection,
+    *,
+    novel_id: str,
+    numero: int,
+    filas_version: list[str],
+    fila_anterior: str | None,
+) -> list[PromesaViva]:
+    """Las promesas que el capítulo `numero` puede citar al escribirse, con su alias.
+
+    Son las abiertas ante el lector al llegar a él, más las que abría su fila anterior si se
+    está reescribiendo. De la fila anterior sale también qué tiene que **conservar**: volver a
+    abrir lo que abría y pagar lo que pagaba, si sigue vivo. El redactor y el extractor leen
+    esta misma lista, así que el alias de una promesa es el mismo para los dos (TO-047).
+    """
+    pendientes = [
+        p
+        for p in repository.leer_promesas(con, novel_id=novel_id, capitulo_ids=filas_version)
+        if p.pendiente_tras(numero - 1)
+    ]
+    abria: list[Promesa] = []
+    pagaba: set[str] = set()
+    if fila_anterior is not None:
+        for p in repository.leer_promesas(con, novel_id=novel_id, capitulo_ids=[fila_anterior]):
+            if p.capitulo_pago is None:
+                abria.append(p)
+            else:
+                pagaba.add(p.promesa_id)
+    ya = {p.promesa_id for p in pendientes}
+    lista: list[tuple[Promesa, Conservar | None]] = [
+        (p, "pagar" if p.promesa_id in pagaba else None) for p in pendientes
+    ] + [(p, "abrir") for p in abria if p.promesa_id not in ya]
+    return [PromesaViva(alias=f"P{i}", promesa=p, conservar=c) for i, (p, c) in enumerate(lista, 1)]
 
 
 def promesas_pendientes_al_cierre(

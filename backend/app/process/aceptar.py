@@ -6,6 +6,12 @@ policy engine haya aceptado el capítulo, nunca antes; y la consolidación repar
 entre las features dueñas dentro de la transacción que abre `process/`: texto y estado del
 capítulo, hechos con la decisión del policy engine, usos, promesas, snapshot, resumen, eventos
 y elementos aparecidos. O entra todo, o nada.
+
+Un capítulo que se **reescribe** en una regeneración dirigida pasa además, antes de
+consolidar, la mitad programática de `cierre_arco` sobre lo que le toca: no puede abrir una
+promesa que ningún capítulo posterior vaya a pagar ni dejar sin pagar la que pagaba su versión
+anterior. Si la deja, la extracción se descarta sin rastro y el capítulo vuelve a su redactor
+como intento fallido (TO-047).
 """
 
 from __future__ import annotations
@@ -27,18 +33,83 @@ from app.novel import service as novel
 from app.policy.service import PolicyEngine
 from app.process import repository
 from app.process.capitulo import ResultadoCapitulo
-from app.process.schemas import Extraccion
+from app.process.schemas import Extraccion, PromesaExtraida
 from app.process.transiciones import aplicar
 
 ESQUEMA_EXTRACCION = esquema_de_salida(Extraccion)
 
 
-class _Conocido:
-    """Lo que el extractor ya sabe de la novela, con los alias que puede citar."""
+class PromesasSinPago(Exception):
+    """Un capítulo reescrito dejaría promesas pendientes al cierre: vuelve a su redactor."""
 
-    def __init__(self, hechos: list[canon.Hecho], promesas: list[canon.Promesa]) -> None:
+    def __init__(self, numero: int, defectos: list[str]) -> None:
+        super().__init__(f"el capítulo {numero} deja promesas sin pagar: " + "; ".join(defectos))
+        self.defectos = defectos
+
+
+def _normalizar(enunciado: str) -> str:
+    return " ".join(enunciado.lower().split())
+
+
+class _Conocido:
+    """Lo que el extractor ya sabe de la novela, con los alias que puede citar.
+
+    `reescrito` dice si el capítulo tenía una fila anterior —una regeneración dirigida— y
+    `filas`, qué otras filas lee la versión al aceptarlo.
+    """
+
+    def __init__(
+        self,
+        hechos: list[canon.Hecho],
+        promesas: list[canon.PromesaViva],
+        *,
+        filas: list[str],
+        reescrito: bool,
+    ) -> None:
         self.hechos = {f"H{i}": h for i, h in enumerate(hechos, 1)}
-        self.promesas = {f"P{i}": p for i, p in enumerate(promesas, 1)}
+        self.promesas = {v.alias: v for v in promesas}
+        self.filas = filas
+        self.reescrito = reescrito
+
+    def clasificar(self, e: Extraccion) -> tuple[list[PromesaExtraida], list[str], list[str]]:
+        """`(nuevas, reabiertas, pagadas)`, con identificadores. Solo se reabre lo que abría la
+        fila anterior y solo se paga lo que estaba abierto; un alias que no encaja se ignora.
+        Una promesa «nueva» igual a una que se puede reabrir se reabre: no se duplica."""
+        reabribles = {a: v for a, v in self.promesas.items() if v.conservar == "abrir"}
+        por_enunciado = {_normalizar(v.promesa.enunciado): a for a, v in reabribles.items()}
+        nuevas: list[PromesaExtraida] = []
+        reabiertas = [a for a in e.promesas_reabiertas if a in reabribles]
+        for p in e.promesas_abiertas:
+            alias = por_enunciado.get(_normalizar(p.enunciado))
+            if alias is None:
+                nuevas.append(p)
+            elif alias not in reabiertas:
+                reabiertas.append(alias)
+        pagadas = [a for a in e.promesas_pagadas if a in self.promesas and a not in reabribles]
+        return (
+            nuevas,
+            [reabribles[a].promesa.promesa_id for a in reabiertas],
+            [self.promesas[a].promesa.promesa_id for a in pagadas],
+        )
+
+    def sin_pago(self, e: Extraccion) -> list[str]:
+        """Lo que este capítulo reescrito dejaría pendiente al cierre, como defectos para su
+        redactor. Los capítulos no afectados no cambian y solo pagan lo que ya pagaban, así
+        que una promesa nueva no la paga nadie; y la que pagaba la fila anterior solo la puede
+        pagar este capítulo."""
+        nuevas, _, pagadas = self.clasificar(e)
+        defectos = [
+            f"El capítulo abre una promesa que ningún capítulo posterior paga: «{p.enunciado}». "
+            "No abras promesas nuevas; conserva las que se te piden."
+            for p in nuevas
+        ]
+        defectos += [
+            f"El capítulo no paga una promesa que su versión anterior pagaba ({a}): "
+            f"«{v.promesa.enunciado}»."
+            for a, v in self.promesas.items()
+            if v.conservar == "pagar" and v.promesa.promesa_id not in pagadas
+        ]
+        return defectos
 
 
 def _leer(
@@ -48,24 +119,26 @@ def _leer(
     bc = context.brief_de_capitulo(con, novel_id=novel_id, numero=numero)
     if cap is None or bc is None:
         raise NovelaNoEncontrada(f"no hay capítulo {numero} en {novel_id}", novel_id=novel_id)
-    anteriores = [
+    filas = [
         c.capitulo_id
         for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
-        if c.numero < numero
+        if c.numero != numero
     ]
+    anterior = novel.capitulo_vigente(con, novel_id=novel_id, numero=numero, version=version)
     conocido = _Conocido(
         canon.hechos_vigentes(con, novel_id=novel_id, version=version),
-        [
-            p
-            for p in canon.promesas_de(
-                con, novel_id=novel_id, version=version, capitulo_ids=anteriores
-            )
-            if p.estado == "pendiente"
-        ],
+        canon.promesas_vivas(
+            con, novel_id=novel_id, numero=numero, filas_version=filas, fila_anterior=anterior
+        ),
+        filas=filas,
+        reescrito=anterior is not None,
     )
     elementos = [e for _, e, _ in intake.elementos_personalizados(con, novel_id=novel_id)]
     nombres = novel.nombres_de_la_obra(con, novel_id=novel_id)
     return cap, bc, conocido, elementos, nombres
+
+
+_REABRIBLE = {"abrir": " (la abría la versión anterior de este capítulo)"}
 
 
 async def _extraer(
@@ -89,8 +162,15 @@ async def _extraer(
                 prioridad=10,
             ),
             context.Pieza(
-                etiqueta="Promesas abiertas (cítalas por su alias si este capítulo las paga)",
-                texto="\n".join(f"{a}: {p.enunciado}" for a, p in conocido.promesas.items())
+                etiqueta=(
+                    "Promesas vivas (cítalas por su alias: en promesas_pagadas si este capítulo "
+                    "las paga, en promesas_reabiertas si las vuelve a abrir; no las repitas en "
+                    "promesas_abiertas)"
+                ),
+                texto="\n".join(
+                    f"{a}: {v.promesa.enunciado}" + _REABRIBLE.get(v.conservar or "", "")
+                    for a, v in conocido.promesas.items()
+                )
                 or "(ninguna)",
                 prioridad=10,
             ),
@@ -187,6 +267,7 @@ def _consolidar(
         return adoptado
 
     momento_base = numero * 100
+    nuevas, reabiertas, pagadas = conocido.clasificar(extraccion)
     resultado = canon.consolidar(
         con,
         novel_id=novel_id,
@@ -207,14 +288,11 @@ def _consolidar(
                 if a in conocido.hechos
             ],
             promesas_abiertas=[
-                canon.PromesaNueva(enunciado=p.enunciado, tipo=p.tipo)
-                for p in extraccion.promesas_abiertas
+                canon.PromesaNueva(enunciado=p.enunciado, tipo=p.tipo) for p in nuevas
             ],
-            promesas_pagadas=[
-                conocido.promesas[a].promesa_id
-                for a in extraccion.promesas_pagadas
-                if a in conocido.promesas
-            ],
+            promesas_pagadas=pagadas,
+            promesas_reabiertas=reabiertas,
+            filas_version=conocido.filas,
             personajes_presentes=extraccion.personajes_presentes,
             ubicaciones={u.personaje: u.lugar for u in extraccion.ubicaciones},
             momento=momento_base,
@@ -252,6 +330,24 @@ def _consolidar(
     return resultado
 
 
+def _cierre_del_reescrito(
+    r: Recursos, *, numero: int, extraccion: Extraccion, conocido: _Conocido
+) -> None:
+    """`cierre_arco` sobre un capítulo reescrito, antes de consolidarlo (TO-047). Deja su score
+    y, si falla, lanza `PromesasSinPago` sin haber escrito nada."""
+    defectos = conocido.sin_pago(extraccion)
+    maximo = r.config.umbrales.continuidad.promesas_pendientes_al_cerrar
+    pasa = len(defectos) <= maximo
+    detalle = "; ".join(defectos) if defectos else "conserva sus promesas"
+    r.trazador.score(
+        "cierre_arco",
+        1.0 if pasa else 0.0,
+        comentario=f"capítulo {numero} reescrito: {detalle}"[:2000],
+    )
+    if not pasa:
+        raise PromesasSinPago(numero, defectos)
+
+
 async def aceptar(
     r: Recursos,
     *,
@@ -278,6 +374,8 @@ async def aceptar(
         nombres=nombres,
         novel_id=novel_id,
     )
+    if conocido.reescrito:
+        _cierre_del_reescrito(r, numero=numero, extraccion=extraccion, conocido=conocido)
     motor = PolicyEngine(r.config)
     with r.trazador.span("consolidar", metadata={"numero": numero, "version": version}):
         return await r.db.en_transaccion(

@@ -9,7 +9,10 @@ Devuelves:
 - **Hechos usados**: de los hechos ya conocidos que se te listan, los identificadores de los
   que este capítulo menciona o en los que se apoya.
 - **Eventos**: lo que ocurre en la fábula, con los personajes presentes y el lugar, en orden.
-- **Promesas**: las expectativas que el capítulo abre ante el lector y las que paga.
+- **Promesas**: las expectativas que el capítulo abre ante el lector y las que paga. De las
+  promesas vivas que se te listan, cita por su identificador las que este capítulo **paga** y
+  las que **vuelve a abrir** —las que ya abría la versión anterior de este mismo capítulo—.
+  Una promesa listada nunca se repite como promesa nueva: se reabre por su identificador.
 - **Elementos personalizados**: de los elementos del encargo que se te listan, cuáles
   aparecen en el capítulo.
 - **Resumen** del capítulo en pocas frases, y su **gancho de cierre**.

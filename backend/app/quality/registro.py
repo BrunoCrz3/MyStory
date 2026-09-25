@@ -100,7 +100,21 @@ REGISTRO: tuple[Validador, ...] = (
     _v("lean_ubicacion", "Consistencia espacial", "formal-Lean", _GT, "O-14"),
     _v("lean_edad", "Coherencia de edad", "formal-Lean", _GT, "O-15"),
     _v("elementos_obligatorios", "Cumplimiento de elementos obligatorios", _P, _GT, "O-04", "O-18"),
-    _v("cierre_arco", "Cierre del arco", _PS, _GT, "O-34", "O-35", "O-36", "O-40", "O-41", "O-43"),
+    # En una regeneración dirigida corre además sobre cada capítulo reescrito antes de
+    # consolidarlo (O-65, TO-047); su punto declarado sigue siendo el gate.
+    _v(
+        "cierre_arco",
+        "Cierre del arco",
+        _PS,
+        _GT,
+        "O-34",
+        "O-35",
+        "O-36",
+        "O-40",
+        "O-41",
+        "O-43",
+        "O-65",
+    ),
     _v("render_visual", "Render visual", _P, _GT, "O-09", "O-10", "O-59", "O-60", "A-106"),
     _v("paridad_pdf_web", "Paridad PDF ↔ web", _P, "export", "O-16"),
     _v("invencion_destinatario", "Invención sobre el destinatario", _PS, _ED, "O-20"),

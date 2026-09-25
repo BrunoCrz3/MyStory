@@ -107,14 +107,17 @@ class Ubicacion(_Salida):
 
 
 class Extraccion(_Salida):
-    """Lectura del capítulo aceptado. `hechos_usados` y `promesas_pagadas` citan los alias
-    (`H1`, `P1`) de la lista que recibe el extractor, no identificadores internos."""
+    """Lectura del capítulo aceptado. `hechos_usados`, `promesas_pagadas` y
+    `promesas_reabiertas` citan los alias (`H1`, `P1`) de la lista que recibe el extractor, no
+    identificadores internos. Reabrir es lo que hace un capítulo reescrito con la promesa que
+    ya abría su versión anterior: la cita por su alias en vez de abrir otra igual (TO-047)."""
 
     hechos_nuevos: list[HechoExtraido]
     hechos_usados: list[str]
     eventos: list[EventoExtraido]
     promesas_abiertas: list[PromesaExtraida]
     promesas_pagadas: list[str]
+    promesas_reabiertas: list[str]
     elementos_presentes: list[str]
     personajes_presentes: list[str]
     ubicaciones: list[Ubicacion]

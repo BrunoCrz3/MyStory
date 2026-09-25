@@ -1673,3 +1673,67 @@ la fase.
   RF-EXP-03, `[post-demo]`.
 - **`render_visual` depende de dos procesos externos** —el servidor MCP y la página de
   lectura—; sin cualquiera de los dos, ninguna versión se publica (A-114).
+
+---
+
+## TO-047 — Promesas en la regeneración dirigida: conservarlas, reabrirlas y devolver al redactor
+
+**Fecha:** 2026-09-24 · **Estado:** **decisión del desarrollador** (resuelve el hueco de F4 de § Pendiente de `specs/progreso.md`, visto en la regeneración real 2 del P44); los detalles de implementación A-125…A-132, **decididos por el agente — revisar** · **Afecta a:** `specs/spec1.md` (RF-VER-08), `docs/verification.md` (O-34, O-65), `docs/architecture.md` § Regeneración dirigida y § Story bible, migración `0015_promesa_por_version.sql`, `backend/app/canon/`, `backend/app/process/{aceptar,capitulo,orquestador}.py`, `backend/app/context/service.py`, prompts `writer.md` y `extractor.md`
+
+### Problema
+
+Una regeneración dirigida reescribe los capítulos afectados en filas nuevas. Las promesas
+estaban atadas a una fila de apertura y una de pago, así que en la versión nueva: lo que abría
+la fila vieja desaparecía aunque un capítulo no afectado lo pagara; lo que pagaba la fila vieja
+se quedaba pendiente, y la fila nueva no podía pagarlo sin cambiar lo que lee la versión
+anterior; y el capítulo reescrito abría promesas nuevas que ningún capítulo no afectado iba a
+pagar. En la regeneración real 2 (P44), `cierre_arco` detuvo la versión 2 por eso.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · La propuesta del agente: al reescribir, cerrar las promesas de la fila vieja que nadie paga, y que el extractor reabra las vivas por su alias | Arregla las promesas heredadas | No impide que el capítulo reescrito abra promesas nuevas que nadie paga: el caso real sigue deteniendo la versión |
+| **B · La propuesta ampliada del desarrollador** | Ataca el caso real en el redactor, en el extractor y en la aceptación, y un fallo gasta intentos en vez de detener | Una migración; un intento fallido paga redactor, judge y extractor otra vez |
+| C · Dejar que el gate detenga, como hasta ahora | Nada que cambiar | La regeneración real no converge |
+
+### Elección
+
+**B, decidida por el desarrollador**, con cuatro reglas:
+
+1. **Al escribir**, el brief del capítulo regenerado lleva como restricción de destino las
+   promesas que abría y pagaba su versión anterior, con el alias que verá el extractor: tiene
+   que conservarlas y no abrir promesas nuevas que ningún capítulo posterior vaya a pagar.
+2. **Al extraer**, el extractor recibe las promesas vivas por su alias y reabre las que abría
+   la versión anterior en vez de duplicarlas.
+3. **Al reconciliar**, una promesa de la fila vieja se cierra solo si el capítulo reescrito no
+   la reabrió y ningún capítulo no afectado la paga.
+4. **Si aun así queda una promesa pendiente**, el fallo de `cierre_arco` vuelve al redactor del
+   capítulo regenerado como intento fallido, con su límite de reintentos; agotados, la novela se
+   detiene como antes.
+
+| Id | Detalle de implementación | Por qué |
+| --- | --- | --- |
+| A-125 | Apertura y pago pasan a ser vínculos de la promesa con filas de capítulo (`promesa_capitulo`, migración 0015); `promesa` pierde `estado`, `capitulo_apertura_id` y `capitulo_pago_id`, y el estado se deriva de las filas de la versión | La fila nueva tiene que reabrir o pagar sin tocar lo que lee la anterior (regla 15). Es el N:M «abre o paga» que ya dibuja `domain-knowledge.md` |
+| A-126 | La reconciliación de la regla 3 no escribe nada: una promesa está en una versión si alguna fila de la versión la abre o la paga | Es la regla 3 escrita como consulta: sin reapertura ni pagador no afectado, ninguna fila la ve y queda cerrada; la versión anterior la sigue viendo entera |
+| A-127 | La comprobación de la regla 4 corre al aceptar cada capítulo reescrito, **antes de consolidarlo**, y no en el gate; el gate sigue pasando `cierre_arco` sobre la versión entera como última red | Tras el gate la candidata ya ocupa su número y es inmutable, y una rechazada detiene (A-113); devolver un capítulo ya consolidado obligaría a deshacer su canon. Antes de consolidar, la extracción se descarta sin rastro (regla 2) |
+| A-128 | Cuenta como pendiente del capítulo reescrito toda promesa nueva y toda promesa que pagaba su fila anterior y él no paga | Los no afectados no cambian y los reescritos posteriores solo pagan lo que conservan: una promesa nueva no la paga nadie. Si todos los reescritos pasan, el gate no encuentra pendientes suyas |
+| A-129 | El intento fallido lo decide el policy engine con un veredicto `cierre_arco` que cierra el paso: queda en el audit log, gasta de `max_intentos_capitulo` y mueve el capítulo `Validando → Reescribiendo` (o a `Agotado`) | Mismo contador y mismas transiciones que un validador del hook de capítulo: la tabla de transiciones no cambia |
+| A-130 | Una promesa «nueva» cuyo enunciado coincide con una que el capítulo puede reabrir se trata como reapertura | Es la duplicación que la regla 2 quiere evitar, aunque el extractor no cite el alias |
+| A-131 | El snapshot deriva las promesas abiertas para la versión que se lee, como los hechos (A-104) | Sin esto, el redactor de un capítulo posterior leía en el snapshot de uno no afectado las promesas de la versión anterior |
+| A-132 | Las promesas que conserva van en la capa Estructural, junto a la restricción de destino; la lista del extractor sigue en Estado (A-110) | Son parte del destino, que no se degrada, y están acotadas por lo que abría y pagaba un solo capítulo |
+
+### Consecuencias
+
+- **La regla 3 deja vivas promesas que el texto nuevo puede no plantear**: si el capítulo
+  reescrito no reabre una promesa que paga uno no afectado, la versión nueva la paga sin que el
+  lector la haya visto abrir. Ningún validador programático lo ve —la promesa está pagada—; es
+  continuidad de prosa (O-62) y la regla 1 es lo que lo previene.
+- **La comprobación cuenta lo que el extractor registra**: una promesa que el texto abre y el
+  extractor no ve no cuenta (O-34, punto ciego #1).
+- **Un intento fallido cuesta una vuelta entera** —redactor, judge, quizá editor, y extractor—
+  y entra en el coste por novela con su tope (RNF-13). En la regeneración real, el capítulo 9 se
+  devolvió dos veces: 1.821 s y 3,22 USD para dos capítulos.
+- **Una novela publicada antes de `cierre_arco` no se puede regenerar tal como está**: la del
+  humo trae dos promesas sin pagar desde su versión 1 y el gate rechaza cualquier versión 2. La
+  comprobación del capítulo reescrito no las cuenta porque no son suyas.

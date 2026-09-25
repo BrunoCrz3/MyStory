@@ -38,9 +38,13 @@ class Consolidacion(BaseModel):
     hechos_usados: list[str] = Field(default_factory=list)
     promesas_abiertas: list[PromesaNueva] = Field(default_factory=list)
     promesas_pagadas: list[str] = Field(default_factory=list)
+    # Las que abría la fila anterior de este capítulo y la nueva vuelve a abrir (TO-047).
+    promesas_reabiertas: list[str] = Field(default_factory=list)
     personajes_presentes: list[str] = Field(default_factory=list)
     ubicaciones: dict[str, str] = Field(default_factory=dict)
     momento: int | None = None
+    # Las demás filas que lee la versión al aceptar este capítulo: de ellas sale el snapshot.
+    filas_version: list[str] = Field(default_factory=list)
 
 
 class HechoPropuesto(BaseModel):
@@ -88,6 +92,8 @@ class Snapshot(BaseModel):
 
 
 class Promesa(BaseModel):
+    """Una promesa vista desde un conjunto de filas de capítulo: el de una versión."""
+
     model_config = ConfigDict(frozen=True)
 
     promesa_id: str
@@ -96,3 +102,26 @@ class Promesa(BaseModel):
     estado: EstadoPromesa
     capitulo_apertura: int
     capitulo_pago: int | None
+
+    def pendiente_tras(self, numero: int) -> bool:
+        """Abierta ante el lector al terminar el capítulo `numero`."""
+        return self.capitulo_apertura <= numero and (
+            self.capitulo_pago is None or self.capitulo_pago > numero
+        )
+
+
+Conservar = Literal["abrir", "pagar"]
+
+
+class PromesaViva(BaseModel):
+    """Una promesa que el capítulo que se escribe puede citar por su alias (`P1`).
+
+    `conservar` dice qué hacía con ella la fila anterior del capítulo, si la hay: una
+    regeneración dirigida tiene que volver a abrirla o a pagarla (TO-047).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    alias: str
+    promesa: Promesa
+    conservar: Conservar | None = None

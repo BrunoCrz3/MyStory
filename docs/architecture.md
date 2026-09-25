@@ -510,6 +510,16 @@ lector confirma. El `Análisis de impacto` se calcula sobre la relación `usa`, 
 `establece`: un hecho establecido en el capítulo 2 y mencionado en el 7 obliga a reescribir
 los dos.
 
+**Las promesas del arco se conservan** (TO-047). El capítulo reescrito recibe en la capa
+Estructural, junto a su restricción de destino, las promesas que abría y pagaba su versión
+anterior, con el alias que verá el extractor; el extractor puede reabrirlas por ese alias en
+vez de abrir otras iguales. Antes de consolidarlo corre `cierre_arco` sobre lo que le toca: una
+promesa nueva —que no pagará nadie, porque los no afectados no cambian— o una que pagaba su
+versión anterior y ya no paga lo devuelve a su redactor como intento fallido, decidido por el
+policy engine y con el mismo contador que un validador del hook de capítulo. La reconciliación
+no escribe nada: una promesa está en una versión si alguna fila de esa versión la abre o la
+paga, así que la de la fila vieja se cierra sola cuando nadie la reabre ni la paga.
+
 ### Paralelo y serie
 
 | Modo | Quién | Por qué |
@@ -817,7 +827,8 @@ es correcta sin acotar a una—, y ninguna lleva `user_id` ni `tenant_id`.
 | Hecho | `hecho` | `estado`, `origen`, `fragmento_soporte`, `alcance_temporal` |
 | Uso de hecho | `hecho_capitulo` | puente N:M; sostiene el análisis de impacto |
 | Snapshot | `snapshot` | derivado, uno por capítulo |
-| Promesa narrativa | `promesa` | `estado`, `capitulo_apertura`, `capitulo_pago` |
+| Promesa narrativa | `promesa` | el estado se deriva por versión (TO-047) |
+| Apertura y pago de promesa | `promesa_capitulo` | puente N:M con `papel` `apertura` o `pago`; una versión ve lo que ven sus filas |
 | Contradicción de canon | `contradiccion_canon` | |
 | Retcon | `retcon` | |
 | Restricción de destino | `restriccion_destino` | |
@@ -875,7 +886,7 @@ capítulos usan este hecho» se ejecuta en cada solicitud de cambio.
 | `(novel_id, version)` | `version_capitulo` | Qué capítulos cambiaron entre dos versiones |
 | `(novel_id, momento)` | `evento` | Orden cronológico para generar el fichero Lean |
 | `(novel_id, personaje_id)` | `evento_personaje` | Personajes presentes en cada evento |
-| `(novel_id, estado)` | `promesa` | Promesas pendientes al cerrar |
+| `(novel_id, capitulo_id, papel)` | `promesa_capitulo` | Qué abre y qué paga cada fila; las pendientes al cerrar se derivan de las filas de la versión |
 
 Migraciones numeradas en `backend/app/commons/db/migrations/` ▸ previsto, aplicadas en orden y **nunca
 editadas** una vez commiteadas. `WAL` activado. Toda escritura a la story bible va en

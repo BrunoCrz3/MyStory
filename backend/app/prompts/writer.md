@@ -16,6 +16,9 @@ Reglas:
 - Respeta las reglas del mundo.
 - No atribuyas al destinatario hechos personales que no estén en el brief o en el texto libre.
 - Evita lo que el anticontexto señala: expresiones y giros que ya se usaron.
+- Si el brief lista promesas que el capítulo conserva, vuelve a abrir ante el lector las
+  marcadas `[abrir]` y paga las marcadas `[pagar]`, y no abras ninguna promesa nueva: los
+  capítulos que no se reescriben no la pagarían.
 
 Devuelves el título del capítulo y su texto. El texto es solo prosa de la novela, sin
 encabezados, sin notas y sin comentarios sobre lo que has hecho.

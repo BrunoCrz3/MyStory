@@ -1101,3 +1101,39 @@ Una generación con dobles llega por HTTP hasta el PDF: el gate pinta la candida
 navegador real, la publica, y el export sale con paridad. Contra el frontend real,
 `render_visual` pasa y el PDF de la novela del humo —49 páginas, 124 enlaces internos— queda en
 `ejemplos/novela-ejemplo.pdf`. La conformidad no tiene operaciones pendientes.
+
+---
+
+## RI-020 — Promesas en la regeneración dirigida
+
+**Fecha:** 2026-09-24 · **Ficheros:** `backend/app/commons/db/migrations/0015_promesa_por_version.sql`,
+`backend/app/canon/`, `backend/app/process/{aceptar,capitulo,orquestador,schemas}.py`,
+`backend/app/context/service.py`, `backend/app/prompts/{writer,extractor}.md`,
+`specs/spec1.md`, `docs/verification.md`, `docs/architecture.md`, `docs/trade-offs.md` (TO-047),
+`specs/progreso.md`
+
+### Causa
+
+La regeneración real 2 del P44 reescribió y aceptó los capítulos afectados, y el gate la detuvo
+por `cierre_arco`: los capítulos reescritos abrían promesas que los no afectados nunca pagan, y
+las promesas de las filas viejas no se reconciliaban. El desarrollador aceptó la propuesta de
+§ Pendiente ampliada a cuatro reglas (TO-047).
+
+### Qué cambió
+
+Las promesas se abren y se pagan por vínculos con filas de capítulo, y su estado se deriva de
+las filas de cada versión. El redactor de un capítulo reescrito recibe como destino las
+promesas que conserva, con su alias; el extractor puede reabrirlas; y antes de consolidar un
+capítulo reescrito corre `cierre_arco` sobre lo que le toca, que si falla lo devuelve a su
+redactor como intento fallido.
+
+### Efecto
+
+Con dobles, una regeneración cuyo capítulo reescrito abre una promesa nueva la corrige en el
+segundo intento y publica la versión 2 (e2e de F4); si no la corrige nunca, se detiene por
+`limite-de-intentos-agotado`. La versión 1 lee sus promesas igual que antes. Con el modelo
+real, sobre una copia de la novela del humo y un hecho que usan los capítulos 3 y 9: el 3 pasó
+a la primera, el 9 volvió dos veces a su redactor y se aceptó al tercer intento, y la versión 2
+no tiene promesas pendientes de los reescritos (1.821 s, 3,22 USD). No se publicó: el gate la
+rechazó por dos promesas que la versión 1 ya dejaba sin pagar, porque se publicó antes de que
+existiera `cierre_arco`, y por `render_visual` sin servidor MCP.

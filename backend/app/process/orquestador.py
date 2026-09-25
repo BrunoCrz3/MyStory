@@ -15,15 +15,15 @@ from functools import partial
 from typing import Any
 
 from app.canon import service as canon
-from app.commons.errores import ErrorDominio, LimiteDeIntentosAgotado
+from app.commons.errores import ErrorDominio, LimiteDeIntentosAgotado, NovelaNoEncontrada
 from app.commons.llm import ErrorModelo
 from app.commons.llm.llamar import Consumo, acumular_en
 from app.commons.recursos import Recursos
 from app.commons.tiempo import ahora
 from app.novel import service as novel
-from app.policy.service import PolicyEngine
+from app.policy.service import DecisionCapitulo, PolicyEngine, Veredicto
 from app.process import repository
-from app.process.aceptar import aceptar
+from app.process.aceptar import PromesasSinPago, aceptar
 from app.process.capitulo import ciclo_capitulo
 from app.process.planificar import planificar
 from app.process.service import Publicador, VeredictoGate
@@ -186,6 +186,10 @@ class Orquestador:
         versiones. Antes de reescribir, lo que la fila vieja establecía o usaba se retira del
         canon desde la versión nueva, y el redactor recibe el cambio como aviso. Reanudable:
         los capítulos ya aceptados en la versión objetivo se saltan.
+
+        Un capítulo reescrito que dejaría una promesa pendiente al cierre no se consolida:
+        vuelve a su redactor como intento fallido, con el mismo límite de intentos que un
+        validador que cierra el paso; agotado, la regeneración se detiene (TO-047).
         """
         novel_id, version = t["novel_id"], t["version_objetivo"]
         await self.estado_inicial(novel_id, version)
@@ -210,22 +214,7 @@ class Orquestador:
                     )
                 )
             await self._actualizar(t, capitulo_actual=numero)
-            resultado = await ciclo_capitulo(
-                self.r, novel_id=novel_id, version=version, numero=numero, aviso=aviso
-            )
-            if resultado.accion != "aceptar":
-                raise GeneracionDetenida(
-                    resultado.detenida_por or "limite-de-intentos-agotado",
-                    f"el capítulo {numero} no convergió al reescribirlo ({resultado.accion})",
-                )
-            await aceptar(
-                self.r,
-                novel_id=novel_id,
-                version=version,
-                numero=numero,
-                resultado=resultado,
-                generacion_id=t["id"],
-            )
+            await self._reescribir(t, numero=numero, aviso=aviso)
             await self._guardar_consumo(t, consumo)
             self._comprobar_topes(t, consumo)
 
@@ -233,6 +222,76 @@ class Orquestador:
         if estado == "Regenerando":
             await self._mover_novela(t, "CerrarRegeneracion")
         await self._cerrar(t)
+
+    async def _reescribir(self, t: dict[str, Any], *, numero: int, aviso: str | None) -> None:
+        """Escribe y acepta un capítulo afectado. Si la aceptación lo rechaza por promesas
+        sin pagar, el intento cuenta como fallido y el redactor recibe los defectos."""
+        novel_id, version = t["novel_id"], t["version_objetivo"]
+        devuelto: list[str] = []
+        while True:
+            resultado = await ciclo_capitulo(
+                self.r,
+                novel_id=novel_id,
+                version=version,
+                numero=numero,
+                aviso=aviso,
+                devuelto=devuelto,
+            )
+            if resultado.accion != "aceptar":
+                raise GeneracionDetenida(
+                    resultado.detenida_por or "limite-de-intentos-agotado",
+                    f"el capítulo {numero} no convergió al reescribirlo ({resultado.accion})",
+                )
+            try:
+                await aceptar(
+                    self.r,
+                    novel_id=novel_id,
+                    version=version,
+                    numero=numero,
+                    resultado=resultado,
+                    generacion_id=t["id"],
+                )
+                return
+            except PromesasSinPago as e:
+                decision = await self.r.db.en_transaccion(
+                    partial(self._devolver, novel_id=novel_id, version=version, numero=numero)
+                )
+                if decision.accion != "devolver":
+                    raise GeneracionDetenida(
+                        decision.detenida_por or "limite-de-intentos-agotado",
+                        f"el capítulo {numero} no convergió al reescribirlo: {e}",
+                    ) from e
+                devuelto = e.defectos
+
+    def _devolver(
+        self, con: sqlite3.Connection, *, novel_id: str, version: int, numero: int
+    ) -> DecisionCapitulo:
+        """El capítulo, que el policy engine acababa de aceptar, vuelve a `Reescribiendo` por
+        `cierre_arco`, o se agota si ya no le quedan intentos. La decisión, al audit log."""
+        cap = novel.capitulo_en_curso(con, novel_id=novel_id, numero=numero, version=version)
+        if cap is None:
+            raise NovelaNoEncontrada(f"no hay capítulo {numero} en {novel_id}", novel_id=novel_id)
+        decision = PolicyEngine(self.r.config).decidir_capitulo(
+            con,
+            novel_id=novel_id,
+            capitulo_id=cap.capitulo_id,
+            intentos=cap.intentos,
+            veredictos=[
+                Veredicto(nombre="cierre_arco", pasa=False, cierra_el_paso=True, valor=0.0)
+            ],
+            reescrituras_por_guardrail=0,
+        )
+        estado = aplicar("Capitulo", cap.estado, "Reescribir")
+        intentos = cap.intentos
+        if decision.accion == "devolver":
+            intentos += 1
+        else:
+            # Agotado: el contador cuenta las reescrituras hechas, y esta ya no se hace.
+            estado = aplicar("Capitulo", estado, "Agotar")
+        novel.fijar_estado_capitulo(
+            con, novel_id=novel_id, capitulo_id=cap.capitulo_id, estado=estado, intentos=intentos
+        )
+        return decision
 
     @staticmethod
     def _preparar_reescritura(

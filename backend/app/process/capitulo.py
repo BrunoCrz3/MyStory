@@ -200,10 +200,18 @@ def _tarea(r: Recursos, numero: int, informe: list[str], aviso: str | None = Non
 
 
 async def ciclo_capitulo(
-    r: Recursos, *, novel_id: str, version: int, numero: int, aviso: str | None = None
+    r: Recursos,
+    *,
+    novel_id: str,
+    version: int,
+    numero: int,
+    aviso: str | None = None,
+    devuelto: list[str] | None = None,
 ) -> ResultadoCapitulo:
     """Escribe y valida el capítulo `numero` de `version`. `aviso` es lo que el redactor tiene
-    que saber además de su contexto: en una regeneración dirigida, qué hecho cambió."""
+    que saber además de su contexto: en una regeneración dirigida, qué hecho cambió.
+    `devuelto` son los defectos de un intento que falló después de aceptarse —las promesas de
+    un capítulo reescrito (TO-047)—, y el primer borrador de esta llamada los corrige."""
     config = r.config
     motor = PolicyEngine(config)
     ensamblador = context.Ensamblador(config, context.ContadorProveedor(r.llamador))
@@ -224,7 +232,7 @@ async def ciclo_capitulo(
         brief_capitulo=datos.brief_capitulo,
         palabras_novela=datos.palabras,
     )
-    informe: list[str] = []
+    informe: list[str] = list(devuelto or [])
     reescrituras_por_guardrail = 0
 
     async def validar(

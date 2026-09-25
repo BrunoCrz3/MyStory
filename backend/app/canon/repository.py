@@ -107,20 +107,24 @@ def insertar_promesa(
 ) -> str:
     promesa_id = str(uuid.uuid4())
     con.execute(
-        "INSERT INTO promesa (id, novel_id, enunciado, tipo, capitulo_apertura_id)"
-        " VALUES (?, ?, ?, ?, ?)",
-        (promesa_id, novel_id, promesa.enunciado, promesa.tipo, capitulo_id),
+        "INSERT INTO promesa (id, novel_id, enunciado, tipo) VALUES (?, ?, ?, ?)",
+        (promesa_id, novel_id, promesa.enunciado, promesa.tipo),
+    )
+    vincular_promesa(
+        con, novel_id=novel_id, promesa_id=promesa_id, capitulo_id=capitulo_id, papel="apertura"
     )
     return promesa_id
 
 
-def pagar_promesa(
-    con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, promesa_id: str
+def vincular_promesa(
+    con: sqlite3.Connection, *, novel_id: str, promesa_id: str, capitulo_id: str, papel: str
 ) -> None:
+    """Una fila de capítulo abre o paga una promesa (TO-047). Nunca se modifica un vínculo:
+    la fila nueva de una regeneración añade el suyo y la vieja conserva el que tenía."""
     con.execute(
-        "UPDATE promesa SET estado = 'pagada', capitulo_pago_id = ?"
-        " WHERE novel_id = ? AND id = ? AND estado = 'pendiente'",
-        (capitulo_id, novel_id, promesa_id),
+        "INSERT OR IGNORE INTO promesa_capitulo (novel_id, promesa_id, capitulo_id, papel)"
+        " SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM promesa WHERE id = ? AND novel_id = ?)",
+        (novel_id, promesa_id, capitulo_id, papel, promesa_id, novel_id),
     )
 
 
@@ -201,46 +205,44 @@ def leer_capitulos_que_usan(
 
 
 def leer_promesas(
-    con: sqlite3.Connection, *, novel_id: str, version: int, capitulo_ids: list[str]
+    con: sqlite3.Connection, *, novel_id: str, capitulo_ids: list[str]
 ) -> list[Promesa]:
-    """Promesas abiertas en los capítulos de una versión, con su estado en esa versión."""
+    """Las promesas que ven unas filas de capítulo —las de una versión— con su estado en ellas.
+
+    Una promesa está en la versión si alguna de sus filas la abre **o la paga**: la que
+    abría una fila reescrita y paga una no afectada sigue viva aunque la nueva no la reabra;
+    solo desaparece si ninguna fila de la versión la abre ni la paga (TO-047). Su apertura es
+    la de la versión, o la de la fila que la abrió si ya no está.
+    """
     if not capitulo_ids:
         return []
     marcas = ",".join("?" for _ in capitulo_ids)
     filas = con.execute(
-        "SELECT p.id, p.enunciado, p.tipo, ca.numero AS apertura, cp.numero AS pago,"
-        f" p.capitulo_pago_id IN ({marcas}) AS pagada_aqui"
-        " FROM promesa p JOIN capitulo ca ON ca.id = p.capitulo_apertura_id"
-        " LEFT JOIN capitulo cp ON cp.id = p.capitulo_pago_id"
-        f" WHERE p.novel_id = ? AND p.capitulo_apertura_id IN ({marcas}) AND ca.version <= ?"
-        " ORDER BY ca.numero, p.id",
-        (*capitulo_ids, novel_id, *capitulo_ids, version),
+        "SELECT p.id, p.enunciado, p.tipo,"
+        " coalesce("
+        "   (SELECT min(c.numero) FROM promesa_capitulo v JOIN capitulo c ON c.id = v.capitulo_id"
+        f"    WHERE v.promesa_id = p.id AND v.papel = 'apertura' AND v.capitulo_id IN ({marcas})),"
+        "   (SELECT min(c.numero) FROM promesa_capitulo v JOIN capitulo c ON c.id = v.capitulo_id"
+        "    WHERE v.promesa_id = p.id AND v.papel = 'apertura')) AS apertura,"
+        " (SELECT min(c.numero) FROM promesa_capitulo v JOIN capitulo c ON c.id = v.capitulo_id"
+        f"  WHERE v.promesa_id = p.id AND v.papel = 'pago' AND v.capitulo_id IN ({marcas})) AS pago"
+        " FROM promesa p WHERE p.novel_id = ? AND EXISTS ("
+        "   SELECT 1 FROM promesa_capitulo v WHERE v.promesa_id = p.id"
+        f"   AND v.capitulo_id IN ({marcas}))"
+        " ORDER BY apertura, p.rowid",
+        (*capitulo_ids, *capitulo_ids, novel_id, *capitulo_ids),
     ).fetchall()
     return [
         Promesa(
             promesa_id=f["id"],
             enunciado=f["enunciado"],
             tipo=f["tipo"],
-            estado="pagada" if f["pagada_aqui"] else "pendiente",
+            estado="pendiente" if f["pago"] is None else "pagada",
             capitulo_apertura=f["apertura"],
-            capitulo_pago=f["pago"] if f["pagada_aqui"] else None,
+            capitulo_pago=f["pago"],
         )
         for f in filas
     ]
-
-
-def promesas_pendientes_hasta(
-    con: sqlite3.Connection, *, novel_id: str, version: int, numero: int
-) -> list[str]:
-    filas = con.execute(
-        "SELECT p.enunciado FROM promesa p JOIN capitulo ca ON ca.id = p.capitulo_apertura_id"
-        " LEFT JOIN capitulo cp ON cp.id = p.capitulo_pago_id"
-        " WHERE p.novel_id = ? AND ca.version <= ? AND ca.numero <= ?"
-        " AND (cp.id IS NULL OR cp.numero > ?)"
-        " ORDER BY ca.numero, p.id",
-        (novel_id, version, numero, numero),
-    ).fetchall()
-    return [f["enunciado"] for f in filas]
 
 
 def existe_novela(con: sqlite3.Connection, *, novel_id: str) -> bool:

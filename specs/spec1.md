@@ -459,9 +459,26 @@ fragmento **nunca regenera sola** (TO-011).
 retcon por vigencia, marcar `Obsoleto` los capítulos afectados **y solo esos**, regenerarlos,
 volver a pasar el gate completo y publicar una versión nueva.
 
+**La regeneración no rompe las promesas del arco** (TO-047). El brief del capítulo regenerado
+lleva como restricción de destino las promesas que abría y pagaba su versión anterior, con el
+alias que verá el extractor, y le prohíbe abrir promesas nuevas que ningún capítulo posterior
+vaya a pagar. El extractor recibe las promesas vivas por su alias y reabre las que abría la
+versión anterior en vez de duplicarlas. Una promesa de la fila vieja se cierra solo si el
+capítulo reescrito no la reabrió y ningún capítulo no afectado la paga. Si aun así el capítulo
+reescrito deja una promesa pendiente al cierre, `cierre_arco` —que corre sobre él al aceptarlo,
+antes de consolidar— lo devuelve a su redactor como intento fallido, con el límite de
+`orquestacion.max_intentos_capitulo`; agotado, la novela se detiene con
+`limite-de-intentos-agotado`.
+
 > *Dado* una novela en la versión 1 con tres capítulos afectados, *cuando* se confirma el
 > cambio, *entonces* la versión 2 tiene esos tres reescritos, **los otros siete idénticos
 > byte a byte**, y la versión 1 sigue consultable.
+
+> *Dado* un capítulo afectado cuya versión anterior abría una promesa que paga uno no
+> afectado, *cuando* su reescritura abre una promesa nueva en lugar de reabrir la suya,
+> *entonces* el intento cuenta como fallido, el redactor recibe la promesa que sobra, y la
+> versión 2 se publica cuando el capítulo conserva sus promesas; la versión 1 lee las suyas
+> igual que antes.
 
 **RF-VER-09 [demo]** · Cuando llegue una solicitud de cambio mientras hay una generación o
 regeneración en curso para esa novela, el sistema deberá rechazarla con
@@ -839,7 +856,7 @@ la revisión humana; el gate de Lean; SSE para el progreso; y PO-11 y PO-12.
 | RF-VER-01, 02, 03 | §2 | TO-028 | O-61, O-63, O-64, A-88, P-63 |
 | RF-VER-04, 05 | §2 | — | O-59, O-60, O-18 |
 | RF-VER-06, 07 | §2 | TO-011 | O-62, P-62 |
-| RF-VER-08 | §2 | TO-011, TO-028 | P-62, P-64, O-61 |
+| RF-VER-08 | §2 | TO-011, TO-028, TO-047 | P-62, P-64, O-61, O-65 |
 | RF-VER-09 | §2 | **TO-032** | — |
 | RF-EXP-01, 02 | §2 | TO-003, TO-025, TO-026 | O-16, A-103, A-105 |
 | § 4.4 contrato de lectura, CL-01…05 | §2, §5a | **TO-037** | O-09, O-10, O-16, O-59, O-60 |

@@ -254,6 +254,34 @@ def _render_snapshot(snapshot: canon.Snapshot) -> str:
     return "\n".join(lineas)
 
 
+def _promesas_que_conserva(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, filas: list[str], fila_anterior: str
+) -> Pieza:
+    """Un capítulo reescrito conserva las promesas de su versión anterior: forman parte de su
+    restricción de destino, porque los capítulos que no se reescriben cuentan con ellas. Van
+    con el alias que verá el extractor (TO-047)."""
+    conserva = [
+        v
+        for v in canon.promesas_vivas(
+            con, novel_id=novel_id, numero=numero, filas_version=filas, fila_anterior=fila_anterior
+        )
+        if v.conservar
+    ]
+    return Pieza(
+        etiqueta=(
+            "Promesas que este capítulo conserva (su versión anterior las abría o las pagaba, "
+            "y los capítulos que no se reescriben cuentan con ellas)"
+        ),
+        texto="\n".join(
+            [
+                *(f"- {v.alias} [{v.conservar}]: {v.promesa.enunciado}" for v in conserva),
+                "No abras promesas nuevas ante el lector: ningún capítulo posterior las pagaría.",
+            ]
+        ),
+        prioridad=10,
+    )
+
+
 def piezas_redactor(
     con: sqlite3.Connection,
     config: Config,
@@ -267,11 +295,9 @@ def piezas_redactor(
 ) -> dict[str, list[Pieza]]:
     """Las siete capas del contexto del redactor para el capítulo `numero` (RF-CTX-01)."""
     cap = config.umbrales.capitulo
-    anteriores = [
-        c
-        for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
-        if c.numero < numero
-    ]
+    aceptados = novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+    anteriores = [c for c in aceptados if c.numero < numero]
+    filas = [c.capitulo_id for c in aceptados if c.numero != numero]
     bc = brief_capitulo
     estructural = [
         Pieza(
@@ -302,12 +328,19 @@ def piezas_redactor(
                 prioridad=10,
             )
         )
+    fila_anterior = novel.capitulo_vigente(con, novel_id=novel_id, numero=numero, version=version)
+    if fila_anterior is not None:
+        estructural.append(
+            _promesas_que_conserva(
+                con, novel_id=novel_id, numero=numero, filas=filas, fila_anterior=fila_anterior
+            )
+        )
 
     estado = [Pieza(etiqueta="Estado de entrada", texto=bc.estado_entrada, prioridad=10)]
     if anteriores:
         previo = anteriores[-1]
         snapshot = canon.snapshot_de(
-            con, novel_id=novel_id, version=version, capitulo_id=previo.capitulo_id
+            con, novel_id=novel_id, version=version, capitulo_id=previo.capitulo_id, filas=filas
         )
         if snapshot is not None:
             estado.append(Pieza(texto=_render_snapshot(snapshot), prioridad=9))
@@ -404,14 +437,15 @@ def piezas_judge(
         )
     ]
     estado = [Pieza(etiqueta="Estado de entrada", texto=bc.estado_entrada, prioridad=10)]
-    previos = [
-        c
-        for c in novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
-        if c.numero < numero
-    ]
+    aceptados = novel.capitulos_aceptados(con, novel_id=novel_id, version=version)
+    previos = [c for c in aceptados if c.numero < numero]
     if previos:
         snapshot = canon.snapshot_de(
-            con, novel_id=novel_id, version=version, capitulo_id=previos[-1].capitulo_id
+            con,
+            novel_id=novel_id,
+            version=version,
+            capitulo_id=previos[-1].capitulo_id,
+            filas=[c.capitulo_id for c in aceptados if c.numero != numero],
         )
         if snapshot is not None:
             estado.append(Pieza(texto=_render_snapshot(snapshot), prioridad=9))
