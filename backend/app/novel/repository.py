@@ -358,6 +358,21 @@ def leer_presencias(
     return [(str(f[0]), str(f[1]), f[2]) for f in filas]
 
 
+def leer_excluyentes(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[tuple[str, str, str]]:
+    """`(evento_id, personaje_id, tipo)` de los excluyentes de eventos vigentes en `version`:
+    heredan la vigencia de su evento."""
+    filas = con.execute(
+        "SELECT x.evento_id, x.personaje_id, x.tipo FROM evento_excluyente x"
+        " JOIN evento e ON e.id = x.evento_id"
+        f" WHERE x.novel_id = :novel_id AND {_vigente('e')}"
+        " ORDER BY x.evento_id, x.personaje_id",
+        {"novel_id": novel_id, "version": version},
+    ).fetchall()
+    return [(str(f[0]), str(f[1]), str(f[2])) for f in filas]
+
+
 def retirar_eventos(
     con: sqlite3.Connection, *, novel_id: str, capitulo_id: str, version: int
 ) -> None:

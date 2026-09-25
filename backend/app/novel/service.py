@@ -44,6 +44,7 @@ __all__ = [
     "HiloTrama",
     "Lugar",
     "Personaje",
+    "PresenciaEnEvento",
     "ReglaMundo",
     "capitulo_en_curso",
     "capitulos_aceptados",
@@ -52,6 +53,7 @@ __all__ = [
     "crear_novela",
     "estado_de_obra",
     "eventos_de_version",
+    "excluyentes_de_version",
     "fijar_estado_capitulo",
     "fijar_estado_obra",
     "fijar_titulo",
@@ -61,6 +63,7 @@ __all__ = [
     "nombres_de_la_obra",
     "obtener_novela",
     "personajes",
+    "personajes_por_id",
     "registrar_elementos_en_capitulo",
     "registrar_eventos",
     "registrar_excluyentes",
@@ -233,6 +236,26 @@ def personajes(con: sqlite3.Connection, *, novel_id: str) -> list[Personaje]:
         )
         for f in repository.leer_personajes(con, novel_id=novel_id)
     ]
+
+
+def personajes_por_id(con: sqlite3.Connection, *, novel_id: str) -> dict[str, Personaje]:
+    """El reparto indexado por su id: lo que la verificación formal enlaza con sus
+    identificadores sintéticos."""
+    return {
+        str(f["id"]): Personaje(
+            nombre=f["nombre"],
+            es_destinatario=bool(f["es_destinatario"]),
+            fecha_nacimiento=f["fecha_nacimiento"],
+        )
+        for f in repository.leer_personajes(con, novel_id=novel_id)
+    }
+
+
+def excluyentes_de_version(
+    con: sqlite3.Connection, *, novel_id: str, version: int
+) -> list[tuple[str, str, str]]:
+    """`(evento_id, personaje_id, tipo)` de los `Evento excluyente` vigentes en `version`."""
+    return repository.leer_excluyentes(con, novel_id=novel_id, version=version)
 
 
 def lugares(con: sqlite3.Connection, *, novel_id: str) -> list[Lugar]:

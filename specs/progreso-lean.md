@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L04 |
+| Paso actual | L05 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L03 |
+| Último commit de paso | L04 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -53,6 +53,13 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   con `app/versioning/lean/toolchain.py` (L-D10), que ya lo encuentra en `~/.elan/bin` sin
   tocar el PATH. README: Lean es obligatorio donde corra la suite. Build del proyecto en frío,
   3,6 s.
+
+- **L04** — `versioning/lean/generar.py`: `leer_cronologia` (eventos vigentes en la versión, con
+  `hasta_numero` para el incremental; excluyentes de esos eventos; años de nacimiento) y
+  `generar` (módulo `Cronologia.Hechos` con cuatro teoremas por evento y el índice línea →
+  teorema). Propiedades con `hypothesis`: mismo fichero en cualquier orden de filas, sin
+  Mathlib ni texto libre, índice completo. `novel` gana `personajes_por_id` y
+  `excluyentes_de_version`.
 
 ## Decisiones
 
