@@ -5,49 +5,27 @@ React 18 + TypeScript + Vite. Tres páginas: `entrevista`, `progreso` y `lectura
 
 ## Arrancar frontend y backend juntos
 
-Hacen falta dos terminales, y una tercera si se quiere `render_visual`. Los puertos son
-fijos: el backend escucha en `127.0.0.1:8000` y el frontend en `127.0.0.1:5173`.
+El arranque completo —servidor Playwright MCP, backend y frontend, con sus variables— está en el
+[README raíz](../README.md#arrancar-la-demo-en-windows), y el comando del servidor MCP, en
+[`docs/browser-mcp.md` § El servidor](../docs/browser-mcp.md#el-servidor), que es su única fuente.
+No es opcional: sin ese servidor ninguna versión se publica.
 
-**1. Backend** (desde la raíz del repositorio; detalle en `specs/plan1.md` § 9). `backend/` lo
-construye el plan 1 en su propia rama; hasta que se fusione, estos comandos se ejecutan allí:
-
-```bash
-cp .env.example .env        # PowerShell: Copy-Item .env.example .env
-# En .env: ANTHROPIC_API_KEY, LANGFUSE_* y STORYMAKER_LECTURA_URL=http://127.0.0.1:5173
-cd backend
-uv sync
-uv run playwright install chromium
-uv run --env-file ../.env uvicorn app.main:app --reload --port 8000
-```
-
-Un solo worker y solo en `127.0.0.1`: el backend no tiene autenticación (spec1 RNF-12).
-`STORYMAKER_LECTURA_URL` es la URL de este frontend. Con ella, `render_visual` y el export a
-PDF abren la página de lectura (`spec1.md` § 4.4).
-
-**2. Frontend** (otra terminal):
+Lo propio del frontend:
 
 ```bash
 cd frontend
 npm install
-npm run dev                 # http://127.0.0.1:5173
+npm run dev                 # puerto 5173 fijo: es el valor de STORYMAKER_LECTURA_URL
 ```
 
-El frontend llama al backend por el proxy de Vite: `/api/*` → `http://127.0.0.1:8000/*`.
-No hace falta CORS.
-
-**3. Opcional, para `render_visual`** (otra terminal):
-
-```bash
-npx -y @playwright/mcp --port 8931
-```
-
-**Comprobarlo**: `http://127.0.0.1:5173/api/salud` debe devolver el JSON de `GET /salud`. Si
-devuelve 500 y la terminal de Vite dice `ECONNREFUSED 127.0.0.1:8000`, el backend no está
-levantado.
+El frontend llama al backend por el proxy de Vite: `/api/*` → `http://127.0.0.1:8000/*`, así
+que no hace falta CORS. **Comprobarlo**: `http://localhost:5173/api/salud` debe devolver el
+JSON de `GET /salud`. Si devuelve 500 y la terminal de Vite dice `ECONNREFUSED 127.0.0.1:8000`,
+el backend no está levantado.
 
 ## Recorrido de la demo
 
-1. `http://127.0.0.1:5173/`: rellena el formulario —el ejemplo `BriefNovela` de
+1. `http://localhost:5173/`: rellena el formulario —el ejemplo `BriefNovela` de
    `specs/openapi.yaml` sirve de guía, con datos ficticios—, pulsa **Validar** y, con el
    brief completo, **Crear y generar**.
 2. El progreso se actualiza solo al ritmo que marca el backend y se para al terminar.

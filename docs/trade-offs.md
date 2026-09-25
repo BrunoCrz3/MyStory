@@ -1958,3 +1958,47 @@ no cambian.
 - `ejemplos/novela-ejemplo.pdf` se regenera con la novela nueva de la demo, que usa este brief.
 - Las entradas antiguas de `docs/` y las trazas ya enviadas a Langfuse conservan el nombre
   anterior: son registro histórico, no ejemplos.
+
+---
+
+## TO-053 — Configuración de la demo en Windows: ruta de la base, base de las pruebas y navegadores
+
+**Fecha:** 2026-09-25 · **Estado:** decidida en la integración de la demo (las dos primeras
+filas, **decididas por el agente — revisar**) · **Afecta a:** `backend/app/commons/db/conexion.py`,
+`backend/tests/e2e/app_con_dobles.py`, `backend/tests/e2e/proceso.py`, `.env.example`,
+`README.md`, `frontend/README.md`
+
+### Problema
+
+Al migrar a Windows aparecieron tres trampas de configuración:
+
+1. Una `STORYMAKER_DB_PATH` relativa se resolvía desde el directorio de trabajo: el README
+   arranca desde `backend/`, así que la misma `.env` abría `backend/data/…` o `data/…` según
+   desde dónde se lanzara. El P27 lo esquivaba con una ruta absoluta escrita a mano.
+2. El backend con dobles de las pruebas (`app_con_dobles`) usaba la base del entorno: lanzado a
+   mano con el `.env` de la demo, como en la integración del P49, escribía novelas del doble en
+   la base de la demo.
+3. `uv run --env-file` descarta el `.env` **entero** si una línea no se puede leer (una ruta de
+   Windows con barras invertidas sin comillas) y solo avisa con un warning.
+
+### Opciones y elección
+
+| Trampa | Opciones | Elección |
+| --- | --- | --- |
+| Ruta relativa | A · Documentar «usa ruta absoluta»; **B · resolver la relativa desde la raíz del repositorio** | **B**: la misma `.env` abre la misma base desde cualquier directorio. Arreglo de bug con prueba previa (`test_una_ruta_relativa_se_resuelve_desde_la_raiz_del_repo`) |
+| Base de las pruebas | A · Confiar en que nadie lance `app_con_dobles` con el `.env` de la demo; **B · `app_con_dobles` ignora `STORYMAKER_DB_PATH`** y usa `STORYMAKER_E2E_DB_PATH` o `data/storymaker-e2e.db` | **B**, con prueba (`tests/e2e/test_base_separada.py`). Las pruebas le pasan su base temporal por `STORYMAKER_E2E_DB_PATH`. Solo toca código de pruebas |
+| `.env` ilegible | A · Cargar `.env` desde el backend con un parser propio; **B · documentar el formato** | **B**: no añade código ni dependencia. `.env.example` y el README dicen que las rutas de Windows van con barras normales o entre comillas simples |
+
+**Navegadores.** El browser MCP del agente y el servidor Playwright MCP del gate usan **Edge**
+(`--browser msedge`). El export a PDF usa el **Chromium de Playwright** (A-123), que se instala
+con `uv run playwright install chromium`. Usar Edge también en el export (`channel="msedge"`)
+ahorraría esa instalación, pero ata el PDF a la versión de Edge del sistema, que se actualiza
+sola. Se deja como propuesta al desarrollador y no se cambia sin su decisión.
+
+### Consecuencias
+
+- `.env.example` documenta el formato, el valor exacto de `PLAYWRIGHT_MCP_URL`, cuándo hace falta
+  `STORYMAKER_CLAUDE_CODE` y que `STORYMAKER_ENV` solo etiqueta las trazas. Corrige además un
+  comentario que atribuía el PDF al servidor MCP.
+- El README explica el arranque en Windows y remite a `docs/browser-mcp.md` como fuente del
+  comando del servidor MCP, igual que `frontend/README.md`.

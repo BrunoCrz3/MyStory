@@ -1283,3 +1283,31 @@ coincidencia ajustada a la longitud nueva.
 
 Backend: 463 pasadas, 6 omitidas. Frontend: 94 de 94, `typecheck` en verde. El contrato sigue en
 la 1.2.0.
+
+---
+
+## RI-026 — Configuración de la demo en Windows
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/commons/db/conexion.py`,
+`backend/tests/commons/test_db.py`, `backend/tests/e2e/app_con_dobles.py`,
+`backend/tests/e2e/proceso.py`, `backend/tests/e2e/test_base_separada.py`, `.env.example`,
+`README.md`, `frontend/README.md`, `specs/progreso-frontend.md`, `specs/progreso.md` (TO-053)
+
+### Causa
+
+La migración de la máquina virtual a Windows: la documentación usaba `127.0.0.1` y un servidor
+MCP sin versión, una ruta relativa de la base dependía del directorio de arranque, y el `.env`
+de la máquina no se cargaba por una ruta de Windows sin comillas.
+
+### Qué cambió
+
+- `ruta_db()` resuelve una ruta relativa desde la raíz del repositorio (prueba en rojo y luego
+  en verde). `conectar()` ya creaba la carpeta; una prueba lo fija.
+- `app_con_dobles` usa su propia base (prueba en rojo por importación y luego en verde).
+- README raíz con los navegadores, la instalación de Chromium, `data/` vacía, las URL con
+  `localhost` y el arranque en tres terminales; `frontend/README.md` remite a él.
+
+### Efecto
+
+Suite del backend en verde. Queda para el desarrollador: corregir la línea de su `.env` que uv no
+lee, y decidir si el export usa Edge (TO-053).

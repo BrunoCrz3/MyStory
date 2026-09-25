@@ -331,15 +331,15 @@ sobre ella y solo entonces pasa a `publicada` o a `rechazada` (TO-045, RI-018, c
 
 ## Cómo reanudar
 
-Estado al escribir esto: **plan 1 cerrado** (P49). Rama `backend-v1`, subida a
-`origin/backend-v1`, con la suite en verde (462 pruebas). No queda paso del plan: lo siguiente
+Estado al escribir esto: **plan 1 cerrado** (P49) y fusionado con el frontend en `Contexto-semilla-v2`, subida a
+`origin/Contexto-semilla-v2`. No queda paso del plan: lo siguiente
 es decidir lo que queda de § Pendiente con el desarrollador; el hueco de promesas ya se resolvió (TO-047). Para `render_visual` real, arrancar el
 servidor MCP como dice `docs/browser-mcp.md`; sin él, ninguna versión se publica (A-114).
 
 ```bash
-git switch backend-v1
+git switch Contexto-semilla-v2
 cd backend && uv sync
-uv run pytest -q          # 420 pruebas en verde al cerrar P46
+uv run pytest -q
 ```
 
 **Verificación de cada paso.** El script vivía fuera del repositorio; esto es lo que hace, y
@@ -390,10 +390,12 @@ del paso. Mensaje: `PNN: Verbo en imperativo…` más la línea `Co-Authored-By`
 `PYTHONUTF8=1`; las lambdas dentro de bucles disparan B023 (usar `functools.partial`);
 hypothesis va sin `deadline` (perfil en `conftest.py`); un campo del contrato opcional y no
 nulable se declara con `commons.esquemas.opcional()`, que lo omite si es `None`.
-Del P27: el humo se lanza desde `backend/` con la base en **ruta absoluta** (una relativa se
-resuelve desde el directorio de trabajo) — `uv run --env-file ../.env -- env
-STORYMAKER_DB_PATH="$(cd .. && pwd -W)/data/storymaker-demo.db" PYTHONUTF8=1 pytest -m real
-tests/humo/test_novela_real.py -v -s`, en segundo plano porque tarda ~30 min; un proceso hijo
+Del P27: el humo se lanza desde `backend/` —`uv run --env-file ../.env -- env PYTHONUTF8=1
+pytest -m real tests/humo/test_novela_real.py -v -s`—, en segundo plano porque tarda ~30 min.
+Ya no hace falta la ruta absoluta de la base: desde la integración de la demo, una
+`STORYMAKER_DB_PATH` relativa cuelga de la raíz del repositorio. Si `.env` tiene una línea que
+uv no sabe leer (una ruta de Windows con barras invertidas sin comillas), uv lo descarta
+entero con un warning y el proceso arranca sin ninguna variable; un proceso hijo
 con `stdout=PIPE` que nadie lee se bloquea al llenarse la tubería; la API de lectura de trazas
 y scores de Langfuse devuelve 410 en esta organización (solo `v2/observations`), así que el
 diagnóstico de un validador se hace en local; si se mata un humo, su trabajo queda `en-curso`

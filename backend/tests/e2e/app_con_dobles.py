@@ -6,12 +6,17 @@ una prueba puede matar el proceso de verdad a mitad de novela y rearrancarlo sob
 base. `STORYMAKER_E2E_RETARDO_S` hace que cada llamada al doble tarde lo que diga, para que
 haya tiempo de matarlo en el capítulo que se quiere. Con `STORYMAKER_E2E_RENDER=real`,
 `render_visual` es el de producción (servidor MCP y página de lectura del entorno) y no el doble.
+
+**Nunca escribe en la base de la demo**: usa `STORYMAKER_E2E_DB_PATH`, que las pruebas apuntan a
+una temporal, o `data/storymaker-e2e.db`, e ignora el `STORYMAKER_DB_PATH` del `.env`. Así la
+demo no enseña novelas escritas por el doble del modelo.
 """
 
 from __future__ import annotations
 
 import argparse
 import os
+from pathlib import Path
 
 import anyio
 import uvicorn
@@ -36,7 +41,17 @@ class ModeloConRetardo(ModeloGuionizado):
         return await super().generar(peticion, recuento)
 
 
+BASE_E2E_POR_DEFECTO = Path("data") / "storymaker-e2e.db"
+
+
+def fijar_base_e2e() -> None:
+    """Sustituye la base del entorno por la de las pruebas antes de crear la app."""
+    base = os.environ.get("STORYMAKER_E2E_DB_PATH", "").strip() or str(BASE_E2E_POR_DEFECTO)
+    os.environ["STORYMAKER_DB_PATH"] = base
+
+
 def crear() -> FastAPI:
+    fijar_base_e2e()
     cfg = cargar_config()
     modelo = ModeloConRetardo(cfg, float(os.environ.get("STORYMAKER_E2E_RETARDO_S", "0")))
     guion_completo(modelo)

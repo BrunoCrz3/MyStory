@@ -19,8 +19,13 @@ T = TypeVar("T")
 
 
 def ruta_db() -> Path:
+    """La base de `STORYMAKER_DB_PATH`. Una ruta relativa cuelga de la raíz del repositorio, no
+    del directorio de trabajo: si no, arrancar desde `backend/` abriría otra base."""
     valor = os.environ.get("STORYMAKER_DB_PATH", "").strip()
-    return Path(valor) if valor else DB_POR_DEFECTO
+    if not valor:
+        return DB_POR_DEFECTO
+    ruta = Path(valor)
+    return ruta if ruta.is_absolute() else RAIZ_REPO / ruta
 
 
 def conectar(ruta: Path) -> sqlite3.Connection:

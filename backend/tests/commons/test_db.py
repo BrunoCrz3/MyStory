@@ -7,7 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from app.commons.db import conectar, transaccion
+from app.commons.db import conectar, ruta_db, transaccion
+from app.commons.db.conexion import RAIZ_REPO
 from app.commons.db.migrar import DIRECTORIO_MIGRACIONES, MigracionEditada, aplicar_migraciones
 
 
@@ -106,3 +107,22 @@ def test_toda_tabla_lleva_novel_id(tmp_path: Path) -> None:
             assert not {"user_id", "tenant_id"} & set(columnas), f"{tabla} con identidad"
     finally:
         con.close()
+
+
+def test_conectar_crea_la_base_y_su_carpeta_si_no_existen(tmp_path: Path) -> None:
+    """Una instalación nueva empieza con `data/` vacía o sin ella."""
+    ruta = tmp_path / "data" / "nueva" / "storymaker.db"
+    con = conectar(ruta)
+    con.close()
+    assert ruta.is_file()
+
+
+def test_una_ruta_relativa_se_resuelve_desde_la_raiz_del_repo(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """La misma `.env` apunta a la misma base se arranque desde la raíz o desde `backend/`."""
+    monkeypatch.setenv("STORYMAKER_DB_PATH", "data/relativa.db")
+    monkeypatch.chdir(tmp_path)
+    assert ruta_db() == RAIZ_REPO / "data" / "relativa.db"
+    monkeypatch.setenv("STORYMAKER_DB_PATH", str(tmp_path / "absoluta.db"))
+    assert ruta_db() == tmp_path / "absoluta.db"

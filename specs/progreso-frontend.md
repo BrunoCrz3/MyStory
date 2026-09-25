@@ -45,19 +45,11 @@ Ver la tabla de `specs/plan2-frontend.md` § 3.
 
 ## Arranque conjunto
 
-Detalle en `frontend/README.md`. Resumen:
+**Sustituido** tras la fusión: el arranque de la demo en Windows está en el `README.md` raíz, y
+el comando del servidor Playwright MCP, en `docs/browser-mcp.md` § El servidor. El resumen que
+había aquí (URL con `127.0.0.1` y el servidor MCP sin versión ni `--browser msedge`) era de la
+máquina anterior.
 
-1. **Backend**, en `127.0.0.1:8000` con un solo worker (`specs/plan1.md` § 9):
-   `uv run --env-file ../.env uvicorn app.main:app --reload --port 8000` desde `backend/`, con
-   `STORYMAKER_LECTURA_URL=http://127.0.0.1:5173` en `.env`.
-2. **Frontend**, en `127.0.0.1:5173`: `cd frontend && npm install && npm run dev`. El proxy
-   de Vite lleva `/api/*` a `http://127.0.0.1:8000/*`.
-3. Opcional, para `render_visual`: `npx -y @playwright/mcp --port 8931`.
-4. Comprobación: `http://127.0.0.1:5173/api/salud` devuelve el JSON de `GET /salud`.
-
-**No probado contra el backend real**: `backend/` no existe todavía en esta rama. Todo lo
-anterior está verificado con respuestas construidas a partir de los ejemplos del contrato. La
-integración real es el P49 de `plan1.md`.
 
 ## Uso del browser MCP
 
