@@ -1,14 +1,75 @@
 # storyMaker
 
-Genera novelas personalizadas para regalar, de principio a fin y sin humano en el bucle. Un
-entrevistador recoge los datos del destinatario, un planificador fija el destino de cada
-capítulo, un redactor los escribe, un editor los critica y una batería de validadores decide
-si se publica.
+Un sistema agéntico que genera novelas personalizadas para regalar, de principio a fin y **sin
+humano en el bucle**. Un entrevistador recoge los datos del destinatario, un planificador fija el
+destino de cada capítulo, un redactor los escribe, un editor los corrige, un judge los puntúa y un
+extractor lleva los hechos a la story bible. Una batería de validadores programáticos, semánticos
+y formales (Lean 4) decide si una versión se publica.
 
-- **Qué se construye y por qué**: `specs/spec1.md` y su contrato `specs/openapi.yaml`.
-- **Cómo se construye**: `specs/plan1.md` (backend) y `specs/plan2-frontend.md` (frontend), y
-  dónde va la ejecución: `specs/progreso.md`.
-- **Instrucciones para agentes**: `CLAUDE.md`.
+## Qué es hoy este repositorio
+
+**La v1 funciona de extremo a extremo con el modelo real**, y así se ensayó la demo
+(2026-09-25): entrevista → generación de diez capítulos → progreso → lectura web → petición de
+cambio → regeneración dirigida con los capítulos modificados marcados y la versión anterior
+conservada → PDF. No es un prototipo con datos simulados: el código de producción no tiene mocks,
+y las novelas de la demo, la evaluación y el ejemplo salieron del modelo de verdad.
+
+| Pieza | Estado |
+| --- | --- |
+| **Backend** FastAPI (Python 3.12), nueve features más `commons/` | Terminado para la v1 (`specs/plan1.md`) |
+| **Frontend** React 18 + TypeScript, páginas `entrevista`, `progreso` y `lectura` | Terminado para la v1 (`specs/plan2-frontend.md`) |
+| **Persistencia** SQLite, un fichero, migraciones numeradas | 16 migraciones; la base no se versiona |
+| **Verificación formal de la cronología** en Lean 4 | Gate activo con cuatro invariantes (`specs/plan4-lean.md`) |
+| **Observabilidad** en Langfuse | Un span por rol y tool, un score por validador |
+| **Gate visual y PDF** con Playwright | `render_visual` antes de publicar; el PDF sale del mismo render |
+| **Verificación formal del harness** en TLA+ | **Pendiente**: `formal/tla/` no existe todavía |
+| **Evaluación con briefs de prueba** B1–B5 | **Parcial**: B2 completo, B1 en parte, B3–B5 sin correr |
+
+Además del código, el repositorio guarda el **proceso** que lo produjo, y es parte del
+entregable: el contexto semilla (`docs/definitions.md`, `docs/domain-knowledge.md`), cada decisión
+con sus alternativas (`docs/trade-offs.md`, 70 entradas), cada cambio con su causa y su
+efecto (`docs/registro-iteraciones.md`) y las specs y planes aprobados antes de escribir código.
+
+## Mapa del repositorio
+
+| Ruta | Qué hay |
+| --- | --- |
+| `CLAUDE.md` | Instrucciones para cualquier agente que trabaje aquí; `AGENTS.md` solo apunta a él |
+| `backend/` | API FastAPI, orquestador, roles, validadores y su suite (`backend/tests/`) |
+| `frontend/` | La interfaz; su propio `README.md` con el recorrido de la demo |
+| `formal/lean/` | Proyecto Lake de la cronología: las cuatro invariantes y un ejemplo |
+| `config/` | `thresholds.yaml` (todas las cifras y umbrales) y `models.yaml` (modelo y effort por rol) |
+| `specs/` | Specs, planes y ficheros de progreso de la v1, y el contrato `openapi.yaml` (1.2.0) |
+| `docs/` | Contexto semilla, arquitectura, verificación, trade-offs, registro, red-team, evaluación |
+| `ejemplos/` | La novela de ejemplo en PDF, su brief y los ficheros de la evaluación B2 |
+| `Presentation/` | La presentación de la propuesta y sus anexos, con su propio `README.md` |
+| `.claude/skills/` | Skills de desarrollo; las de runtime viven en `backend/app/skills/` |
+| `.mcp.json` | Browser MCP de Claude Code (Edge), para inspeccionar la interfaz en desarrollo |
+
+**Specs y planes.** Ninguna línea de código se escribe sin spec y plan aprobados por el
+desarrollador (`CLAUDE.md` § Ciclo de cambio):
+
+| Spec | Plan | Qué cubre | Estado |
+| --- | --- | --- | --- |
+| `specs/spec1.md` | `specs/plan1.md` · progreso en `specs/progreso.md` | El sistema entero y el backend | Aprobados; plan cerrado |
+| `specs/spec2-frontend.md` | `specs/plan2-frontend.md` · `specs/progreso-frontend.md` | El frontend de la demo | Aprobados; plan cerrado |
+| `specs/spec4-lean.md` | `specs/plan4-lean.md` · `specs/progreso-lean.md` | Lean desde la story bible y gate activo | Aprobados; plan cerrado |
+
+Lo archivado (la primera versión del backend) está en `docs/specs/_archivo/` y no se implementa.
+
+**Dónde leer cada cosa:**
+
+| Para saber… | Lee |
+| --- | --- |
+| Qué pide el proyecto | `docs/requerimientos/alcance-proyecto.md` |
+| El vocabulario y las máquinas de estado del dominio | `docs/definitions.md`, `docs/domain-knowledge.md` |
+| Cómo está construido el sistema | `docs/architecture.md` |
+| Qué valida cada validador, dónde y con qué score | `docs/verification.md` |
+| Por qué se eligió cada opción | `docs/trade-offs.md` |
+| Qué cambió, por qué y con qué efecto | `docs/registro-iteraciones.md` |
+| Resultados de las ejecuciones reales | `docs/evaluacion-preliminar.md`, `docs/caso-lean.md` |
+| Casos adversariales y fallos reales | `docs/red-team.md` |
+| Qué falta, priorizado | `specs/progreso.md` § Post-demo |
 
 ## Requisitos
 
@@ -133,6 +194,12 @@ uv run pytest                    # toda la suite; no llama al modelo ni a Langfu
 uv run pytest tests/guardrail    # el guardrail tiene suite propia
 uv run ruff check . && uv run ruff format --check .
 uv run mypy app tests
+
+cd ../frontend
+npm run typecheck && npm run test && npm run build
+
+cd ../formal/lean
+lake build                       # la cronología de ejemplo y las cuatro invariantes
 ```
 
 Cada prueba usa una base temporal, y el backend con dobles de las pruebas de extremo a extremo
@@ -143,25 +210,35 @@ omiten si el servidor Playwright MCP no está en marcha.
 La prueba de humo con el modelo real está excluida por defecto y gasta cuota del modelo:
 `uv run --env-file ../.env pytest -m real tests/humo -v`.
 
-## Qué queda fuera de la demo
+## Qué falta y qué se sabe que falla
 
-La demo recorre el flujo entero con el modelo real: entrevista → generación → progreso →
-lectura → petición de cambio → versión nueva con los capítulos marcados y la anterior
-conservada → PDF. Lo que falta, priorizado, está en `specs/progreso.md` § Post-demo; lo
-principal:
+La lista completa y priorizada está en `specs/progreso.md` § Post-demo. Lo que el alcance exige y
+todavía no está:
 
-- **Evaluaciones medibles** (briefs B1–B5, tabla brief × validador, revisión humana frente al
-  judge, iteración de tuning documentada) y **TLA+** (la especificación y sus invariantes están
-  descritas en `docs/architecture.md`, sin `formal/tla/`). El brief B2 ya se corrió y su resultado
-  está en `ejemplos/evaluacion/`, reutilizable mientras el código no cambie.
-- **Lean ya no queda fuera**: el gate está activo con cuatro invariantes (plan 4, `formal/lean/`),
-  y el caso que solo detecta Lean es el de B2 (`docs/red-team.md` RT-004).
-- Con `proveedor: claude_code`, las instrucciones de privacidad de la organización llegan a los
-  subprocesos del modelo y a veces anonimizan nombres ficticios; los validadores lo detectan y
-  el capítulo vuelve al redactor (TO-061, `docs/red-team.md` RT-002). Se resuelve con el
-  administrador o con `proveedor: api`.
-- Una regeneración fallida deja la novela publicada y su candidata rechazada (TO-062), pero la
-  lectura todavía no muestra el motivo del fallo de la solicitud (necesita el contrato 1.3.0).
+- **Evaluaciones medibles.** La evaluación preliminar reúne las 15 ejecuciones reales hechas hasta
+  la demo: 4 se publicaron, 4 las rechazó el gate por un validador concreto y 7 se detuvieron antes
+  de llegar a él (`docs/evaluacion-preliminar.md`).
+  Faltan los briefs B3–B5 y el resto de B1, la tabla brief × validador completa, la revisión humana
+  comparada con el judge y una iteración de tuning documentada. El resultado de B2 está en
+  `ejemplos/evaluacion/`.
+- **TLA+.** La especificación del harness, TLC y el test de correspondencia con la tabla de
+  transiciones. Hoy solo está descrita en `docs/architecture.md`.
+
+Defectos conocidos, vistos en ejecuciones reales:
+
+- **Un validador semántico y uno programático pueden discrepar.** El judge da por pagada una
+  promesa que el extractor no registra, y el capítulo se agota aunque el texto la resuelva. Además,
+  los dos se llaman `cierre_arco` (`docs/red-team.md` RT-005; post-demo 17 y 23).
+- **Un tope de latencia agotado tras el último capítulo impide publicar lo ya escrito**, y se
+  informa como `error-interno` (TO-070; post-demo 21 y 22).
+- **Con `proveedor: claude_code`, las instrucciones de privacidad de la organización llegan a los
+  subprocesos del modelo** y a veces anonimizan nombres ficticios. Los validadores lo detectan y el
+  capítulo vuelve al redactor (TO-061, RT-002); se resuelve con el administrador o con
+  `proveedor: api`.
+- **Una regeneración fallida no dice por qué en la lectura.** La novela sigue publicada y la
+  candidata queda rechazada (TO-062), pero mostrar el motivo necesita el contrato 1.3.0.
+
+Sin multiusuario ni autenticación en la v1: el backend solo escucha en la interfaz local.
 
 ## Novela de ejemplo
 
