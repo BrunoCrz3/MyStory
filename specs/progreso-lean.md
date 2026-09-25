@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L09 |
+| Paso actual | L10 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L08 |
+| Último commit de paso | L09 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -29,6 +29,7 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
 
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
 | --- | --- | --- | --- | --- |
+| 2026-09-25 | L09 | Re-extracción de los 10 capítulos de la versión 3 de la novela de la demo en una copia (`claude_code`, extractor Sonnet 5, effort low). La copia se borra al terminar y con ella el consumo por capítulo, así que el coste es **estimado**: unos 150.000 tokens de entrada y 20.000 de salida. Traza `41ca142437dcc661822be843c6f849cf` | ≈0,75 | ≈47,22 |
 
 ## Pasos cerrados
 
@@ -92,6 +93,12 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   `formal.gate_activo: true`. Prompt del extractor publicado en Langfuse
   (`git-9383032a9b54e9df8ab6e6f54f657983`). 538 pruebas con el gate activo, 12 min 45 s (dos
   avisos de pytest que ya salían en el L07; sin revisar, no fallan nada).
+
+- **L09** — `tests/humo/test_lean_copia_real.py` sobre una copia de `data/storymaker-demo.db`
+  (hash `6a0777ecfde99a7c…` sin cambios antes y después): 48 eventos re-extraídos, **ninguno** con
+  año, edad o exclusión; `lean_ubicacion` demostrado (6 sin lugar), las otras tres vacuamente
+  (48 de 48 sin comprobar). La novela no fecha nada: no hay caso real que encontrar en ella.
+  `docs/red-team.md` RT-003.
 
 ## Decisiones
 
