@@ -785,7 +785,7 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
     aceptados 1–4 no se reescribieron (mismo `capitulo_id`) y que ninguno se aceptó dos veces.
 - **Además**, **la prueba de humo real**:
   1. si `ANTHROPIC_API_KEY` no está en el entorno → **condición de parada 1**;
-  2. si `acumulado + coste.coste_maximo_novela > 40` → **condición de parada 4**;
+  2. si `acumulado + coste.coste_maximo_novela > 100` → **condición de parada 4** (40 hasta TO-048);
   3. `uv run python -m app.prompts.sync` (si hay Langfuse) y
      `uv run --env-file ../.env pytest -m real tests/humo -v`;
   4. anotar en progreso el coste real (`coste_usd` de la generación), la ruta de la base y el
@@ -938,7 +938,7 @@ El «Hecho cuando» se suma siempre al invariante global de § 0.1.
   el `Fragmento sospechoso`, queda registrado y descartado; generado con dobles, **ninguna**
   petición al modelo de toda la generación contiene la instrucción inyectada.
 - **Opcional, real**: la misma generación con modelo real, **solo si**
-  `acumulado + coste.coste_maximo_novela ≤ 40`; si no cabe, se anota como no ejecutada y no se
+  `acumulado + coste.coste_maximo_novela ≤ 100` (40 hasta TO-048); si no cabe, se anota como no ejecutada y no se
   para.
 - **Hecho cuando** el bloque de § 4.5 con `N = 3`.
 

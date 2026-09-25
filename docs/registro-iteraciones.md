@@ -1180,3 +1180,29 @@ queda vinculada al commit que la introdujo (A-71).
   aplica a capítulos reescritos, así que no debería mover una generación inicial, pero no está
   comprobado. La regeneración real corrió con los ficheros v2 antes de publicarlos en Langfuse;
   no era un eval, así que A-72 no la bloqueaba.
+
+---
+
+## RI-022 — Topes de coste para la novela de la demo
+
+**Fecha:** 2026-09-25 · **Ficheros:** `config/thresholds.yaml`, `specs/plan1.md`,
+`specs/progreso.md`, `docs/trade-offs.md` (TO-048, TO-049)
+
+### Causa
+
+La demo usará una novela nueva generada desde cero (TO-047 § Decisiones posteriores). Con el
+acumulado en 30,31 USD, la condición de parada 4 (40 USD) dejaba sitio para una sola ejecución
+real más, y el tope por novela (8 USD) podía detenerla a mitad: el humo costó 5,06 USD y cada
+intento fallido cuesta otra vuelta entera.
+
+### Qué cambió
+
+El desarrollador subió el tope acumulado de 40 a 100 USD (TO-048) y el tope por novela de 8 a
+15 USD (TO-049). Los dos con el mismo motivo: con `proveedor: claude_code` el coste es nominal
+y el límite real es el de uso de su plan. TO-048 se registró sin esta entrada; queda aquí, junto
+con TO-049.
+
+### Efecto
+
+La novela del paso de integración cabe con margen: 30,31 + 15 = 45,31 ≤ 100. Ningún tope es
+todavía una medida: los dos siguen siendo frenos de seguridad.

@@ -1786,3 +1786,40 @@ lanza—, y el tope por novela de `config/thresholds.yaml` no cambia.
 - **El límite de uso del plan no lo ve el sistema**: una ejecución puede cortarse por él antes
   de llegar a ningún tope propio, y eso se registra como fallo de infraestructura, no como
   parada por coste.
+
+---
+
+## TO-049 — El tope de coste por novela sube de 8 a 15 USD
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** · **Afecta a:** `config/thresholds.yaml` § `coste.coste_maximo_novela`, `specs/progreso.md` § Coste real
+
+### Problema
+
+`coste.coste_maximo_novela` detiene una generación en cuanto su coste supera el tope (RNF-13).
+La novela del humo costó 5,06 USD (P27) y cada intento fallido paga otra vuelta entera
+—redactor, judge, quizá editor, y extractor—: en la regeneración real de TO-047, dos
+capítulos costaron 3,22 USD. Con 8 USD, la novela nueva de la demo (TO-047 § Decisiones
+posteriores) podía detenerse a mitad por el tope, sin ningún fallo de calidad.
+
+### Opciones
+
+| Opción | A favor | En contra |
+| --- | --- | --- |
+| A · Mantener 8 USD | Frena antes un bucle caro | Margen de 1,6 veces sobre el humo: una novela sana con reintentos puede no terminar |
+| **B · Subir a 15 USD** | Unas tres veces el humo; la novela de la demo termina con sus reintentos | Un bucle caro tarda más en detenerse |
+| C · Quitar el tope | Nunca se detiene por coste | Se pierde el freno de RNF-13 y la condición de parada 4 deja de ser preventiva, porque se apoya en este tope |
+
+### Elección
+
+**B, decidida por el desarrollador, con el razonamiento de TO-048**: con `proveedor:
+claude_code` el coste es **nominal** —no se factura— y el límite real es el de uso de su plan.
+Sigue siendo un tope de seguridad y no una estimación: la marca `[provisional — calibrar tras la
+demo]` no cambia.
+
+### Consecuencias
+
+- **La condición de parada 4 reserva ahora 15 USD por ejecución**: con el acumulado en
+  30,31 USD caben cuatro ejecuciones reales más antes de los 100 (TO-048).
+- **Un bucle caro gasta hasta 15 USD nominales antes de detenerse**: con `claude_code` eso es
+  uso del plan, no dinero. Si se vuelve a `proveedor: api`, este tope y el de TO-048 se revisan
+  antes de lanzar nada.

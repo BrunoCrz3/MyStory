@@ -20,7 +20,9 @@ paso que indica: nada de lo que hace falta para seguir vive fuera de aquí.
 Tope de parada: **100 USD** acumulados (plan § 1, condición 4). Lo subió el desarrollador de
 40 a 100 el 2026-09-25 (TO-048): con `proveedor: claude_code` el coste es **nominal** —no se
 factura— y el límite real es el de uso de su plan. Antes de cada ejecución real: si
-`acumulado + coste.coste_maximo_novela > 100`, no se lanza.
+`acumulado + coste.coste_maximo_novela > 100`, no se lanza. El tope por novela,
+`coste.coste_maximo_novela`, pasa de 8 a **15 USD** (TO-049, decisión del desarrollador, 2026-09-25):
+con el acumulado actual (30,31 USD), la novela del paso de integración cabe con margen (45,31 ≤ 100).
 
 | Fecha | Paso | Qué se ejecutó | Coste USD | Acumulado USD |
 | --- | --- | --- | --- | --- |

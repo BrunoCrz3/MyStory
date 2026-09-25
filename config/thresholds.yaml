@@ -408,7 +408,9 @@ coste:
   # [provisional — calibrar tras la demo] Dólares por novela. Diez capítulos con el
   # redactor en el modelo alto, más judge y editor, más reintentos. Es un tope de
   # seguridad para que un bucle caro se detenga solo, no una estimación del coste real.
-  coste_maximo_novela: 8.0
+  # TO-049: 8 → 15, decisión del desarrollador. La novela del humo costó 5,06 USD y cada
+  # intento fallido paga otra vuelta entera; con `claude_code` el coste es nominal.
+  coste_maximo_novela: 15.0
 
   # Dólares por millón de tokens, por identificador de `config/models.yaml` (D-18). El coste
   # de cada llamada sale de aquí y de `usage`; el arranque falla si un rol usa un modelo sin
