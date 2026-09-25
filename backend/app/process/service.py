@@ -12,6 +12,7 @@ import sqlite3
 from dataclasses import dataclass
 from typing import Protocol
 
+from app.commons.db import BaseDatos
 from app.process import repository
 from app.process.cola import encolar
 from app.process.schemas import Generacion
@@ -21,6 +22,7 @@ __all__ = [
     "Generacion",
     "Publicador",
     "VeredictoGate",
+    "VerificacionFormal",
     "aplicar",
     "encolar",
     "solicitud_de_trabajo",
@@ -36,6 +38,19 @@ class VeredictoGate:
     pasa: bool
     valor: float
     detalle: str
+
+
+@dataclass(frozen=True)
+class VerificacionFormal:
+    """Una ejecución de Lean sobre una cronología (spec 4): cuatro veredictos y lo que el span
+    `lean` registra. `estado` es `demostrado`, `fallos`, `timeout`, `toolchain-ausente` o
+    `error`; solo `demostrado` es verde."""
+
+    estado: str
+    veredictos: list[VeredictoGate]
+    duracion_segundos: float
+    bytes_fichero: int
+    eventos: int
 
 
 class Publicador(Protocol):
@@ -55,6 +70,13 @@ class Publicador(Protocol):
 
     async def render_visual(self, *, novel_id: str, version: int) -> VeredictoGate:
         """Pinta la candidata en la página `lectura` y afirma el contrato (TO-026)."""
+        ...
+
+    async def lean(
+        self, db: BaseDatos, *, novel_id: str, version: int, hasta_numero: int | None = None
+    ) -> VerificacionFormal:
+        """Demuestra con Lean la cronología de la versión —hasta el capítulo `hasta_numero`
+        en el chequeo incremental— sin lanzar nunca: un fallo de toolchain es rojo (spec 4)."""
         ...
 
     def publicar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:

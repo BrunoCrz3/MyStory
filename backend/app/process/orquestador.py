@@ -395,6 +395,9 @@ class Orquestador:
             )
             for v in veredictos:
                 self.r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000])
+            if self.r.config.umbrales.formal.gate_activo:
+                # RF-EXP-03, regla 16: Lean incluido. Un fallo vuelve al editor por `GateEnRojo`.
+                veredictos += await self._lean(novel_id, version, etapa="gate")
         fallidos = [v for v in veredictos if not v.pasa]
         if fallidos:
             raise GateEnRojo(fallidos)
@@ -418,6 +421,34 @@ class Orquestador:
 
         with self.r.trazador.span("publicar", metadata={"version": version}):
             await self.r.db.en_transaccion(publicar)
+
+    async def _lean(
+        self, novel_id: str, version: int, *, etapa: str, hasta_numero: int | None = None
+    ) -> list[VeredictoGate]:
+        """Una ejecución de Lean con su span y sus cuatro scores, marcados con la etapa para
+        distinguir el gate del chequeo incremental (L-D11)."""
+        metadata: dict[str, Any] = {"etapa": etapa, "version": version}
+        if hasta_numero is not None:
+            metadata["capitulo"] = hasta_numero
+        with self.r.trazador.span("lean", metadata=metadata) as obs:
+            resultado = await self.publicador.lean(
+                self.r.db, novel_id=novel_id, version=version, hasta_numero=hasta_numero
+            )
+            obs.actualizar(
+                salida={"estado": resultado.estado},
+                metadata={
+                    **metadata,
+                    "duracion_segundos": resultado.duracion_segundos,
+                    "bytes_fichero": resultado.bytes_fichero,
+                    "eventos": resultado.eventos,
+                },
+            )
+        marca = (
+            {"etapa": etapa} if hasta_numero is None else {"etapa": etapa, "capitulo": hasta_numero}
+        )
+        for v in resultado.veredictos:
+            self.r.trazador.score(v.nombre, v.valor, comentario=v.detalle[:2000], metadata=marca)
+        return resultado.veredictos
 
     async def _detener(
         self, t: dict[str, Any], motivo: str, detalle: str, *, devolver_al_editor: bool = False

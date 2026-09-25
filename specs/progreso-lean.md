@@ -9,11 +9,11 @@ indica.
 | Campo | Valor |
 | --- | --- |
 | Plan | `specs/plan4-lean.md`, **aprobado** por el desarrollador el 2026-09-25 |
-| Paso actual | L06 |
+| Paso actual | L07 |
 | Estado del paso | pendiente |
 | Intentos fallidos en el paso actual | 0 de 3 |
 | Rama | `lean-v1` (desde `Contexto-semilla-v2`) |
-| Último commit de paso | L05 |
+| Último commit de paso | L06 |
 
 **Ajuste del desarrollador al aprobar** (2026-09-25):
 - **L10**: exactamente el brief de incoherencia temporal que usará la evaluación, guardado en
@@ -69,6 +69,15 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
   datos vacíos y mismo año en verde. `EventoVigente` gana `descripcion` para el informe (nunca
   entra en el fichero: la propiedad de A-91 la siembra). 529 pruebas.
 
+- **L06** — Lean en el gate: `Publicador.lean` (puerto en `process/`, implementado en
+  `versioning/` con `leer_cronologia` + `verificar`) y `Orquestador._lean`, con span `lean`
+  (estado, duración, bytes, eventos) y los cuatro scores con `metadata = {"etapa": "gate"}`;
+  corre con `formal.gate_activo` y sus veredictos entran en `GateEnRojo`. `Trazador.score` gana
+  `metadata` (Langfuse `create_score` la admite). `lean_nacimiento` en el registro y en
+  `verification.md` (O-66). Pruebas con `lake` real: candidata con violación rechazada y detalle
+  con capítulo y personaje en el audit log; limpia publicada; gate apagado sin Lean;
+  regeneración en rojo con la 1 intacta. 533 pruebas.
+
 ## Decisiones
 
 | ID | Paso | Decisión | Porqué | Rastro |
@@ -81,6 +90,7 @@ Tope de parada: **100 USD** acumulados (plan 1, TO-048). Acumulado al empezar es
 
 | ID | Paso | Decisión | Porqué | Rastro |
 | --- | --- | --- | --- | --- |
+| A-05 | L06 | Un solo método `Publicador.lean(db, novel_id, version, hasta_numero=None)` para gate e incremental, en vez de `lean` y `lean_incremental` | Es la misma ejecución sobre un prefijo; la etapa la pone el orquestador en el span y en los scores | — |
 | A-04 | L05 | La prueba de RNF-09 admite un segundo proceso: `asyncio.create_subprocess_exec` en `versioning/lean/ejecutar.py` | Argumentos fijos (`lake build Cronologia.Hechos`) sobre un fichero sin texto libre; la salida del modelo sigue sin poder llegar a un proceso | TO-069 |
 
 ## Parada

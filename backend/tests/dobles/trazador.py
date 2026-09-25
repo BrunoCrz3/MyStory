@@ -42,6 +42,7 @@ class ScoreRegistrado:
     valor: float
     comentario: str | None
     traza: str | None
+    metadata: dict[str, Any] | None = None
 
 
 _traza: contextvars.ContextVar[str | None] = contextvars.ContextVar("traza", default=None)
@@ -156,9 +157,10 @@ class RegistroTrazas:
         *,
         comentario: str | None,
         traza_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         self.scores.append(
-            ScoreRegistrado(nombre, float(valor), comentario, traza_id or _traza.get())
+            ScoreRegistrado(nombre, float(valor), comentario, traza_id or _traza.get(), metadata)
         )
 
     def cerrar(self) -> None:

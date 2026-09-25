@@ -99,6 +99,7 @@ REGISTRO: tuple[Validador, ...] = (
     _v("lean_cronologia", "Consistencia temporal", "formal-Lean", _GT, "O-13"),
     _v("lean_ubicacion", "Consistencia espacial", "formal-Lean", _GT, "O-14"),
     _v("lean_edad", "Coherencia de edad", "formal-Lean", _GT, "O-15"),
+    _v("lean_nacimiento", "Nacimiento previo", "formal-Lean", _GT, "O-66"),
     _v("elementos_obligatorios", "Cumplimiento de elementos obligatorios", _P, _GT, "O-04", "O-18"),
     # En una regeneración dirigida corre además sobre cada capítulo reescrito antes de
     # consolidarlo (O-65, TO-047); su punto declarado sigue siendo el gate.

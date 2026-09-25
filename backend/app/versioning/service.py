@@ -20,12 +20,14 @@ from app.commons.tiempo import ahora
 from app.intake.service import leer_brief
 from app.novel import service as novel
 from app.process import service as process
-from app.process.service import VeredictoGate
+from app.process.service import VeredictoGate, VerificacionFormal
 from app.versioning import ficha as _ficha
 from app.versioning import gate, repository
 from app.versioning import portada as _portada
 from app.versioning.export import sanear as sanear_exportaciones
 from app.versioning.huella import contenido, hash_contenido, hash_de_version
+from app.versioning.lean.ejecutar import verificar
+from app.versioning.lean.generar import leer_cronologia
 from app.versioning.render_visual import RenderVisual, SinNavegador, render_de_entorno
 from app.versioning.schemas import (
     Capitulo,
@@ -134,6 +136,17 @@ class Publicacion:
 
     async def render_visual(self, *, novel_id: str, version: int) -> VeredictoGate:
         return await self.render(novel_id=novel_id, version=version)
+
+    async def lean(
+        self, db: BaseDatos, *, novel_id: str, version: int, hasta_numero: int | None = None
+    ) -> VerificacionFormal:
+        cronologia = await db.ejecutar(
+            partial(leer_cronologia, novel_id=novel_id, version=version, hasta_numero=hasta_numero)
+        )
+        timeout = self.config.umbrales.formal.lean_timeout_segundos
+        # El arranque rechaza `gate_activo` sin timeout (P03); el incremental usa el mismo.
+        assert timeout is not None, "formal.lean_timeout_segundos es null"
+        return await verificar(cronologia, timeout=timeout)
 
     def publicar(self, con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
         repository.decidir_version(

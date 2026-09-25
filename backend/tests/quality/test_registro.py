@@ -37,7 +37,7 @@ def indice() -> list[tuple[str, str, str, str, tuple[str, ...]]]:
 
 
 def test_el_indice_se_lee_entero() -> None:
-    assert len(indice()) == 26
+    assert len(indice()) == 27  # 26 + lean_nacimiento (O-66, TO-064)
 
 
 def test_el_registro_es_el_indice_de_verification() -> None:

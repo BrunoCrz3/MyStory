@@ -161,6 +161,7 @@ class TrazadorLangfuse:
         *,
         comentario: str | None,
         traza_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         _log.info("score %s=%s", nombre, valor)
         if self._cliente is None:
@@ -170,7 +171,7 @@ class TrazadorLangfuse:
             _log.warning("score %s sin traza a la que asociarse", nombre)
             return
         self._cliente.create_score(
-            name=nombre, value=float(valor), trace_id=destino, comment=comentario
+            name=nombre, value=float(valor), trace_id=destino, comment=comentario, metadata=metadata
         )
 
     def cerrar(self) -> None:

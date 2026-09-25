@@ -33,6 +33,7 @@ PUNTOS_DEL_PROCESO = frozenset(
         "rol_editor",
         "consolidar",
         "gate_publicacion",
+        "lean",
         "publicar",
         "validar_brief",
         "export",
@@ -85,6 +86,7 @@ class Trazador(Protocol):
         *,
         comentario: str | None,
         traza_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None: ...
 
     def cerrar(self) -> None: ...

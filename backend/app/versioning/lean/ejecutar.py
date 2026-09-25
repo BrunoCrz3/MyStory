@@ -17,24 +17,12 @@ import time
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
-
-from app.process.service import VeredictoGate
+from app.process.service import VeredictoGate, VerificacionFormal
 from app.versioning.lean import informe
 from app.versioning.lean.generar import Cronologia, generar
 from app.versioning.lean.toolchain import PROYECTO_LEAN, buscar_lake, donde_se_busco
 
 EstadoLean = Literal["demostrado", "fallos", "timeout", "toolchain-ausente", "error"]
-
-
-class ResultadoLean(BaseModel):
-    model_config = ConfigDict(frozen=True)
-
-    estado: EstadoLean
-    veredictos: list[VeredictoGate]
-    duracion_segundos: float
-    bytes_fichero: int
-    eventos: int
 
 
 def _copiar_proyecto(destino: Path) -> Path:
@@ -45,14 +33,14 @@ def _copiar_proyecto(destino: Path) -> Path:
     return proyecto
 
 
-async def verificar(c: Cronologia, *, timeout: float) -> ResultadoLean:
+async def verificar(c: Cronologia, *, timeout: float) -> VerificacionFormal:
     """Genera el fichero de `c`, lo construye y devuelve los cuatro veredictos."""
     fichero = generar(c)
     tamano = len(fichero.texto.encode("utf-8"))
     inicio = time.monotonic()
 
-    def resultado(estado: EstadoLean, veredictos: list[VeredictoGate]) -> ResultadoLean:
-        return ResultadoLean(
+    def resultado(estado: EstadoLean, veredictos: list[VeredictoGate]) -> VerificacionFormal:
+        return VerificacionFormal(
             estado=estado,
             veredictos=veredictos,
             duracion_segundos=round(time.monotonic() - inicio, 3),
