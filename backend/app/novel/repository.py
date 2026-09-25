@@ -65,25 +65,36 @@ def leer_reglas(con: sqlite3.Connection, *, novel_id: str) -> list[ReglaMundo]:
     return [ReglaMundo(enunciado=f["enunciado"], origen=f["origen"]) for f in filas]
 
 
-def insertar_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, version: int) -> str:
+def insertar_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int, estado: str = "Pendiente"
+) -> str:
     capitulo_id = str(uuid.uuid4())
     con.execute(
-        "INSERT INTO capitulo (id, novel_id, numero, version) VALUES (?, ?, ?, ?)",
-        (capitulo_id, novel_id, numero, version),
+        "INSERT INTO capitulo (id, novel_id, numero, version, estado) VALUES (?, ?, ?, ?, ?)",
+        (capitulo_id, novel_id, numero, version, estado),
     )
     return capitulo_id
+
+
+# Las filas que puede leer la versión `:version`: las suyas y las de las versiones publicadas.
+# Una candidata rechazada no es base de nada: sus filas no las lee ninguna otra versión (TO-062).
+_FILA_LEGIBLE = (
+    "({a}.version = :version OR {a}.version IN (SELECT vn.version FROM version_novela vn"
+    " WHERE vn.novel_id = :novel_id AND vn.estado = 'publicada'))"
+)
 
 
 def leer_capitulos_aceptados(
     con: sqlite3.Connection, *, novel_id: str, version: int
 ) -> list[dict[str, Any]]:
     """La fila vigente de cada capítulo aceptado en una versión: la de versión más alta que no
-    la supera (D-05)."""
+    la supera (D-05), entre las que esa versión puede leer (TO-062)."""
     filas = con.execute(
         "SELECT c.id, c.numero, c.titulo, c.texto FROM capitulo c"
         " WHERE c.novel_id = :novel_id AND c.estado = 'Aceptado' AND c.version = ("
         "   SELECT max(c2.version) FROM capitulo c2 WHERE c2.novel_id = c.novel_id"
-        "   AND c2.numero = c.numero AND c2.version <= :version AND c2.estado = 'Aceptado')"
+        "   AND c2.numero = c.numero AND c2.version <= :version AND c2.estado = 'Aceptado'"
+        f"   AND {_FILA_LEGIBLE.format(a='c2')})"
         " ORDER BY c.numero",
         {"novel_id": novel_id, "version": version},
     ).fetchall()
@@ -319,9 +330,10 @@ def leer_capitulo_anterior(
     con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
 ) -> str | None:
     fila = con.execute(
-        "SELECT id FROM capitulo WHERE novel_id = ? AND numero = ? AND version < ?"
-        " ORDER BY version DESC LIMIT 1",
-        (novel_id, numero, version),
+        "SELECT c.id FROM capitulo c WHERE c.novel_id = :novel_id AND c.numero = :numero"
+        f" AND c.version < :version AND {_FILA_LEGIBLE.format(a='c')}"
+        " ORDER BY c.version DESC LIMIT 1",
+        {"novel_id": novel_id, "numero": numero, "version": version},
     ).fetchone()
     return None if fila is None else str(fila["id"])
 

@@ -75,6 +75,28 @@ def leer_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> dic
     return None if fila is None else dict(fila)
 
 
+def version_base(con: sqlite3.Connection, *, novel_id: str, version: int) -> int | None:
+    """La versión publicada de la que parte `version`: la más alta publicada por debajo. Una
+    candidata rechazada nunca es base de otra (TO-062)."""
+    fila = con.execute(
+        "SELECT max(version) AS base FROM version_novela"
+        " WHERE novel_id = ? AND estado = 'publicada' AND version < ?",
+        (novel_id, version),
+    ).fetchone()
+    return None if fila is None or fila["base"] is None else int(fila["base"])
+
+
+def siguiente_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> int:
+    """El número de la próxima candidata sobre la base `version`: el primero que no ha usado
+    ninguna versión ni ninguna fila de capítulo, porque una rechazada conserva el suyo."""
+    fila = con.execute(
+        "SELECT max(coalesce((SELECT max(version) FROM version_novela WHERE novel_id = :n), 0),"
+        " coalesce((SELECT max(version) FROM capitulo WHERE novel_id = :n), 0), :v) AS ultima",
+        {"n": novel_id, "v": version},
+    ).fetchone()
+    return int(fila["ultima"]) + 1
+
+
 def listar_versiones(con: sqlite3.Connection, *, novel_id: str) -> list[dict[str, Any]]:
     filas = con.execute(
         "SELECT v.*, a.version AS version_anterior FROM version_novela v"
@@ -259,15 +281,14 @@ def aplicar_solicitud(
     )
 
 
-def estados_de_capitulos(
-    con: sqlite3.Connection, *, novel_id: str, ids: list[str]
-) -> dict[str, str]:
-    marcas = ", ".join("?" for _ in ids)
+def numeros_de_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> list[int]:
+    """Los capítulos que tienen fila propia en `version`: en una regeneración, los afectados,
+    que nacen `Obsoleto` en la candidata al confirmar (TO-062)."""
     filas = con.execute(
-        f"SELECT id, estado FROM capitulo WHERE novel_id = ? AND id IN ({marcas})",
-        (novel_id, *ids),
+        "SELECT numero FROM capitulo WHERE novel_id = ? AND version = ? ORDER BY numero",
+        (novel_id, version),
     ).fetchall()
-    return {str(f["id"]): str(f["estado"]) for f in filas}
+    return [int(f["numero"]) for f in filas]
 
 
 # --- Export a PDF (P48) -------------------------------------------------------------------

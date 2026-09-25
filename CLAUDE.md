@@ -187,8 +187,9 @@ Consecuencias operativas para cualquier agente que genere o revise texto:
   capítulo descubre *cómo*, no *hacia dónde*; cambiar el destino exige replanificar.
 - Los hechos se **extraen** tras aceptar el capítulo. Entran como `propuesto` y quien los
   adopta es el **policy engine**, con la decisión en el audit log.
-- El retcon marca `obsoleto` a los capítulos que **usan** el hecho —no solo al que lo
-  estableció— y encola su reescritura, sin tocar el resto.
+- El retcon marca `obsoleto`, **en la candidata**, a los capítulos que **usan** el hecho —no
+  solo al que lo estableció— y encola su reescritura, sin tocar el resto. **Una regeneración
+  fallida no modifica ninguna versión publicada**: la candidata se rechaza y la novela sigue.
 - La replanificación se dispara cuando el canon invalida una restricción pendiente, nunca
   por cadencia ni en mitad de un capítulo, y solo toca capítulos no escritos.
 

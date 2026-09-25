@@ -142,9 +142,14 @@ def reglas_del_mundo(con: sqlite3.Connection, *, novel_id: str) -> list[ReglaMun
     return repository.leer_reglas(con, novel_id=novel_id)
 
 
-def crear_capitulo(con: sqlite3.Connection, *, novel_id: str, numero: int, version: int) -> str:
-    """Crea la fila del capítulo `numero` para la versión `version`, en `Pendiente` (D-05)."""
-    return repository.insertar_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+def crear_capitulo(
+    con: sqlite3.Connection, *, novel_id: str, numero: int, version: int, estado: str = "Pendiente"
+) -> str:
+    """Crea la fila del capítulo `numero` para la versión `version` (D-05): en `Pendiente`, o en
+    `Obsoleto` si es la de un capítulo afectado en la candidata de una regeneración (TO-062)."""
+    return repository.insertar_capitulo(
+        con, novel_id=novel_id, numero=numero, version=version, estado=estado
+    )
 
 
 class CapituloAceptado(BaseModel):

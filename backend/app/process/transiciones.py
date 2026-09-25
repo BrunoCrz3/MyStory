@@ -34,7 +34,9 @@ TRANSICIONES: tuple[Transicion, ...] = (
     Transicion("Reescribir", "Capitulo", "Validando", "Reescribiendo", "orquestador.reescribir"),
     Transicion("Reintentar", "Capitulo", "Reescribiendo", "Escribiendo", "orquestador.reintentar"),
     Transicion("Agotar", "Capitulo", "Reescribiendo", "Agotado", "orquestador.agotar"),
-    Transicion("Obsoletar", "Capitulo", "Aceptado", "Obsoleto", "orquestador.obsoletar"),
+    # TO-062: la marca nace en la candidata —una fila nueva del capítulo afectado— y nunca
+    # cambia una fila publicada.
+    Transicion("Obsoletar", "Capitulo", None, "Obsoleto", "confirmar.obsoletar"),
     Transicion("Reencolar", "Capitulo", "Obsoleto", "Pendiente", "orquestador.reencolar"),
     Transicion("Planificar", "Novela", "Configurando", "Planificando", "orquestador.planificar"),
     Transicion(
@@ -58,7 +60,22 @@ TRANSICIONES: tuple[Transicion, ...] = (
     ),
     Transicion("Detener", "Novela", "Escribiendo", "Detenida", "orquestador.detener"),
     Transicion("Detener", "Novela", "Planificando", "Detenida", "orquestador.detener"),
-    Transicion("Detener", "Novela", "Regenerando", "Detenida", "orquestador.detener"),
+    # TO-062: una regeneración fallida —un capítulo agotado o el gate en rojo— deja la novela
+    # publicada con su vigente; `Detenida` es de la generación, no de la novela publicada.
+    Transicion(
+        "DescartarRegeneracion",
+        "Novela",
+        "Regenerando",
+        "Publicada",
+        "orquestador.descartar_regeneracion",
+    ),
+    Transicion(
+        "DescartarRegeneracion",
+        "Novela",
+        "Validando",
+        "Publicada",
+        "orquestador.descartar_regeneracion",
+    ),
 )
 
 _INDICE: dict[tuple[Maquina, str | None, str], str] = {

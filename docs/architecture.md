@@ -424,14 +424,15 @@ documento añade y aquel no tiene:
 ```mermaid
 stateDiagram-v2
   [*] --> Pendiente: Init
+  [*] --> Obsoleto: Obsoletar
   Pendiente --> Escribiendo: Escribir
   Escribiendo --> Validando: Validar
   Validando --> Aceptado: Aceptar
   Validando --> Reescribiendo: Reescribir
   Reescribiendo --> Escribiendo: Reintentar
   Reescribiendo --> Agotado: Agotar
-  Aceptado --> Obsoleto: Obsoletar
   Obsoleto --> Pendiente: Reencolar
+  Aceptado --> [*]
   Agotado --> [*]
 ```
 
@@ -449,7 +450,7 @@ en silencio.
 | `Reescribir` | Capitulo | `Validando` | `Reescribiendo` | `orquestador.reescribir` · `intentos + 1` |
 | `Reintentar` | Capitulo | `Reescribiendo` | `Escribiendo` | `orquestador.reintentar` |
 | `Agotar` | Capitulo | `Reescribiendo` | `Agotado` | `orquestador.agotar` |
-| `Obsoletar` | Capitulo | `Aceptado` | `Obsoleto` | `orquestador.obsoletar` · lo dispara el retcon |
+| `Obsoletar` | Capitulo | — | `Obsoleto` | `confirmar.obsoletar` · la fila nueva del afectado nace en la candidata; nunca se marca una publicada (TO-062) |
 | `Reencolar` | Capitulo | `Obsoleto` | `Pendiente` | `orquestador.reencolar` |
 | `Planificar` | Novela | `Configurando` | `Planificando` | `orquestador.planificar` |
 | `FijarEsquema` | Novela | `Planificando` | `Escribiendo` | `orquestador.fijar_esquema` |
@@ -461,13 +462,24 @@ en silencio.
 | `CerrarRegeneracion` | Novela | `Regenerando` | `Validando` | `orquestador.cerrar_regeneracion` · afectados reescritos |
 | `Detener` | Novela | `Escribiendo` | `Detenida` | `orquestador.detener` · terminal |
 | `Detener` | Novela | `Planificando` | `Detenida` | `orquestador.detener` · el planificador agota sus intentos (D-23) |
-| `Detener` | Novela | `Regenerando` | `Detenida` | `orquestador.detener` · un capítulo reescrito agota sus intentos (A-100) |
+| `DescartarRegeneracion` | Novela | `Regenerando` | `Publicada` | `orquestador.descartar_regeneracion` · un capítulo reescrito agota sus intentos: la generación se detiene, la candidata queda `rechazada` y la vigente sigue (TO-062) |
+| `DescartarRegeneracion` | Novela | `Validando` | `Publicada` | `orquestador.descartar_regeneracion` · falla el gate de una regeneración: igual (TO-062) |
 
 `Escribiendo` y `Validando` existen en las dos máquinas con sentidos distintos, y por eso la
 tabla dice de qué máquina es cada fila. Las seis acciones de la novela que el diagrama de
 `domain-knowledge.md` dibujaba sin nombre —de `FijarEsquema` a `CerrarRegeneracion`— se
 nombraron al implementar la tabla del orquestador (plan 1, P13; TO-039), y la prueba de
 `process/` compara esta tabla y los dos diagramas con el dato del código.
+
+**Una regeneración fallida no modifica ninguna versión publicada** (TO-062). `Detener` ya no
+sale de `Regenerando`: `Detenida` es un estado de la generación y no de la novela publicada.
+Cuando una regeneración falla, en una sola transacción: su candidata queda `rechazada` —se
+escribe entonces si no llegó al gate—, el canon que escribió se revierte (lo que abrió queda
+vacío y lo que cerró vuelve a abrirse), la generación queda `Detenida` con su `detenida_por`, y
+la novela vuelve a `Publicada` con la misma versión vigente. Las filas de la versión publicada
+no cambian de estado: `Obsoleto` solo marca filas de la candidata. Toda solicitud nueva parte
+de la vigente y toma el primer número de versión libre, así que una rechazada nunca es base de
+otra: la resolución de filas y la base del gate saltan las versiones no publicadas.
 
 `Detener` desde `Planificando` materializa D-23, aprobada con el plan 1: un planificador
 que agota sus intentos detiene la novela. El diagrama de `domain-knowledge.md` no la
@@ -498,13 +510,15 @@ flowchart TD
   CONF --> HEC
   HEC --> AI[Análisis de impacto<br/>capítulos que USAN el hecho]
   AI --> RT[Retcon · cierra el hecho viejo, abre el nuevo]
-  RT --> OBS[Capítulos afectados a Obsoleto]
+  RT --> OBS[Filas nuevas de los afectados, Obsoleto, en la candidata]
   OBS --> RG[Regeneración dirigida]
   RG --> HOK[Hooks y rol editor]
   HOK --> GT[Gate de publicación]
-  GT -->|falla| RG
   GT -->|pasa| NV[Versión de novela nueva]
+  GT -->|falla| RCH[Candidata rechazada · canon revertido · la vigente sigue]
+  RG -->|un capítulo agota| RCH
   ANT[Versión anterior] -.->|se conserva entera| NV
+  ANT -.->|intacta| RCH
 ```
 
 **La selección de fragmento nunca regenera sola** (TO-011): propone un hecho candidato y el
@@ -760,8 +774,10 @@ derivado, nunca como el texto completo de lo anterior.
 **Qué sobrevive a una regeneración: todo.** Una regeneración **no borra nada**. La versión
 nueva sustituye a la anterior como versión vigente, y **la anterior queda consultable
 entera**: su texto, sus capítulos y **sus hechos**, porque el retcon no sobrescribe la story
-bible en su sitio (§ Story bible, versionado por vigencia). Los capítulos que el retcon marca
-`Obsoleto` lo quedan **para la versión nueva**, no para la anterior.
+bible en su sitio (§ Story bible, versionado por vigencia). El retcon marca
+`Obsoleto` **filas nuevas de la candidata**, nunca las de la anterior (TO-062). Y si la
+regeneración falla, tampoco sobrevive nada de ella fuera de su candidata rechazada: **una
+regeneración fallida no modifica ninguna versión publicada**.
 
 **Aislamiento.** Toda tabla de dominio lleva `novel_id`. En corto plazo el aislamiento es por
 construcción, porque un trabajo pertenece a una novela; la excepción persistida —el diálogo
@@ -959,6 +975,23 @@ RechazadaNuncaVigente ==
 `vigente` es la versión que la lectura muestra como actual. La acción `Publicar` exige el gate
 en verde y fija `estadoVersion` a `publicada` en el mismo paso; `DevolverAlEditor` la fija a
 `rechazada` sin tocar `vigente`.
+
+**Invariante de regeneración fallida** (TO-062). Una regeneración fallida no modifica ninguna
+versión publicada. El módulo lleva el contenido de cada versión publicada —sus filas, el
+estado de cada fila y el canon que lee— como una función `contenido[v]` que solo escribe la
+acción `Publicar`, y el `.cfg` comprueba:
+
+```tla
+RegeneracionFallidaNoTocaPublicadas ==
+  [][\A v \in Versiones : estadoVersion[v] = "publicada" => contenido'[v] = contenido[v]]_vars
+NovelaPublicadaNoSeDetiene ==
+  (\E v \in Versiones : estadoVersion[v] = "publicada") => estadoNovela # "Detenida"
+RechazadaNoEsBase ==
+  \A v \in Versiones : estadoVersion[v] = "rechazada" => \A w \in Versiones : base[w] # v
+```
+
+`DescartarRegeneracion` lleva la novela de `Regenerando` o `Validando` a `Publicada` y la
+candidata a `rechazada` en el mismo paso, sin tocar `vigente`.
 
 **Invariante de intentos** (TO-014, TO-057, TO-059). Un solo contador por capítulo que gastan
 dos acciones: la corrección del editor, dentro de `Validando` y sin cambiar de estado, y

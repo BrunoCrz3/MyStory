@@ -80,26 +80,27 @@ def cierre_arco(
 def regeneracion_fiel(
     con: sqlite3.Connection, *, novel_id: str, version: int, candidatos: dict[int, str]
 ) -> VeredictoGate:
-    """O-61…O-64: la versión nueva cambia **exactamente** los capítulos que la anterior
-    marcó `Obsoleto`, y la anterior sigue consultable con su hash intacto (regla 15)."""
+    """O-61…O-64: la versión nueva cambia **exactamente** los capítulos que la candidata tenía
+    que reescribir —los que marcó `Obsoleto` en sus propias filas al confirmar (TO-062)—, y la
+    publicada de la que parte sigue consultable con su hash intacto (regla 15)."""
     problemas: list[str] = []
-    anterior = repository.leer_version(con, novel_id=novel_id, version=version - 1)
-    if anterior is None:
-        problemas.append(f"la versión {version - 1} no es consultable")
+    base = repository.version_base(con, novel_id=novel_id, version=version)
+    anterior = repository.leer_version(con, novel_id=novel_id, version=base) if base else None
+    if anterior is None or base is None:
+        problemas.append(f"la versión {version} no parte de ninguna versión publicada")
     else:
-        previos = repository.vinculos(con, novel_id=novel_id, version=version - 1)
+        previos = repository.vinculos(con, novel_id=novel_id, version=base)
         ids = list(previos.values())
         recalculado = hash_contenido(anterior["titulo"], contenido(con, novel_id=novel_id, ids=ids))
         if recalculado != anterior["hash"]:
-            problemas.append(f"el hash de la versión {version - 1} ya no cuadra")
-        estados = repository.estados_de_capitulos(con, novel_id=novel_id, ids=ids)
-        obsoletos = {n for n, cid in previos.items() if estados.get(cid) == "Obsoleto"}
+            problemas.append(f"el hash de la versión {base} ya no cuadra")
+        afectados = set(repository.numeros_de_version(con, novel_id=novel_id, version=version))
         cambiados = {n for n in candidatos if candidatos[n] != previos.get(n)}
         if sorted(candidatos) != sorted(previos):
             problemas.append("la versión nueva no tiene los mismos capítulos que la anterior")
-        if infieles := sorted(cambiados - obsoletos):
+        if infieles := sorted(cambiados - afectados):
             problemas.append(f"cambian capítulos no afectados: {infieles}")
-        if pendientes := sorted(obsoletos - cambiados):
+        if pendientes := sorted(afectados - cambiados):
             problemas.append(f"capítulos obsoletos sin reescribir: {pendientes}")
     return VeredictoGate(
         nombre="regeneracion_fiel",

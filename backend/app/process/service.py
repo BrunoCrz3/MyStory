@@ -65,6 +65,13 @@ class Publicador(Protocol):
         """La candidata pasa a `rechazada`: nunca será la vigente."""
         ...
 
+    def rechazar_regeneracion(
+        self, con: sqlite3.Connection, *, novel_id: str, version: int, generacion_id: str
+    ) -> None:
+        """Una regeneración fallida: su candidata queda `rechazada`, se escribiera o no, y lo
+        que escribió en el canon se revierte. Ninguna versión publicada cambia (TO-062)."""
+        ...
+
 
 def trabajo_vivo(con: sqlite3.Connection, *, novel_id: str) -> str | None:
     """El trabajo pendiente o en curso de la novela, si lo hay: con él no se admite otro

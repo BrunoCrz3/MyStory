@@ -12,6 +12,7 @@ import sqlite3
 from functools import partial
 from typing import Any
 
+from app.canon import service as canon
 from app.commons.config import Config
 from app.commons.db import BaseDatos
 from app.commons.errores import NovelaNoEncontrada, TransicionInvalida, VersionNoEncontrada
@@ -56,11 +57,10 @@ def candidatos(con: sqlite3.Connection, *, novel_id: str, version: int) -> dict[
     """Qué fila de capítulo leerá cada número en la versión que se va a publicar.
 
     Los aceptados de esta versión; para los que no se reescribieron, la fila que ya leía la
-    versión anterior (D-05).
+    versión publicada de la que parte (D-05), nunca una rechazada (TO-062).
     """
-    anteriores = (
-        repository.vinculos(con, novel_id=novel_id, version=version - 1) if version > 1 else {}
-    )
+    base = repository.version_base(con, novel_id=novel_id, version=version)
+    anteriores = repository.vinculos(con, novel_id=novel_id, version=base) if base else {}
     nuevos = repository.aceptados_de_version(con, novel_id=novel_id, version=version)
     return {**anteriores, **{n: str(f["id"]) for n, f in nuevos.items()}}
 
@@ -88,14 +88,9 @@ class Publicacion:
                 )
             return str(existente["hash"])
         filas = candidatos(con, novel_id=novel_id, version=version)
-        anterior = (
-            repository.leer_version(con, novel_id=novel_id, version=version - 1)
-            if version > 1
-            else None
-        )
-        previos = (
-            repository.vinculos(con, novel_id=novel_id, version=version - 1) if anterior else {}
-        )
+        base = repository.version_base(con, novel_id=novel_id, version=version)
+        anterior = repository.leer_version(con, novel_id=novel_id, version=base) if base else None
+        previos = repository.vinculos(con, novel_id=novel_id, version=base) if base else {}
         titulo = novel.titulo_de_obra(con, novel_id=novel_id)
         huella = hash_contenido(titulo, contenido(con, novel_id=novel_id, ids=list(filas.values())))
         repository.insertar_version(
@@ -159,6 +154,21 @@ class Publicacion:
         repository.decidir_version(
             con, novel_id=novel_id, version=version, estado="rechazada", ahora=ahora()
         )
+
+    def rechazar_regeneracion(
+        self, con: sqlite3.Connection, *, novel_id: str, version: int, generacion_id: str
+    ) -> None:
+        """Una regeneración fallida no modifica ninguna versión publicada (TO-062): su candidata
+        queda `rechazada` —se escribe ahora si no llegó al gate, con lo que tenga aceptado y el
+        resto de la base— y lo que escribió en el canon se revierte, para que ninguna versión
+        posterior lo herede. La publicada no se toca."""
+        existente = repository.leer_version(con, novel_id=novel_id, version=version)
+        if existente is None:
+            self.proponer(con, novel_id=novel_id, version=version, generacion_id=generacion_id)
+            existente = repository.leer_version(con, novel_id=novel_id, version=version)
+        if existente is not None and existente["estado"] == "candidata":
+            self.rechazar(con, novel_id=novel_id, version=version)
+        canon.revertir_version(con, novel_id=novel_id, version=version)
 
 
 # --- Lectura ---------------------------------------------------------------------------

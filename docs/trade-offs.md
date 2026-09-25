@@ -2317,3 +2317,60 @@ al redactor; si se repite hasta agotar los intentos, la generación se detiene y
 | **B · `proveedor: api`** | Una `ANTHROPIC_API_KEY` proporcionada por la organización o por el curso, en `.env` (nunca en el repo) | La API no lleva las instrucciones de la organización; además el recuento de tokens y el coste dejan de ser estimados (TO-040) |
 
 Las dos están en la lista post-demo: resolver el proveedor con el administrador.
+
+---
+
+## TO-062 — Una regeneración fallida no modifica ninguna versión publicada
+
+**Fecha:** 2026-09-25 · **Estado:** **decisión del desarrollador** (ontología, estados y comportamiento; implementada con TDD) · **Afecta a:** `docs/domain-knowledge.md` § Estados y ciclo del hecho, `docs/architecture.md` (tabla de acciones, § Story bible, § TLA+), `specs/spec1.md` RF-VER-08, `CLAUDE.md` § Modelo de generación, `backend/app/{novel,canon,versioning,process}/`
+
+### Problema
+
+En el ensayo de la demo, una regeneración de *Soltar amarras* agotó los intentos del capítulo 6
+(RI-033) y dejó tres cosas mal:
+
+1. La novela pasó a `Detenida`, que la ontología declara terminal: ya no admitía cambios, aunque
+   su versión 1 seguía publicada y se leía entera.
+2. La confirmación había marcado `Obsoleto` los capítulos 5 y 6 **de la versión 1**: el estado
+   de una fila publicada cambió por una regeneración que no llegó a publicarse.
+3. La versión 2 quedó con restos (el 5 reescrito, el 6 agotado, el canon del retcon y de la
+   extracción), y como toda la resolución era por número —la base de `N` era `N − 1`, las filas
+   y la vigencia por `version <= N`—, una solicitud nueva los habría heredado.
+
+### Decisión del desarrollador
+
+1. La candidata de la regeneración pasa a `rechazada`, como cuando el gate la rechaza.
+2. La solicitud queda marcada como fallida, con su motivo visible en la lectura. **Pospuesto**:
+   exige cambiar el contrato (`fallida` en `SolicitudCambio.estado`, un campo de motivo y una
+   forma de listar las solicitudes desde la lectura). Queda post-demo por decisión del
+   desarrollador.
+3. La novela **no** pasa a `Detenida`: sigue publicada con la vigente intacta y admite
+   solicitudes nuevas. `Detenida` es un estado de la generación, no de la novela publicada.
+4. `Obsoleto` nunca modifica una versión publicada (TO-025); si la regeneración falla, las marcas
+   quedan solo en la candidata rechazada. Corregir el estado actual de *Soltar amarras*.
+5. Toda solicitud nueva parte de la versión vigente publicada, nunca de una candidata rechazada.
+
+### Cómo se aplica
+
+| Punto | Cambio |
+| --- | --- |
+| 4 | `confirmar` ya no toca las filas publicadas: crea en la candidata una fila nueva de cada afectado que nace `Obsoleto` (acción `Obsoletar` sin origen); el orquestador la reencola (`Reencolar`) tras retirar el canon de la fila base. `Aceptado` pasa a ser terminal: una fila aceptada no cambia |
+| 1 y 3 | Al fallar una regeneración —capítulo agotado o gate en rojo—, en una transacción: la candidata se escribe si no llegó al gate y queda `rechazada`; el canon que escribió se revierte; la generación queda `Detenida` con su `detenida_por`; la novela vuelve a `Publicada` (acción nueva `DescartarRegeneracion`, desde `Regenerando` o `Validando`). `Detener` ya no sale de `Regenerando` |
+| 5 | La base de una versión es la **publicada más alta por debajo** (`version_base`), y la candidata toma el **primer número libre** (`siguiente_version`): una rechazada conserva el suyo. La resolución de filas (`leer_capitulos_aceptados`, `leer_capitulo_anterior`) solo lee las de su versión y las de versiones publicadas; `candidatos`, `proponer` y `regeneracion_fiel` parten de la base publicada |
+| Canon | Revertir una versión: lo que abrió queda con intervalo vacío y lo que cerró vuelve a abrirse, con el hecho retconeado de vuelta a `Adoptado`. Es la excepción acotada al carácter terminal de `Retconeado`: un retcon solo es historia cuando su versión se publica |
+
+Alternativa descartada para el canon: una vigencia por linaje (saltar las versiones rechazadas
+en cada consulta). No resolvía volver a retconear el mismo hecho —su `version_hasta` ya estaba
+fijado por la rechazada— y habría tocado todas las consultas por vigencia.
+
+### Consecuencias
+
+- **Invariante** «una regeneración fallida no modifica ninguna versión publicada», escrita en
+  `docs/architecture.md` (§ Estados y § TLA+, con `RegeneracionFallidaNoTocaPublicadas`,
+  `NovelaPublicadaNoSeDetiene` y `RechazadaNoEsBase`), en RF-VER-08 y en `CLAUDE.md`.
+- Pruebas: `tests/process/test_regeneracion_fallida.py` (confirmar no toca las filas publicadas;
+  una regeneración que agota deja la novela publicada, la candidata rechazada y la 1 intacta;
+  la solicitud siguiente publica la 3 sobre la 1 sin heredar nada de la 2) y cuatro pruebas
+  ajustadas a la decisión.
+- Una candidata rechazada pierde su vista del canon (queda la de su base): se conservan sus
+  filas, sus vínculos, su hash, el audit log y el registro del retcon.

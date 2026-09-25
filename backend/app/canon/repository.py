@@ -275,6 +275,32 @@ def retirar_capitulo(
     )
 
 
+def revertir_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+    """Deshace lo que la versión `version` escribió en el canon: lo que abrió se queda con un
+    intervalo vacío y lo que cerró vuelve a estar abierto (TO-062). El orden respeta RD-05: los
+    usos caben siempre en la vigencia de su hecho."""
+    con.execute(
+        "UPDATE hecho_capitulo SET version_hasta = version_desde"
+        " WHERE novel_id = ? AND version_desde = ?",
+        (novel_id, version),
+    )
+    con.execute(
+        "UPDATE hecho SET version_hasta = version_desde WHERE novel_id = ? AND version_desde = ?",
+        (novel_id, version),
+    )
+    con.execute(
+        "UPDATE hecho SET version_hasta = NULL,"
+        " estado = CASE estado WHEN 'retconeado' THEN 'adoptado' ELSE estado END"
+        " WHERE novel_id = ? AND version_hasta = ? AND version_desde < ?",
+        (novel_id, version, version),
+    )
+    con.execute(
+        "UPDATE hecho_capitulo SET version_hasta = NULL"
+        " WHERE novel_id = ? AND version_hasta = ? AND version_desde < ?",
+        (novel_id, version, version),
+    )
+
+
 def leer_retcon(
     con: sqlite3.Connection, *, novel_id: str, solicitud_id: str
 ) -> tuple[str, str] | None:

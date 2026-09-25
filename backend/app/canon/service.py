@@ -243,6 +243,13 @@ def retirar_capitulo(
     repository.retirar_capitulo(con, novel_id=novel_id, capitulo_id=capitulo_id, version=version)
 
 
+def revertir_version(con: sqlite3.Connection, *, novel_id: str, version: int) -> None:
+    """Una candidata rechazada no deja rastro en el canon que lean otras versiones (TO-062,
+    `CLAUDE.md` regla 2): los hechos y usos que abrió quedan vacíos, y los que cerró —el hecho
+    retconeado, lo que retiraban sus capítulos reescritos— vuelven a estar vigentes."""
+    repository.revertir_version(con, novel_id=novel_id, version=version)
+
+
 def retcon_de(
     con: sqlite3.Connection, *, novel_id: str, solicitud_id: str
 ) -> tuple[str, str] | None:

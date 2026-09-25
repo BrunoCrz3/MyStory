@@ -107,7 +107,7 @@ async def test_el_contexto_de_la_reescritura_lleva_el_snapshot_de_la_version_2(
 
 
 @pytest.mark.anyio
-async def test_regeneracion_fiel_pasa_con_lo_publicado_y_falla_si_la_anterior_no_existe(
+async def test_regeneracion_fiel_pasa_con_lo_publicado_y_falla_sin_base_publicada(
     entorno: Entorno,
 ) -> None:
     novela, _, _ = await _regenerada(entorno)
@@ -120,8 +120,11 @@ async def test_regeneracion_fiel_pasa_con_lo_publicado_y_falla_si_la_anterior_no
         return entorno.recursos.db.ejecutar_sync(leer)
 
     assert comprobar(2).pasa
-    fallo = comprobar(4)  # su anterior, la 3, no existe
-    assert not fallo.pasa and "versión 3" in fallo.detalle
+    # TO-062: la base es la publicada más alta por debajo, no la de número anterior; la 4 parte
+    # de la 2 aunque la 3 no exista (una rechazada conserva su número).
+    assert comprobar(4).pasa
+    fallo = comprobar(1)  # por debajo de la 1 no hay ninguna publicada
+    assert not fallo.pasa and "no parte de ninguna versión publicada" in fallo.detalle
 
 
 @pytest.mark.anyio

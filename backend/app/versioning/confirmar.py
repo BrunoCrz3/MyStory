@@ -2,9 +2,11 @@
 (RF-VER-08).
 
 Todo en una transacción: el hecho viejo se cierra por vigencia y el nuevo se abre en la
-versión siguiente, los capítulos del análisis de impacto —y **solo** esos— pasan a
-`Obsoleto`, y se encola una generación `dirigida` que reescribirá esos capítulos. La versión
-publicada no se toca: sigue leyendo el hecho viejo y sus mismos textos (regla 15).
+versión candidata, los capítulos del análisis de impacto —y **solo** esos— tienen en ella una
+fila nueva que nace `Obsoleto`, y se encola una generación `dirigida` que la reescribirá. La
+versión publicada no se toca, ni el estado de sus filas: sigue leyendo el hecho viejo y sus
+mismos textos (regla 15, TO-062). La candidata parte siempre de la vigente y toma el primer
+número libre: una candidata rechazada conserva el suyo.
 """
 
 from __future__ import annotations
@@ -52,7 +54,7 @@ async def confirmar(r: Recursos, novel_id: str, solicitud_id: str) -> process.Ge
                 "la novela ya tiene otra versión: pide el cambio sobre la vigente",
                 novel_id=novel_id,
             )
-        nueva = version + 1
+        nueva = repository.siguiente_version(con, novel_id=novel_id, version=version)
         momento = ahora()
         canon.aplicar_retcon(
             con,
@@ -64,15 +66,10 @@ async def confirmar(r: Recursos, novel_id: str, solicitud_id: str) -> process.Ge
             ahora=momento,
         )
         afectados: list[int] = json.loads(fila["capitulos_afectados"])
-        vinculos = repository.vinculos(con, novel_id=novel_id, version=version)
         for numero in afectados:
-            capitulo_id = vinculos[numero]
-            actual = novel.estado_capitulo(con, novel_id=novel_id, capitulo_id=capitulo_id)
-            novel.cambiar_estado_capitulo(
-                con,
-                novel_id=novel_id,
-                capitulo_id=capitulo_id,
-                estado=process.aplicar("Capitulo", actual, "Obsoletar"),
+            # La marca vive en la candidata: la fila publicada sigue `Aceptado` (TO-062).
+            novel.crear_capitulo(
+                con, novel_id=novel_id, numero=numero, version=nueva, estado="Obsoleto"
             )
         generacion = process.encolar(
             con,

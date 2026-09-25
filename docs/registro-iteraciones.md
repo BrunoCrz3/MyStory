@@ -1521,3 +1521,30 @@ No hay versión 2: el paso «versión nueva con los capítulos marcados» del en
 demostrar con el modelo real. Dos hallazgos para el desarrollador en la lista post-demo: qué
 hace una regeneración fallida con la novela (y que la API acepte una solicitud sobre una novela
 `Detenida`), y la discrepancia del extractor al pagar promesas en un capítulo reescrito.
+
+---
+
+## RI-034 — Regeneración fallida: la novela sigue publicada
+
+**Fecha:** 2026-09-25 · **Ficheros:** `backend/app/{novel,canon,versioning,process}/`,
+`backend/tests/process/test_regeneracion_fallida.py`, `docs/domain-knowledge.md`,
+`docs/architecture.md`, `specs/spec1.md`, `CLAUDE.md` (TO-062)
+
+### Causa
+
+La regeneración del ensayo (RI-033) dejó *Soltar amarras* `Detenida`, con los capítulos 5 y 6 de
+la versión 1 marcados `Obsoleto` y restos en la versión 2. El desarrollador decidió qué debe
+pasar tras una regeneración fallida.
+
+### Qué cambió
+
+Tres pruebas primero (en rojo): confirmar no toca las filas publicadas; una regeneración que
+agota deja la novela publicada y la candidata rechazada con la 1 intacta; la solicitud siguiente
+publica la 3 sobre la 1 sin heredar la 2. Después, el código (TO-062 § Cómo se aplica), los
+diagramas de estados, la tabla de acciones y la invariante TLA+ prevista. Cuatro pruebas que
+fijaban el comportamiento anterior se ajustaron a la decisión.
+
+### Efecto
+
+Suite en verde: 492 pasadas. El punto 2 de la decisión (solicitud fallida visible en la
+lectura) queda post-demo porque exige cambiar el contrato.

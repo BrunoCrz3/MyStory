@@ -95,7 +95,8 @@ def test_ninguna_secuencia_valida_sale_de_los_estados_declarados(elecciones: lis
     for eleccion in elecciones:
         posibles = sorted(acciones_desde("Capitulo", estado))
         if not posibles:
-            assert estado == "Agotado"
+            # Una fila aceptada no cambia nunca (TO-062): solo `Agotado` y `Aceptado` terminan.
+            assert estado in ("Agotado", "Aceptado")
             break
         estado = aplicar("Capitulo", estado, posibles[eleccion % len(posibles)])
         assert estado in declarados

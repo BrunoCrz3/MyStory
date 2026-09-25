@@ -177,12 +177,13 @@ stateDiagram-v2
   Propuesto --> Descartado: lo rechaza el policy engine
   Adoptado --> Retconeado: reescritura deliberada
   Adoptado --> Refutado: contradicción resuelta en contra
+  Retconeado --> Adoptado: se rechaza la candidata que lo retconeó
   Descartado --> [*]
   Retconeado --> [*]
   Refutado --> [*]
 ```
 
-Quien mueve `Propuesto` a `Adoptado` es el policy engine y la decisión queda en el audit log. Un hecho `Propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación. **Los tres estados de salida son terminales.** `Descartado` y `Refutado` lo eran ya; `Retconeado` lo es desde que la story bible se versiona por vigencia: el retcon **cierra** el hecho viejo con su `versión hasta` y **abre otro**, que es una fila distinta, no el mismo hecho revivido. La relación entre ambos la guarda `Retcon`. Resucitarlo destruiría lo único que el canon garantiza, que lo que fue verdad en `t` siga siendo consultable en `t`.
+Quien mueve `Propuesto` a `Adoptado` es el policy engine y la decisión queda en el audit log. Un hecho `Propuesto` no es canon: no se consulta, no entra en el contexto del capítulo siguiente y no sostiene ninguna verificación. **Los tres estados de salida son terminales**, con una excepción acotada. `Descartado` y `Refutado` lo eran ya; `Retconeado` lo es desde que la story bible se versiona por vigencia: el retcon **cierra** el hecho viejo con su `versión hasta` y **abre otro**, que es una fila distinta, no el mismo hecho revivido. La relación entre ambos la guarda `Retcon`. Resucitarlo destruiría lo único que el canon garantiza, que lo que fue verdad en `t` siga siendo consultable en `t`. **La excepción** (TO-062): un retcon solo pasa a ser historia cuando se publica la versión que lo aplicó. Si su candidata se rechaza, el retcon nunca fue verdad en ninguna versión publicada, así que se revierte —el hecho viejo vuelve a `Adoptado` y abierto, y el nuevo queda con un intervalo vacío— para que ninguna versión posterior lo herede. Ninguna consulta de una versión publicada cambia.
 
 **El estatus describe la versión vigente, no la historia**, y de ahí sale la regla que más fácil es incumplir: **una consulta por versión se resuelve con la vigencia, nunca con el estatus**. En la versión anterior, un hecho que hoy está `Retconeado` seguía siendo verdad, y filtrar por estatus lo dejaría fuera.
 
@@ -388,20 +389,23 @@ Las máquinas del capítulo y de la novela son las de la especificación formal 
 ```mermaid
 stateDiagram-v2
   [*] --> Pendiente: el planificador fija su restricción de destino
+  [*] --> Obsoleto: retcon, fila del capítulo afectado en la candidata
   Pendiente --> Escribiendo: el redactor lo toma
   Escribiendo --> Validando: hay borrador
   Validando --> Aceptado: pasa hooks y editor
   Validando --> Reescribiendo: falla algún validador
   Reescribiendo --> Escribiendo: quedan intentos
   Reescribiendo --> Agotado: se alcanzó el límite
-  Aceptado --> Obsoleto: retcon o replanificación
   Obsoleto --> Pendiente: se reescribe
+  Aceptado --> [*]: una fila aceptada no cambia, la lea o no una versión publicada
   Agotado --> [*]
 ```
 
 Solo la transición a `Aceptado` escribe en el canon. Un borrador rechazado no deja rastro; si lo dejara, cada iteración fallida contaminaría el estado del mundo y la regeneración dirigida acabaría propagando hechos que nunca llegaron a la novela.
 
-`Agotado` es terminal y arrastra a la novela entera a `Detenida`: un capítulo que no converge no se salta.
+`Agotado` es terminal: un capítulo que no converge no se salta. En una generación inicial arrastra a la novela entera a `Detenida`; en una regeneración, solo a la generación (TO-062).
+
+**`Obsoleto` nunca marca una fila publicada** (TO-062): las versiones son inmutables (TO-025). Al confirmar una solicitud de cambio, cada capítulo afectado recibe en la **candidata** una fila nueva que nace `Obsoleto` y se reencola; la fila que lee la versión publicada sigue `Aceptado`. Si la regeneración falla, la marca queda solo en la candidata rechazada.
 
 **Novela:**
 
@@ -418,7 +422,23 @@ stateDiagram-v2
   Publicando --> Publicada: versión conservada
   Publicada --> Regenerando: solicitud de cambio
   Regenerando --> Validando: capítulos afectados reescritos
-  Regenerando --> Detenida: un capítulo reescrito agota sus intentos
+  Regenerando --> Publicada: un capítulo reescrito agota sus intentos, la vigente sigue
+  Validando --> Publicada: falla el gate de una regeneración, la vigente sigue
+  Detenida --> [*]
+```
+
+**`Detenida` es de la generación, no de la novela publicada** (TO-062). Una novela solo llega a `Detenida` si su generación inicial no termina: todavía no tiene ninguna versión publicada. Una **regeneración** que falla —un capítulo reescrito agotado o el gate en rojo— detiene la **generación** (`Generacion.estado = Detenida`, con su `detenida_por`), deja su candidata `rechazada` y devuelve la novela a `Publicada` con la versión vigente intacta: admite solicitudes nuevas, que parten siempre de la vigente. Las dos flechas a `Publicada` solo existen desde una regeneración: una generación inicial en `Validando` que falla el gate vuelve al editor.
+
+**Generación** (un trabajo del orquestador, `process/`):
+
+```mermaid
+stateDiagram-v2
+  [*] --> pendiente: se encola
+  pendiente --> en_curso: el worker la reclama
+  en_curso --> pendiente: el proceso cae y se reanuda
+  en_curso --> Publicada: publica su versión
+  en_curso --> Detenida: agota intentos, gate en rojo o tope de coste
+  Publicada --> [*]
   Detenida --> [*]
 ```
 
@@ -429,13 +449,14 @@ stateDiagram-v2
   [*] --> candidata: todos los capítulos aceptados
   candidata --> publicada: pasa el gate completo, render_visual incluido
   candidata --> rechazada: falla algún validador del gate
+  candidata --> rechazada: la regeneración falla antes del gate
   publicada --> [*]
   rechazada --> [*]
 ```
 
 Una versión existe antes de publicarse porque `render_visual` tiene que pintarla: la lectura la pide por su número, y el gate la valida en el mismo render que después se entrega. Las dos salidas son terminales: una `publicada` es inmutable, y una `rechazada` se conserva para el diagnóstico pero **nunca es la versión vigente**, ni aparece en el listado del lector ni se exporta. La máquina es de `versioning/` y no del orquestador: la novela solo ve `Publicar` cuando la versión ya pasó.
 
-`Publicada` no es terminal: una novela publicada sigue viva mientras el lector pueda pedir cambios. Lo que sí es invariante es que salir de `Publicada` nunca destruye la versión anterior, y que la única entrada a `Publicando` pasa por el gate.
+`Publicada` no es terminal: una novela publicada sigue viva mientras el lector pueda pedir cambios. Lo que sí es invariante es que salir de `Publicada` nunca destruye la versión anterior, que la única entrada a `Publicando` pasa por el gate, y que **una regeneración fallida no modifica ninguna versión publicada** (TO-062): ni su contenido, ni el estado de sus filas, ni el canon que lee. Lo que la regeneración escribió en el canon se revierte al rechazar su candidata, y una candidata rechazada nunca es base de otra versión.
 
 ## Solicitud de cambio
 

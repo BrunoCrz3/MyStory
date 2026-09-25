@@ -181,15 +181,17 @@ class Orquestador:
         """Regeneración dirigida (RF-VER-08, D-05): reescribe **solo** los capítulos del análisis
         de impacto y publica la versión nueva; la anterior no se toca.
 
-        Cada capítulo afectado tiene una fila nueva en la versión objetivo; la de la versión
-        publicada se queda `Obsoleto` e intacta, y los no afectados son la misma fila en las dos
-        versiones. Antes de reescribir, lo que la fila vieja establecía o usaba se retira del
-        canon desde la versión nueva, y el redactor recibe el cambio como aviso. Reanudable:
-        los capítulos ya aceptados en la versión objetivo se saltan.
+        Cada capítulo afectado tiene una fila nueva en la versión objetivo, que la confirmación
+        creó `Obsoleto`; la de la versión publicada se queda intacta, estado incluido, y los no
+        afectados son la misma fila en las dos versiones (TO-062). Antes de reescribir, lo que
+        la fila vieja establecía o usaba se retira del canon desde la versión nueva, la fila
+        nueva se reencola y el redactor recibe el cambio como aviso. Reanudable: los capítulos
+        ya aceptados en la versión objetivo se saltan.
 
         Un capítulo reescrito que dejaría una promesa pendiente al cierre no se consolida:
         vuelve a su redactor como intento fallido, con el mismo límite de intentos que un
-        validador que cierra el paso; agotado, la regeneración se detiene (TO-047).
+        validador que cierra el paso; agotado, la regeneración se detiene (TO-047), y la
+        novela sigue publicada con su versión vigente (TO-062).
         """
         novel_id, version = t["novel_id"], t["version_objetivo"]
         await self.estado_inicial(novel_id, version)
@@ -204,7 +206,7 @@ class Orquestador:
             )
             if cap is not None and cap.estado == "Aceptado":
                 continue
-            if cap is None:
+            if cap is None or cap.estado == "Obsoleto":
                 await self.r.db.en_transaccion(
                     partial(
                         self._preparar_reescritura,
@@ -300,12 +302,23 @@ class Orquestador:
     def _preparar_reescritura(
         con: sqlite3.Connection, *, novel_id: str, numero: int, version: int
     ) -> None:
-        """La fila nueva del capítulo en la versión objetivo, y el canon de la vieja retirado
-        desde esa versión, en una transacción."""
+        """El canon de la fila vieja retirado desde la versión objetivo y la fila nueva lista
+        para escribirse, en una transacción: la que la confirmación creó `Obsoleto` se reencola
+        (TO-062); una de un trabajo anterior a TO-062 que no la tenga, se crea."""
         anterior = novel.capitulo_vigente(con, novel_id=novel_id, numero=numero, version=version)
         if anterior is not None:
             canon.retirar_capitulo(con, novel_id=novel_id, capitulo_id=anterior, version=version)
-        novel.crear_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+        cap = novel.capitulo_en_curso(con, novel_id=novel_id, numero=numero, version=version)
+        if cap is None:
+            novel.crear_capitulo(con, novel_id=novel_id, numero=numero, version=version)
+            return
+        novel.fijar_estado_capitulo(
+            con,
+            novel_id=novel_id,
+            capitulo_id=cap.capitulo_id,
+            estado=aplicar("Capitulo", cap.estado, "Reencolar"),
+            intentos=cap.intentos,
+        )
 
     async def _aviso(self, t: dict[str, Any]) -> str | None:
         if not t["solicitud_id"]:
@@ -413,6 +426,38 @@ class Orquestador:
         def detener(con: sqlite3.Connection) -> None:
             actual = novel.estado_de_obra(con, novel_id=t["novel_id"])
             transiciones = []
+            if t["tipo"] == "dirigida":
+                # TO-062: una regeneración fallida no modifica ninguna versión publicada. Su
+                # candidata queda rechazada, el canon que escribió se revierte y la novela
+                # sigue `Publicada` con su vigente: `Detenida` es la generación, no la novela.
+                self.publicador.rechazar_regeneracion(
+                    con,
+                    novel_id=t["novel_id"],
+                    version=t["version_objetivo"],
+                    generacion_id=t["id"],
+                )
+                destino = aplicar("Novela", actual, "DescartarRegeneracion")
+                transiciones.append("DescartarRegeneracion")
+                novel.fijar_estado_obra(con, novel_id=t["novel_id"], estado=destino)
+                repository.actualizar_trabajo(
+                    con,
+                    novel_id=t["novel_id"],
+                    trabajo_id=t["id"],
+                    cambios={
+                        "estado": "Detenida",
+                        "estado_cola": "terminado",
+                        "detenida_por": motivo,
+                        "terminada_en": ahora(),
+                    },
+                )
+                motor.registrar_detencion(
+                    con,
+                    novel_id=t["novel_id"],
+                    generacion_id=t["id"],
+                    motivo=motivo,
+                    detalle={"detalle": detalle[:2000], "transiciones": transiciones},
+                )
+                return
             if devolver_al_editor:
                 # El gate falló: la candidata queda rechazada y nunca será la vigente (TO-045).
                 # El diagrama devuelve la novela al editor (Escribiendo); corregir la novela

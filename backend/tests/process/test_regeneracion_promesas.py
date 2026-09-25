@@ -283,11 +283,11 @@ async def test_si_se_agotan_los_intentos_la_regeneracion_se_detiene(entorno: Ent
         "SELECT estado FROM capitulo WHERE novel_id = ? AND numero = 2 AND version = 2", novela
     )
     assert cap["estado"] == "Agotado"
+    # TO-062: la generación se detiene, pero la novela sigue publicada con la versión 1, y la
+    # candidata queda rechazada.
     [obra] = entorno.consultar("SELECT estado FROM obra WHERE novel_id = ?", novela)
-    assert obra["estado"] == "Detenida"
-    assert (
-        entorno.consultar(
-            "SELECT count(*) AS n FROM version_novela WHERE novel_id = ? AND version = 2", novela
-        )[0]["n"]
-        == 0
+    assert obra["estado"] == "Publicada"
+    [v2] = entorno.consultar(
+        "SELECT estado FROM version_novela WHERE novel_id = ? AND version = 2", novela
     )
+    assert v2["estado"] == "rechazada"

@@ -459,8 +459,21 @@ sistema deberá proponer un hecho candidato y esperar confirmación: la selecci�
 fragmento **nunca regenera sola** (TO-011).
 
 **RF-VER-08 [demo]** · Cuando el lector confirme la solicitud, el sistema deberá aplicar el
-retcon por vigencia, marcar `Obsoleto` los capítulos afectados **y solo esos**, regenerarlos,
-volver a pasar el gate completo y publicar una versión nueva.
+retcon por vigencia, marcar `Obsoleto` en la versión candidata los capítulos afectados **y
+solo esos** —con filas nuevas: las de la versión publicada no cambian—, regenerarlos, volver a
+pasar el gate completo y publicar una versión nueva.
+
+**Una regeneración fallida no modifica ninguna versión publicada** (TO-062, decisión del
+desarrollador). Si un capítulo reescrito agota sus intentos o el gate rechaza la candidata:
+la candidata queda `rechazada`, lo que la regeneración escribió en el canon se revierte, la
+generación queda `Detenida` con su `detenida_por` y la novela sigue `Publicada` con la misma
+versión vigente, que admite solicitudes nuevas. Toda solicitud parte de la vigente y la
+candidata toma el primer número de versión libre, así que una rechazada nunca es base de otra.
+
+> *Dado* una regeneración cuyo capítulo 7 agota sus intentos, *cuando* se detiene, *entonces*
+> la versión 1 conserva su hash, el estado de sus filas y sus hechos, la 2 queda `rechazada`,
+> la novela está `Publicada` y una solicitud nueva publica la 3 sobre la 1 sin heredar nada de
+> la 2.
 
 **La regeneración no rompe las promesas del arco** (TO-047). El brief del capítulo regenerado
 lleva como restricción de destino las promesas que abría y pagaba su versión anterior, con el
@@ -470,8 +483,8 @@ versión anterior en vez de duplicarlas. Una promesa de la fila vieja se cierra 
 capítulo reescrito no la reabrió y ningún capítulo no afectado la paga. Si aun así el capítulo
 reescrito deja una promesa pendiente al cierre, `cierre_arco` —que corre sobre él al aceptarlo,
 antes de consolidar— lo devuelve a su redactor como intento fallido, con el límite de
-`orquestacion.max_intentos_capitulo`; agotado, la novela se detiene con
-`limite-de-intentos-agotado`.
+`orquestacion.max_intentos_capitulo`; agotado, la regeneración se detiene con
+`limite-de-intentos-agotado` y la novela sigue publicada (TO-062).
 
 > *Dado* una novela en la versión 1 con tres capítulos afectados, *cuando* se confirma el
 > cambio, *entonces* la versión 2 tiene esos tres reescritos, **los otros siete idénticos

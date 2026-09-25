@@ -87,8 +87,14 @@ async def test_confirmar_aplica_el_retcon_marca_obsoletos_y_encola_la_dirigida(
             novela,
         )
     }
-    assert {n for n, e in estados.items() if e == "Obsoleto"} == {2, 7}
-    assert all(e == "Aceptado" for n, e in estados.items() if n not in (2, 7))
+    # TO-062: la versión publicada no cambia ni en el estado de sus filas; la marca `Obsoleto`
+    # nace en la candidata, como fila nueva de cada afectado.
+    assert set(estados.values()) == {"Aceptado"}
+    candidata = entorno.consultar(
+        "SELECT numero, estado FROM capitulo WHERE novel_id = ? AND version = 2 ORDER BY numero",
+        novela,
+    )
+    assert [(f["numero"], f["estado"]) for f in candidata] == [(2, "Obsoleto"), (7, "Obsoleto")]
 
     [trabajo] = entorno.consultar(
         "SELECT tipo, estado_cola, version_objetivo, capitulos_a_regenerar, solicitud_id"
